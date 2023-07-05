@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|arm64">
+      <Configuration>Debug</Configuration>
+      <Platform>arm64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|arm64">
+      <Configuration>Release</Configuration>
+      <Platform>arm64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{61dbfb82-9db3-46f8-8637-3699ba8f7463}</ProjectGuid>
+    <RootNamespace>mtots</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|arm64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|arm64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|arm64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|arm64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY=1;MTOTS_ENABLE_SDL=1;MTOTS_ENABLE_PACO=1;MTOTS_ENABLE_AUDIO=1;MTOTS_ENABLE_GG=1;MTOTS_ENABLE_IMAGE=1;MTOTS_ENABLE_CANVAS=1;MTOTS_ENABLE_FONT=1;MTOTS_ENABLE_FONT_ROBOTO_MONO=1;MTOTS_ENABLE_ZIP=1</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>..\..\..\lib\stbimage\include;..\..\..\lib\miniz\src;..\..\..\lib\lodepng\src;..\..\..\lib\freetype\include;..\..\..\lib\sdl2\include;..\..\..\src\extensions\audio;..\..\..\src\extensions\fontrm;..\..\..\src\extensions\font;..\..\..\src\extensions\canvas;..\..\..\src\extensions\image;..\..\..\src\extensions\gg;..\..\..\src\extensions\zip;..\..\..\src\extensions\paco;..\..\..\src\extensions\sdl;..\..\..\src;</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY=1;MTOTS_ENABLE_SDL=1;MTOTS_ENABLE_PACO=1;MTOTS_ENABLE_AUDIO=1;MTOTS_ENABLE_GG=1;MTOTS_ENABLE_IMAGE=1;MTOTS_ENABLE_CANVAS=1;MTOTS_ENABLE_FONT=1;MTOTS_ENABLE_FONT_ROBOTO_MONO=1;MTOTS_ENABLE_ZIP=1</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>..\..\..\lib\stbimage\include;..\..\..\lib\miniz\src;..\..\..\lib\lodepng\src;..\..\..\lib\freetype\include;..\..\..\lib\sdl2\include;..\..\..\src\extensions\audio;..\..\..\src\extensions\fontrm;..\..\..\src\extensions\font;..\..\..\src\extensions\canvas;..\..\..\src\extensions\image;..\..\..\src\extensions\gg;..\..\..\src\extensions\zip;..\..\..\src\extensions\paco;..\..\..\src\extensions\sdl;..\..\..\src;</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY=1;MTOTS_ENABLE_SDL=1;MTOTS_ENABLE_PACO=1;MTOTS_ENABLE_AUDIO=1;MTOTS_ENABLE_GG=1;MTOTS_ENABLE_IMAGE=1;MTOTS_ENABLE_CANVAS=1;MTOTS_ENABLE_FONT=1;MTOTS_ENABLE_FONT_ROBOTO_MONO=1;MTOTS_ENABLE_ZIP=1</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>..\..\..\lib\stbimage\include;..\..\..\lib\miniz\src;..\..\..\lib\lodepng\src;..\..\..\lib\freetype\include;..\..\..\lib\sdl2\include;..\..\..\src\extensions\audio;..\..\..\src\extensions\fontrm;..\..\..\src\extensions\font;..\..\..\src\extensions\canvas;..\..\..\src\extensions\image;..\..\..\src\extensions\gg;..\..\..\src\extensions\zip;..\..\..\src\extensions\paco;..\..\..\src\extensions\sdl;..\..\..\src;..\..\..\src\extensions\paco;C:..\..\..\src\extensions\sdl;C:..\..\..\src;C:..\..\..\lib\sdl2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\..\..\lib\sdl2\targets\win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;imm32.lib;winmm.lib;setupapi.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY=1;MTOTS_ENABLE_SDL=1;MTOTS_ENABLE_PACO=1;MTOTS_ENABLE_AUDIO=1;MTOTS_ENABLE_GG=1;MTOTS_ENABLE_IMAGE=1;MTOTS_ENABLE_CANVAS=1;MTOTS_ENABLE_FONT=1;MTOTS_ENABLE_FONT_ROBOTO_MONO=1;MTOTS_ENABLE_ZIP=1</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>..\..\..\lib\stbimage\include;..\..\..\lib\miniz\src;..\..\..\lib\lodepng\src;..\..\..\lib\freetype\include;..\..\..\lib\sdl2\include;..\..\..\src\extensions\audio;..\..\..\src\extensions\fontrm;..\..\..\src\extensions\font;..\..\..\src\extensions\canvas;..\..\..\src\extensions\image;..\..\..\src\extensions\gg;..\..\..\src\extensions\zip;..\..\..\src\extensions\paco;..\..\..\src\extensions\sdl;..\..\..\src;</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\..\..\lib\sdl2\targets\win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;imm32.lib;winmm.lib;setupapi.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|arm64'">
+    <ClCompile>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY=1;MTOTS_ENABLE_SDL=1;MTOTS_ENABLE_PACO=1;MTOTS_ENABLE_AUDIO=1;MTOTS_ENABLE_GG=1;MTOTS_ENABLE_IMAGE=1;MTOTS_ENABLE_CANVAS=1;MTOTS_ENABLE_FONT=1;MTOTS_ENABLE_FONT_ROBOTO_MONO=1;MTOTS_ENABLE_ZIP=1</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\lib\stbimage\include;..\..\..\lib\miniz\src;..\..\..\lib\lodepng\src;..\..\..\lib\freetype\include;..\..\..\lib\sdl2\include;..\..\..\src\extensions\audio;..\..\..\src\extensions\fontrm;..\..\..\src\extensions\font;..\..\..\src\extensions\canvas;..\..\..\src\extensions\image;..\..\..\src\extensions\gg;..\..\..\src\extensions\zip;..\..\..\src\extensions\paco;..\..\..\src\extensions\sdl;..\..\..\src;</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|arm64'">
+    <ClCompile>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY=1;MTOTS_ENABLE_SDL=1;MTOTS_ENABLE_PACO=1;MTOTS_ENABLE_AUDIO=1;MTOTS_ENABLE_GG=1;MTOTS_ENABLE_IMAGE=1;MTOTS_ENABLE_CANVAS=1;MTOTS_ENABLE_FONT=1;MTOTS_ENABLE_FONT_ROBOTO_MONO=1;MTOTS_ENABLE_ZIP=1</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\lib\stbimage\include;..\..\..\lib\miniz\src;..\..\..\lib\lodepng\src;..\..\..\lib\freetype\include;..\..\..\lib\sdl2\include;..\..\..\src\extensions\audio;..\..\..\src\extensions\fontrm;..\..\..\src\extensions\font;..\..\..\src\extensions\canvas;..\..\..\src\extensions\image;..\..\..\src\extensions\gg;..\..\..\src\extensions\zip;..\..\..\src\extensions\paco;..\..\..\src\extensions\sdl;..\..\..\src;</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\lib\lodepng\src\lodepng.c" />
+    <ClCompile Include="..\..\..\lib\miniz\src\miniz.c" />
+    <ClCompile Include="..\..\..\lib\stbimage\src\mtotsa_stbimage.c" />
+    <ClCompile Include="..\..\..\src\extensions\audio\mtots_m_audio.c" />
+    <ClCompile Include="..\..\..\src\extensions\audio\mtots_wave.c" />
+    <ClCompile Include="..\..\..\src\extensions\canvas\mtots_m_canvas.c" />
+    <ClCompile Include="..\..\..\src\extensions\fontrm\mtots_m_fontrm.c" />
+    <ClCompile Include="..\..\..\src\extensions\font\mtots_m_font.c" />
+    <ClCompile Include="..\..\..\src\extensions\gg\mtots_m_gg.c" />
+    <ClCompile Include="..\..\..\src\extensions\image\mtots_m_image.c" />
+    <ClCompile Include="..\..\..\src\extensions\image\mtots_m_imageloader.c" />
+    <ClCompile Include="..\..\..\src\extensions\image\mtots_m_png.c" />
+    <ClCompile Include="..\..\..\src\extensions\paco\mtots_m_paco.c" />
+    <ClCompile Include="..\..\..\src\extensions\sdl\mtots_sdl.c" />
+    <ClCompile Include="..\..\..\src\extensions\zip\mtots_m_zip.c" />
+    <ClCompile Include="..\..\..\src\main.c" />
+    <ClCompile Include="..\..\..\src\mtots_assumptions.c" />
+    <ClCompile Include="..\..\..\src\mtots_bundle.c" />
+    <ClCompile Include="..\..\..\src\mtots_chunk.c" />
+    <ClCompile Include="..\..\..\src\mtots_class_buffer.c" />
+    <ClCompile Include="..\..\..\src\mtots_class_class.c" />
+    <ClCompile Include="..\..\..\src\mtots_class_color.c" />
+    <ClCompile Include="..\..\..\src\mtots_class_dict.c" />
+    <ClCompile Include="..\..\..\src\mtots_class_frozendict.c" />
+    <ClCompile Include="..\..\..\src\mtots_class_frozenlist.c" />
+    <ClCompile Include="..\..\..\src\mtots_class_list.c" />
+    <ClCompile Include="..\..\..\src\mtots_class_matrix.c" />
+    <ClCompile Include="..\..\..\src\mtots_class_number.c" />
+    <ClCompile Include="..\..\..\src\mtots_class_range.c" />
+    <ClCompile Include="..\..\..\src\mtots_class_rect.c" />
+    <ClCompile Include="..\..\..\src\mtots_class_sb.c" />
+    <ClCompile Include="..\..\..\src\mtots_class_str.c" />
+    <ClCompile Include="..\..\..\src\mtots_class_vector.c" />
+    <ClCompile Include="..\..\..\src\mtots_debug.c" />
+    <ClCompile Include="..\..\..\src\mtots_env.c" />
+    <ClCompile Include="..\..\..\src\mtots_globals.c" />
+    <ClCompile Include="..\..\..\src\mtots_import.c" />
+    <ClCompile Include="..\..\..\src\mtots_lexer.c" />
+    <ClCompile Include="..\..\..\src\mtots_main.c" />
+    <ClCompile Include="..\..\..\src\mtots_map.c" />
+    <ClCompile Include="..\..\..\src\mtots_memory.c" />
+    <ClCompile Include="..\..\..\src\mtots_modules.c" />
+    <ClCompile Include="..\..\..\src\mtots_m_bmon.c" />
+    <ClCompile Include="..\..\..\src\mtots_m_data.c" />
+    <ClCompile Include="..\..\..\src\mtots_m_fs.c" />
+    <ClCompile Include="..\..\..\src\mtots_m_json.c" />
+    <ClCompile Include="..\..\..\src\mtots_m_os.c" />
+    <ClCompile Include="..\..\..\src\mtots_m_random.c" />
+    <ClCompile Include="..\..\..\src\mtots_m_sys.c" />
+    <ClCompile Include="..\..\..\src\mtots_object.c" />
+    <ClCompile Include="..\..\..\src\mtots_ops.c" />
+    <ClCompile Include="..\..\..\src\mtots_parser.c" />
+    <ClCompile Include="..\..\..\src\mtots_repl.c" />
+    <ClCompile Include="..\..\..\src\mtots_util_base64.c" />
+    <ClCompile Include="..\..\..\src\mtots_util_buffer.c" />
+    <ClCompile Include="..\..\..\src\mtots_util_color.c" />
+    <ClCompile Include="..\..\..\src\mtots_util_error.c" />
+    <ClCompile Include="..\..\..\src\mtots_util_escape.c" />
+    <ClCompile Include="..\..\..\src\mtots_util_fs.c" />
+    <ClCompile Include="..\..\..\src\mtots_util_matrix.c" />
+    <ClCompile Include="..\..\..\src\mtots_util_number.c" />
+    <ClCompile Include="..\..\..\src\mtots_util_printf.c" />
+    <ClCompile Include="..\..\..\src\mtots_util_random.c" />
+    <ClCompile Include="..\..\..\src\mtots_util_readfile.c" />
+    <ClCompile Include="..\..\..\src\mtots_util_rect.c" />
+    <ClCompile Include="..\..\..\src\mtots_util_string.c" />
+    <ClCompile Include="..\..\..\src\mtots_util_unicode.c" />
+    <ClCompile Include="..\..\..\src\mtots_util_vector.c" />
+    <ClCompile Include="..\..\..\src\mtots_util_writefile.c" />
+    <ClCompile Include="..\..\..\src\mtots_value.c" />
+    <ClCompile Include="..\..\..\src\mtots_vm.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\base\ftsystem.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\base\ftinit.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\base\ftdebug.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\base\ftbase.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\base\ftbbox.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\base\ftglyph.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\base\ftbdf.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\base\ftbitmap.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\base\ftcid.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\base\ftfstype.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\base\ftgasp.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\base\ftgxval.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\base\ftmm.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\base\ftotval.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\base\ftpatent.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\base\ftpfr.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\base\ftstroke.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\base\ftsynth.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\base\fttype1.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\base\ftwinfnt.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\base\ftmac.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\bdf\bdf.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\cff\cff.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\cid\type1cid.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\pcf\pcf.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\pfr\pfr.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\sfnt\sfnt.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\truetype\truetype.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\type1\type1.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\type42\type42.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\winfonts\winfnt.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\raster\raster.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\sdf\sdf.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\smooth\smooth.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\autofit\autofit.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\cache\ftcache.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\gzip\ftgzip.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\lzw\ftlzw.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\bzip2\ftbzip2.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\gxvalid\gxvalid.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\otvalid\otvalid.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\psaux\psaux.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\pshinter\pshinter.c" />
+    <ClCompile Include="..\..\..\lib\freetype\src\psnames\psnames.c" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -1,0 +1,65 @@
+"""
+Module for interacting with the interpreter itself.
+
+Analogous to Python's sys module.
+"""
+
+
+final sizeOfValue Int """
+The number of bytes each Value struct occupies in the interpreter.
+
+This value should be 16 on all supported platforms.
+""" = 16
+
+
+final argv List[String] = []
+
+
+def isArchiveScript() Bool:
+  """
+  Returns true if this the initial script was started with a 'zip' or 'mtzip' archive.
+  """
+
+
+def getMallocCount() Int:
+  """
+  Return the number of times tracked memory has been allocated
+  since startup
+  """
+
+
+def enableGCLogs(enable Bool) nil:
+  """
+  Enables or disables the garbage collector's debug logs.
+
+  When enabled, the system will print some statistics
+  to stderr whenever the garbage collector is run.
+
+  Disabled by default.
+  """
+
+
+def enableMallocFreeLogs(enable Bool) nil:
+  """
+  Enables or disables the malloc and free logs.
+
+  When enabled, the system will print some information
+  whenever an object is allocated or freed.
+
+  NOTE: String allocations and deallocates are not logged.
+  String allocations currently do not trigger the garbage collector,
+  but their allocation sizes are used when deciding whether or not
+  to run the collector. This behavior may change in the future.
+
+  Disabled by default.
+  """
+
+
+def enableLogOnGC(enable Bool) nil:
+  """
+  Enables a subset of `enableGCLogs` and logs only when a GC happens.
+
+  This is useful when you want to debug performance critical regions
+  where you might not want GC to trigger, but you also don't want it to
+  crash when there is a collection.
+  """

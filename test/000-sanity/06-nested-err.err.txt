@@ -1,0 +1,5 @@
+string values do not have have fields
+[line 9] in __main__:third()
+[line 6] in __main__:second()
+[line 3] in __main__:first()
+[line 12] in __main__

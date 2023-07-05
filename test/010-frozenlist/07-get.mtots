@@ -1,0 +1,7 @@
+
+final list = final['a', 'b', 'c', 'd', 'e', 'f']
+
+print(list.get0())
+print(list.get1())
+print(list.get2())
+print(list.get3())

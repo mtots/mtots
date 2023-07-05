@@ -1,0 +1,5 @@
+
+print(0xFFFFFFFF)
+print(0xFFFFFFFF + 123)
+print((0xFFFFFFFF + 123).toU32())
+print((-30).toU32())

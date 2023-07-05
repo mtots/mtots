@@ -1,0 +1,2 @@
+Method '__setitem__' not found in 'FrozenDict'
+[line 2] in __main__

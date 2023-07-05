@@ -1,0 +1,16 @@
+ROUND 1
+  item = 10, total = 10
+  item = 13, total = 23
+  item = 16, total = 39
+  item = 19, total = 58
+  item = 22, total = 80
+total = 80
+
+ROUND 2
+  item = 10, total = 10
+  item = 13, total = 23
+  item = 16, total = 39
+  item = 19, total = 58
+  item = 22, total = 80
+total = 80
+

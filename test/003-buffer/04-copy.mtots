@@ -1,0 +1,7 @@
+
+final ba1 = Buffer.fromList([1, 2, 3])
+print('repr(ba1) = %s' % [repr(ba1)])
+final ba2 = ba1.clone()
+print('repr(ba2) = %s' % [repr(ba2)])
+print('ba1 == ba2 = %s' % [ba1 == ba2])
+

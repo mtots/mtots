@@ -1,0 +1,46 @@
+"""
+Audio (native) Module
+
+The audio module doesn ot actually contain logic for playing audio,
+but contains a class `Audio` that can hold audio data.
+
+To actually play audio, you should use the `Audio` class here
+together with some library that can actually interact with an audio device
+like the `ui` module.
+"""
+
+
+class Audio:
+  """
+  Audio stored in stereo 16-bit signed values sampled at 44.1kHz.
+  (this is the format for audio stored in a standard music CD).
+  """
+
+  static def fromSampleCount(n Int) Audio:
+    """
+    Create a new Audio with the given number of samples.
+    """
+
+  static def fromWaveFile(path String) Audio:
+    """
+    Load an audio clip from a WAV/WAVE file.
+    """
+
+  def __len__() Int:
+    "Returns the number of samples in this audio"
+
+  def get(sampleIndex Int, channelIndex Int) Int:
+    """
+    Returns the 16-bit signed sample value given the sample index
+    and channel index (channelIndex must be 0 or 1).
+    """
+
+  def set(sampleIndex Int, channelIndex Int, sample Int) nil:
+    """
+    Sets the sample
+    """
+
+  def saveToWaveFile(path String) nil:
+    """
+    Save this audio to a WAVE/WAV file
+    """

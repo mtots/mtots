@@ -1,0 +1,5 @@
+import nested.sample
+import nested.deeper.another
+
+print(sample.sampleValue)
+print(another.value)

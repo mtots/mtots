@@ -1,0 +1,6 @@
+import json
+
+print(json.dumps('hello'))
+print(json.dumps([]))
+print(json.dumps([1, 2, nil]))
+print(json.dumps({"a", "b", "hello": "world"}))

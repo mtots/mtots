@@ -1,0 +1,12 @@
+def foo():
+  def f():
+    print("INSIDE f()")
+
+  def bar():
+    def baz():
+      f()
+    baz()
+
+  bar()
+
+foo()

@@ -1,0 +1,10 @@
+
+
+class SomeClass:
+  def __repr__():
+    raise "Some Problem"
+
+
+final inst = SomeClass()
+print(try print(inst) else 'failed to print')
+print(inst)

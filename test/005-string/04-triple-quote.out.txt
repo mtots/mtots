@@ -1,0 +1,1 @@
+"\nSome multiline\nTriple quote string\n\t\t\n"

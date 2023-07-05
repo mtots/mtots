@@ -1,0 +1,6 @@
+
+
+final buffer = Buffer.fromSize(10)
+print(buffer)
+buffer.memset(0xFA)
+print(buffer)

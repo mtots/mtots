@@ -1,0 +1,20 @@
+
+
+print(FrozenDict)
+print({1: 2}.freeze())
+
+final d = {1: 2}.freeze()
+print("d[1] = %r" % [d[1]])
+print("1 in d = %r" % [1 in d])
+print("5 in d = %r" % [5 in d])
+
+final d2 = final{5: "hello"}
+print("d2[5] = %r" % [d2[5]])
+print("1 in d2 = %r" % [1 in d2])
+print("5 in d2 = %r" % [5 in d2])
+
+final d3 = final{5: "hello", 123: "world"}
+print("d3[5] = %r" % [d3[5]])
+print("1 in d3 = %r" % [1 in d3])
+print("5 in d3 = %r" % [5 in d3])
+print("123 in d3 = %r" % [123 in d3])

@@ -1,0 +1,16 @@
+
+
+class SomeClass:
+  var value Any
+
+  def __init__(value Any):
+    this.value = value
+
+  def __repr__() String:
+    return "SomeClass(%r)" % [this.value]
+
+final inst = SomeClass("hello")
+print("inst = %r" % [inst])
+inst.value = 123
+print("inst = %r" % [inst])
+print(inst)

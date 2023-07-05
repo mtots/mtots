@@ -1,0 +1,2 @@
+empty lists are truthy
+non-empty lists are truthy

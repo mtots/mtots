@@ -1,0 +1,6 @@
+round(0.7) = 1
+round(0.1) = 0
+round(1.1) = 1
+round(13.6) = 14
+round(13.5) = 14
+round(-2.5) = -2

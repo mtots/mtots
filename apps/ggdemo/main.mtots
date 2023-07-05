@@ -1,0 +1,79 @@
+import sys
+import gg
+from media import Image
+from random import Random
+
+print("isArchiveScript = %s" % [sys.isArchiveScript()])
+print("__file__ = %s" % [__file__])
+
+final rand = Random()
+final WIDTH = 800
+final HEIGHT = 800
+
+final window = gg.Window("Hello", WIDTH, HEIGHT, 60)
+
+var tick = 0
+
+final colors = [
+  Color(255, 0, 0),
+  Color(255, 255, 0),
+  Color(255, 255, 255),
+]
+
+final ballImage = Image(100, 100)
+for i in range(ballImage.width):
+  for j in range(ballImage.height):
+    if ((i - ballImage.width // 2) ** 2) + ((j - ballImage.height // 2) ** 2) < 30 ** 2:
+      ballImage.set(i, j, Color(255, 255, 255))
+# final texture = window.newTexture(ballImage, true)
+final spriteSheet = window.newTexture(ballImage).newSpriteSheet()
+
+
+class Ball:
+  var color Color
+  var x Int
+  var y Int
+  var width Int
+  var height Int
+  var angle Float
+  def __init__(color Color, x Int, y Int, width Int, height Int, angle Float):
+    this.color = color
+    this.x = x
+    this.y = y
+    this.width = width
+    this.height = height
+    this.angle = angle
+
+  def blit():
+    spriteSheet.sspr(
+      0, 0, spriteSheet.spriteWidth, spriteSheet.spriteHeight,
+      this.x, this.y, this.width, this.height,
+      false, false, this.angle, this.color)
+
+
+final balls List[Ball] = []
+for i in range(100):
+  final color = Color(rand.int(0, 255), rand.int(0, 255), rand.int(0, 255))
+  final x = rand.number() * WIDTH
+  final y = rand.number() * HEIGHT
+  final width = 50 + 100 * rand.number()
+  final height = 50 + 100 * rand.number()
+  balls.append(Ball(color, x, y, width, height, 0))
+
+
+@window.onUpdate
+def():
+  tick = tick + 1
+  # window.clear(colors[(tick // 60) % len(colors)])
+
+  if tick % 1 == 0:
+    # window.clear(Color(0, 0, 0, 255))
+
+    for ball in balls:
+      ball.angle = (2 * PI) * (tick / 15)
+
+  sys.enableMallocFreeLogs(true)
+  for ball in balls:
+    ball.blit()
+  sys.enableMallocFreeLogs(false)
+

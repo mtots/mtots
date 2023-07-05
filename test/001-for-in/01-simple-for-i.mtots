@@ -1,0 +1,27 @@
+print('global var, global for-i')
+var foo = ["a", "bb", "cccc"]
+
+for i in range(len(foo)):
+  print('  i -> %r' % [foo[i]])
+
+########################################
+########################################
+
+print('global var, local for-i')
+
+def func():
+  for i in range(len(foo)):
+    print('  i -> %r' % [foo[i]])
+
+func()
+
+########################################
+########################################
+
+print('local var, local for-i')
+
+def bar():
+  var baz = ["kl", [], 2, 2.5]
+  for i in range(len(baz)):
+    print('  i -> %r' % [baz[i]])
+bar()

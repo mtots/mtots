@@ -1,0 +1,5 @@
+
+print('not true = %r' % [not true])
+print('not false = %r' % [not false])
+print('not 0 = %r' % [not 0])
+print('not 1 = %r' % [not 1])

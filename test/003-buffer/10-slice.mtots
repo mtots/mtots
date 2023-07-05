@@ -1,0 +1,11 @@
+
+
+final buf1 = Buffer.fromList([0xA, 0xB, 0xC, 0xD, 0xE])
+final buf2 = Buffer.fromSize(10)
+final buf3 = Buffer.fromList([1, 2, 3, 4])
+
+print("buf2 = %r" % [buf2])
+buf2.memcpy(4, buf1)
+print("buf2 = %r" % [buf2])
+buf2.memcpy(1, buf3, 2)
+print("buf2 = %r" % [buf2])

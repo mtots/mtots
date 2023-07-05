@@ -1,0 +1,7 @@
+
+final buffer = Buffer.fromSize(4)
+buffer.setU16(0, 0xAAFF)
+print('buffer = %r' % [buffer])
+buffer.useBigEndian()
+buffer.setU16(0, 0xAAFF)
+print('buffer = %r' % [buffer])

@@ -1,0 +1,13 @@
+
+
+print(Matrix.one())
+
+final c1 = Vector(2, 5)
+final c2 = Vector(4, -4)
+
+final m1 = Matrix.fromColumns(c1, c2)
+
+print(m1)
+print(m1 * m1)
+
+# TODO: add some proper testing

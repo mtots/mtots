@@ -1,0 +1,6 @@
+
+print('Class.getName(List) = %r' % [Class.getName(List)])
+print('Class.getName(Number) = %r' % [Class.getName(Number)])
+print('Class.getName(FrozenList) = %r' % [Class.getName(FrozenList)])
+print('Class.getName(Function) = %r' % [Class.getName(Function)])
+print('Class.getName(Class) = %r' % [Class.getName(Class)])

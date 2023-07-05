@@ -1,0 +1,2 @@
+int(): Expected digit but got '.'
+[line 1] in __main__

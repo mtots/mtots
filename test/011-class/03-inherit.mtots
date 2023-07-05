@@ -1,0 +1,24 @@
+
+
+class SomeClass:
+  var someField String
+
+  def __init__(someField String):
+    this.someField = someField
+
+  def someMethod(extra String=''):
+    return 'some-value' + extra
+
+
+class SomeOtherClass(SomeClass):
+  def __init__():
+    super.__init__('SomeOtherClass field value')
+
+  def someOtherMethod():
+    return this.someMethod(' for some other method')
+
+
+final someInstance = SomeOtherClass()
+print(someInstance.someMethod())
+print(someInstance.someOtherMethod())
+print(someInstance.someField)

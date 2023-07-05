@@ -1,0 +1,5 @@
+Class.getName(List) = "List"
+Class.getName(Number) = "Number"
+Class.getName(FrozenList) = "FrozenList"
+Class.getName(Function) = "Function"
+Class.getName(Class) = "Class"

@@ -1,0 +1,10 @@
+
+
+print(final[1, 2, 3])
+print(final[1, 2, 3, "hello", "world"])
+print(final[1, 2, final[3, "hello", "world"]])
+print(final[])
+print(final[1])
+print(final[1, 2, 3])
+print("FrozenList([1, 2, 3]) == final[1, 2, 3] = %r" % [FrozenList([1, 2, 3]) == final[1, 2, 3]])
+print("FrozenList([1, 2, 3]) == final[1, 2] = %r" % [FrozenList([1, 2, 3]) == final[1, 2]])

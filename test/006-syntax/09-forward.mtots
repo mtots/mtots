@@ -1,0 +1,25 @@
+"""
+This test is more for testing that the IDE can handle
+function definitions that come after rather than
+testing that the function actually actually executes correctly.
+"""
+
+def first() nil:
+  """
+  This is the first function.
+  It calls the second function that is defined afterwards.
+  """
+  second()
+
+
+def second() nil:
+  """
+  This is the second function. Its definition comes after
+  the first function
+  """
+  print('inside second')
+
+
+first()
+
+

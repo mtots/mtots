@@ -1,0 +1,18 @@
+
+
+print(sorted([1, 2, 3, 5, 4, 3, 2, 1]))
+print(sorted(["a", "aaa", "bbbb", "cab"]))
+
+def getKey2(x Number) Number:
+  return -x
+
+def getKey3(x Number) String:
+  return str(x)
+
+final sortedList1 = sorted([1, 2, 3, 5, 4, 3, 2, 1, 11, 155, 99])
+final sortedList2 = sorted(sortedList1, getKey2)
+final sortedList3 = sorted(sortedList1, getKey3)
+
+print("sortedList1 %r" % [sortedList1])
+print("sortedList2 %r" % [sortedList2])
+print("sortedList3 %r" % [sortedList3])

@@ -1,0 +1,9 @@
+
+
+print('INFINITY = %r' % [INFINITY])
+print('-INFINITY = %r' % [-INFINITY])
+print('NAN = %r' % [NAN])
+print('NAN == NAN = %r' % [NAN == NAN])
+print('INFINITY == INFINITY = %r' % [INFINITY == INFINITY])
+print('INFINITY == -INFINITY = %r' % [INFINITY == -INFINITY])
+print('-INFINITY == -INFINITY = %r' % [-INFINITY == -INFINITY])

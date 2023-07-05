@@ -1,0 +1,33 @@
+
+class ZipArchive:
+  """
+  A Zip archive read from a file
+  """
+
+  static def fromFile(path String) ZipArchive:
+    """
+    Creates a ZipArchive from a file on disk
+    """
+
+  def getFileCount() Int:
+    """
+    Returns the number of files in this zip archive.
+
+    Files are referred to by their index
+    (between `0` and `getFileCount() - 1` inclusive).
+    """
+
+  def getFileName(fileIndex Int) String:
+    """
+    Returns the name of the file at the given index.
+    """
+
+  def isDirectory(fileIndex Int) Bool:
+    """
+    Checks whether the file at the given index is actually a directory
+    """
+
+  def extractToFile(fileIndex Int, destinationPath String) nil:
+    """
+    Extracts the given file to the path on disk.
+    """

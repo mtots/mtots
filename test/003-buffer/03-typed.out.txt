@@ -1,0 +1,5 @@
+ba.setF32(0, 5.5) = nil
+ba.getF32(0) = 5.5
+ba.getF64(0) = 0
+ba.setU32(4, 77) = nil
+ba.getU32(4) = 77

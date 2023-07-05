@@ -1,0 +1,12 @@
+
+def first(x):
+  second(x)
+
+def second(x):
+  third(x)
+
+def third(x):
+  print(x.invalidField)
+
+
+first('hello')

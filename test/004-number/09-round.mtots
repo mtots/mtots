@@ -1,0 +1,6 @@
+print("round(0.7) = %r" % [round(0.7)])
+print("round(0.1) = %r" % [round(0.1)])
+print("round(1.1) = %r" % [round(1.1)])
+print("round(13.6) = %r" % [round(13.6)])
+print("round(13.5) = %r" % [round(13.5)])
+print("round(-2.5) = %r" % [round(-2.5)])

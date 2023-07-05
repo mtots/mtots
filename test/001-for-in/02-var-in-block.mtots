@@ -1,0 +1,13 @@
+# When a variable is declared inside a for-in loop,
+# the variable declarations seem to be broken
+#
+# Regression test to hopefully fix this
+
+var items = ["a", "b", "c", "d"]
+
+def main():
+  for i in range(len(items)):
+    var item = items[i]
+    print('i -> %r' % [item])
+
+main()

@@ -1,0 +1,35 @@
+"""
+API for retrieving resources
+"""
+
+
+def readString(filePath String, path String) String:
+  """
+  Read a resource and return its contents as a `String`.
+
+  * `filePath` should be the script's local `__file__` variable.
+  * `path` should be the name of the file relative to the script's
+    directory.
+
+  For archive scripts, this function will read the file from
+  the archive.
+
+  Otherwise, this function will load a file relative
+  to the script on disk.
+  """
+
+
+def readBuffer(filePath String, path String) Buffer:
+  """
+  Read a resource and return its contents as a `Buffer`.
+
+  * `filePath` should be the script's local `__file__` variable.
+  * `path` should be the name of the file relative to the script's
+    directory.
+
+  For archive scripts, this function will read the file from
+  the archive.
+
+  Otherwise, this function will load a file relative
+  to the script on disk.
+  """

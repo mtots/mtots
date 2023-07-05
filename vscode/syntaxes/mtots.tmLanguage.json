@@ -1,0 +1,227 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "mtots",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#number"
+		},
+		{
+			"include": "#line_comment"
+		},
+		{
+			"include": "#string_literal"
+		},
+		{
+			"include": "#classify_names"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [
+				{
+					"name": "constant.language.mtots",
+					"match": "\\b(true|false|nil|super|this)\\b"
+				},
+				{
+					"name": "storage.type",
+					"match": "\\b(var|final|class|def|static)\\b"
+				},
+				{
+					"name": "keyword.control.mtots",
+					"match": "\\b(elif|else|for|if|then|return|while|pass|from|import|as|and|or|not|in|is|raise|try)\\b"
+				},
+				{
+					"comment": "Globals provided by the runtime (functions)",
+					"name": "support.function.mtots",
+					"match": "\\b(len|exit|type|repr|str|chr|ord|print|range|open)\\b"
+				},
+				{
+					"comment": "Globals provided by the runtime (types)",
+					"name": "support.class.mtots",
+					"match": "\\b(Nil|Bool|Number|String|StringBuilder|Buffer|Iteration|Iterable|Optional|List|FrozenList|Dict|FrozenDict|Function|Class|File|Table)\\b"
+				},
+				{
+					"comment": "Pseudo Types (Not provide by the runtime, purely for type annotations)",
+					"name": "support.class.mtots",
+					"match": "\\b(Int|Float|Any|Never)\\b"
+				},
+				{
+					"comment": "Globals provided by the runtime (variables and constants)",
+					"name": "support.variable.mtots",
+					"match": "\\b(len|exit|type|repr|str|chr|ord|print|range|open|StopIteration)\\b"
+				},
+				{
+					"comment": "Reserved keyword",
+					"name": "invalid.deprecated.mtots",
+					"match": "\\b(assert|async|await|break|continue|del|except|finally|global|with|yield|lambda)\\b"
+				}
+			]
+		},
+		"line_comment": {
+			"patterns": [
+				{
+					"name": "comment.line.number-sign.mtots",
+					"match": "#.*"
+				}
+			]
+		},
+		"number": {
+			"comment": "int or float literals",
+			"patterns": [
+				{
+					"comment": "Integer literal (hexadecimal)",
+					"name": "constant.numeric.integer.hexadecimal.mtots",
+					"match": "\\b0x[a-fA-F0-9_]+\\b"
+				},
+				{
+					"comment": "Integer literal (binary)",
+					"name": "constant.numeric.integer.binary.mtots",
+					"match": "\\b0b[01]+\\b"
+				},
+				{
+					"comment": "Integer literal (decimal)",
+					"name": "constant.numeric.integer.decimal.mtots",
+					"match": "\\b[0-9][0-9_]*\\b"
+				},
+				{
+					"comment": "Floating point literal (fraction)",
+					"name": "constant.numeric.float.mtots",
+					"match": "\\b[0-9][0-9_]*\\.[0-9][0-9_]*([eE][+-]?[0-9_]+)?\\b"
+				}
+			]
+		},
+		"classify_names": {
+			"patterns": [
+				{
+					"comment": "Items provided by the runtime",
+					"name": "support.variable.mtots",
+					"match": "\\b(__file|__name|__main)\\b"
+				},
+				{
+					"comment": "Intrinsics",
+					"name": "keyword.other.mtots",
+					"match": "\\$(GetCallingModule)\\b"
+				},
+				{
+					"comment": "Type definition (best effort)",
+					"match": "\\b(case\\s+class|class|except|trait)\\s+([a-zA-Z_][a-zA-Z0-9_]*)\\b",
+					"captures": {
+						"1": {
+							"name": "storage.type.mtots"
+						},
+						"2": {
+							"name": "entity.name.type.mtots"
+						}
+					}
+				},
+				{
+					"comment": "Function or method call (best effort)",
+					"match": "\\b([A-Za-z][A-Za-z0-9_]*|_[A-Za-z0-9_]+)\\s*\\(",
+					"captures": {
+						"1": {
+							"name": "entity.name.function.mtots"
+						}
+					}
+				},
+				{
+					"comment": "Variable",
+					"match": "\\b(\\w+)\\b",
+					"captures": {
+						"1": {
+							"name": "entity.name.mtots"
+						}
+					}
+				}
+			]
+		},
+		"string_literal": {
+			"comment": "String literal",
+			"patterns": [
+				{"include": "#triple_double_quote_string_literal"},
+				{"include": "#triple_single_quote_string_literal"},
+				{"include": "#raw_triple_double_quote_string_literal"},
+				{"include": "#raw_triple_single_quote_string_literal"},
+				{"include": "#raw_double_quote_string_literal"},
+				{"include": "#raw_single_quote_string_literal"},
+				{"include": "#double_quote_string_literal"},
+				{"include": "#single_quote_string_literal"}
+			]
+		},
+		"escaped_character": {
+			"name": "constant.character.escape.mtots",
+			"match": "\\\\(x[0-9A-Fa-f]{2}|n|r|t|\\\\|'|\"|0|(u|o|d)\\{[0-9A-Fa-f]*\\})"
+		},
+		"single_quote_string_literal": {
+			"comment": "Single-quote string literal",
+			"name": "string.quoted.single.mtots",
+			"begin": "b?'",
+			"end": "'",
+			"patterns": [
+				{
+					"include": "#escaped_character"
+				}
+			]
+		},
+		"double_quote_string_literal": {
+			"comment": "Double-quote string literal",
+			"name": "string.quoted.double.mtots",
+			"begin": "b?\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"include": "#escaped_character"
+				}
+			]
+		},
+		"triple_double_quote_string_literal": {
+			"comment": "Triple double-quote string literal (raw is not quite accurately handled)",
+			"name": "string.quoted.double.mtots",
+			"begin": "\"\"\"",
+			"end": "\"\"\"",
+			"patterns": [
+				{
+					"include": "#escaped_character"
+				}
+			]
+		},
+		"triple_single_quote_string_literal": {
+			"comment": "Triple single-quote string literal (raw is not quite accurately handled)",
+			"name": "string.quoted.single.mtots",
+			"begin": "'''",
+			"end": "'''",
+			"patterns": [
+				{
+					"include": "#escaped_character"
+				}
+			]
+		},
+		"raw_triple_double_quote_string_literal": {
+			"comment": "Triple double-quote string literal (raw is not quite accurately handled)",
+			"name": "string.quoted.double.mtots",
+			"begin": "r\"\"\"",
+			"end": "\"\"\""
+		},
+		"raw_triple_single_quote_string_literal": {
+			"comment": "Triple single-quote string literal (raw is not quite accurately handled)",
+			"name": "string.quoted.single.mtots",
+			"begin": "r'''",
+			"end": "'''"
+		},
+		"raw_double_quote_string_literal": {
+			"comment": "Raw double-quote string literal",
+			"name": "string.quoted.double.raw.mtots",
+			"begin": "r(#*)\"",
+			"end": "\"\\1"
+		},
+		"raw_single_quote_string_literal": {
+			"comment": "Raw single-quote string literal",
+			"name": "string.quoted.single.raw.mtots",
+			"begin": "r(#*)'",
+			"end": "'\\1"
+		}
+	},
+	"scopeName": "source.mtots"
+}

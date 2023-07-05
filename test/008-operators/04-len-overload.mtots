@@ -1,0 +1,17 @@
+
+
+
+class WithLen:
+  var length Int
+
+  def __init__(length Int):
+    this.length = length
+
+  def __len__() Int:
+    return this.length
+
+
+final obj = WithLen(10)
+print('len(obj) = %r' % [len(obj)])
+obj.length = 15
+print('len(obj) = %r' % [len(obj)])

@@ -1,0 +1,20 @@
+
+var items = {10, 13, 16, 19, 22}
+var total = 0
+
+print('ROUND 1')
+for item in items:
+  total = total + item
+  print('  item = %r, total = %r' % [item, total])
+
+print('total = %r\n' % [total])
+
+items = {10: 80, 13, 16, 19, 22: 'hello'}
+total = 0
+
+print('ROUND 2')
+for item in items:
+  total = total + item
+  print('  item = %r, total = %r' % [item, total])
+
+print('total = %r\n' % [total])

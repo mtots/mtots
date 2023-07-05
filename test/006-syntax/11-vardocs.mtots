@@ -1,0 +1,11 @@
+
+final docWithType Int """
+Some documentation for docWithType
+""" = 100
+
+final docWithoutType """
+Some documentation for docWithoutType
+""" = 200
+
+print("docWithType = %r" % [docWithType])
+print("docWithoutType = %r" % [docWithoutType])

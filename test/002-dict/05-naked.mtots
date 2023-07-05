@@ -1,0 +1,18 @@
+r"""
+Dictionaries should act like 'tables'
+
+Field accesses should be like setting and getting string keys
+"""
+
+
+final d = {
+  "foo": 123,
+}
+
+print('d["foo"] = %r' % [d["foo"]])
+print('d.foo = %r' % [d.foo])
+
+d.bar = 7.7
+print('d["bar"] = %r' % [d["bar"]])
+print('d.bar = %r' % [d.bar])
+print('d.bar = 6.6 = %r' % [d.bar = 6.6])

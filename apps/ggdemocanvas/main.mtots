@@ -1,0 +1,28 @@
+import gg
+import fs
+import sys
+
+final imagePath = fs.join([fs.dirname(__file__), 'image.png'])
+
+final window = gg.Window("", 300, 300)
+
+final canvas = window.newCanvas()
+var colorIndex = 0
+
+canvas.fill(Color(100, 0, 0))
+canvas.fillOval(Rect(40, 40, 40, 40), Color(200, 200, 200))
+print([canvas.width, canvas.height])
+
+def nextColor() Color:
+  final color = gg.COLORS[colorIndex]
+  colorIndex = (colorIndex + 1) % len(gg.COLORS)
+  return color
+
+@window.onClick
+def(e gg.ClickEvent) nil:
+  print("onClick %s %s (color %s)" % [e.x, e.y, colorIndex])
+  canvas.fillCircle(Vector(e.x, e.y), 30, nextColor())
+
+# sys.enableMallocFreeLogs(true)
+# sys.enableGCLogs(true)
+# window.mainLoop()

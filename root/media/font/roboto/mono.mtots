@@ -1,0 +1,7 @@
+from media import Font
+
+
+def load() Font:
+  """
+  Loads the Roboto Monospaced font from memory
+  """

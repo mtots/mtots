@@ -1,0 +1,8 @@
+
+
+print("1 and 2 = %s" % [1 and 2])
+print("0 and nil = %s" % [0 and nil])
+print("true or false = %s" % [true or false])
+print("true and false = %s" % [true and false])
+print("false and true = %s" % [false and true])
+print("false and false = %s" % [false and false])

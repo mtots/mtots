@@ -1,0 +1,21 @@
+
+
+trait Foo:
+  """
+  Traits are purely for type-checking and so
+  are not allowed to have any runtime effect, except
+  possibly for optimizations.
+  """
+
+  def foo(someArg Int) String:
+    """
+    Some documentation for method foo on trait Foo
+    """
+
+
+print("A trait Foo was defined in this file")
+
+class Bar:
+  """
+  Bar comments
+  """

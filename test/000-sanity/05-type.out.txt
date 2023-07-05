@@ -1,0 +1,4 @@
+type = <function type>
+type(type) = <class Function>
+type('hello') = <class String>
+type(123) = <class Number>

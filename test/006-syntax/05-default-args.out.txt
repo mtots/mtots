@@ -1,0 +1,6 @@
+foo() = 5
+foo(123) = 123
+bar() = "hello"
+bar(1010) = 1010
+baz(true) = [true, false]
+baz(1010, 'm') = [1010, "m"]

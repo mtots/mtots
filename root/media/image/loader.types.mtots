@@ -1,0 +1,13 @@
+"""
+Mtots wrapper for stb_image
+"""
+from data import DataSource
+from media.image import Image
+
+
+def loadImage(ds DataSource) Image:
+  """
+  Loads an Image from the given data source.
+
+  PNG, JPEG and BMP file types are supported.
+  """

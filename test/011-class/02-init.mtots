@@ -1,0 +1,19 @@
+
+
+class Base:
+  def __init__(given):
+    this.given = given
+    this.set = 'Base.set'
+
+
+class Child(Base):
+  def __init__(given2):
+    super.__init__('given1')
+    this.given2 = given2
+
+
+final child = Child('given-two')
+
+print('child.given = %r' % [child.given])
+print('child.set = %r' % [child.set])
+print('child.given2 = %r' % [child.given2])

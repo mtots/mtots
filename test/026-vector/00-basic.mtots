@@ -1,0 +1,22 @@
+
+
+final v1 = Vector(2, 3)
+final v2 = Vector(55, 2.5, 7.75)
+final v3 = v1 + v2
+final v4 = v1 - v2
+
+
+print("v1 = %s" % [v1])
+print("v2 = %s" % [v2])
+print("v3 = %s" % [v3])
+print("v4 = %s" % [v4])
+
+print("v2.x = %s" % [v2.x])
+print("v2.y = %s" % [v2.y])
+print("v2.z = %s" % [v2.z])
+
+print("v2.dot(v3) = %s" % [v2.dot(v3)])
+
+print("v1.rotateX(PI / 2) = %s" % [v1.rotateX(PI / 2)])
+print("v1.rotateY(PI / 2) = %s" % [v1.rotateY(PI / 2)])
+print("v1.rotateZ(PI / 2) = %s" % [v1.rotateZ(PI / 2)])

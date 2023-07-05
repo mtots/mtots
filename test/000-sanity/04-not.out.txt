@@ -1,0 +1,4 @@
+not true = false
+not false = true
+not 0 = true
+not 1 = false

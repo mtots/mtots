@@ -1,0 +1,2 @@
+docWithType = 100
+docWithoutType = 200

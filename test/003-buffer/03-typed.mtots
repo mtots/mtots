@@ -1,0 +1,9 @@
+
+
+final ba = Buffer.fromSize(32)
+
+print('ba.setF32(0, 5.5) = %r' % [ba.setF32(0, 5.5)])
+print('ba.getF32(0) = %r' % [ba.getF32(0)])
+print('ba.getF64(0) = %r' % [ba.getF64(0)])
+print('ba.setU32(4, 77) = %r' % [ba.setU32(4, 77)])
+print('ba.getU32(4) = %r' % [ba.getU32(4)])

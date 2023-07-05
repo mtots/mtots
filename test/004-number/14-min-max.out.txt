@@ -1,0 +1,4 @@
+min(1, 2, 3) = 1
+min("hello", "world") = "hello"
+max(1, 2, 3) = 3
+max("hello", "world") = "world"

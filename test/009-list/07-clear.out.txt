@@ -1,0 +1,8 @@
+someItems = [1, 2, 3, 4]
+ref = [1, 2, 3, 4]
+mallocs = 1
+someItems = []
+ref = []
+someItems = [1, 2, 3, 4]
+ref = [1, 2, 3, 4]
+mallocs = 0

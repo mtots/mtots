@@ -1,0 +1,34 @@
+import sys
+
+final someItems = [] as List[Int]
+final ref = someItems
+
+final c0 = sys.getMallocCount()
+someItems.append(1)
+someItems.append(2)
+someItems.append(3)
+someItems.append(4)
+final c1 = sys.getMallocCount()
+
+
+print("someItems = %r" % [someItems])
+print("ref = %r" % [ref])
+print("mallocs = %r" % [c1 - c0])
+
+someItems.clear()
+
+print("someItems = %r" % [someItems])
+print("ref = %r" % [ref])
+
+final c2 = sys.getMallocCount()
+someItems.append(1)
+someItems.append(2)
+someItems.append(3)
+someItems.append(4)
+final c3 = sys.getMallocCount()
+
+# appends after clear should not require new allocation
+# if the new length does not exceed the old one
+print("someItems = %r" % [someItems])
+print("ref = %r" % [ref])
+print("mallocs = %r" % [c3 - c2])

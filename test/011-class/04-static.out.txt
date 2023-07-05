@@ -1,0 +1,3 @@
+<Foo instance>
+14
+hello

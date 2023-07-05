@@ -1,0 +1,14 @@
+from random import Random
+
+final random = Random(0xABC)
+
+var total = 0
+for _ in range(20000):
+  total = total + random.number()
+
+if total < 5000:
+  print('total is below  5000: %r' % [total])
+elif total > 15000:
+  print('total is above 15000: %r' % [total])
+else:
+  print('total is between 5000 and 15000 %r' % [total])

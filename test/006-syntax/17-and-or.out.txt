@@ -1,0 +1,6 @@
+1 and 2 = 2
+0 and nil = 0
+true or false = true
+true and false = false
+false and true = false
+false and false = false

@@ -1,0 +1,12 @@
+
+
+final someDict = final{
+  final[5, 6, 7]: final[2, 5],
+  final[5, 6, 8]: "Hello",
+}
+
+print("someDict = %r" % [someDict])
+print("someDict[final[5, 6, 7]] = %r" % [someDict[final[5, 6, 7]]])
+print("someDict[final[5, 6, 8]] = %r" % [someDict[final[5, 6, 8]]])
+print("final[5, 6, 7] in someDict = %r" % [final[5, 6, 7] in someDict])
+print("final[5, 6, 9] in someDict = %r" % [final[5, 6, 9] in someDict])

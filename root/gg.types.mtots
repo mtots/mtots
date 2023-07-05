@@ -1,0 +1,488 @@
+"""
+A simple game development library
+"""
+from media import Image
+from media import Audio
+from media import Canvas
+
+# A collection of curated colors taken from PICO-8's palette.
+# 16 offical colors + 16 unofficial colors for a total of 32.
+final BLACK           = Color(   0,   0,   0, 255)
+final DARK_BLUE       = Color(  29,  43,  83, 255)
+final DARK_PURPLE     = Color( 126,  37,  83, 255)
+final DARK_GREEN      = Color(   0, 135,  81, 255)
+final BROWN           = Color( 171,  82,  54, 255)
+final DARK_GREY       = Color(  95,  87,  79, 255)
+final LIGHT_GREY      = Color( 194, 195, 199, 255)
+final WHITE           = Color( 255, 241, 232, 255)
+final RED             = Color( 255,   0,  77, 255)
+final ORANGE          = Color( 255, 163,   0, 255)
+final YELLOW          = Color( 255, 236,  39, 255)
+final GREEN           = Color(   0, 228,  54, 255)
+final BLUE            = Color(  41, 173, 255, 255)
+final LAVENDER        = Color( 131, 118, 156, 255)
+final PINK            = Color( 255, 119, 168, 255)
+final LIGHT_PEACH     = Color( 255, 204, 170, 255)
+final BROWNISH_BLACK  = Color(  41,  24,  20, 255)
+final DARKER_BLUE     = Color(  17,  29,  53, 255)
+final DARKER_PURPLE   = Color(  66,  33,  54, 255)
+final BLUE_GREEN      = Color(  18,  83,  89, 255)
+final DARK_BROWN      = Color( 116,  47,  41, 255)
+final DARKER_GREY     = Color(  73,  51,  59, 255)
+final MEDIUM_GREY     = Color( 162, 136, 121, 255)
+final LIGHT_YELLOW    = Color( 243, 239, 125, 255)
+final DARK_RED        = Color( 190,  18,  80, 255)
+final DARK_ORANGE     = Color( 255, 108,  36, 255)
+final LIME_GREEN      = Color( 168, 231,  46, 255)
+final MEDIUM_GREEN    = Color(   0, 181,  67, 255)
+final TRUE_BLUE       = Color(   6,  90, 181, 255)
+final MAUVE           = Color( 117,  70, 101, 255)
+final DARK_PEACH      = Color( 255, 110,  89, 255)
+final PEACH           = Color( 255, 157, 129, 255)
+
+
+final COLORS """
+  List of PICO-8 colors in order PICO-8's palette order
+""" = final[
+  BLACK,
+  DARK_BLUE,
+  DARK_PURPLE,
+  DARK_GREEN,
+  BROWN,
+  DARK_GREY,
+  LIGHT_GREY,
+  WHITE,
+  RED,
+  ORANGE,
+  YELLOW,
+  GREEN,
+  BLUE,
+  LAVENDER,
+  PINK,
+  LIGHT_PEACH,
+  BROWNISH_BLACK,
+  DARKER_BLUE,
+  DARKER_PURPLE,
+  BLUE_GREEN,
+  DARK_BROWN,
+  DARKER_GREY,
+  MEDIUM_GREY,
+  LIGHT_YELLOW,
+  DARK_RED,
+  DARK_ORANGE,
+  LIME_GREEN,
+  MEDIUM_GREEN,
+  TRUE_BLUE,
+  MAUVE,
+  DARK_PEACH,
+  PEACH,
+]
+
+
+class Window:
+  """
+  A window for viewing the game.
+
+  Currently, only one Window may be created per program.
+
+  When created, the `mainLoop` for the Window will be
+  queued to run when the program exits
+  """
+
+  def __init__(
+      title String = "",
+      width Int = 0,
+      height Int = 0,
+      framesPerSecond Int = 30):
+    ""
+
+  def setTitle(title String) nil:
+    """
+    Sets the window's title
+    """
+
+  def setBackgroundColor(color Color) nil:
+    """
+    Sets the window's background color.
+
+    The screen will be cleared with this color before call to `update`
+    each frame.
+    """
+
+  def clear(color Color) nil:
+    """
+    Clear the screen with the given color
+    """
+
+  def onUpdate(update Function[Any]) nil:
+    """
+    Sets the update callback.
+
+    The update callback is called 60 times per second
+    right before each frame is presented to the screen.
+    """
+
+  def onClick(callback Function[ClickEvent, Any]) nil:
+    """
+    Sets the callback for when a mouse button or finger is pressed down.
+    """
+
+  def onClickUp(callback Function[ClickEvent, Any]) nil:
+    """
+    Sets the callback for when a mouse button or finger is released.
+    """
+
+  def onKeyDown(callback Function[KeyEvent, Any]) nil:
+    """
+    Sets the callback for when a key on the keyboard is pressed
+    """
+
+  def onKeyUp(callback Function[KeyEvent, Any]) nil:
+    """
+    Sets the callback for when a key on the keyboard is released
+    """
+
+  def onMotion(callback Function[MotionEvent, Any]) nil:
+    """
+    Sets the callback for when the mouse cursor or a touch moves across
+    the screen
+    """
+
+  def getCanvas() Canvas:
+    """
+    Returns the `Canvas` currently associated with this `Window` (e.g. through
+    a call to `newCanvas`).
+
+    If there is no canvas `Canvas` associated with this `Window`, a new one is
+    created with dmensions matching the current window.
+    """
+
+  def newCanvas(width Int=-1, height Int=-1) Canvas:
+    """
+    Returns a Canvas you can modify to draw on the window.
+
+    If `width` or `height` is negative, they will default to the window
+    width and window height in pixels respectively (more specifically
+    the results of `SDL_GetRendererOutputSize`).
+
+    Any canvas previously associated with this Window will no longer
+    be associated with this Window.
+
+    This canvas image will be redrawn on the window every
+    frame before the update callback.
+
+    This approach is slower than rendering with sprites and textures
+    directly, but is easier and simpler to get something on the screen.
+    """
+
+  def mainLoop() nil:
+    """
+    Starts the main user interface event loop around this Window
+
+    This method does not have to be called explicitly because
+    the main loop will be queued to run after the script ends by
+    the Window's constructor.
+    """
+
+  def newTexture(image Image, streaming Bool = false) Texture:
+    """
+    Creates a texture from an image that can be used to
+    draw on this window.
+
+    If `streaming` is set to true, the texture will hold a
+    reference to the image, and the `update` method on the
+    returned `Texture` will update the texture with the new
+    state of `image`.
+    """
+
+  def newSpriteSheet(image Image, spriteWidth Int=0, spriteHeight Int=0) SpriteSheet:
+    """
+    Creates a uniform rectangular grid sprite sheet from an image.
+
+    If `spriteWidth` or `spriteHeight` is omitted or set to zero, they will be
+    set to match the dimensions of the entire image. So if both `spriteWidth`
+    and `spriteHeight` is omitted, the resulting `SpriteSheet` will contain
+    exactly a single sprite consisting of the entire image.
+
+    The newly created `SpriteSheet` will be set as the 'active' `SpriteSheet`
+    for this `Window` replacing any previously active `SpriteSheet`.
+    """
+
+  def spr(
+      n Int,
+      x Int, y Int,
+      w Float=1, h Float=1,
+      flipX Bool=false, flipY Bool=false,
+      angle Float=0,
+      color Color?=nil):
+    """
+    Draws a sprite from the active sprite sheet.
+
+    Compare with PICO-8's `spr()` function.
+
+    Parameters:
+    * n - the index of the sprite in the sheet (sprites are ordered left to right, top down,
+      like English text).
+    * x - the x coordinate of the upper left corner to draw
+    * y - the y coordinate of the upper left corner to draw
+    * w - width in number of sprites (in pixels, the drawn width will be w * spriteWidth)
+    * h - height in number of sprites (in pixels, the drawn height will be h * spriteHeight)
+    * flipX - if true (i.e. non-zero), the sprite is drawn inverted left to right.
+      Defaults to 0.
+    * flipY - if true (i.e. non-zero), the sprite is drawn inverted top to bottom.
+      Defaults to 0.
+    * angle - angle to rotate the rendered sprite by around its center, in degrees
+    * color - the color to modulate with. Defaults to Color(255, 255, 255)
+    """
+
+  def sspr(
+      sx Int, sy Int, sw Int, sh Int,
+      dx Int, dy Int, dw Int=-1, dh Int=-1,
+      flipX Bool=false, flipY Bool=false,
+      angle Float=0,
+      color Color?=nil):
+    """
+    Draws a rectangle of pixels from the active sprite sheet, optionally stretching the
+    image to fit a rectangle on the screen.
+
+    Compare with PICO-8's `sspr()` function.
+
+    Parameters:
+    * sx - The x coordinate of the upper left corner of the rectangle in the sprite sheet.
+    * sy - The y coordinate of the upper left corner of the rectangle in the sprite sheet.
+    * sw - The width of the rectangle in the sprite sheet, as a number of pixels.
+    * sh - The height of the rectangle in the sprite sheet, as a number of pixels.
+    * dx - The x coordinate of the upper left corner of the rectangle area of the screen.
+    * dy - The y coordinate of the upper left corner of the rectangle area of the screen.
+    * dw - The width of the rectangle area of the screen.
+      Defaults to -1. If -1, it is set to match the image width (sw).
+    * dh - The height of the rectangle area of the screen.
+      Defaults to -1. If -1, it is set to match the image height (sh).
+    * flipX - if true (i.e. non-zero), the sprite is drawn inverted left to right.
+      Defaults to 0.
+    * flipY - if true (i.e. non-zero), the sprite is drawn inverted top to bottom.
+      Defaults to 0.
+    * angle - angle to rotate the rendered sprite by around its center, in degrees
+    * color - the color to modulate with. Defaults to Color(255, 255, 255)
+    """
+
+
+class Texture:
+  """
+  A Texture is an Image that has been loaded into GPU memory
+  """
+
+  final width Int
+  final height Int
+
+  def blit(pos Vector) nil:
+    """
+    Draws this texture at the given position
+    """
+
+  def newSpriteSheet(spriteWidth Int=0, spriteHeight Int=0) SpriteSheet:
+    """
+    Creates and returns a `SpriteSheet` from this `Texture`.
+
+    If `spriteWidth` or `spriteHeight` is omitted or set to zero, they will be
+    set to match the dimensions of the entire image. So if both `spriteWidth`
+    and `spriteHeight` is omitted, the resulting `SpriteSheet` will contain
+    exactly a single sprite consisting of the entire image.
+    """
+
+  def clip(rect Rect? = nil, color Color? = nil) TextureClip:
+    """
+    Creates a texture clip
+    """
+
+  def isStreaming() Bool:
+    """
+    Returns true if this is a streaming texture.
+    """
+
+  def update() nil:
+    """
+    If this `Texture` was created with the `streaming` parameter
+    set to true, this method will update the texture to the
+    current state of the associated `Image`.
+
+    Otherwise, this method raises an error.
+    """
+
+
+class TextureClip:
+  """
+  Texture together with a source Rect and color to modulate with
+
+  The width and height fields can be used to stretch out the
+  rendered image as well.
+  """
+
+  var texture Texture
+  var rect Rect          "The region to clip in the texture"
+  var color Color        "Color to mod the texture with"
+  var width Float        "Destination width when rendering. Defaults to rect.width"
+  var height Float       "Destination height when rendering. Defaults to rect.height"
+
+  def blit(pos Vector, rotation Float = 0) nil:
+    """
+    Draws the texture clip at the given position.
+
+    The image can also be rotated if the `rotation` argument is provided.
+    `rotation` is specified in radians.
+    """
+
+
+class SpriteSheet:
+  """
+  A rectangular grid of sprites from a texture.
+  """
+  final texture Texture "The texture sprites are drawn from"
+  final spriteWidth Int "The width of a single sprite in pixels"
+  final spriteHeight Int "The height of a single sprite in pixels"
+
+  def __len__() Int:
+    """
+    Returns the number of sprites in this sheet.
+    """
+
+  def spr(
+      n Int,
+      x Int, y Int,
+      w Float=1, h Float=1,
+      flipX Bool=false, flipY Bool=false,
+      angle Float=0,
+      color Color?=nil):
+    """
+    Draws a sprite from this sprite sheet.
+
+    Compare with PICO-8's `spr()` function.
+
+    Parameters:
+    * n - the index of the sprite in the sheet (sprites are ordered left to right, top down,
+      like English text).
+    * x - the x coordinate of the upper left corner to draw
+    * y - the y coordinate of the upper left corner to draw
+    * w - width in number of sprites (in pixels, the drawn width will be w * spriteWidth)
+    * h - height in number of sprites (in pixels, the drawn height will be h * spriteHeight)
+    * flipX - if true (i.e. non-zero), the sprite is drawn inverted left to right.
+      Defaults to 0.
+    * flipY - if true (i.e. non-zero), the sprite is drawn inverted top to bottom.
+      Defaults to 0.
+    * angle - angle to rotate the rendered sprite by around its center, in degrees
+    * color - the color to modulate with. Defaults to Color(255, 255, 255)
+    """
+
+  def sspr(
+      sx Int, sy Int, sw Int, sh Int,
+      dx Int, dy Int, dw Int=-1, dh Int=-1,
+      flipX Bool=false, flipY Bool=false,
+      angle Float=0,
+      color Color?=nil):
+    """
+    Draws a rectangle of pixels from this sprite sheet, optionally stretching the
+    image to fit a rectangle on the screen.
+
+    Compare with PICO-8's `sspr()` function.
+
+    Parameters:
+    * sx - The x coordinate of the upper left corner of the rectangle in the sprite sheet.
+    * sy - The y coordinate of the upper left corner of the rectangle in the sprite sheet.
+    * sw - The width of the rectangle in the sprite sheet, as a number of pixels.
+    * sh - The height of the rectangle in the sprite sheet, as a number of pixels.
+    * dx - The x coordinate of the upper left corner of the rectangle area of the screen.
+    * dy - The y coordinate of the upper left corner of the rectangle area of the screen.
+    * dw - The width of the rectangle area of the screen.
+      Defaults to -1. If -1, it is set to match the image width (sw).
+    * dh - The height of the rectangle area of the screen.
+      Defaults to -1. If -1, it is set to match the image height (sh).
+    * flipX - if true (i.e. non-zero), the sprite is drawn inverted left to right.
+      Defaults to 0.
+    * flipY - if true (i.e. non-zero), the sprite is drawn inverted top to bottom.
+      Defaults to 0.
+    * angle - angle to rotate the rendered sprite by around its center, in degrees
+    * color - the color to modulate with. Defaults to Color(255, 255, 255)
+    """
+
+
+class ClickEvent:
+  """
+  Click events fire when a mouse clicks or a finger touches a
+  part of the window or screen (onClick and onClickUp).
+  """
+
+  final x Int "x coordinate, relative to the window"
+  final y Int "y coordinate, relative to the window"
+  final button Int """
+    The button that was pressed.
+    1 - left mouse button,
+    2 - middle mouse button,
+    3 - right mouse button
+  """
+
+
+class KeyEvent:
+  """
+  Keyboard events fire when a key is pressed down (onKeyDown) or
+  up (onKeyUp)
+  """
+
+  final key String """
+    Name of the key that was pressed.
+    The key disregards keyboard layout and the names are based
+    purely on the scancode.
+  """
+
+  final scancode Int """
+    The raw scancode value that represents the key that was just pressed.
+    Scancodes disregard keyboard layout and locale.
+
+    For more information see:
+    https://gist.github.com/ekaitz-zarraga/2b25b94b711684ba4e969e5a5723969b
+  """
+
+  final repeat Bool """
+    True if this is keyboard event was fired as result of auto-repeat
+  """
+
+
+class MotionEvent:
+  """
+  Motion events fire when the mouse or touch moves across the window
+  """
+
+  final x Int "x coordinate relative to the window"
+  final y Int "y coordinate relative to the window"
+  final dx Int "relative motion in the x direction"
+  final dy Int "relative motion in the y direction"
+
+
+def loadAudio(audio Audio, channel Int=0) nil:
+  """
+  Load audio to play.
+
+  There are 8 channels, and the audio will be loaded to the given channel
+  """
+
+
+def playAudio(channel Int=0, repeats Int=0) nil:
+  """
+  Play audio in the given channel
+
+  `repeats` argument may be set to have the audio play an extra `repeat` times.
+  Negative value will cause audio to loop I32_MAX times.
+  """
+
+
+def pauseAudio(channel Int=0, pause Bool=true) nil:
+  """
+  Pauses the audio
+  """
+
+
+def setAudioVolume(channel Int, volume Int) nil:
+  """
+  Sets the volume for a given audio channel.
+
+  The volume must be between 0 and 128 inclusive.
+  """

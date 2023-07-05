@@ -1,0 +1,7 @@
+
+final tstr = """
+Some multiline
+Triple quote string
+\t\t
+"""
+print(repr(tstr))

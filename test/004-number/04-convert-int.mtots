@@ -1,0 +1,9 @@
+
+
+print('int(2.5) = %r' % [int(2.5)])
+print('int(2.1) = %r' % [int(2.1)])
+print('int(2.9) = %r' % [int(2.9)])
+print('int(3) = %r' % [int(3)])
+
+print('int("45") = %r' % [int("45")])
+print('int("-745") = %r' % [int("-745")])

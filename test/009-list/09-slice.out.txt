@@ -1,0 +1,5 @@
+someList = ["xx", "a", "b", "c", "def", "asdf", "new item"]
+copy1 = ["xx", "a", "b", "c", "def", "asdf"]
+copy2 = ["a", "b", "c", "def", "asdf"]
+copy3 = ["xx", "a", "b", "c", "def"]
+copy4 = ["b", "c"]

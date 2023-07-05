@@ -1,0 +1,15 @@
+
+class SomeClass:
+  final value Number
+
+  def __init__(value Number) nil:
+    this.value = value
+
+  def __neg__() SomeClass:
+    return SomeClass(-this.value)
+
+
+final inst1 = SomeClass(123)
+final inst2 = -inst1
+print("inst1.value = %r" % [inst1.value])
+print("inst2.value = %r" % [inst2.value])

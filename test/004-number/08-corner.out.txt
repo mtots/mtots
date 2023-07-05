@@ -1,0 +1,7 @@
+INFINITY = inf
+-INFINITY = -inf
+NAN = nan
+NAN == NAN = false
+INFINITY == INFINITY = true
+INFINITY == -INFINITY = false
+-INFINITY == -INFINITY = true

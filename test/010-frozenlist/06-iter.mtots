@@ -1,0 +1,6 @@
+
+
+final frozenList = final["a", "b", "aa", "bbb", "ccc", "abcdef"]
+
+for item in frozenList:
+  print("item = %r" % [item])

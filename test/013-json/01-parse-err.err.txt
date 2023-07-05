@@ -1,0 +1,2 @@
+while parsing JSON, missing matching quote for quote on line 1 column 4
+[line 2] in __main__

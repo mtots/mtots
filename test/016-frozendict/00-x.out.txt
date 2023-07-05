@@ -1,0 +1,12 @@
+<class FrozenDict>
+final{1: 2}
+d[1] = 2
+1 in d = true
+5 in d = false
+d2[5] = "hello"
+1 in d2 = false
+5 in d2 = true
+d3[5] = "hello"
+1 in d3 = false
+5 in d3 = true
+123 in d3 = true

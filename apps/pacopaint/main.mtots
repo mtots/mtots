@@ -1,0 +1,489 @@
+"""
+Paco Paint
+
+Kind of a clone of PICO-8's sprite editor.
+"""
+import paco as p
+import pacofonts as fonts
+import sys
+import fs
+import data
+import os
+
+final font8x8  = fonts.load8x8(false)
+final font8x16 = fonts.load8x16(false)
+
+final iconsFileBuffer = data.fromBundle(__file__, 'icons.bmp').toBuffer()
+print('len(iconsFileBuffer) = %s' % [len(iconsFileBuffer)])
+
+# =============================================================================
+# Constants (various widget positions, etc)
+# =============================================================================
+final SHEET_FILE_PATH = if len(sys.argv) > 1 then sys.argv[1] else 'sprite-sheet.bmp'
+final RENDER_WIDTH = 256 + 128 + 12
+final RENDER_HEIGHT = 128 + 12 + (16 + 4)
+final SHEET_WIDTH  = 128
+final SHEET_HEIGHT = 128
+final SPRITE_WIDTH = 8
+final SPRITE_HEIGHT = 8
+final SPRITE_WIDTH_COUNT = SHEET_WIDTH // SPRITE_WIDTH
+final SPRITE_HEIGHT_COUNT = SHEET_HEIGHT // SPRITE_HEIGHT
+final PREVIEW_POS_X = RENDER_WIDTH - (128 + 6)
+final PREVIEW_POS_Y = 5
+final PREVIEW_END_X = PREVIEW_POS_X + SHEET_WIDTH
+final PREVIEW_END_Y = PREVIEW_POS_Y + SHEET_HEIGHT
+final CANVAS_SIDE_LENGTH = 128
+final CANVAS_WIDTH = CANVAS_SIDE_LENGTH
+final CANVAS_HEIGHT = CANVAS_SIDE_LENGTH
+final CANVAS_POS_X = 8
+final CANVAS_POS_Y = 8
+final CANVAS_END_X = CANVAS_POS_X + CANVAS_WIDTH
+final CANVAS_END_Y = CANVAS_POS_Y + CANVAS_HEIGHT
+final MIN_VIEW_SIDE_LENGTH = SPRITE_WIDTH
+final MAX_VIEW_SIDE_LENGTH = CANVAS_WIDTH
+final COLOR_CELL_WIDTH = 12
+final COLOR_CELL_HEIGHT = 12
+final COLOR_TABLE_CELLS_PER_ROW = 4
+final COLOR_TABLE_CELLS_PER_COLUMN = 8
+final COLOR_TABLE_WIDTH = COLOR_CELL_WIDTH * COLOR_TABLE_CELLS_PER_ROW
+final COLOR_TABLE_HEIGHT = COLOR_CELL_HEIGHT * COLOR_TABLE_CELLS_PER_COLUMN
+final COLOR_TABLE_POS_X = CANVAS_END_X + 8
+final COLOR_TABLE_POS_Y = CANVAS_POS_Y
+final COLOR_TABLE_END_X = COLOR_TABLE_POS_X + COLOR_TABLE_WIDTH
+final COLOR_TABLE_END_Y = COLOR_TABLE_POS_Y + COLOR_TABLE_HEIGHT
+final COLOR_COUNT = COLOR_TABLE_CELLS_PER_ROW * COLOR_TABLE_CELLS_PER_COLUMN
+final ZOOM_BUTTONS_POS_X = COLOR_TABLE_END_X + 8
+final ZOOM_BUTTONS_POS_Y = COLOR_TABLE_POS_Y
+final ZOOM_BUTTON_WIDTH = 8
+final ZOOM_BUTTON_HEIGHT = 8
+final ZOOM_BUTTON_COUNT = flog2(MAX_VIEW_SIDE_LENGTH // MIN_VIEW_SIDE_LENGTH) + 1
+final ZOOM_BUTTONS_END_X = ZOOM_BUTTONS_POS_X + ZOOM_BUTTON_COUNT * ZOOM_BUTTON_WIDTH
+final ZOOM_BUTTONS_END_Y = ZOOM_BUTTONS_POS_Y + ZOOM_BUTTON_HEIGHT
+final TOOL_BUTTONS_POS_X = ZOOM_BUTTONS_POS_X
+final TOOL_BUTTONS_POS_Y = ZOOM_BUTTONS_END_Y + 4
+final TOOL_BUTTON_WIDTH = 8
+final TOOL_BUTTON_HEIGHT = 8
+final TOOL_PEN = 0
+final TOOL_STAMP = 1
+final TOOL_SELECT = 2
+final TOOL_COUNT = 3
+final TOOL_BUTTONS_END_X = TOOL_BUTTONS_POS_X + TOOL_BUTTON_WIDTH * TOOL_COUNT
+final TOOL_BUTTONS_END_Y = TOOL_BUTTONS_POS_Y + TOOL_BUTTON_HEIGHT
+final TOOL_ICON_START = 128 // 8
+final SPRITE_INDEX_DIGIT_COUNT = 3
+final SPRITE_INDEX_POS_X = TOOL_BUTTONS_POS_X
+final SPRITE_INDEX_POS_Y = TOOL_BUTTONS_POS_Y + SPRITE_HEIGHT + 4
+final SPRITE_INDEX_END_X = SPRITE_INDEX_POS_X + SPRITE_INDEX_DIGIT_COUNT * SPRITE_WIDTH
+final SPRITE_INDEX_END_Y = SPRITE_INDEX_POS_Y + SPRITE_HEIGHT
+final MESSAGE_BANNER_POS_X = 0
+final MESSAGE_BANNER_POS_Y = RENDER_HEIGHT - (16 + 4)
+final MESSAGE_BANNER_END_X = RENDER_WIDTH
+final MESSAGE_BANNER_END_Y = RENDER_HEIGHT
+final MESSAGE_POS_X = MESSAGE_BANNER_POS_X + 8
+final MESSAGE_POS_Y = MESSAGE_BANNER_POS_Y + 2
+final MESSAGE_PRIORITY_NONE = 0
+final MESSAGE_PRIORITY_LOW = 1
+final MESSAGE_PRIORITY_MED = 2
+final MESSAGE_PRIORITY_HIGH = 3
+
+# =============================================================================
+# State
+# =============================================================================
+final palette = p.palette()
+final iconSheet = p.loadSheetFromBuffer(iconsFileBuffer)
+var drawingSheet = (
+  if fs.isFile(SHEET_FILE_PATH)
+    then p.loadSheetFromFile(SHEET_FILE_PATH)
+    else p.newSheet(SHEET_WIDTH, SHEET_HEIGHT, SPRITE_WIDTH, SPRITE_HEIGHT))
+final undoStack List[p.SpriteSheet] = []
+final redoStack List[p.SpriteSheet] = []
+var selectedSpriteIndex = 0
+var lastDx = 0
+var lastDy = 0
+var viewSideLength = 8
+var selectedColor = 7
+var selectedToolIndex = 0
+var clipboardWidth = 0
+var clipboardHeight = 0
+var clipboardData List[Int] = []
+var selectionPosX = 0
+var selectionPosY = 0
+var selectionEndX = 0
+var selectionEndY = 0
+var selectionActive = false
+var message = ''
+var messageTick = 0
+var messagePriority = MESSAGE_PRIORITY_NONE
+
+
+def rememberForUndo():
+  undoStack.append(drawingSheet.clone())
+  redoStack.clear()
+
+
+def setMessage(msg String, priority Int, tick Int=120) nil:
+  if priority >= messagePriority:
+    messagePriority = priority
+    messageTick = tick
+    message = msg
+
+
+def undo():
+  if len(undoStack):
+    redoStack.append(drawingSheet)
+    drawingSheet = undoStack.pop()
+  else:
+    setMessage("undo stack empty", MESSAGE_PRIORITY_MED)
+
+
+def redo():
+  if len(redoStack):
+    undoStack.append(drawingSheet)
+    drawingSheet = redoStack.pop()
+  else:
+    setMessage("redo stack empty", MESSAGE_PRIORITY_MED)
+
+
+# =============================================================================
+# init and main loop
+# =============================================================================
+
+p.setWindowTitle(SHEET_FILE_PATH)
+p.setRenderDimensions(RENDER_WIDTH, RENDER_HEIGHT)
+p.setScalingFactor(3)
+p.init()
+
+
+def loadDataFromClipboard():
+  clipboardWidth = clipboardHeight = 0
+  clipboardData.clear()
+  final clipboard = p.clipboard()
+  if clipboard.startsWith('[gfx]') and clipboard.endsWith('[/gfx]'):
+    clipboardWidth = int(clipboard[5:7], 16)
+    clipboardHeight = int(clipboard[7:9], 16)
+    for ch in clipboard[9:-6]:
+      clipboardData.append(int(ch, 16))
+
+
+def setSelectedTool(toolIndex Int) nil:
+  selectedToolIndex = toolIndex
+  if selectedToolIndex == TOOL_STAMP:
+    loadDataFromClipboard()
+
+
+def copySelectionToClipboard():
+  if selectionActive:
+    p.renderTarget(drawingSheet)
+    final pixelData List[String] = []
+    for y in range(selectionPosY, selectionEndY):
+      for x in range(selectionPosX, selectionEndX):
+        pixelData.append((p.pixel(x, y)).base(36))
+    p.renderTarget()
+    final clipboardString = '[gfx]%s%s%s[/gfx]' % [
+      (selectionEndX - selectionPosX).base(16).padStart(2, '0'),
+      (selectionEndY - selectionPosY).base(16).padStart(2, '0'),
+      ''.join(pixelData)]
+    p.clipboard(clipboardString)
+    selectionActive = false
+    loadDataFromClipboard()
+
+
+def mouseInside(x0 Int, y0 Int, x1 Int, y1 Int) Bool:
+  final x = p.mouseX()
+  final y = p.mouseY()
+  return x0 <= x and x < x1 and y0 <= y and y < y1
+
+
+def clickInside(x0 Int, y0 Int, x1 Int, y1 Int) Bool:
+  return p.click() and mouseInside(x0, y0, x1, y1)
+
+
+def pressedCtrl(scancode Int) Bool:
+  if os.isMacOS():
+    if not (p.key(p.scancode.LEFTMETA) or p.key(p.scancode.RIGHTMETA)):
+      return false
+  else:
+    if not (p.key(p.scancode.LEFTCTRL) or p.key(p.scancode.RIGHTCTRL)):
+      return false
+  return p.key(scancode, p.PRESSED)
+
+
+def update() nil:
+  # ===================================
+  # MESSAGE
+  # ===================================
+  if messageTick:
+    messageTick = messageTick - 1
+    if messageTick <= 0:
+      message = ''
+      messagePriority = MESSAGE_PRIORITY_NONE
+
+  # ===================================
+  # SAVE
+  # ===================================
+  if pressedCtrl(p.scancode.S):
+    p.sheet(drawingSheet)
+    p.saveSheetToFile(SHEET_FILE_PATH)
+    setMessage("SAVED %r" % [fs.basename(SHEET_FILE_PATH)], MESSAGE_PRIORITY_MED, 240)
+
+  # ===================================
+  # COPY
+  # ===================================
+  if pressedCtrl(p.scancode.C) and selectionActive:
+    copySelectionToClipboard()
+
+  # ===================================
+  # UNDO, REDO
+  # ===================================
+  if pressedCtrl(p.scancode.Z):
+    if p.key(p.scancode.LEFTSHIFT) or p.key(p.scancode.RIGHTSHIFT):
+      redo()
+    else:
+      undo()
+
+  # ===================================
+  # ZOOM (MOUSE WHEEL)
+  # ===================================
+  if p.wheelY() > 0 and viewSideLength < MAX_VIEW_SIDE_LENGTH:
+    viewSideLength = viewSideLength * 2
+  if p.wheelY() < 0 and viewSideLength > MIN_VIEW_SIDE_LENGTH:
+    viewSideLength = viewSideLength // 2
+
+  # ===================================
+  # CLICK (ZOOM BUTTONS)
+  # ===================================
+  if clickInside(ZOOM_BUTTONS_POS_X, ZOOM_BUTTONS_POS_Y, ZOOM_BUTTONS_END_X, ZOOM_BUTTONS_END_Y):
+    final index = (p.mouseX() - ZOOM_BUTTONS_POS_X) // ZOOM_BUTTON_WIDTH
+    viewSideLength = MIN_VIEW_SIDE_LENGTH * (1 << index)
+
+  # ===================================
+  # CLICK (TOOL BUTTONS)
+  # ===================================
+  if mouseInside(TOOL_BUTTONS_POS_X, TOOL_BUTTONS_POS_Y, TOOL_BUTTONS_END_X, TOOL_BUTTONS_END_Y):
+    final hoverTool = (p.mouseX() - TOOL_BUTTONS_POS_X) // TOOL_BUTTON_WIDTH
+    setMessage(
+      if hoverTool == TOOL_PEN then "Draw (pen)"
+      else if hoverTool == TOOL_STAMP then "Stamp"
+      else if hoverTool == TOOL_SELECT then "Select"
+      else "Tool %s" % [hoverTool],
+      MESSAGE_PRIORITY_LOW, 1)
+    if p.click():
+      setSelectedTool(hoverTool)
+
+  # ===================================
+  # CLICK (DRAWING AREA, CANVAS)
+  # ===================================
+  if mouseInside(CANVAS_POS_X, CANVAS_POS_Y, CANVAS_END_X, CANVAS_END_Y):
+    final sx = (selectedSpriteIndex  % SPRITE_WIDTH_COUNT ) * SPRITE_WIDTH
+    final sy = (selectedSpriteIndex // SPRITE_HEIGHT_COUNT) * SPRITE_HEIGHT
+    final dx = (p.mouseX() - CANVAS_POS_X) // (CANVAS_WIDTH  // viewSideLength)
+    final dy = (p.mouseY() - CANVAS_POS_Y) // (CANVAS_HEIGHT // viewSideLength)
+    final x0 = sx + dx # x coordinate of clicked pixel on the sprite sheet
+    final y0 = sy + dy # y coordinate of clicked pixel on the sprite sheet
+    setMessage(
+      "X:%s Y:%s" % [str(x0).padStart(3), str(y0).padStart(3)],
+      MESSAGE_PRIORITY_LOW, 1)
+    if p.click(0, 2):
+      if selectedToolIndex == TOOL_PEN:
+        p.renderTarget(drawingSheet)
+        if p.click():
+          rememberForUndo()
+          p.pixel(x0, y0, selectedColor)
+        else:
+          p.line(x0, y0, sx + lastDx, sy + lastDy, 1, selectedColor)
+        p.renderTarget()
+        lastDx = dx
+        lastDy = dy
+      elif selectedToolIndex == TOOL_STAMP:
+        if len(clipboardData) and p.click():
+          rememberForUndo()
+          p.renderTarget(drawingSheet)
+          palette[p.BLACK] = p.BLACK
+          var k = 0
+          for j in range(clipboardHeight):
+            final y = y0 + j
+            for i in range(clipboardWidth):
+              final x = x0 + i
+              final color = clipboardData[k]
+              k = k + 1
+              p.pixel(x, y, color)
+          p.renderTarget()
+      elif selectedToolIndex == TOOL_SELECT:
+        if p.click():
+          if selectionActive:
+            # If we had a selection active, unselect it
+            selectionActive = false
+          else:
+            # We are creating a new selection
+            selectionActive = true
+            selectionPosX = x0
+            selectionPosY = y0
+            selectionEndX = selectionPosX + 1
+            selectionEndY = selectionPosY + 1
+        elif selectionActive:
+          # We are in the middle of modifying a selection
+          selectionEndX = x0 + 1
+          selectionEndY = y0 + 1
+
+  # ===================================
+  # CLICK (COLOR TABLE)
+  # ===================================
+  if mouseInside(COLOR_TABLE_POS_X, COLOR_TABLE_POS_Y, COLOR_TABLE_END_X, COLOR_TABLE_END_Y):
+    final xi = (p.mouseX() - COLOR_TABLE_POS_X) // COLOR_CELL_WIDTH
+    final yi = (p.mouseY() - COLOR_TABLE_POS_Y) // COLOR_CELL_HEIGHT
+    final color = yi * COLOR_TABLE_CELLS_PER_ROW + xi
+    setMessage("Color %s" % [color], MESSAGE_PRIORITY_LOW, 1)
+    if p.click():
+      selectedColor = color
+
+  # ===================================
+  # CLICK (PREVIEW AREA)
+  # ===================================
+  if p.click(0, 2) and mouseInside(PREVIEW_POS_X, PREVIEW_POS_Y, PREVIEW_END_X, PREVIEW_END_Y):
+    final xi = (p.mouseX() - PREVIEW_POS_X) // SPRITE_WIDTH
+    final yi = (p.mouseY() - PREVIEW_POS_Y) // SPRITE_HEIGHT
+    selectedSpriteIndex = yi * SPRITE_WIDTH_COUNT + xi
+
+
+
+def draw() nil:
+  p.clear(p.DARK_GREY)
+
+  # ===================================
+  # MESSAGE
+  # ===================================
+  if true:
+    p.rect(
+      MESSAGE_BANNER_POS_X, MESSAGE_BANNER_POS_Y,
+      MESSAGE_BANNER_END_X, MESSAGE_BANNER_END_Y,
+      p.FILL, p.RED)
+    if messageTick:
+      p.font(font8x16)
+      p.print(message, MESSAGE_POS_X, MESSAGE_POS_Y)
+
+  # ===================================
+  # DRAWING AREA (aka CANVAS)
+  # ===================================
+  if true:
+    palette[p.BLACK] = p.BLACK
+    p.sheet(drawingSheet)
+    final selectedSpriteX = (selectedSpriteIndex  % SPRITE_WIDTH_COUNT) * SPRITE_WIDTH
+    final selectedSpriteY = (selectedSpriteIndex // SPRITE_WIDTH_COUNT) * SPRITE_HEIGHT
+    p.blit(
+      selectedSpriteX,
+      selectedSpriteY,
+      viewSideLength,
+      viewSideLength,
+      CANVAS_POS_X,
+      CANVAS_POS_Y,
+      CANVAS_WIDTH,
+      CANVAS_HEIGHT)
+
+    if selectedToolIndex == TOOL_STAMP and clipboardWidth and mouseInside(
+        CANVAS_POS_X, CANVAS_POS_Y, CANVAS_END_X, CANVAS_END_Y):
+      final x0 = p.mouseX()
+      final y0 = p.mouseY()
+      final width = clipboardWidth * (MAX_VIEW_SIDE_LENGTH // viewSideLength)
+      final height = clipboardHeight * (MAX_VIEW_SIDE_LENGTH // viewSideLength)
+      p.clip(CANVAS_POS_X, CANVAS_POS_Y, CANVAS_END_X, CANVAS_END_Y)
+      p.rect(x0, y0, x0 + width, y0 + height, p.OUTLINE)
+      p.clip()
+
+    if selectionActive:
+      p.clip(CANVAS_POS_X - 1, CANVAS_POS_Y - 1, CANVAS_END_X + 1, CANVAS_END_Y + 1)
+      final sx = (selectedSpriteIndex  % SPRITE_WIDTH_COUNT ) * SPRITE_WIDTH
+      final sy = (selectedSpriteIndex // SPRITE_HEIGHT_COUNT) * SPRITE_HEIGHT
+      final x0 = CANVAS_POS_X + (selectionPosX - sx) * (MAX_VIEW_SIDE_LENGTH // viewSideLength)
+      final y0 = CANVAS_POS_Y + (selectionPosY - sy) * (MAX_VIEW_SIDE_LENGTH // viewSideLength)
+      final x1 = CANVAS_POS_X + (selectionEndX - sx) * (MAX_VIEW_SIDE_LENGTH // viewSideLength)
+      final y1 = CANVAS_POS_Y + (selectionEndY - sy) * (MAX_VIEW_SIDE_LENGTH // viewSideLength)
+      p.rect(x0 - 1, y0 - 1, x1, y1, p.OUTLINE)
+      p.clip()
+
+  # ===================================
+  # COLOR TABLE
+  # ===================================
+  if true:
+    palette[p.BLACK] = p.BLACK
+    p.rect(
+      COLOR_TABLE_POS_X - 1, COLOR_TABLE_POS_Y - 1,
+      COLOR_TABLE_END_X,     COLOR_TABLE_END_Y,
+      p.OUTLINE, p.BLACK)
+    for color in range(COLOR_COUNT):
+      final xi = color  % COLOR_TABLE_CELLS_PER_ROW
+      final yi = color // COLOR_TABLE_CELLS_PER_ROW
+      final x = COLOR_TABLE_POS_X + xi * COLOR_CELL_WIDTH
+      final y = COLOR_TABLE_POS_Y + yi * COLOR_CELL_HEIGHT
+      p.rect(x, y, x + COLOR_CELL_WIDTH - 1, y + COLOR_CELL_HEIGHT - 1, p.FILL, color)
+    final xi = selectedColor  % COLOR_TABLE_CELLS_PER_ROW
+    final yi = selectedColor // COLOR_TABLE_CELLS_PER_ROW
+    final x = COLOR_TABLE_POS_X + xi * COLOR_CELL_WIDTH
+    final y = COLOR_TABLE_POS_Y + yi * COLOR_CELL_HEIGHT
+    p.rect(x    , y    , x + COLOR_CELL_WIDTH - 1, y + COLOR_CELL_HEIGHT - 1, p.OUTLINE, p.BLACK)
+    p.rect(x - 1, y - 1, x + COLOR_CELL_WIDTH, y + COLOR_CELL_HEIGHT, p.OUTLINE, p.WHITE)
+
+  # ===================================
+  # TOOL BUTTONS
+  # ===================================
+  if true:
+    palette[p.BLACK] = p.TRANSPARENT
+    p.sheet(iconSheet)
+    for tool in range(TOOL_COUNT):
+      final iconIndex = TOOL_ICON_START + tool
+      final x = TOOL_BUTTONS_POS_X + TOOL_BUTTON_WIDTH * tool
+      final y = TOOL_BUTTONS_POS_Y
+      palette[p.WHITE] = if tool == selectedToolIndex then p.WHITE else p.LAVENDER
+      p.sprite(iconIndex, x, y)
+    palette[p.WHITE] = p.WHITE
+
+  # ===================================
+  # SPRITE INDEX
+  # ===================================
+  if true:
+    palette[p.BLACK] = p.BLACK
+    p.rect(
+      SPRITE_INDEX_POS_X - 1, SPRITE_INDEX_POS_Y - 1,
+      SPRITE_INDEX_END_X    , SPRITE_INDEX_END_Y,
+      p.FILL, p.BLACK)
+    p.font(font8x8)
+    p.print(
+      str(selectedSpriteIndex).padStart(3, '0'),
+      SPRITE_INDEX_POS_X, SPRITE_INDEX_POS_Y)
+
+  # ===================================
+  # ZOOM BUTTONS
+  # ===================================
+  if true:
+    palette[p.BLACK] = p.BLACK
+    for i in range(ZOOM_BUTTON_COUNT):
+      final sideLen = MIN_VIEW_SIDE_LENGTH * 1 << i
+      final x0 = ZOOM_BUTTONS_POS_X + i * ZOOM_BUTTON_WIDTH
+      final y0 = ZOOM_BUTTONS_POS_Y
+      final x1 = x0 + ZOOM_BUTTON_WIDTH - 1
+      final y1 = ZOOM_BUTTONS_END_Y - 1
+      if  viewSideLength == sideLen:
+        p.oval(x0, y0, x1, y1, p.FILL, p.BLUE)
+      else:
+        p.oval(x0, y0, x1, y1, p.OUTLINE, p.BLACK)
+
+  # ===================================
+  # PREVIEW
+  # ===================================
+  palette[p.BLACK] = p.BLACK
+  p.sheet(drawingSheet)
+  p.rect(PREVIEW_POS_X - 1, PREVIEW_POS_Y - 1, PREVIEW_END_X, PREVIEW_END_Y, p.OUTLINE, p.BLACK)
+  p.sprite(0, PREVIEW_POS_X, PREVIEW_POS_Y, SPRITE_WIDTH_COUNT, SPRITE_HEIGHT_COUNT)
+  if true:
+    final selectedSpriteX = PREVIEW_POS_X + (selectedSpriteIndex  % SPRITE_WIDTH_COUNT) * SPRITE_WIDTH
+    final selectedSpriteY = PREVIEW_POS_Y + (selectedSpriteIndex // SPRITE_WIDTH_COUNT) * SPRITE_HEIGHT
+    p.clip(PREVIEW_POS_X - 1, PREVIEW_POS_Y - 1, PREVIEW_END_X + 1, PREVIEW_END_Y + 1)
+    p.rect(
+      selectedSpriteX - 1,
+      selectedSpriteY - 1,
+      selectedSpriteX + viewSideLength,
+      selectedSpriteY + viewSideLength,
+      p.OUTLINE)
+    p.clip()
+
+
+p.mainLoop(update, draw)

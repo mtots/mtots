@@ -1,0 +1,2 @@
+len(obj) = 10
+len(obj) = 15

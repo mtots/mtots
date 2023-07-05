@@ -1,0 +1,898 @@
+""
+
+final NAN Number = raise 0
+
+final INFINITY Number = raise 0
+
+final PI Number = raise 0
+final TAU Number = raise 0
+
+
+final __file__ String """
+Path to the current script.
+Similar to `__file__` in Python
+""" = raise 0
+
+final __name__ String """
+Name of the current module.
+Similar to `__name__` in Python
+""" = raise 0
+
+final StopIteration Iteration[Never] = raise 0
+
+
+class Nil:
+  def __bmon__() Any:
+    ""
+
+
+class Bool:
+  def __bmon__() Any:
+    ""
+
+
+class Number:
+  def __bmon__() Any:
+    ""
+
+  def __eq__(other Number) Bool:
+    ""
+
+  def __lt__(other Number) Number:
+    ""
+
+  def __add__(other Number) Number:
+    "Add two numbers"
+
+  def __sub__(other Number) Number:
+    "Subtract two numbers"
+
+  def __mul__(other Number) Number:
+    ""
+
+  def __mod__(other Number) Number:
+    ""
+
+  def __div__(other Number) Number:
+    ""
+
+  def __floordiv__(other Number) Number:
+    ""
+
+  def __pow__(other Number) Number:
+    ""
+
+  def __neg__() Number:
+    ""
+
+  def __and__(other Number) Number:
+    "Bitwise and"
+
+  def __xor__(other Number) Number:
+    "Bitwise xor"
+
+  def __or__(other Number) Number:
+    "Bitwise or"
+
+  def __lshift__(other Number) Number:
+    "Bitwise left shift"
+
+  def __rshift__(other Number) Number:
+    "Bitwise right shift"
+
+  def __not__() Number:
+    "Bitwise not"
+
+  def toU32() Number:
+    """
+    Clamps a double value to a 32 value.
+    To restrict values to 32-bits for use with
+    bitwise operators.
+    """
+
+  def base(n Number) String:
+    """
+    Converts a number to its base 'n' representation as a string.
+    If 'n' is greater than 36, this method will raise an error.
+    """
+
+
+class String:
+  ""
+
+  def __bmon__() Any:
+    ""
+
+  def __len__() Number:
+    """
+    Returns the number of unicode code points in this string.
+    """
+
+  def __add__(other String) String:
+    "Concatenate two strings"
+
+  def __mul__(n Number) String:
+    ""
+
+  def __iter__() Function[Iteration[String]]:
+    ""
+
+  def __getitem__(index Number) String:
+    ""
+
+  def __mod__(args List) String:
+    ""
+
+  def __slice__(start Int?=0, end Int?=0) String:
+    ""
+
+  def __eq__(other String) Bool:
+    "Tests if two strings are equal"
+
+  def strip(stripSet String="") String:
+    ""
+
+  def replace(old String, new String) String:
+    ""
+
+  def join(separator List[String]) String:
+    ""
+
+  def getByteLength() Int:
+    ""
+
+  def startsWith(prefix String) Bool:
+    ""
+
+  def endsWith(suffix String) Bool:
+    ""
+
+  def padStart(width Int, padString String=' ') String:
+    """
+    Pads the string at the beginning to the given width.
+    `padString` defaults to ASCII space.
+    Compare with Python's `str.rjust`.
+    """
+
+  def padEnd(width Int, padEnd String=' ') String:
+    """
+    Pads the string at the end to the given width.
+    `padString` defaults to ASCII space.
+    Compare with Python's `str.ljust`.
+    """
+
+  def upper() String:
+    """
+    Returns a copy of this string with all ASCII lowercase
+    letters replaced with their uppercase counterparts.
+    """
+
+  def lower() String:
+    """
+    Returns a copy of this string with all ASCII uppercase
+    letters replaced with their lowercase counterparts.
+    """
+
+
+trait Len:
+  def __len__() Number
+
+
+trait LessThan:
+  def __lt__(other Never) Bool:
+    "TODO: replace Never with the 'self' type"
+
+
+trait Bmon:
+  """
+  Values that are serializable into BMON (Binary Mtots Object Notation)
+  """
+
+  def __bmon__() Any:
+    """
+    Should return a value that is a core BMON type, i.e.:
+      * nil,
+      * bool,
+      * number,
+      * string,
+      * list of core BMON types,
+      * dict with keys and values all core BMON types
+    """
+
+
+def getErrorString() String:
+  "Returns the last error string - for use with 'try-else' clauses"
+
+
+def len(collection Len) Int:
+  "Returns the number of elements in a collection"
+
+
+def sum(numbers Iterable[Number]) Number:
+  "Returns the sum of the given numbers"
+
+
+def isinstance(value Any, klass Class) Bool:
+  "Checks whether the value is an instance of klass"
+
+
+def min[T LessThan](a0 T, a1 T?=nil, a2 T?=nil, a3 T?=nil, a4 T?=nil) T:
+  "Returns the minimum of the given arguments"
+
+
+def max[T LessThan](a0 T, a1 T?=nil, a2 T?=nil, a3 T?=nil, a4 T?=nil) T:
+  "Returns the maximum of the given arguments"
+
+
+def sorted[T, K](iterable Iterable[T], key Function[T, K]? = nil) List[T]:
+  "Sorts all the items in the iterable and returns them as a list"
+
+
+def frozenList[T](iterable Iterable[T]) FrozenList[T]:
+  "Converts a List to a FrozenList"
+
+
+def Set[T](iterable Iterable[T]) Dict[T, nil]:
+  "Converts any iterable into a set"
+
+
+def exit(exitCode Int = 0) Never:
+  pass
+
+
+def type(value) Any:
+  "Returns the value's class"
+
+
+def chr(codePoint Int) String:
+  r"""
+  Given a unicode code point, returns a
+  string of just that single code point.
+  """
+
+
+def ord(ch String) Int:
+  r"""
+  Given a string or length one, returns the code point of that character.
+  """
+
+
+def range(start Int, end Int=0, step Int=1) Function[Iteration[Int]]:
+  "Iterates over the numbers from start (inclusive) to end (exclusive)"
+
+
+def int(value, base Int=10) Int:
+  r"""
+  Convert the given value to an integer.
+
+  * Given a string, it will try to parse the string as an integer.
+  * Given a number, it will return the floor of the given number.
+
+  Parameters:
+  * value - String or number.
+  * base - Ignored if `value` is not a String.
+    If `value` is a String, `base` is the number based used to parse
+    the string.
+  """
+
+
+def hex(value Int) String:
+  """
+  Converts an integer value into a hex string
+  """
+
+
+def bin(value Int) String:
+  """
+  Converts an integer value into a string of the number in base 2
+  """
+
+
+def str(value) String:
+  "Converts the given value to a string"
+
+
+def repr(value) String:
+  "Converts the given value to a string representation"
+
+
+def abs(x Number) Number:
+  "Returns the absolute value of x"
+
+
+def log(x Float) Float:
+  "Computes the natural logarithm of x"
+
+
+def flog2(x Float) Int:
+  "Computes floor(log2(x))"
+
+
+def sin(x Float) Float:
+  "Returns the sine of x radians"
+
+
+def cos(x Float) Float:
+  "Returns the cosine of x radians"
+
+
+def tan(x Float) Float:
+  "Returns the tangent of x radians"
+
+
+def print(x) nil:
+  "print str(x) to stdout"
+
+
+final __print """
+__print is an alias for `print` for places where
+the name `print` may be overshadowed
+""" = print
+
+
+def round(x Number) Int:
+  "Rounds a number to the closest integer. 0.5 always rounds up."
+
+
+def V(x Float, y Float, z Float=0) Vector:
+  """
+  Convenience method for creating a `Vector`.
+  """
+
+
+def M(row1 List[Float],
+      row2 List[Float],
+      row3 List[Float]?=nil,
+      row4 List[Float]?=nil) Matrix:
+  """
+  Convenience method for creating a `Matrix`.
+
+  Any missing values will be filled out with the corresponding
+  values in the identity matrix.
+  """
+
+
+class Buffer:
+  r"""
+  Mutable, appendable array of bytes.
+
+  NOTE: Because Buffer is appendable, the location of the bytes
+  is not stable. Care should be taken when using C API
+  that requires access to raw bytes.
+  """
+
+  static def fromSize(n Int) Buffer:
+    """
+    Creates a zero'd out buffer of n bytes
+    """
+
+  static def fromString(string String) Buffer:
+    """
+    Creates a buffer from the UTF-8 representation of the given string
+    """
+
+  static def fromList(list List[Int]) Buffer:
+    """
+    Creates a buffer given a list of values for each byte
+    """
+
+  def isLocked() Bool:
+    "Indicates whether this Buffer is locked and can no longer change in size"
+
+  def lock() nil:
+    "Lock this buffer so that it may no longer change in size"
+
+  def clear() nil:
+    """
+    Set the length of this buffer to zero
+    """
+
+  def clone() Buffer:
+    """
+    Create a clone of this Buffer
+    """
+
+  def __len__() Int:
+    """
+    Returns the number of bytes in this Buffer
+    """
+
+  def __getitem__(i Int) Int:
+    """
+    Gets a byte as U8. (Equivalent to getU8)
+    """
+
+  def __setitem__(i Int, value Int) nil:
+    """
+    Sets a byte as U8. (Equivalent to setU8)
+    """
+
+  def memset(value Int, start Int?=nil, end Int?=nil) nil:
+    """
+    Sets the value of every byte in the specified range in this Buffer
+    to the given value.
+
+    If `start` and `end` are omitted or nil, the entire contents of
+    this `Buffer` is set to the given value.
+    """
+
+  def useLittleEndian() nil:
+    ""
+
+  def useBigEndian() nil:
+    ""
+
+  def view(start Int, end Int?=nil) Buffer:
+    """
+    Creates a new Buffer that is a view into a continguous subregion
+    of this Buffer from `start` (inclusive) to `end` (exclusive).
+
+    If `end` is omitted or nil, the length of this buffer will be used
+    as the end index.
+
+    Creating a view will lock this Buffer's capacity, and any operation
+    that tries to increase capacity will throw.
+
+    The new view Buffer will initially have the same byte-order/endianness
+    as this Buffer, but each Buffer may maintain its own byte-order state
+    independent of other Buffers that may view into the same region.
+    """
+
+  def getI8(index Int) Int:
+    pass
+
+  def getU8(index Int) Int:
+    pass
+
+  def getI16(index Int) Int:
+    pass
+
+  def getU16(index Int) Int:
+    pass
+
+  def getI32(index Int) Int:
+    pass
+
+  def getU32(index Int) Int:
+    pass
+
+  def getF32(index Int) Float:
+    pass
+
+  def getF64(index Int) Float:
+    pass
+
+  def setI8(index Int, value Int):
+    pass
+
+  def setU8(index Int, value Int):
+    pass
+
+  def setI16(index Int, value Int):
+    pass
+
+  def setU16(index Int, value Int):
+    pass
+
+  def setI32(index Int, value Int):
+    pass
+
+  def setU32(index Int, value Int):
+    pass
+
+  def setF32(index Int, value Float):
+    pass
+
+  def setF64(index Int, value Float):
+    pass
+
+  def memcpy(index Int, src Buffer, start Int=0, end Int=0) nil:
+    """
+    Copies the contents of `src` from `start` to `end`
+    into `this` starting from `index`.
+    `start` defaults to zero and `end` defaults to the length of `src`
+    """
+
+  def addI8(value Int):
+    pass
+
+  def addU8(value Int):
+    pass
+
+  def addI16(value Int):
+    pass
+
+  def addU16(value Int):
+    pass
+
+  def addI32(value Int):
+    pass
+
+  def addU32(value Int):
+    pass
+
+  def addF32(value Float):
+    pass
+
+  def addF64(value Float):
+    pass
+
+  def addBase64(string String):
+    """
+    Given a base64 encoded string, decode and add the content
+    to the end of this buffer
+    """
+
+
+class StringBuilder:
+  """
+  A basic StringBuilder implementation
+  """
+
+  def __init__():
+    """
+    Create an empty string builder
+    """
+
+  def clear() nil:
+    """
+    Clears the contents of this string builder
+    """
+
+  def add(string String) nil:
+    """
+    Add to the string builder
+    """
+
+  def addBase64(buffer Buffer) nil:
+    """
+    Add the encoded base64 string of this buffer to this StringBuilder
+    """
+
+  def build() String:
+    """
+    Build a new string from all the content that's been added
+    to this string builder so far.
+
+    NOTE: a build() will not clear the contents of the StringBuilder.
+    If you want to create a different string with entirely new contents
+    but reuse the builder, you need to call clear().
+    """
+
+
+class Rect:
+  """
+  A 2D AABB (axis aligned bounding box)
+
+  To make the rectangle coordinate system agnostic,
+  the coordinates are specified with minX, minY, maxX and maxY fields.
+
+  Internally, only minX, minY, width and height values are stored.
+
+  When maxX or maxY fields are modified, the minX and minY values are
+  adjusted.
+
+  Even using floats, a Rect requires 16-bytes, and so cannot fit into
+  the 12 bytes for data avaiable in a value. So like Matrix, Rect
+  objects are allocated on the heap.
+  """
+
+  var minX Float
+  var minY Float
+  var width Float
+  var height Float
+  var maxX Float
+  var maxY Float
+
+  def __init__(minX Float, minY Float, width Float, height Float):
+    ""
+
+  def copy(other Rect) nil:
+    """
+    Updates the contents of `this` to match the values in `other`.
+    """
+
+
+class Color:
+  """
+  A general RGBA color type.
+  Each channel is stored as an unsigned 8-bit integer (with values between
+  0 and 255 inclusive).
+
+  Color is implemented as a builtin type so that
+  creating new instances does not need a heap allocation.
+  """
+
+  final red Int
+  final green Int
+  final blue Int
+  final alpha Int
+
+  def __init__(red Int, green Int, blue Int, alpha Int = 255):
+    ""
+
+  def __eq__(other Color) Bool:
+    ""
+
+
+class Vector:
+  """
+  A basic 3D vector.
+
+  Vector is implemented as a buitllin type so that
+  creating new instances does not require a heap allocation.
+
+  However, to make a Vector fit into a Value without a heap allocation,
+  components are stored as `float`s rather than `double`s.
+  """
+
+  final x Number
+  final y Number
+  final z Number
+
+  def __init__(x Number, y Number, z Number = 0):
+    ""
+
+  def __eq__(other Vector) Bool:
+    ""
+
+  def __add__(other Vector) Vector:
+    "Vector addition"
+
+  def __sub__(other Vector) Vector:
+    "Vector subtraction"
+
+  def dot(other Vector) Number:
+    "Vector dot product"
+
+  def __mul__(scale Number) Vector:
+    "Vector-scalar multiplication"
+
+  def irotateX(angle Number) Vector:
+    """
+    Rotate the vector counterclockwise around the X axis by `angle` radians.
+    Standard right handed 3D coordinate system where positive x points right,
+    positive y points up, and positive z points towards the viewer is assumed.
+    """
+
+  def irotateY(angle Number) Vector:
+    """
+    Rotate the vector counterclockwise around the Y axis by `angle` radians.
+    Standard right handed 3D coordinate system where positive x points right,
+    positive y points up, and positive z points towards the viewer is assumed.
+    """
+
+  def irotateZ(angle Number) Vector:
+    """
+    Rotate the vector counterclockwise around the Z axis by `angle` radians.
+    Standard right handed 3D coordinate system where positive x points right,
+    positive y points up, and positive z points towards the viewer is assumed.
+
+    In a 2D coordinate system where the positive Y direction is down,
+    and the positive X direction is right, this function will rotate
+    the vector in the clockwise direction.
+    """
+
+
+class Matrix:
+  """
+  A basic 4x4 Matrix backed by single-precision floating point values.
+
+  4x4 was chosen as a 4x4 matrix can represent affine transformations in
+  3D space.
+
+  Unlike Vectors, Matrices are mutable.
+  """
+
+  static def zero() Matrix:
+    """
+    Allocates and returns a 4x4 zero matrix
+    """
+
+  static def one() Matrix:
+    """
+    Allocates and returns a 4x4 identity matrix
+    """
+
+  static def fromColumnValues(values List[List[Float]]) Matrix:
+    """
+    Creates a matrix given column major values.
+
+    The resulting matrix is equivalent to:
+
+    ```
+    Matrix(values).transpose()
+    ```
+    """
+
+  static def fromColumns(a Vector, b Vector, c Vector?=nil, d Vector?=nil) Matrix:
+    """
+    Creates a matrix from 3 or 4 column vectors.
+
+    The resulting matrix will have the following values:
+
+    ```
+      Column  0    1    2    3
+    Row
+    0        a.x  b.x  c.x  d.x
+    1        a.y  b.y  c.y  d.y
+    2        a.z  b.z  c.z  d.z
+    3         0    0    0    1
+    ```
+
+    If `c` is omitted or nil, Vector(0, 0, 1) is assumed.
+    If `d` is omitted or nil, Vector(0, 0, 0) is assumed.
+    """
+
+  static def fromRows(a Vector, b Vector, c Vector?=nil, d Vector?=nil) Matrix:
+    """
+    Creates a matrix from 3 or 4 row vectors.
+
+    The resulting matrix will have the following values:
+
+    ```
+      Column  0    1    2    3
+    Row
+    0        a.x  a.y  a.z   0
+    1        b.x  b.y  b.z   0
+    2        c.x  c.y  c.z   0
+    3         0    0    0    1
+    ```
+
+    If `c` is omitted or nil, Vector(0, 0, 1) is assumed.
+    If `d` is omitted or nil, Vector(0, 0, 0) is assumed.
+    """
+
+  def __init__(values List[List[Int]]):
+    """
+    Creates a matrix from the given values in row major order.
+    Any values beyond the fourth row or column are ignored.
+    """
+
+  def get(row Int, column Int) Float:
+    """
+    Gets the value of a cell in this matrix
+    """
+
+  def set(row Int, column Int, value Float) nil:
+    """
+    Sets the value of a cell in this matrix
+    """
+
+  def iscale(factor Float) nil:
+    """
+    Inplace scalar multiplication
+    """
+
+  def iadd(other Matrix) nil:
+    """
+    Inplace matrix addition
+    """
+
+  def isub(other Matrix) nil:
+    """
+    Inplace matrix subtraction
+    """
+
+  def imul(other Matrix) nil:
+    """
+    Inplace matrix multiplication
+    """
+
+  def ipow(exponent Int) nil:
+    """
+    Inplace matrix exponentiation
+    """
+
+  def itranspose() nil:
+    """
+    Inplace matrix transpose
+    """
+
+  def itranslate(offset Vector) nil:
+    """
+    Applies a translation to this linear transformation.
+
+    If `this` matrix is `M`, and `T` is the translation matrix
+    described by `offset`, this method replaces `this` with
+    the product `TM`.
+    """
+
+  def irotateX(angle Float, center Vector?=nil) nil:
+    """
+    Applies a rotation of `angle` radians about the X axis through `center`.
+
+    If omitted or nil, `center` is assumed to be the origin
+    """
+
+  def irotateY(angle Float, center Vector?=nil) nil:
+    """
+    Applies a rotation of `angle` radians about the Y axis through `center`.
+
+    If omitted or nil, `center` is assumed to be the origin
+    """
+
+  def irotateZ(angle Float, center Vector?=nil) nil:
+    """
+    Applies a rotation of `angle` radians about the Z axis through `center`.
+
+    If omitted or nil, `center` is assumed to be the origin
+
+    In 2D standard mathematical cartesian coordinates, this would constitute
+    a counterclockwise rotation.
+
+    In 2D coordinate systems more common in games, where y points down
+    and x points right, this is a clockwise rotation.
+    """
+
+  def scale(factor Float) Matrix:
+    """
+    Scalar multiplication
+
+    The original matrix is not modified.
+    """
+
+  def __add__(other Matrix) Matrix:
+    """
+    Matrix addition
+
+    The original matrix is not modified.
+    """
+
+  def __sub__(other Matrix) Matrix:
+    """
+    Matrix subtraction
+
+    The original matrix is not modified.
+    """
+
+  def __mul__(other Matrix) Matrix:
+    """
+    Matrix multiplication
+
+    The original matrix is not modified.
+    """
+
+  def __pow__(exponent Int) Matrix:
+    """
+    Matrix exponentiation
+
+    The original matrix is not modified
+    """
+
+  def transpose() Matrix:
+    """
+    Matrix transpose
+
+    The original matrix is not modified.
+    """
+
+  def det2x2() Float:
+    """
+    2x2 determinant
+
+    Computes the determinant of the first two rows and columns.
+    """
+
+  def det3x3() Float:
+    """
+    3x3 determinant
+
+    Computes the determinant of the first three rows and columns.
+    """
+
+  def det() Float:
+    """
+    (4x4) determinant
+
+    Computes the determinant of this matrix
+    """
+
+  def apply(vector Vector) Vector:
+    """
+    Multiplies this matrix with a vector, taking the vector as a
+    column vector augmented with `1` for its fourth element.
+
+    If this matrix represents an affine transformation, this method
+    applies the affine transformation to the given vector.
+    """

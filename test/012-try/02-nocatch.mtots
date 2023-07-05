@@ -1,0 +1,10 @@
+
+
+def foo():
+  raise 'raised'
+
+
+def bar():
+  return foo()
+
+bar()

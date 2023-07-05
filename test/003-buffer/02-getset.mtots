@@ -1,0 +1,15 @@
+
+
+var buf = Buffer.fromSize(10)
+
+for i in range(10):
+  buf.setU8(i, i * i)
+
+print(buf)
+
+var items List[Int] = []
+
+for i in range(10):
+  items.append(buf.getU8(i))
+
+print(items)

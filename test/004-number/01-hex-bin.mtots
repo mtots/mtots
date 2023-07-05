@@ -1,0 +1,16 @@
+print(0xFF)
+print(0b1101)
+
+print(hex(0xFF))
+print(hex(0xABC))
+print(hex(123))
+print(hex(-0xFF))
+print(hex(-0xABC))
+print(hex(-123))
+
+print(bin(0xFF))
+print(bin(0xABC))
+print(bin(123))
+print(bin(-0xFF))
+print(bin(-0xABC))
+print(bin(-123))

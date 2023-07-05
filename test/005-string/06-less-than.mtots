@@ -1,0 +1,5 @@
+
+
+print("'hello' < 'world' = %r" % ['hello' < 'world'])
+print("'日' < '本' = %r" % ['日' < '本'])
+print("'x' < '本' = %r" % ['x' < '本'])

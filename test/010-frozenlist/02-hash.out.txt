@@ -1,0 +1,5 @@
+someDict = final{(5, 6, 7): (2, 5), (5, 6, 8): "Hello"}
+someDict[final[5, 6, 7]] = (2, 5)
+someDict[final[5, 6, 8]] = "Hello"
+final[5, 6, 7] in someDict = true
+final[5, 6, 9] in someDict = false

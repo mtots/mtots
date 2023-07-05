@@ -1,0 +1,6 @@
+len(t) = 3
+t[0] = "hello"
+t[1] = "world"
+t[2] = "bob"
+t * 3 = ("hello", "world", "bob", "hello", "world", "bob", "hello", "world", "bob")
+tf = ("a", "b", "c")

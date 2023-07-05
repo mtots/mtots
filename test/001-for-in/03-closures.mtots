@@ -1,0 +1,14 @@
+# Test to see if for loop variables are properly captured
+
+var foos = []
+
+def main():
+  for j in range(10):
+    var k = j * j
+    def foo():
+      return [j, j + j, k]
+    foos.append(foo)
+
+main()
+for i in range(len(foos)):
+  print('i -> %r' % [foos[i]()])

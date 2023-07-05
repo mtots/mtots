@@ -1,0 +1,2 @@
+inst1.value = 123
+inst2.value = -123

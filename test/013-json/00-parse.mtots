@@ -1,0 +1,21 @@
+import json
+
+print(repr(json.loads('"hello"')))
+print(repr(json.loads('"hello 日本"')))
+print(repr(json.loads('null')))
+print(repr(json.loads('7')))
+print(repr(json.loads('7e9')))
+print(repr(json.loads('7.2')))
+print(repr(json.loads('7.2E2')))
+print(try json.loads('"hell') else 'failed unterminated string literal')
+print(try json.loads('"hell') else 'failed unterminated string literal')
+print(try json.loads('"hello" "world"') else 'failed parse with extra')
+
+
+print(json.loads('[1, 2,3]'))
+print(json.loads('[1, [2,3, "hi"]]'))
+print(json.loads('[]'))
+print(json.loads('[true, false, null]'))
+print(json.loads('{}'))
+print(json.loads('{"hello": "world"}'))
+print(json.loads('{"hello": "world", "x": {}}'))

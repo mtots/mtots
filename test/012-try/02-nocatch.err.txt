@@ -1,0 +1,4 @@
+raised
+[line 4] in __main__:foo()
+[line 8] in __main__:bar()
+[line 10] in __main__

@@ -1,0 +1,13 @@
+
+final buffer = Buffer()
+
+buffer.addBase64('aGVsbG8gd29ybGQ=')
+print(buffer)
+
+buffer.clear()
+buffer.addBase64('Zm9vYmFy')
+print(buffer)
+
+buffer.clear()
+buffer.addBase64('BRby')
+print(buffer)

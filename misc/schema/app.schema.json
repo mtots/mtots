@@ -1,0 +1,45 @@
+{
+  "$id": "https://raw.githubusercontent.com/mtots/mtots/main/misc/schema/app.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Schema of an app.json file for an Mtots app",
+  "properties": {
+    "mainScript": {
+      "description": "Path to the main script to start the app. Defaults to main.mtots",
+      "type": "string"
+    },
+    "exclude": {
+      "description": "Files and folders to exclude when the app is packaged. Anything not listed here will be included in the app.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "deps": {
+      "description": "List of paths to dependencies. The paths should be relative to the parent of the app directory.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "extensions": {
+      "description": "List of extensions this app or library needs.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "paco",
+          "poco",
+          "sdl2",
+          "sdl2_ttf",
+          "sdl2_image",
+          "mp3"]
+      }
+    },
+    "web": {
+      "description": "Configuration specific to deploying to web",
+      "type": "object",
+      "properties": {
+        "shell": {
+          "description": "The shell HTML file to use when compiling with emscripten",
+          "type": "string"
+        }
+      }
+    }
+  }
+}

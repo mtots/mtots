@@ -1,0 +1,27 @@
+
+
+def negate(x):
+  return -x
+
+print(sorted([1, 2, 3, 5, 4, 3, 2, 1], negate))
+
+# Since multiple strings can have the same length,
+# this tests that the sort is stable
+final strings = [
+  "z",
+  "zzzzz",
+  "y",
+  "yyyyyyyyy",
+  "x",
+  "xx",
+  "w",
+  "wwwwww",
+  "a",
+  "aaaaa",
+  "b",
+  "bbb",
+  "c",
+  "ccc",
+]
+strings.sort(len)
+print(strings)

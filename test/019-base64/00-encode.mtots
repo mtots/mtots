@@ -1,0 +1,14 @@
+
+
+final sb = StringBuilder()
+
+sb.addBase64(Buffer.fromString('hello world'))
+print(sb.build())
+
+sb.clear()
+sb.addBase64(Buffer.fromString('foobar'))
+print(sb.build())
+
+sb.clear()
+sb.addBase64(Buffer.fromList([0x05, 0x16, 0xF2]))
+print(sb.build())

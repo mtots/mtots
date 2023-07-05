@@ -1,0 +1,3 @@
+child.given = "given1"
+child.set = "Base.set"
+child.given2 = "given-two"

@@ -1,0 +1,17 @@
+
+print(String.fromUTF8(Buffer.fromList([
+  ord('A'),
+  ord('B'),
+  ord('c'),
+  ord('d'),
+  ord(' '),
+  ord('z'),
+])))
+
+
+# Try an invalid array of bytes
+print(String.fromUTF8(Buffer.fromList([
+  200,
+  200,
+  200,
+])))

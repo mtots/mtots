@@ -1,0 +1,610 @@
+"""
+The paco library.
+"""
+
+final FILL      = 0
+final OUTLINE   = 1
+
+final PRESSED   = 0
+final RELEASED  = 1
+final HELD      = 2
+
+final LEFT    "left controller button and left mouse button"    = 0
+final RIGHT   "right controller button and right mosue button"  = 1
+final UP      "up controller button"                            = 2
+final DOWN    "down controller button"                          = 3
+final O       "'O' controller button"                           = 4
+final X       "'X' controller button"                           = 5
+final MIDDLE  "middle mouse button"                             = 2
+
+final TRANSPARENT      = 255
+final BLACK            = 0
+final DARK_BLUE        = 1
+final DARK_PURPLE      = 2
+final DARK_GREEN       = 3
+final BROWN            = 4
+final DARK_GREY        = 5
+final LIGHT_GREY       = 6
+final WHITE            = 7
+final RED              = 8
+final ORANGE           = 9
+final YELLOW           = 10
+final GREEN            = 11
+final BLUE             = 12
+final LAVENDER         = 13
+final PINK             = 14
+final LIGHT_PEACH      = 15
+final BROWNISH_BLACK   = 16
+final DARKER_BLUE      = 17
+final DARKER_PURPLE    = 18
+final BLUE_GREEN       = 19
+final DARK_BROWN       = 20
+final DARKER_GREY      = 21
+final MEDIUM_GREY      = 22
+final LIGHT_YELLOW     = 23
+final DARK_RED         = 24
+final DARK_ORANGE      = 25
+final LIME_GREEN       = 26
+final MEDIUM_GREEN     = 27
+final TRUE_BLUE        = 28
+final MAUVE            = 29
+final DARK_PEACH       = 30
+final PEACH            = 31
+
+final scancode """
+Maps the name of each key to the scancode of the key for use with function `key()`
+""" = final{
+  "A":           0x04,
+  "B":           0x05,
+  "C":           0x06,
+  "D":           0x07,
+  "E":           0x08,
+  "F":           0x09,
+  "G":           0x0A,
+  "H":           0x0B,
+  "I":           0x0C,
+  "J":           0x0D,
+  "K":           0x0E,
+  "L":           0x0F,
+  "M":           0x10,
+  "N":           0x11,
+  "O":           0x12,
+  "P":           0x13,
+  "Q":           0x14,
+  "R":           0x15,
+  "S":           0x16,
+  "T":           0x17,
+  "U":           0x18,
+  "V":           0x19,
+  "W":           0x1A,
+  "X":           0x1B,
+  "Y":           0x1C,
+  "Z":           0x1D,
+  "1":           0x1E,
+  "2":           0x1F,
+  "3":           0x20,
+  "4":           0x21,
+  "5":           0x22,
+  "6":           0x23,
+  "7":           0x24,
+  "8":           0x25,
+  "9":           0x26,
+  "0":           0x27,
+  "ENTER":       0x28,
+  "ESC":         0x29,
+  "BACKSPACE":   0x2A,
+  "TAB":         0x2B,
+  "SPACE":       0x2C,
+  "MINUS":       0x2D,
+  "EQUAL":       0x2E,
+  "LEFTBRACE":   0x2F,
+  "RIGHTBRACE":  0x30,
+  "BACKSLASH":   0x31,
+  "HASHTILDE":   0x32,
+  "SEMICOLON":   0x33,
+  "APOSTROPHE":  0x34,
+  "GRAVE":       0x35,
+  "COMMA":       0x36,
+  "DOT":         0x37,
+  "SLASH":       0x38,
+  "CAPSLOCK":    0x39,
+  "F1":          0x3a,
+  "F2":          0x3b,
+  "F3":          0x3c,
+  "F4":          0x3d,
+  "F5":          0x3e,
+  "F6":          0x3f,
+  "F7":          0x40,
+  "F8":          0x41,
+  "F9":          0x42,
+  "F10":         0x43,
+  "F11":         0x44,
+  "F12":         0x45,
+  "SYSRQ":       0x46,
+  "SCROLLLOCK":  0x47,
+  "PAUSE":       0x48,
+  "INSERT":      0x49,
+  "HOME":        0x4A,
+  "PAGEUP":      0x4B,
+  "DELETE":      0x4C,
+  "END":         0x4D,
+  "PAGEDOWN":    0x4E,
+  "RIGHT":       0x4F,
+  "LEFT":        0x50,
+  "DOWN":        0x51,
+  "UP":          0x52,
+  "NUMLOCK":     0x53,
+  "KPSLASH":     0x54,
+  "KPASTERISK":  0x55,
+  "KPMINUS":     0x56,
+  "KPPLUS":      0x57,
+  "KPENTER":     0x58,
+  "KP1":         0x59,
+  "KP2":         0x5a,
+  "KP3":         0x5b,
+  "KP4":         0x5c,
+  "KP5":         0x5d,
+  "KP6":         0x5e,
+  "KP7":         0x5f,
+  "KP8":         0x60,
+  "KP9":         0x61,
+  "KP0":         0x62,
+  "KPDOT":       0x63,
+  "LEFTCTRL":    0xe0,
+  "LEFTSHIFT":   0xe1,
+  "LEFTALT":     0xe2,
+  "LEFTMETA":    0xe3,
+  "RIGHTCTRL":   0xe4,
+  "RIGHTSHIFT":  0xe5,
+  "RIGHTALT":    0xe6,
+  "RIGHTMETA":   0xe7,
+}
+
+
+def setWindowTitle(title String) nil:
+  """
+  Sets the title of the window
+  """
+
+
+def setScalingFactor(scalingFactor Float) nil:
+  """
+  Sets the scaling factor (i.e. how much the rendering width and height will be
+  scaled on the window).
+  """
+
+
+def setRenderDimensions(width Int, height Int) nil:
+  """
+  Sets the rendering dimensions in pixels.
+  """
+
+
+def init() nil:
+  """
+  Initializes paco and creates the window
+  """
+
+
+def mainLoop(update Function[nil], draw Function[nil]?=nil) nil:
+  """
+  Starts the main loop. Must be called after `init()`
+  """
+
+
+def clear(color Int) nil:
+  """
+  Clears the screen with the given color.
+  """
+
+
+class SpriteSheet:
+  """
+  A bitmap image that holds a grid of sheets.
+
+  When saved to a file, a sprite sheet will be a `.bmp` file with 8-bit pixel depth.
+  When a sheet is saved to a file, paco will match the palette for the file with its
+  own system colors.
+  However, when reading a sprite sheet from a file, paco will ignore the color palette.
+
+  Further, the sprite dimensions will be stored in the palette as color 255.
+  """
+
+  def clone() SpriteSheet:
+    """
+    Creates a copy of this sprite sheet.
+    """
+
+
+def newSheet(width Int, height Int, spriteWidth Int, spriteHeight Int) SpriteSheet:
+  """
+  Create a new empty sprite sheet
+  """
+
+
+def saveSheetToFile(filePath String) nil:
+  """
+  Saves the active sprite sheet to a file.
+
+  Parameters:
+  * filePath - the path to the file to save the sprite sheet.
+  """
+
+
+def loadSheetFromFile(
+    filePath String,
+    spriteWidth Int=8,
+    spriteHeight Int=8,
+    active Bool=true) SpriteSheet:
+  """
+  Loads a sprite sheet from a file.
+
+  Parameters:
+  * filePath - The path to the file containing the sprite sheet.
+  * spriteWidth - the width of each sprite, defaults to 8
+  * spriteHeight - the height of each sprite, defaults to 8
+  * active - if true, will also set the returned sheet as the active
+    sprite sheet. Defaults to true.
+  """
+
+
+def loadSheetFromBuffer(
+    buffer Buffer,
+    spriteWidth Int=8,
+    spriteHeight Int=8,
+    active Bool=true) SpriteSheet:
+  """
+  Loads a sprite sheet from a file.
+
+  Parameters:
+  * buffer - The buffer file containing the sprite sheet data.
+  * spriteWidth - the width of each sprite, defaults to 8
+  * spriteHeight - the height of each sprite, defaults to 8
+  * active - if true, will also set the returned sheet as the active
+    sprite sheet. Defaults to true.
+  """
+
+
+def renderTarget(sheet SpriteSheet?=nil) nil:
+  """
+  Sets the active render target.
+
+  By default, the drawing functions (`line`, `rect`, `pixel`, etc.) will draw to the screen.
+  However, if you set a render target, they will draw to the render target instead.
+
+  You can pass `nil` to this function to reset the render target and draw to the screen again.
+
+  Parameters:
+  * sheet - The render target sprite sheet.
+    Defaults to nil.
+  """
+
+
+def sheet(sheet SpriteSheet?) nil:
+  """
+  Sets the active sprite sheet.
+
+  Parameters:
+  * sheet - the sprite sheet to set as the new active sprite sheet.
+    May be nil.
+  """
+
+
+def font(font SpriteSheet) nil:
+  """
+  Sets the active font. This sprite sheet is used with the `print` function.
+
+  Parameters:
+  * font - The sprite sheet used as the font.
+  """
+
+
+def newPalette() Buffer:
+  """
+  Creates a copy of the current palette
+  """
+
+
+def palette(pal Buffer?=nil) Buffer:
+  """
+  Gets or sets the current draw palette.
+
+  If `pal` is omitted or nil, the currently active draw palette will be returned.
+
+  If `pal` is a valid Buffer with length exactly 256,
+  `pal` will be set as the draw palette. `pal` will be returned.
+  """
+
+
+def color(color Int) nil:
+  """
+  Set the pen color
+  """
+
+
+def clip(xStart Int=0, yStart Int=0, xEnd Int=-1, yEnd Int=-1) nil:
+  """
+  Sets the clipping region.
+
+  If called without any arguments, it will reset the clipping area to the
+  full drawing area.
+
+  Otherwise, it will restrict the drawing area to just the
+  specified clipping rectangle (inclusive of xStart and yStart, exclusive of
+  xEnd and yEnd).
+  """
+
+
+def camera(x Int, y Int) nil:
+  """
+  Adjusts the camera.
+
+  The draw functions (like `rect` and `pixel`), will subtract the camera x and y
+  values from each coordinate so as to translate the objects as though the
+  camera were moved to the given position.
+  """
+
+
+def pixel(x Int, y Int, color Int=-1) Int:
+  """
+  Draws a single pixel to the framebuffer, and gets the pixel's color.
+
+  Somewhat comparable to PICO-8's `pset()` and `pget()` in a single function,
+  but with a few differences:
+
+  * `pixel()` is not affected by the pen color (i.e. `color()`).
+  * By changing the rendering target, `pixel()` can also modify sprite sheets
+    (this is why `sset()` and `sget()` equivalents are not provided in paco).
+
+  Parameters:
+  * x - x coordinate of the pixel to draw.
+  * y - y coordinate of the pixel to draw.
+  * color - If a valid color is provided, this function will set the pixel's color.
+    If color is omitted or `-1`, this function will not modify the pixel's color
+    and simply return the color at the given pixel coordinates.
+
+  Returns:
+  The color of the pixel at the given coordinates at the end of the function.
+  If `x` and `y` are not valid coordinates, this function will return BLACK.
+
+  NOTE: LIke with PICO-8's `pset()`, this function respects clipping.
+  """
+
+
+def line(x0 Int, y0 Int, x1 Int, y1 Int, style Int=1, color Int=-1) nil:
+  """
+  Draws a rectangle to the framebuffer.
+
+  Parameters:
+  * x0 - x coordinate of the start point of the line,
+  * y0 - y coordinate of the start point of the line,
+  * x1 - x coordinate of the end point of the line,
+  * y1 - y coordinate of the end point of the line,
+  * style - specifies the way to draw the rectangle (defaults to 1, STROKE).
+    Currently, only the STROKE style is supported.
+  * color - The color to use when drawing the rectangle.
+    If omitted or given -1, the color will default to the pen color.
+  """
+
+
+def rect(x0 Int, y0 Int, x1 Int, y1 Int, style Int=0, color Int=-1) nil:
+  """
+  Draws a rectangle to the framebuffer.
+
+  Parameters:
+  * x0 - x coordinate of the upper left corner of the rectangle,
+  * y0 - y coordinate of the upper left corner of the rectangle,
+  * x1 - x coordinate of the lower right corner of the rectangle,
+  * y1 - y coordinate of the lower right corner of the rectangle,
+  * style - specifies the way to draw the rectangle (defaults to 0, FILL).
+    * 0 (FILL) - Fills the rectangle.
+    * 1 (OUTLINE) - Draws just the outline of the rectangle.
+  * color - The color to use when drawing the rectangle.
+    If omitted or given -1, the color will default to the pen color.
+  """
+
+
+def oval(x0 Int, y0 Int, x1 Int, y1 Int, style Int=0, color Int=-1) nil:
+  """
+  Draws an oval to the framebuffer.
+
+  Parameters:
+  * x0 - smallest x coordinate of the oval,
+  * y0 - smallest y coordinate of the oval,
+  * x1 - largest x coordinate of the oval,
+  * y1 - largest y coordinate of the oval,
+  * style - specifies the way to draw the oval (defaults to 0, FILL).
+    * 0 (FILL) - Fills the oval.
+    * 1 (OUTLINE) - Draws just the outline of the oval.
+  * color - The color to use when drawing the oval.
+    If omitted or -1, defaults to the pen color.
+  """
+
+
+def sprite(n Int, x Int, y Int, w Int=1, h Int=1, flipX Int=0, flipY Int=0) nil:
+  """
+  Draws a sprite from the active sprite sheet.
+
+  Compare with PICO-8's `spr()` function.
+
+  Parameters:
+  * n - the index of the sprite in the sheet (sprites are ordered left to right, top down,
+    like English text).
+  * x - the x coordinate of the upper left corner to draw
+  * y - the y coordinate of the upper left corner to draw
+  * w - width in number of sprites (in pixels, the drawn width will be w * spriteWidth)
+  * h - height in number of sprites (in pixels, the drawn height will be h * spriteHeight)
+  * flipX - if true (i.e. non-zero), the sprite is drawn inverted left to right.
+    Defaults to 0.
+  * flipY - if true (i.e. non-zero), the sprite is drawn inverted top to bottom.
+    Defaults to 0.
+  """
+
+
+def blit(sx Int, sy Int, sw Int, sh Int, dx Int, dy Int, dw Int=-1, dh Int=-1, flipX Int=0, flipY Int=0) nil:
+  """
+  Draws a rectangle of pixels from the active sprite sheet, optionally stretching the
+  image to fit a rectangle on the screen.
+
+  Compare with PICO-8's `sspr()` function.
+
+  Parameters:
+  * sx - The x coordinate of the upper left corner of the rectangle in the sprite sheet.
+  * sy - The y coordinate of the upper left corner of the rectangle in the sprite sheet.
+  * sw - The width of the rectangle in the sprite sheet, as a number of pixels.
+  * sh - The height of the rectangle in the sprite sheet, as a number of pixels.
+  * dx - The x coordinate of the upper left corner of the rectangle area of the screen.
+  * dy - The y coordinate of the upper left corner of the rectangle area of the screen.
+  * dw - The width of the rectangle area of the screen.
+    Defaults to -1. If -1, it is set to match the image width (sw).
+  * dh - The height of the rectangle area of the screen.
+    Defaults to -1. If -1, it is set to match the image height (sh).
+  * flipX - if true (i.e. non-zero), the sprite is drawn inverted left to right.
+    Defaults to 0.
+  * flipY - if true (i.e. non-zero), the sprite is drawn inverted top to bottom.
+    Defaults to 0.
+  """
+
+
+def cursor(x Int, y Int) nil:
+  """
+  Sets the cursor position for where `print()` will start printing
+  """
+
+
+def print(text String, x Int?=nil, y Int?=nil, color Int?=nil) nil:
+  """
+  Draws text using the currently active font.
+
+  Parameters:
+  * text - The text to render
+  * x - The x coordinate of the upper left corner of where to draw the
+    text. If nil or omitted, it will default to the same value when
+    `print()` was last called. If called for the first time, `x` will
+    default to zero.
+  * y - The y coordinate of the upper left corner of where to draw the
+    text. If nil or omitted, it will default to the previous value
+    of `y` plus the height of the font. When called for the first time,
+    `y` will default to zero.
+  * color - The color to use when rendering the font. Will default
+    to the pen color.
+  """
+
+
+def button(buttonID Int, playerID Int=0, query Int=0) Bool:
+  """
+  Queries the state of a button.
+
+  Parameters:
+  * buttonID - an integer between 0-5 inclusive indicating the type of button press,
+  * playerID - an integer between 0-7 inclusive indicating the player that pressed
+    the button. Defaults to 0.
+    * 0 (LEFT) - the left button.
+      The left key on the keyboard is attributed to player 0.
+    * 1 (RIGHT) - the right button.
+      The right key on the keyboard is attributed to player 0.
+    * 2 (UP) - the up button.
+      The up key on the keyboard is attributed to player 0.
+    * 3 (DOWN) - the down button.
+      The down key on the keyboard is attributed to player 0.
+    * 4 (O) - the 'O' button.
+      The 'Z' key on the keyboard is attributed to player 0.
+    * 5 (X) - the 'X' button.
+      The 'X' key on the keyboard is attributed to player 0.
+  * query - an integer between 0-2 inclusive indicating the kind of button
+    event to query for.
+    Defaults to 0.
+    * 0 (PRESSED) - tests for whether the given button was just pressed
+      within the past frame.
+    * 1 (RELEASED) - tests whether the given button was just released within
+      the past frame.
+    * 2 (HELD) - test whether the button is currently being held down by
+      the player.
+  """
+
+
+def click(mouseButtonID Int=0, query Int=0) Bool:
+  """
+  Queries the state of a mouse button.
+
+  Parameters:
+  * mouseButtonID - an integer between 0-2 inclusive indicating the mouse button.
+    Defaults to 0.
+    * 0 (LEFT) - the left mouse button
+    * 1 (RIGHT) - the right mouse button
+    * 2 (MIDDLE) - the middle mouse button
+  * query - an integer between 0-2 inclusive indicating the kind of button
+    event to query for.
+    Defaults to 0.
+    * 0 (PRESSED) - tests for whether the given button was just clicked
+      within the past frame.
+    * 1 (RELEASED) - tests whether the given button was just released within
+      the past frame.
+    * 2 (HELD) - test whether the button is currently being held down by
+      the player.
+  """
+
+
+def mouseX() Int:
+  """
+  Gets the X coordinate of the mouse cursor relative to the window
+  """
+
+
+def mouseY() Int:
+  """
+  Gets the Y coordinate of the mouse cursor relative to the window
+  """
+
+
+def wheelX() Float:
+  """
+  Gets the X movement of the mouse wheel.
+  Positive is to the right, negative is to the left.
+  """
+
+
+def wheelY() Float:
+  """
+  Gets the Y movement of the mouse wheel.
+  Positive is away from the user, negative is towards the user.
+  """
+
+
+def key(scancode Int=-1, query Int=2) Int:
+  """
+  Checks the state of a key on the keyboard.
+
+  Parameters:
+  * scancode - If scancode is not -1, it will check if the key referenced by the
+    scancode is currently being HELD (if query = 2), was just PRESSED (if query = 0),
+    or was just RELEASED (if query = 1).
+
+    If scancode is -1, it will return the next key that was just pressed (if
+    query = 0 or query = 2), or just released (if query = 1). If no more keys
+    remain, this function will return -1.
+
+  * query - Determines the kind of query to make about a key on the keyboard.
+    Defaults to 2.
+
+    The three valid values for query are:
+    * 0 (PRESSED) - to see if the key was just recently pressed,
+    * 1 (RELEASED) - to see if the key was just recently released, or
+    * 2 (HELD) - to see if a key is currently being held down.
+  """
+
+
+def clipboard(text String?=nil) String:
+  """
+  Gets or sets clipboard text.
+
+  Parameters:
+  * text - If provided and not nil, this function will set the
+    clipboard to the given text.
+    If text is omitted or nil, this function will return
+    the current clipboard value.
+
+  Returns:
+  If `text` is nil, this function returns the current clipboard value.
+  Otherwise, clipboard will just return the argument as is (i.e. `text`).
+  """

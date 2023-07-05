@@ -1,0 +1,30 @@
+
+
+final list = [1, 2, 3, 4, 5]
+
+list.insert(0, -1)
+print("list.insert(0, -1) -> %s" % [list])
+
+list.insert(0, -2)
+print("list.insert(0, -2) -> %s" % [list])
+
+list.insert(len(list), 100)
+print("list.insert(len(list), 100) -> %s" % [list])
+
+list.insert(len(list) // 2, 555)
+print("list.insert(len(list) // 2, 555) -> %s" % [list])
+
+list.insert(-1, 444)
+print("list.insert(-1, 444) -> %s" % [list])
+
+
+print("list.pop(0) -> %s, %s" % [list.pop(0), list])
+
+print("list.pop(-1) -> %s, %s" % [list.pop(-1), list])
+
+print("list.pop(len(list) // 2) -> %s, %s" % [list.pop(len(list) // 2), list])
+
+print("list.pop(1) -> %s, %s" % [list.pop(1), list])
+
+print("list.pop() -> %s, %s" % [list.pop(), list])
+

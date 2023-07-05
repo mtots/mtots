@@ -1,0 +1,3 @@
+some-value
+some-value for some other method
+SomeOtherClass field value

@@ -1,0 +1,147 @@
+"""
+A native module for reading and writing data to and from various
+sources and sinks.
+"""
+
+
+def fromBuffer(buffer Buffer) DataSource:
+  """
+  Convenience function equivalent to `DataSource.fromBuffer`
+
+  Returns a `DataSource` that represents the contents
+  of the given `Buffer`.
+  """
+
+
+def fromString(string String) DataSource:
+  """
+  Convenience function equivalent to `DataSource.fromString`
+
+  Returns a `DataSource` that represents the UTF-8
+  byte data of the given `String`.
+  """
+
+
+def fromFile(filePath String) DataSource:
+  """
+  Convenience function equivalent to `DataSource.fromFile`
+
+  Returns a `DataSource` that represents the contents
+  of a file specified by the given `filePath`
+  """
+
+
+def fromBundle(src String, path String) DataSource:
+  """
+  Convenience function equivalent to `DataSource.fromBundle`
+
+  Returns a `DataSource` that represents the contents
+  of a bundled file.
+
+  `src` should be the `__file__` value of the module
+  the resource was bundled with.
+
+  `path` should be the relative path (using '/' as the path
+  component separator) to the file from the script's
+  directory.
+  """
+
+
+def toBuffer(buffer Buffer) DataSink:
+  """
+  Convenience function equivalent to `DataSink.fromBuffer`
+
+  Returns a `DataSink` that will append to the given buffer.
+  """
+
+
+def toFile(filePath String) DataSink:
+  """
+  Convenience function equivalent to `DataSink.fromFile`
+
+  Returns a `DataSink` that will write to the file at the given path.
+  """
+
+
+class DataSource:
+  """
+  A source of binary data.
+
+  Can represent:
+  * the contents of a `Buffer`
+  * the UTF-8 contents of a `String`,
+  * the contents of a file on disk
+  * the contents of a bundled asset (i.e. a file located relative
+    to the script itself, or included in a zip archive with the script)
+  """
+
+  static def fromBuffer(buffer Buffer) DataSource:
+    """
+    Returns a `DataSource` that represents the contents
+    of the given `Buffer`.
+    """
+
+  static def fromString(string String) DataSource:
+    """
+    Returns a `DataSource` that represents the UTF-8
+    byte data of the given `String`.
+    """
+
+  static def fromFile(filePath String) DataSource:
+    """
+    Returns a `DataSource` that represents the contents
+    of a file specified by the given `filePath`
+    """
+
+  static def fromBundle(src String, path String) DataSource:
+    """
+    Returns a `DataSource` that represents the contents
+    of a bundled file.
+
+    `src` should be the `__file__` value of the module
+    the resource was bundled with.
+
+    `path` should be the relative path (using '/' as the path
+    component separator) to the file from the script's
+    directory.
+    """
+
+  def read(out Buffer) nil:
+    """
+    Read the entire contents of this data source into the given `Buffer`
+    """
+
+  def toBuffer() Buffer:
+    """
+    Return the entire contents of this `DataSource` into a newly
+    allocated `Buffer`.
+    """
+
+  def toString() String:
+    """
+    Return the entire contents of this `DataSource` as a `String`
+    decoding the contents as UTF-8.
+
+    This function may panic if the contents do not form a valid UTF-8 sequence.
+    """
+
+
+class DataSink:
+  """
+  A sink for binary data.
+  """
+
+  static def fromBuffer(buffer Buffer) DataSink:
+    """
+    Creates a new data sink that will write to the given buffer
+    """
+
+  static def fromFile(filePath String) DataSink:
+    """
+    Creates a new data sink pointing to the file at the given path
+    """
+
+  def write(source DataSource) nil:
+    """
+    Writes the contents of the given `DataSource` into this `DataSink`.
+    """

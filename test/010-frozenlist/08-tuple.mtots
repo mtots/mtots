@@ -1,0 +1,7 @@
+
+final tuple = Tuple('a', 2, 3)
+
+print(tuple)
+print(tuple.get0())
+print(tuple.get1())
+print(tuple.get2())

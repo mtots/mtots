@@ -1,0 +1,41 @@
+
+
+class Random:
+  """
+  Basic Mersene Twister (MT19937) random number generator
+
+  Meant to be useful for general applications that need some sort of
+  predictable randomness, including tests.
+
+  Is not cryptographically secure
+  """
+
+  def __init__(seedValue Int=0) nil:
+    """
+    New Random object. May optionally be initialized with a seed
+    """
+
+  def seed(seedValue Int) nil:
+    """
+    Set seed value
+    """
+
+  def next() Int:
+    """
+    Returns the next unsigned 32-bit number generated
+    """
+
+  def number() Float:
+    """
+    Returns a random floating point number X such that 0.0 <= X < 1.0
+    """
+
+  def int(start Int, end Int=0) Int:
+    """
+    Returns a uniform random integer from the range [start, end]
+    """
+
+  def range(start Int, end Int=0) Int:
+    """
+    Returns a uniform random integer from the range [start, end)
+    """

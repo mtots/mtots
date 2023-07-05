@@ -1,0 +1,14 @@
+"""
+fmod in C will match the sign of dividend rather than the divisor.
+The `%` operator in mtots matches the sign of the divisor rather than the dividend.
+"""
+
+print(" 13 %%  8 = %s" % [13 % 8])
+print("  5 %%  8 = %s" % [ 5 % 8])
+print(" -5 %%  8 = %s" % [-5 % 8])
+print(" 16 %%  8 = %s" % [16 % 8])
+
+print(" -5 %% -8 = %s" % [-5 % -8])
+print("  8 %% -8 = %s" % [8 % -8])
+print("-16 %% -8 = %s" % [-16 % -8])
+print("-17 %% -8 = %s" % [-17 % -8])

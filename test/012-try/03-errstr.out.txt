@@ -1,0 +1,4 @@
+(prefix)Some Error Message
+[line 4] in __main__:func()
+[line 6] in __main__
+(suffix)

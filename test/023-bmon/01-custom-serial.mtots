@@ -1,0 +1,30 @@
+import bmon
+
+
+class SomeClass:
+  var x Int
+
+  def __init__(x Int) nil:
+    this.x = x
+
+  def __bmon__() Any:
+    return {"x-value": this.x}
+
+
+final inst = SomeClass(123)
+
+final bytes1 = bmon.dumps(inst)
+print(bytes1)
+final data1 = bmon.loads(bytes1)
+print(data1)
+
+final bytes2 = bmon.dumps([1, 2, inst, 3])
+print(bytes2)
+final data2 = bmon.loads(bytes2)
+print(data2)
+
+inst.x = 555
+final bytes3 = bmon.dumps(inst)
+print(bytes3)
+final data3 = bmon.loads(bytes3)
+print(data3)

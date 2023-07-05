@@ -1,0 +1,3 @@
+'<' requires values of the same type but got number and string
+[line 3] in __main__:foo()
+[line 6] in __main__

@@ -1,0 +1,26 @@
+r"""
+The operating system module
+"""
+
+final name "A human readable name of the current operating system" = 'macos'
+
+
+def getenv(name String) String?:
+  """
+  Looks up an environment variable.
+  Returns nil if not found.
+  """
+
+
+def getcwd() String:
+  """
+  Similar to Python's os.getcwd.
+
+  Return a string representing the current working directory
+  """
+
+
+def isMacOS() Bool:
+  """
+  Returns true if the current platform is MacOS
+  """

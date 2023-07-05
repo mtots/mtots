@@ -1,0 +1,7 @@
+from test_importable import x
+from test_importable import foo
+
+
+print('x = %r' % [x])
+print('foo = %r' % [foo])
+print('foo() = %r' % [foo()])

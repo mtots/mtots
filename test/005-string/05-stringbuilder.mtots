@@ -1,0 +1,11 @@
+
+
+final sb = StringBuilder()
+sb.add('first')
+sb.add(',')
+sb.add('second')
+sb.add(',')
+sb.add('third')
+print("sb.build() = %r" % [sb.build()])
+print(sb.build())
+

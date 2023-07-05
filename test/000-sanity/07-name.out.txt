@@ -1,0 +1,2 @@
+__name__ = "__main__"
+tm.name = "test_import2"

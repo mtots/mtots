@@ -1,0 +1,26 @@
+
+
+final foo = def(a Int, b Int): a + b
+print("foo(2, 3) = %s" % [foo(2, 3)])
+
+
+def foldInt(init Int, values Iterable[Int], f Function[Int, Int, Int]) Int:
+  for value in values:
+    init = f(init, value)
+  return init
+
+print("foldInt(10, range(5), def(a, b): a + b) = %s" % [foldInt(10, range(5), def(a, b): a + b)])
+
+def fold[T](
+    init T,
+    values Iterable[T],
+    f Function[T, T, T]) T:
+  for value in values:
+    init = f(init, value)
+  return init
+
+# Currently, the vscode extension type solver is not clever enough to
+# infer parameter types when the function being called is generic.
+print("fold(10, range(5), def(a Int, b Int): a + b) = %s" % [
+  fold(10, range(5), def(a, b): a + b)])
+

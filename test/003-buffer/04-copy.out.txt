@@ -1,0 +1,3 @@
+repr(ba1) = b"\x01\x02\x03"
+repr(ba2) = b"\x01\x02\x03"
+ba1 == ba2 = true

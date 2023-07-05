@@ -1,0 +1,12 @@
+
+
+print("Color(1, 2, 3) = %s" % [Color(1, 2, 3)])
+print("Color(255, 255, 255) == Color(255, 255, 255) -> %s" % [
+  Color(255, 255, 255) == Color(255, 255, 255)])
+
+final c1 = Color(100, 200, 150)
+print("c1 = %s" % [c1])
+print("c1.red = %s" % [c1.red])
+print("c1.green = %s" % [c1.green])
+print("c1.blue = %s" % [c1.blue])
+print("c1.alpha = %s" % [c1.alpha])

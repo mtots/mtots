@@ -1,0 +1,4 @@
+
+final x = 5 as int
+print('x = %s' % [x])
+

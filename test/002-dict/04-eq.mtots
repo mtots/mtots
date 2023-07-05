@@ -1,0 +1,10 @@
+print('{1, 2, 3} == Set([1, 2, 3]) = %r' % [{1, 2, 3} == Set([1, 2, 3])])
+
+final s = {"hello": "world"}
+print('s == s = %r' % [s == s])
+print('s == {"hello": "world"} = %r' % [s == {"hello": "world"}])
+print('s == {"hello": "world", "foo": "bar"} = %r' % [s == {"hello": "world", "foo": "bar"}])
+print('s == {"world": "hello"} = %r' % [s == {"world": "hello"}])
+print('s == {"hello": "worldx"} = %r' % [s == {"hello": "worldx"}])
+
+print('{1: 2} == {1: 2, 2: 7} = %r' % [{1: 2} == {1: 2, 2: 7}])

@@ -1,0 +1,3 @@
+inst = SomeClass("hello")
+inst = SomeClass(123)
+SomeClass(123)

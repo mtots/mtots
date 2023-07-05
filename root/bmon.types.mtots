@@ -1,0 +1,68 @@
+"""
+BMON = Binary Mtots Object Notation.
+
+Kind of meant to be like a binary JSON.
+
+MongoDB's BSON adds a bit too many bells and whistles imo.
+
+The serialization and deserialization is dead simple and easier than
+even JSON, since there's no need to worry about formatting and
+string literal escapes.
+
+BMON data types:
+
+  * nil
+  * bool
+  * number (stored as double precision IEEE754)
+  * string (stored as UTF-8)
+  * list
+  * dict
+
+The serialization format is dead simple.
+
+All values are preceeded by one of the following tags:
+
+  * TAG_NIL (1)
+  * TAG_TRUE (2)
+  * TAG_FALSE (3)
+  * TAG_NUMBER (4)
+  * TAG_STRING (5)
+  * TAG_LIST (6)
+  * TAG_DICT (7)
+
+TAG_NIL, TAG_TRUE and TAG_FALSE have no additional data
+and specify exactly what it says in the name.
+
+TAG_NUMBER
+  * is followed by exactly 8-bytes - the value of the number
+    in IEEE754 double precision in little endian.
+
+TAG_STRING
+  * is followed by exactly 4-bytes - an unsigned integer
+    specifying the length of the string.
+  * It is then followed by exactly length bytes.
+
+TAG_LIST
+  * is followed by exactly 4-bytes - an unsigned integer
+    specifying the number of subvalues in this list.
+  * It is then followed by that many BMON values.
+
+TAG_DICT
+  * is followed by exactly 4-bytes - an unsigned integer
+    specifying the number of pairs in this dictionary.
+  * It is then followed by twice that many BMON values.
+    Every 2 BMON values specify a pair, an entry in
+    the dictionary.
+"""
+
+
+def loads(buffer Buffer) Any:
+  """
+  Deserializes BMON encoded data
+  """
+
+
+def dumps(value Any) Buffer:
+  """
+  Serializes data into BMON
+  """

@@ -1,0 +1,22 @@
+
+
+print("''.padStart(5) = '%s'" % [''.padStart(5)])
+print("'hello'.padStart(5) = '%s'" % ['hello'.padStart(5)])
+print("'hello world'.padStart(5) = '%s'" % ['hello world'.padStart(5)])
+print("'hello world'.padStart(20) = '%s'" % ['hello world'.padStart(20)])
+print("'hello world'.padStart(20, '0') = '%s'" % ['hello world'.padStart(20, '0')])
+
+
+print("''.padEnd(5) = '%s'" % [''.padEnd(5)])
+print("'hello'.padEnd(5) = '%s'" % ['hello'.padEnd(5)])
+print("'hello world'.padEnd(5) = '%s'" % ['hello world'.padEnd(5)])
+print("'hello world'.padEnd(20) = '%s'" % ['hello world'.padEnd(20)])
+print("'hello world'.padEnd(20, '0') = '%s'" % ['hello world'.padEnd(20, '0')])
+
+# Divides evenly
+print("'hello'.padEnd(9, '#*') = '%s'" % ['hello'.padEnd(9, '#*')])
+print("'hello'.padStart(9, '#*') = '%s'" % ['hello'.padStart(9, '#*')])
+
+# Divides unevenly
+print("'hello'.padEnd(10, '#*') = '%s'" % ['hello'.padEnd(10, '#*')])
+print("'hello'.padStart(10, '#*') = '%s'" % ['hello'.padStart(10, '#*')])

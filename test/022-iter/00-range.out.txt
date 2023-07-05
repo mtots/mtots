@@ -1,0 +1,23 @@
+mallocCount (r1) = 0
+mallocCount (r2) = 1
+[5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+[5000000000, 5000000001, 5000000002, 5000000003, 5000000004, 5000000005, 5000000006, 5000000007, 5000000008, 5000000009]
+mallocCount (total1) = 0
+mallocCount (total2) = 2
+total1 = 95
+total2 = 50000000045
+mallocCount (sum1) = 0
+mallocCount (sum2) = 2
+sum1 = 95
+sum2 = 50000000045
+mallocCount (lr1) = 0
+mallocCount (lr2) = 1
+lr1 = [5, 3, 1, -1, -3]
+lr2 = [5000000010, 5000000008, 5000000006, 5000000004, 5000000002]
+mallocCount (t1) = 0
+mallocCount (t2) = 2
+t1 = 5
+t2 = 25000000030
+FastRange(5,10,1)
+FastRange(5,-5,-2)
+Range(5000000010,5000000000,-2)

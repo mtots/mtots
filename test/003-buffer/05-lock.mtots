@@ -1,0 +1,13 @@
+
+
+final buffer = Buffer.fromList([1, 2, 3])
+
+print("buffer = %r" % [buffer])
+print("buffer.isLocked() = %r" % [buffer.isLocked()])
+buffer.addU8(10)
+print("buffer = %r" % [buffer])
+print("buffer.lock() = %r" % [buffer.lock()])
+print("buffer.isLocked() = %r" % [buffer.isLocked()])
+for _ in range(100):
+  buffer.addU8(123)
+print("buffer = %r" % [buffer])

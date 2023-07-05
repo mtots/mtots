@@ -1,0 +1,104 @@
+{
+    "name": "mtots",
+    "displayName": "mtots",
+    "description": "Intellisense support for Mtots",
+    "version": "0.0.42",
+    "publisher": "mtots",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/groundupcoder/mtots"
+    },
+    "engines": {
+        "vscode": "^1.45.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "// browser": "./dist/extension.js",
+    "main": "./out/extension",
+    "// (scripts, browser)": {
+        "vscode:prepublish": "npm run package",
+        "webpack": "webpack --mode development",
+        "webpack-dev": "webpack --mode development --watch",
+        "package": "webpack --mode production --devtool hidden-source-map",
+        "test-compile": "tsc -p ./"
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "lint": "eslint \"src/**/*.ts\"",
+        "watch": "tsc -watch -p ./"
+    },
+    "contributes": {
+        "configurationDefaults": {
+            "[mtots]": {
+                "editor.tabSize": 2
+            }
+        },
+        "configuration": {
+            "title": "mtots",
+            "properties": {
+                "mtots.mtotspath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Path to search for mtots scripts. List of paths separated by ':'"
+                }
+            }
+        },
+        "languages": [
+            {
+                "id": "mtots",
+                "aliases": [
+                    "mtots",
+                    "mtots"
+                ],
+                "extensions": [
+                    ".mtots"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "mtots",
+                "scopeName": "source.mtots",
+                "path": "./syntaxes/mtots.tmLanguage.json"
+            }
+        ],
+        "commands": [
+            {
+                "command": "mtots.tokenize",
+                "title": "Tokenize mtots code"
+            },
+            {
+                "command": "mtots.parse",
+                "title": "Parse mtots code"
+            }
+        ],
+        "menus": {
+            "commandPalette": [
+                {
+                    "command": "mtots.tokenize",
+                    "when": "editorLangId == mtots"
+                }
+            ]
+        }
+    },
+    "activationEvents": [
+        "onLanguage:mtots",
+        "onCommand:mtots.tokenize",
+        "onCommand:mtots.parse"
+    ],
+    "devDependencies": {
+        "@types/vscode": "^1.45.0",
+        "ts-loader": "^9.4.2"
+    },
+    "// (devDependencies, browser)": {
+        "@types/vscode": "^1.45.0",
+        "ts-loader": "^9.4.2",
+        "typescript": "^5.0.4",
+        "webpack": "^5.82.0",
+        "webpack-cli": "^5.1.1"
+    }
+}

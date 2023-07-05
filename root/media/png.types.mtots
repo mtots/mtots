@@ -1,0 +1,18 @@
+"""
+Mtots wrapper for lodepng
+"""
+
+from media.image import Image
+import data
+
+
+def savePNG(sink data.DataSink, image Image):
+  """
+  Saves an `Image` as a PNG file into the given `DataSink`.
+  """
+
+
+def loadPNG(src data.DataSource) Image:
+  """
+  Loads a PNG from a `DataSource` and returns the contents as an `Image`.
+  """

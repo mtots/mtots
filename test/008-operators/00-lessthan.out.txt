@@ -1,0 +1,56 @@
+5 < 6 = true
+6 < 5 = false
+6 < 6 = false
+5 > 6 = false
+6 > 5 = true
+6 > 6 = false
+5 <= 6 = true
+6 <= 5 = false
+6 <= 6 = true
+5 >= 6 = false
+6 >= 5 = true
+6 >= 6 = true
+"Hello" < "hello" = true
+"hello" < "Hello" = false
+"Hello" > "hello" = false
+"hello" > "Hello" = true
+"Hello" <= "hello" = true
+"hello" <= "Hello" = false
+"Hello" >= "hello" = false
+"hello" >= "Hello" = true
+"aaa" < "a" = false
+"a" < "aaa" = true
+"aaa" < "aaa" = false
+"aaa" > "a" = true
+"a" > "aaa" = false
+"aaa" > "aaa" = false
+"aaa" <= "a" = false
+"a" <= "aaa" = true
+"aaa" <= "aaa" = true
+"aaa" >= "a" = true
+"a" >= "aaa" = false
+"aaa" >= "aaa" = true
+[1, []] < [2, [5]] = true
+[2, [5]] < [1, []] = false
+[2, [5]] < [2, [5]] = false
+[1, []] > [2, [5]] = false
+[2, [5]] > [1, []] = true
+[2, [5]] > [2, [5]] = false
+[1, []] <= [2, [5]] = true
+[2, [5]] <= [1, []] = false
+[2, [5]] <= [2, [5]] = true
+[1, []] >= [2, [5]] = false
+[2, [5]] >= [1, []] = true
+[2, [5]] >= [2, [5]] = true
+[2, []] < [2, [5]] = true
+[2, [5]] < [2, []] = false
+[2, [5]] < [2, [5]] = false
+[2, []] > [2, [5]] = false
+[2, [5]] > [2, []] = true
+[2, [5]] > [2, [5]] = false
+[2, []] <= [2, [5]] = true
+[2, [5]] <= [2, []] = false
+[2, [5]] <= [2, [5]] = true
+[2, []] >= [2, [5]] = false
+[2, [5]] >= [2, []] = true
+[2, [5]] >= [2, [5]] = true

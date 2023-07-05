@@ -1,0 +1,14 @@
+
+
+print("repr(''.strip()) = %s" % [repr(''.strip())])
+print("repr('  '.strip()) = %s" % [repr('  '.strip())])
+print("repr('hello'.strip()) = %s" % [repr('hello'.strip())])
+print("repr('hello '.strip()) = %s" % [repr('hello '.strip())])
+print("repr(' hello'.strip()) = %s" % [repr(' hello'.strip())])
+print("repr(' hello '.strip()) = %s" % [repr(' hello '.strip())])
+print("repr(' hello world '.strip()) = %s" % [repr(' hello world '.strip())])
+print("repr(' hello world \\n'.strip()) = %s" % [repr(' hello world \n'.strip())])
+
+print("repr('hello'.strip('h')) = %s" % [repr('hello'.strip('h'))])
+print("repr('hello'.strip('eh')) = %s" % [repr('hello'.strip('eh'))])
+print("repr('hello'.strip('he')) = %s" % [repr('hello'.strip('he'))])

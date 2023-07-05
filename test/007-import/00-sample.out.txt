@@ -1,0 +1,5 @@
+foo is defined
+<module test_importable>
+<function foo>
+(from foo) x = 5
+foo result

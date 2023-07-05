@@ -1,0 +1,5 @@
+import sys
+import fs
+
+print(fs.basename(fs.dirname(sys.argv[0])))
+print(fs.basename(sys.argv[0]))

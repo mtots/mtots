@@ -1,0 +1,7 @@
+
+class Foo:
+  var someField Int "Documentation about some field"
+
+final foo "Comment for a foo variable" = Foo()
+foo.someField = 10
+print("foo.someField = %r" % [foo.someField])

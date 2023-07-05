@@ -1,0 +1,13 @@
+
+
+
+def loads(json String) Any:
+  """
+  Deserialize data from JSON - resulting in nil, Bool, Number, String, List and Map
+  """
+
+
+def dumps(data Any) String:
+  """
+  Serialize data into JSON from nil, Bool, Number, String, List or Map
+  """

@@ -1,0 +1,20 @@
+
+
+
+def foo(x=5):
+  return x
+
+print("foo() = %r" % [foo()])
+print("foo(123) = %r" % [foo(123)])
+
+def bar(x="hello"):
+  return x
+
+print("bar() = %r" % [bar()])
+print("bar(1010) = %r" % [bar(1010)])
+
+def baz(a, b=false):
+  return [a, b]
+
+print("baz(true) = %r" % [baz(true)])
+print("baz(1010, 'm') = %r" % [baz(1010, 'm')])

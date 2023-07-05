@@ -1,0 +1,5 @@
+
+
+print('hello'.replace('l', 'xx'))
+print('hello'.replace('ll', 'xx'))
+print('lool'.replace('lo', 'aka'))

@@ -1,0 +1,33 @@
+
+
+
+final x = if 1 then 'got-true' else 'got-false'
+print(x)
+print(if 0 then 'got-true' else 'got-false')
+
+final a = (
+  if false
+    then 'first'
+    else if false
+      then 'second'
+      else 'third'
+)
+print(a)
+
+final b = (
+  if false
+    then 'first'
+    else if true
+      then 'second'
+      else 'third'
+)
+print(b)
+
+final c = (
+  if true
+    then 'first'
+    else if true
+      then 'second'
+      else 'third'
+)
+print(c)

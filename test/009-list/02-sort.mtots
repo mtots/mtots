@@ -1,0 +1,5 @@
+
+final items = [10, 9, 8, 7, 6, 5, 4, 3]
+print(items)
+print(items.sort())
+print(items)

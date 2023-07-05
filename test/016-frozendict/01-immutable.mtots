@@ -1,0 +1,2 @@
+final d = {1: 2}.freeze()
+d[1] = 3

@@ -1,0 +1,51 @@
+len("Hello world") = 11
+len("日本") = 2
+len("food😋") = 5
+len("food😋 and stuff") = 15
+"Hello world".getByteLength() = 11
+"日本".getByteLength() = 6
+"food😋 and stuff".getByteLength() = 18
+iterating over Hello world
+  by index
+    (0 -> H)
+    (1 -> e)
+    (2 -> l)
+    (3 -> l)
+    (4 -> o)
+    (5 ->  )
+    (6 -> w)
+    (7 -> o)
+    (8 -> r)
+    (9 -> l)
+    (10 -> d)
+iterating over 日本
+  by index
+    (0 -> 日)
+    (1 -> 本)
+iterating over food😋
+  by index
+    (0 -> f)
+    (1 -> o)
+    (2 -> o)
+    (3 -> d)
+    (4 -> 😋)
+iterating over food😋 and stuff
+  by index
+    (0 -> f)
+    (1 -> o)
+    (2 -> o)
+    (3 -> d)
+    (4 -> 😋)
+    (5 ->  )
+    (6 -> a)
+    (7 -> n)
+    (8 -> d)
+    (9 ->  )
+    (10 -> s)
+    (11 -> t)
+    (12 -> u)
+    (13 -> f)
+    (14 -> f)
+'日本😋日本😋日本😋'[1:] = 本😋日本😋日本😋
+'日本😋日本😋日本😋'[2:] = 😋日本😋日本😋
+'日本😋日本😋日本😋'[2:-2] = 😋日本😋日

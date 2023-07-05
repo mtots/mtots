@@ -1,0 +1,8 @@
+
+final items = [5, 6, 7, 8, 9, 10]
+var total = 0
+
+for x in items:
+  total = total + x
+
+print(total)

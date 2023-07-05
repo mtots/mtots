@@ -1,0 +1,2 @@
+frozenList1 == frozenList2 = true
+frozenList1 == frozenList3 = false

@@ -1,0 +1,10 @@
+"" = ""
+'' = ""
+len('') = 0
+'' == "" = true
+'' == r"" = true
+r"" = ""
+"" == r"""""" = true
+
+Hello world
+New Line

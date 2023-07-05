@@ -1,0 +1,7 @@
+{1, 2, 3} == Set([1, 2, 3]) = true
+s == s = true
+s == {"hello": "world"} = true
+s == {"hello": "world", "foo": "bar"} = false
+s == {"world": "hello"} = false
+s == {"hello": "worldx"} = false
+{1: 2} == {1: 2, 2: 7} = false

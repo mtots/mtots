@@ -1,0 +1,14 @@
+import fs
+
+# print(os.name)
+# print(fs.sep)
+
+print(fs.basename('/abc/def/gh.txt'.replace('/', fs.sep)) ==
+  'gh.txt'.replace('/', fs.sep))
+
+print(fs.dirname('/abc/def/gh.txt'.replace('/', fs.sep)) ==
+  '/abc/def'.replace('/', fs.sep))
+
+# print([fs.join('a', 'b', 'c'), len(fs.join('a', 'b', 'c'))])
+# print([fs.sep.join(['a', 'b', 'c']), len(fs.sep.join(['a', 'b', 'c']))])
+print(fs.join(['a', 'b', 'c']) == fs.sep.join(['a', 'b', 'c']))

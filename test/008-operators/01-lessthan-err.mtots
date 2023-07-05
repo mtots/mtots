@@ -1,0 +1,6 @@
+
+def foo():
+  print(5 < '5')
+
+
+foo()

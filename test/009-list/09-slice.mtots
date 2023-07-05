@@ -1,0 +1,13 @@
+
+
+final someList = ['xx', 'a', 'b', 'c', 'def', 'asdf']
+final copy1 = someList[:]
+final copy2 = someList[1:]
+final copy3 = someList[:-1]
+final copy4 = someList[2:-2]
+someList.append('new item')
+print('someList = %s' % [someList])
+print('copy1 = %s' % [copy1])
+print('copy2 = %s' % [copy2])
+print('copy3 = %s' % [copy3])
+print('copy4 = %s' % [copy4])

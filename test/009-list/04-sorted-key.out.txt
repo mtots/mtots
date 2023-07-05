@@ -1,0 +1,2 @@
+[5, 4, 3, 3, 2, 2, 1, 1]
+["z", "y", "x", "w", "a", "b", "c", "xx", "bbb", "ccc", "zzzzz", "aaaaa", "wwwwww", "yyyyyyyyy"]

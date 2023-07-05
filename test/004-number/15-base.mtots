@@ -1,0 +1,22 @@
+print('int("F", 16) = %s' % [int("F", 16)])
+
+print('int("30", 16) = %s' % [int("30", 16)])
+print('int("AB", 16) = %s' % [int("AB", 16)])
+print('int("5AB", 16) = %s' % [int("5AB", 16)])
+print('int("5ab", 16) = %s' % [int("5ab", 16)])
+print('int("780", 16) = %s' % [int("780", 16)])
+print('int("30") = %s' % [int("30")])
+print('int("30", 10) = %s' % [int("30", 10)])
+
+print('int("-30", 16) = %s' % [int("-30", 16)])
+print('int("-AB", 16) = %s' % [int("-AB", 16)])
+print('int("-5AB", 16) = %s' % [int("-5AB", 16)])
+print('int("-5ab", 16) = %s' % [int("-5ab", 16)])
+print('int("-780", 16) = %s' % [int("-780", 16)])
+print('int("-30") = %s' % [int("-30")])
+print('int("-30", 10) = %s' % [int("-30", 10)])
+
+
+print((16).base(36))
+for i in range(2, 36):
+  print("(100).base(%s) = %s" % [i, (100).base(i)])

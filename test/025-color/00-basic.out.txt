@@ -1,0 +1,7 @@
+Color(1, 2, 3) = Color(1,2,3,255)
+Color(255, 255, 255) == Color(255, 255, 255) -> true
+c1 = Color(100,200,150,255)
+c1.red = 100
+c1.green = 200
+c1.blue = 150
+c1.alpha = 255

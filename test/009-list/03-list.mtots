@@ -1,0 +1,7 @@
+
+
+print(List([1, 2, 3]))
+print(List(final[1, 2, 3]))
+print(List({1, 2, 3}))
+print(List({3, 2, 1}))
+print(List({"a": 1, "b": 2, "c"}))

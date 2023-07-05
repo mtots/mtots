@@ -1,0 +1,11 @@
+
+
+def foo(a int) int:
+  var x int | str = "hello world"
+  return a + 2
+
+
+class Foo:
+  "A class with field declarations"
+  var x list[int?]
+  var y float?

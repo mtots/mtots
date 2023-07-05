@@ -1,0 +1,130 @@
+"""
+Standard library module for interacting with the file system.
+"""
+
+
+final sep """
+The path separator for the current system.
+On windows this value is '\\', and '/' everywhere else.
+""" = '/'
+
+
+def readString(path String) String:
+  """
+  Read the entire contents of a file into a String.
+
+  The file must be a valid UTF-8 text file.
+
+  If the file is missing or not a valid UTF-8 text file,
+  the function will raise an error.
+
+  Parameter:
+  * path - The path to the file to read from
+  """
+
+
+def readBytes(path String) Buffer:
+  """
+  Read the entire contents of a file into a Buffer.
+
+  Parameter:
+  * path - The path of the file to read from.
+  """
+
+
+def writeString(path String, contents String) nil:
+  """
+  Create a file and fill it with the contents of the given String.
+  The contents will be the UTF-8 encoding of the String.
+
+  If a file already exists at the given path, it wil be overwritten.
+
+  Parameters:
+  * path - The path of the file to write into.
+  * contents - The data to fill the new file with.
+  """
+
+
+def writeBytes(path String, contents Buffer) nil:
+  """
+  Create a file and fill it with the contents of the given Buffer.
+
+  If a file already exists at the given path, it wil be overwritten.
+
+  Parameters:
+  * path - The path of the file to write into.
+  * contents - The bytes to fill the new file with.
+  """
+
+
+def isFile(path String) Bool:
+  """
+  Returns true if path refers to a regular file.
+
+  NOTE: This function is not supported on every platform.
+  Currently this function is only supported on POSIX-like platforms.
+
+  TODO: Support this function on windows.
+
+  Parameters:
+  * path - The path to query.
+  """
+
+
+def isDir(path String) Bool:
+  """
+  Returns true if path refers to a regular directory.
+
+  NOTE: This function is not supported on every platform.
+  Currently this function is only supported on POSIX-like platforms.
+
+  TODO: Support this function on windows.
+
+  Parameters:
+  * path - The path to query.
+  """
+
+
+def list(path String) List[String]:
+  """
+  Similar to Python's os.listdir.
+
+  Return a list containing the names of the entries in the directory
+  given by `path`.
+  The list is in arbitrary order, and does not include the special
+  entries '.' and '..' even if they are present in the directory.
+
+  parameters:
+  * path - The path to query.
+  """
+
+
+def mkdir(path String, existOK Bool=false) nil:
+  """
+  Create a new directory at the given path.
+
+  If `existOK` is set to true, this function will not raise an error
+  if this function fails because there is already a file or directory
+  at `path`.
+  """
+
+
+def dirname(path String) String:
+  r"""
+  The dirname function deletes the filename portion, beginning with the
+  last path separator character to the end of string and returns the result
+  """
+
+
+def basename(path String) String:
+  r"""
+  The basename function deletes any prefix ending with the last path
+  separator character present in 'path' and returns the result.
+  """
+
+
+def join(parts List[String]) String:
+  r"""
+  The join function joins parts of a path into a single path
+  connected by the path separator character.
+  """

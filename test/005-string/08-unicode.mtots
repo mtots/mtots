@@ -1,0 +1,25 @@
+
+
+print('len("Hello world") = %r' % [len("Hello world")])
+print('len("日本") = %r' % [len("日本")])
+print('len("food😋") = %r' % [len("food😋")])
+print('len("food😋 and stuff") = %r' % [len("food😋 and stuff")])
+
+print('"Hello world".getByteLength() = %r' % ["Hello world".getByteLength()])
+print('"日本".getByteLength() = %r' % ["日本".getByteLength()])
+print('"food😋 and stuff".getByteLength() = %r' % ["food😋 and stuff".getByteLength()])
+
+def display(s String) nil:
+  print("iterating over %s" % [s])
+  print("  by index")
+  for i in range(len(s)):
+    print("    (%s -> %s)" % [i, s[i]])
+
+display("Hello world")
+display("日本")
+display("food😋")
+display("food😋 and stuff")
+
+print("'日本😋日本😋日本😋'[1:] = %s" % ['日本😋日本😋日本😋'[1:]])
+print("'日本😋日本😋日本😋'[2:] = %s" % ['日本😋日本😋日本😋'[2:]])
+print("'日本😋日本😋日本😋'[2:-2] = %s" % ['日本😋日本😋日本😋'[2:-2]])

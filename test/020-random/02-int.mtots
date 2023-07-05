@@ -1,0 +1,21 @@
+from random import Random
+
+final random = Random(0xAABB55)
+
+final counts1 = [0] * 7
+final counts2 = [0] * 7
+
+
+for _ in range(10000):
+  final i = random.range(7)
+  counts1[i] = counts1[i] + 1
+
+
+for _ in range(10000):
+  final i = random.int(6)
+  counts2[i] = counts2[i] + 1
+
+
+print(counts1)
+print(counts2)
+print("10000 / 7 = %r" % [10000 / 7])

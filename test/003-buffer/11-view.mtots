@@ -1,0 +1,24 @@
+
+
+final buffer = Buffer.fromList(List(range(10)))
+final view1 = buffer.view(2, 5)
+final view2 = buffer.view(3)
+
+var xs List[Int] = []
+
+print("START")
+print("buffer = %r" % [buffer])
+print("view1 = %r" % [view1])
+print("view2 = %r" % [view2])
+
+view1.setU16(0, 0xFFFF)
+print("\nAFTER 1")
+print("buffer = %r" % [buffer])
+print("view1 = %r" % [view1])
+print("view2 = %r" % [view2])
+
+view2.setU16(0, 0xAABB)
+print("\nAFTER 2")
+print("buffer = %r" % [buffer])
+print("view1 = %r" % [view1])
+print("view2 = %r" % [view2])

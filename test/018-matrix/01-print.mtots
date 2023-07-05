@@ -1,0 +1,14 @@
+
+
+final m = V(2, 3)
+print(m)
+
+print(Matrix.fromRows(
+  V(1, 2, 3),
+  V(4, 5, 6),
+))
+
+print(Matrix.fromColumns(
+  V(1, 2, 3),
+  V(4, 5, 6),
+))

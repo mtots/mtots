@@ -1,0 +1,23 @@
+
+
+
+class Image:
+  final width Int "Width of the image in pixels"
+  final height Int "Height of the image in pixels"
+
+  def __init__(width Int, height Int):
+    """
+    Create a blank image with the given dimensions
+
+    All pixels will be set to black transparent
+    """
+
+  def get(row Int, column Int) Color:
+    """
+    Gets the color of a pixel in the image given its row and column
+    """
+
+  def set(row Int, column Int, color Color) nil:
+    """
+    Sets the color of a pixel in the image
+    """

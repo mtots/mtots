@@ -1,0 +1,5 @@
+
+
+print(FrozenList(final['some', 'frozen-list', 'value']))
+print(FrozenList(['a', 'b', 'c']))
+print(FrozenList({1, 2, 7, 5, 2}))

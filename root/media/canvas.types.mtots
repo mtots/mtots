@@ -1,0 +1,119 @@
+from media import Image
+from media import Pen
+
+
+class Canvas:
+
+  final width Int "Width of the image in pixels (alias for `image.width`)"
+  final height Int "Height of the image in pixels (alias for `image.height`)"
+  final image Image "The underlying `Image` this `Canvas` draws to"
+
+  def __init__(image Image):
+    """
+    Creates a Canvas that will draw to the given Image.
+    """
+
+  def get(row Int, column Int) Color:
+    """
+    Gets the color of a pixel in the image given its row and column
+    """
+
+  def set(row Int, column Int, color Color) nil:
+    """
+    Sets the color of a pixel in the image
+    """
+
+  def getPen() Pen:
+    """
+    Gets the current `Pen` associated with this `Canvas`.
+
+    If there is no `Pen` curently associated with this `Canvas`,
+    a new one is created and associated with this `Canvas`.
+
+    The created pen will use the Roboto Monospace Font.
+    """
+
+  def fill(color Color?=nil) nil:
+    """
+    Fill the entire image with a single color.
+
+    `color` defaults to `Color(0,0,0,0)`
+    """
+
+  def drawLine(start Vector, end Vector, color Color) nil:
+    """
+    Draw a line between two points
+    """
+
+  def fillRect(rect Rect, color Color) nil:
+    """
+    Fill a rectangular area in the Canvas with the given color
+    """
+
+  def strokeRect(rect Rect, color Color) nil:
+    """
+    Draw the outline of a rectangular area in the Canvas with the given color
+    """
+
+  def fillPolygon(points List[Vector], color Color) nil:
+    """
+    Fills a polygon with the given color
+    """
+
+  def fillCircle(center Vector, radius Float, color Color) nil:
+    """
+    Fill a circle with the given center, radius and color
+    """
+
+  def strokeCircle(center Vector, radius Float, color Color) nil:
+    """
+    Draw the outline of a circle with the given center, radius and color
+    """
+
+  def fillOval(boundingRect Rect, color Color) nil:
+    """
+    Fill an ellipse with the given bounding rectangle and color
+    """
+
+  def strokeOval(boundingRect Rect, color Color) nil:
+    """
+    Draw the outline of an ellipse with the given bounding rectangle and color
+    """
+
+  def copy(
+      src Canvas,
+      dstPos Vector,
+      srcRect Rect?=nil,
+      flipX Bool=false,
+      flipY Bool=false) nil:
+    """
+    Copy `src` to `this`. No scaling is done - the image will be copied
+    in its original size.
+
+    * `src` - the source image to copy from
+    * `dstPos` - the position in `src` to copy to.
+    * `srcRect` - the region in `src` to copy. If omitted or nil,
+      the entire `src` image will be copied over.
+    * `flipX` - if true, flip the image horizontally as it is copied
+    * `flipY` - if true, flip the image vertically as it is copied
+    """
+
+  def copyScaled(
+      src Canvas,
+      srcRect Rect?=nil,
+      dstRect Rect?=nil,
+      flipX Bool=false,
+      flipY Bool=false) nil:
+    """
+    Copy `src` to `this`, with the option to crop and scale the `src`
+    image as it is copied to `this`.
+
+    * `src` - the source image to copy from
+    * `srcRect` - the region in `src` to copy. If omitted or nil,
+      the entire `src` image will be copied over.
+    * `dstRect` - the rectangular area to fit the image into.
+      If omitted, the source image will be stretched to fit the entire
+      destination image.
+    * `flipX` - if true, flip the image horizontally as it is copied
+    * `flipY` - if true, flip the image vertically as it is copied
+    """

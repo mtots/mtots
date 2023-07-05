@@ -1,0 +1,42 @@
+
+
+
+def foo(f Function[Any]):
+  print("BEFORE CALLING F")
+  f()
+  print("AFTER CALLING F")
+
+
+print("Before decoration")
+
+@foo
+def() nil:
+  print("Inside decorated function")
+
+
+print("After decoration")
+
+
+print("")
+
+
+class SomeClass:
+  def wrap(f Function[Int, Int]) nil:
+    ""
+    print("SomeClass::wrap start")
+    final value = f(55)
+    print("f() returned %s" % [value])
+    print("SomeClass::wrap end")
+
+
+print("Before Instantiation")
+final someInstance = SomeClass()
+print("After Instantiation")
+
+print("Before decorator application")
+@someInstance.wrap
+def(i Int) Int:
+  print("INSIDE WRAPPED FUNCTION")
+  return i + 7
+
+print("After decorator application")

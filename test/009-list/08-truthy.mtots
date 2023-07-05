@@ -1,0 +1,18 @@
+
+# Right now, empty lists are truthy.
+# Consider whether I want this to change
+
+final items = [] as List[Int]
+
+if items:
+  print("empty lists are truthy")
+else:
+  print("empty lists are falsey")
+
+items.append(10)
+
+if items:
+  print("non-empty lists are truthy")
+else:
+  print("non-empty lists are falsey")
+

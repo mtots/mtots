@@ -1,0 +1,5 @@
+buffer = b"\x01\x02\x03"
+buffer.isLocked() = false
+buffer = b"\x01\x02\x03\x0A"
+buffer.lock() = nil
+buffer.isLocked() = true

@@ -1,0 +1,8 @@
+"""
+Test for name of a module
+"""
+import test_import2 as tm
+
+print('__name__ = %r' % [__name__])
+
+print('tm.name = %r' % [tm.name])

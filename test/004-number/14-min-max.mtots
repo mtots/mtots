@@ -1,0 +1,6 @@
+
+
+print('min(1, 2, 3) = %r' % [min(1, 2, 3)])
+print('min("hello", "world") = %r' % [min("hello", "world")])
+print('max(1, 2, 3) = %r' % [max(1, 2, 3)])
+print('max("hello", "world") = %r' % [max("hello", "world")])

@@ -1,0 +1,3 @@
+isinstance(5, Number) = true
+isinstance('hi', Number) = false
+isinstance('hi', String) = true

@@ -1,0 +1,6 @@
+
+
+final lis = List(range(10))
+print("lis = %s" % [lis])
+lis.reverse()
+print("lis = %s" % [lis])

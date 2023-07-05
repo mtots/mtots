@@ -1,0 +1,17 @@
+print('"" = %r' % [""])
+print("'' = %r" % [''])
+print("len('') = %r" % [len('')])
+print('\'\' == "" = %r' % ['' == ""])
+print('\'\' == r"" = %r' % ['' == r""])
+print('r"" = %r' % [r""])
+print('"" == r"""""" = %r' % ["" == r""""""])
+print(r"""
+Hello world
+New Line""")
+
+"""
+I don't know why, but on windows, the spacing is kind of weird
+when printing newlines.
+But when I run it directly on the REPL, it looks fine.
+TODO: Look into this at some point.
+"""

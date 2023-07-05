@@ -1,0 +1,8 @@
+
+print(
+  try  raise "fail"
+  else "foo")
+
+print(
+  try  "success"
+  else "foo")

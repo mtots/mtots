@@ -1,0 +1,21 @@
+
+
+
+class Foo:
+  static def baz() Foo:
+    "a static method"
+    return Foo(14)
+
+  static def anotherStatic() String:
+    return 'hello'
+
+  var baz Int
+
+  def __init__(baz Int):
+    this.baz = baz
+
+
+final foo = Foo.baz()
+print(foo)
+print(foo.baz)
+print(Foo.anotherStatic())

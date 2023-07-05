@@ -1,0 +1,15 @@
+
+
+final xs List[Int] = []
+
+xs.extend(range(5, 10))
+print("xs = %s" % [xs])
+
+final ys List[Int] = [5, 5]
+ys.extend([1, 1, 1])
+print("ys = %s" % [ys])
+
+final zs List[Any] = ["hello", "world"]
+zs.extend(xs)
+zs.extend(ys)
+print("zs = %s" % [zs])

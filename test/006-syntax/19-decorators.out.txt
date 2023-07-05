@@ -1,0 +1,14 @@
+Before decoration
+BEFORE CALLING F
+Inside decorated function
+AFTER CALLING F
+After decoration
+
+Before Instantiation
+After Instantiation
+Before decorator application
+SomeClass::wrap start
+INSIDE WRAPPED FUNCTION
+f() returned 62
+SomeClass::wrap end
+After decorator application

@@ -1,0 +1,4 @@
+
+print("isinstance(5, Number) = %r" % [isinstance(5, Number)])
+print("isinstance('hi', Number) = %r" % [isinstance('hi', Number)])
+print("isinstance('hi', String) = %r" % [isinstance('hi', String)])

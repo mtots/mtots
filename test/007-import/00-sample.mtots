@@ -1,0 +1,5 @@
+import test_importable
+
+print(test_importable)
+print(test_importable.foo)
+print(test_importable.foo())

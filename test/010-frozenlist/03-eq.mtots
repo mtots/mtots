@@ -1,0 +1,9 @@
+
+
+final frozenList1 = FrozenList(["aa", 2, 5])
+final x = 3
+final frozenList2 = FrozenList(["a" + "a", x - 1, x + 2])
+final frozenList3 = FrozenList(["aa", 2, 6])
+
+print("frozenList1 == frozenList2 = %r" % [frozenList1 == frozenList2])
+print("frozenList1 == frozenList3 = %r" % [frozenList1 == frozenList3])

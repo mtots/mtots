@@ -1,0 +1,4 @@
+
+final s = "hello 日本😋 world"
+for ch in s:
+  print("ch = '%s'" % [ch])

@@ -1,0 +1,2 @@
+Tried to intern a string that is not valid UTF-8
+[line 17] in __main__

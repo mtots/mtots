@@ -1,0 +1,36 @@
+import gg
+import sys
+from random import Random
+
+
+final rand = Random()
+final WIDTH = 400
+final HEIGHT = 300
+final SCALE = 2
+final BGCOLOR = gg.BROWN
+final RADIUS = 30
+
+final window = gg.Window('demo', WIDTH * SCALE, HEIGHT * SCALE)
+final canvas = window.newCanvas(WIDTH, HEIGHT)
+
+canvas.fill(BGCOLOR)
+
+var pos = Vector(WIDTH // 2, HEIGHT // 2)
+var vel = Vector(rand.int(-30, 30), rand.int(-30, 30))
+
+
+@window.onUpdate
+def() nil:
+  canvas.fill(BGCOLOR)
+  canvas.fillCircle(pos, RADIUS, gg.BLUE)
+  pos = pos + vel
+
+  if pos.x - RADIUS < 0 or pos.x + RADIUS >= WIDTH:
+    vel = Vector(-vel.x, vel.y)
+
+  if pos.y - RADIUS < 0 or pos.y + RADIUS >= HEIGHT:
+    vel = Vector(vel.x, -vel.y)
+
+sys.enableLogOnGC(true)
+window.mainLoop()
+sys.enableLogOnGC(false)

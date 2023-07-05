@@ -1,0 +1,5 @@
+
+# For loop over a temporary list value
+for i in [1, 2, 3, 4]:
+  print("i = %s" % [i])
+

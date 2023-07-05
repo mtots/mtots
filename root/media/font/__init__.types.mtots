@@ -1,0 +1,134 @@
+from media import Image
+from data import DataSource
+
+
+class Font:
+  static def fromData(ds DataSource) Font:
+    """
+    Creates a `Font` from ttf file data
+    """
+
+  static def fromFile(path String) Font:
+    """
+    Creates a `Font` from a ttf file
+    """
+
+  static def fromBuffer(buffer Buffer) Font:
+    """
+    Creates a `Font` from ttf file data
+    """
+
+  var emWidth Int """
+    The width of the scaled EM square in pixels,
+    hence the term `ppem` (pixels per EM).
+    It is also referred to as `nominal width`.
+
+    For more information about the EM square, see:
+    https://fonts.google.com/knowledge/glossary/em
+    https://fonts.google.com/knowledge/choosing_type/exploring_x_height_the_em_square
+
+    Assigning to this field will also automatically
+    modify the height.
+
+    You should not rely on the resulting glyphs matching or being
+    constrained to this pixel size.
+
+    `emWidth` corresponds to the `x_ppem` field in `FT_Size_Metrics`:
+    https://freetype.org/freetype2/docs/reference/ft2-base_interface.html#ft_size_metrics
+
+    See https://freetype.org/freetype2/docs/glyphs/glyphs-2.html
+    for more details.
+  """
+
+  var emHeight Int """
+    The height of the scaled EM square in pixels,
+    hence the term `ppem` (pixels per EM).
+    It is also referred to as `nominal height`.
+
+    For more information about the EM square, see:
+    https://fonts.google.com/knowledge/glossary/em
+    https://fonts.google.com/knowledge/choosing_type/exploring_x_height_the_em_square
+
+    Assigning to this field will also automatically
+    modify the width.
+
+    You should not rely on the resulting glyphs matching or being
+    constrained to this pixel size.
+
+    `emHeight` corresponds to the `y_ppem` field in `FT_Size_Metrics`:
+    https://freetype.org/freetype2/docs/reference/ft2-base_interface.html#ft_size_metrics
+
+    See https://freetype.org/freetype2/docs/glyphs/glyphs-2.html
+    for more details.
+  """
+
+  final advanceHeight Int """
+    The vertical distance between two consecutive baselines in pixels.
+
+    When rendering latin text on multiple lines, you should increment
+    the y coordinate by this amount when moving to the next line.
+
+    `advanceHeight` will change automatically when `width` or `height`
+    changes, but you cannot assign to `advanceHeight` directly.
+
+    `advanceHeight` corresponds to the `height` field in `FT_Size_Metrics`:
+    https://freetype.org/freetype2/docs/reference/ft2-base_interface.html#ft_size_metrics
+  """
+
+  def newPen(imamge Image?=nil, x Int?=nil, y Int?=nil, color Color?=nil) Pen:
+    """
+    Create a new `Pen` to render text with.
+    """
+
+
+class Pen:
+  """
+  `Pen` instances hold a `Font` together with context necessary for rendering
+  text onto an `Image`.
+  """
+
+  var font Font "The font to use to draw with"
+  var image Image? """
+    The image to render the text to. May be nil if you do not want to
+    actually draw the text but just want to make measurements.
+  """
+  var lineStartX Float """
+    The x coordinate to move the pen to when starting a new line
+  """
+  var x Float """
+    The current x coordinate of the pen to start rendering from.
+  """
+  var y Float """
+    The current y coordinate of the pen to start rendering from.
+    The y coordinate is used as the baseline of the text that is rendered.
+  """
+  var color Color """
+    The color to render the text in. Defaults to Color(255, 255, 255, 255)
+  """
+  final boundingBox Rect """
+    Holds the bounding box of the last bit of text that was rendered.
+  """
+
+  def write(text String) nil:
+    """
+    Render some text on to the image associated with this pen.
+
+    The `x` and `y` coordinates specify the leftmost `x` coordinate and
+    the `y` coordinate of the baseline to start rendering the text from.
+
+    If image is nil, this function will do a dry render - the `pen` field
+    will be updated as though the font had done the render without actually
+    rendering to any image.
+
+    `x` or `y` values are given, they will override and update the
+    `pen` field before rendering the text.
+
+    The `boundingBox` of this pen will be updated so that the Rect will
+    contain the entire text, relative to the image's coordinates.
+    The resulting rectangle may partially or wholly lie outside the image
+    itself.
+
+    See
+    https://fonts.google.com/knowledge/choosing_type/exploring_x_height_the_em_square
+    https://fonts.google.com/knowledge/glossary/baseline
+    """

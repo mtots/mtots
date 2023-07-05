@@ -1,0 +1,17 @@
+"""
+Verify that the default Random engine
+produces the values expected by mt19937
+
+I match the result against the output produced by
+mt19937 in the C++11 standard library with the
+results produced by the mtots implementation.
+"""
+
+from random import Random
+
+final random = Random(0)
+
+for i in range(1000):
+  final value = random.next()
+  if i < 20 or i > 600 and i < 650 or i > 990:
+    print("%r -> %r" % [i, value])

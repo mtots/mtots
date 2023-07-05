@@ -1,0 +1,2 @@
+import test_importable    # real module
+import not_a_real_module  # should not exist

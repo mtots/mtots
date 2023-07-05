@@ -1,0 +1,53 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/src/extensions/gg",
+                "${workspaceFolder}/src/extensions/sdl",
+                "${workspaceFolder}/src/extensions/audio",
+                "${workspaceFolder}/src/extensions/image",
+                "${workspaceFolder}/src/extensions/canvas",
+                "${workspaceFolder}/src/extensions/font",
+                "${workspaceFolder}/src/extensions/fontrm",
+                "${workspaceFolder}/src/extensions/zip",
+                "${workspaceFolder}/src/extensions/paco",
+                "${workspaceFolder}/lib/freetype/include",
+                "${workspaceFolder}/lib/lodepng/src",
+                "${workspaceFolder}/lib/miniz/src",
+                "${workspaceFolder}/lib/sdl2/include",
+                "${workspaceFolder}/lib/dr_mp3/include",
+                "${workspaceFolder}/lib/stbimage/include"
+            ],
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "macos-clang-arm64"
+        },
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/src/extensions/gg",
+                "${workspaceFolder}/src/extensions/sdl",
+                "${workspaceFolder}/src/extensions/audio",
+                "${workspaceFolder}/src/extensions/image",
+                "${workspaceFolder}/src/extensions/canvas",
+                "${workspaceFolder}/src/extensions/font",
+                "${workspaceFolder}/src/extensions/fontrm",
+                "${workspaceFolder}/src/extensions/zip",
+                "${workspaceFolder}/src/extensions/paco",
+                "${workspaceFolder}/lib/freetype/include",
+                "${workspaceFolder}/lib/lodepng/src",
+                "${workspaceFolder}/lib/miniz/src",
+                "${workspaceFolder}/lib/sdl2/include",
+                "${workspaceFolder}/lib/dr_mp3/include",
+                "${workspaceFolder}/lib/stbimage/include"
+            ],
+            "defines": ["_DEBUG", "UNICODE", "_UNICODE"],
+            "cStandard": "c89",
+            "intelliSenseMode": "msvc-arm64"
+          }
+    ],
+    "version": 4
+}

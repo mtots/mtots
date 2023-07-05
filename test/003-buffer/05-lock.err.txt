@@ -1,0 +1,2 @@
+Cannot increase the capacity of a locked Buffer
+[line 12] in __main__

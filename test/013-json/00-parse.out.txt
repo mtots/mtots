@@ -1,0 +1,17 @@
+"hello"
+"hello \u65E5\u672C"
+nil
+7
+7000000000
+7.2
+720
+failed unterminated string literal
+failed unterminated string literal
+failed parse with extra
+[1, 2, 3]
+[1, [2, 3, "hi"]]
+[]
+[true, false, nil]
+{}
+{"hello": "world"}
+{"hello": "world", "x": {}}

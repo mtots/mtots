@@ -1,0 +1,9 @@
+*.pyc
+/venv
+/requirements.txt
+.DS_Store
+/sdl-audio-demo*
+/out/
+/a.out
+/a.out.dSYM
+*.obj

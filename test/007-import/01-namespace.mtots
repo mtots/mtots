@@ -1,0 +1,5 @@
+import test_importable
+
+# 'foo' is defined as a global in test_importable.
+# That should not pollute the global namespace here
+foo
