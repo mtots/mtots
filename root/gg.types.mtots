@@ -290,11 +290,6 @@ class Texture:
     exactly a single sprite consisting of the entire image.
     """
 
-  def clip(rect Rect? = nil, color Color? = nil) TextureClip:
-    """
-    Creates a texture clip
-    """
-
   def isStreaming() Bool:
     """
     Returns true if this is a streaming texture.
@@ -307,29 +302,6 @@ class Texture:
     current state of the associated `Image`.
 
     Otherwise, this method raises an error.
-    """
-
-
-class TextureClip:
-  """
-  Texture together with a source Rect and color to modulate with
-
-  The width and height fields can be used to stretch out the
-  rendered image as well.
-  """
-
-  var texture Texture
-  var rect Rect          "The region to clip in the texture"
-  var color Color        "Color to mod the texture with"
-  var width Float        "Destination width when rendering. Defaults to rect.width"
-  var height Float       "Destination height when rendering. Defaults to rect.height"
-
-  def blit(pos Vector, rotation Float = 0) nil:
-    """
-    Draws the texture clip at the given position.
-
-    The image can also be rotated if the `rotation` argument is provided.
-    `rotation` is specified in radians.
     """
 
 

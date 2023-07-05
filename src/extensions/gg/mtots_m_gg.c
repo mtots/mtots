@@ -37,14 +37,12 @@
 
 #define AS_WINDOW(v) ((ObjWindow*)AS_OBJ((v)))
 #define AS_TEXTURE(v) ((ObjTexture*)AS_OBJ((v)))
-#define AS_TEXTURE_CLIP(v) ((ObjTextureClip*)AS_OBJ((v)))
 #define AS_SPRITE_SHEET(v) ((ObjSpriteSheet*)AS_OBJ((v)))
 #define AS_CLICK_EVENT(v) ((ObjClickEvent*)AS_OBJ((v)))
 #define AS_KEY_EVENT(v) ((ObjKeyEvent*)AS_OBJ((v)))
 #define AS_MOTION_EVENT(v) ((ObjMotionEvent*)AS_OBJ((v)))
 #define IS_WINDOW(v) ((getNativeObjectDescriptor((v)) == &descriptorWindow))
 #define IS_TEXTURE(v) ((getNativeObjectDescriptor((v)) == &descriptorTexture))
-#define IS_TEXTURE_CLIP(v) ((getNativeObjectDescriptor((v)) == &descriptorTextureClip))
 #define IS_SPRITE_SHEET(v) (getNativeObjectDescriptor(v) == &descriptorSpriteSheet)
 #define IS_CLICK_EVENT(v) ((getNativeObjectDescriptor((v)) == &descriptorClickEvent))
 #define IS_KEY_EVENT(v) ((getNativeObjectDescriptor((v)) == &descriptorKeyEvent))
@@ -83,15 +81,6 @@ struct ObjTexture {
   ObjImage *image;       /* for streaming textures */
   Color colorMod;
 };
-
-typedef struct ObjTextureClip {
-  ObjNative obj;
-  ObjTexture *texture;
-  ObjRect *rect;
-  Color color;
-  float width;
-  float height;
-} ObjTextureClip;
 
 struct ObjSpriteSheet {
   ObjNative obj;
@@ -161,10 +150,6 @@ static Value TEXTURE_VAL(ObjTexture *texture) {
   return OBJ_VAL_EXPLICIT((Obj*)texture);
 }
 
-static Value TEXTURE_CLIP_VAL(ObjTextureClip *clip) {
-  return OBJ_VAL_EXPLICIT((Obj*)clip);
-}
-
 static Value CLICK_EVENT_VAL(ObjClickEvent *clickEvent) {
   return OBJ_VAL_EXPLICIT((Obj*)clickEvent);
 }
@@ -213,12 +198,6 @@ static void freeTexture(ObjNative *n) {
   }
 }
 
-static void blackenTextureClip(ObjNative *n) {
-  ObjTextureClip *clip = (ObjTextureClip*)n;
-  markObject((Obj*)clip->texture);
-  markObject((Obj*)clip->rect);
-}
-
 static void blackenSpriteSheet(ObjNative *n) {
   ObjSpriteSheet *ss = (ObjSpriteSheet*)n;
   markObject((Obj*)ss->texture);
@@ -230,10 +209,6 @@ static NativeObjectDescriptor descriptorWindow = {
 
 static NativeObjectDescriptor descriptorTexture = {
   blackenTexture, freeTexture, sizeof(ObjTexture), "Texture"
-};
-
-static NativeObjectDescriptor descriptorTextureClip = {
-  blackenTextureClip, nopFree, sizeof(ObjTextureClip), "TextureClip"
 };
 
 static NativeObjectDescriptor descriptorSpriteSheet = {
@@ -694,34 +669,6 @@ static ubool windowNewCanvas(ObjWindow *window, size_t width, size_t height) {
 
   LOCAL_GC_UNPAUSE(gcPause);
 
-  return UTRUE;
-}
-
-static ubool textureClipBlit(
-    ObjTextureClip *clip,
-    float dstX,
-    float dstY,
-    float rotation) {
-  SDL_Rect srcRect;
-  SDL_FRect dstRect;
-  srcRect.x = clip->rect->handle.minX;
-  srcRect.y = clip->rect->handle.minY;
-  srcRect.w = clip->rect->handle.width;
-  srcRect.h = clip->rect->handle.height;
-  dstRect.x = dstX;
-  dstRect.y = dstY;
-  dstRect.w = clip->width;
-  dstRect.h = clip->height;
-  if (!setTextureColorMod(clip->texture, clip->color)) {
-    return UFALSE;
-  }
-  if (SDL_RenderCopyExF(
-      clip->texture->window->renderer,
-      clip->texture->handle,
-      &srcRect, &dstRect,
-      rotation, NULL, SDL_FLIP_NONE) != 0) {
-    return sdlError("SDL_RenderCopyF");
-  }
   return UTRUE;
 }
 
@@ -1209,38 +1156,6 @@ static CFunction funcTextureNewSpriteSheet = {
   implTextureNewSpriteSheet, "newSpriteSheet", 0, 2, argsTextureNewSpriteSheet
 };
 
-static ubool implTextureClip(i16 argc, Value *args, Value *out) {
-  ObjTexture *texture = AS_TEXTURE(args[-1]);
-  ObjRect *rect = argc > 0 && !IS_NIL(args[0]) ?
-    AS_RECT(args[0]) :
-    allocRect(newRect(0, 0, texture->width, texture->height));
-  Color color = argc > 1 && !IS_NIL(args[1]) ?
-    AS_COLOR(args[1]) : newColor(255, 255, 255, 255);
-  ObjTextureClip *clip;
-
-  push(RECT_VAL(rect));
-  clip = NEW_NATIVE(ObjTextureClip, &descriptorTextureClip);
-  clip->texture = texture;
-  clip->rect = rect;
-  clip->color = color;
-  clip->width = rect->handle.width;
-  clip->height = rect->handle.height;
-  pop(); /* rect */
-
-  *out = TEXTURE_CLIP_VAL(clip);
-
-  return UTRUE;
-}
-
-static TypePattern argsTextureClip[] = {
-  { TYPE_PATTERN_NATIVE_OR_NIL, &descriptorRect },
-  { TYPE_PATTERN_COLOR_OR_NIL },
-};
-
-static CFunction funcTexureClip = {
-  implTextureClip, "clip", 0, 2, argsTextureClip,
-};
-
 static ubool implTextureIsStreaming(i16 argc, Value *args, Value *out) {
   ObjTexture *texture = AS_TEXTURE(args[-1]);
   *out = BOOL_VAL(!!texture->image);
@@ -1264,91 +1179,6 @@ static ubool implTextureUpdate(i16 argc, Value *args, Value *out) {
 }
 
 static CFunction funcTextureUpdate = { implTextureUpdate, "update" };
-
-static ubool implTextureClipGetattr(i16 argc, Value *args, Value *out) {
-  ObjTextureClip *clip = AS_TEXTURE_CLIP(args[-1]);
-  String *name = AS_STRING(args[0]);
-  if (name == textureString) {
-    *out = TEXTURE_VAL(clip->texture);
-  } else if (name == rectString) {
-    *out = RECT_VAL(clip->rect);
-  } else if (name == colorString) {
-    *out = COLOR_VAL(clip->color);
-  } else if (name == vm.widthString) {
-    *out = NUMBER_VAL(clip->width);
-  } else if (name == vm.heightString) {
-    *out = NUMBER_VAL(clip->height);
-  } else {
-    runtimeError("Field %s not found in TextureClip", name->chars);
-    return UFALSE;
-  }
-  return UTRUE;
-}
-
-static CFunction funcTextureClipGetattr = {
-  implTextureClipGetattr, "__getattr__", 1, 0, argsStrings
-};
-
-static ubool implTextureClipSetattr(i16 argc, Value *args, Value *out) {
-  ObjTextureClip *clip = AS_TEXTURE_CLIP(args[-1]);
-  String *name = AS_STRING(args[0]);
-  Value value = args[1];
-  if (name == textureString) {
-    if (IS_TEXTURE(value)) {
-      clip->texture = AS_TEXTURE(value);
-    } else {
-      runtimeError("Expected Texture but got %s", getKindName(value));
-    }
-  } else if (name == rectString) {
-    if (IS_RECT(value)) {
-      clip->rect = AS_RECT(value);
-    } else {
-      runtimeError("Expected Rect but got %s", getKindName(value));
-    }
-  } else if (name == colorString) {
-    if (IS_COLOR(value)) {
-      clip->color = AS_COLOR(value);
-    } else {
-      runtimeError("Expected Color but got %s", getKindName(value));
-    }
-  } else if (name == vm.widthString) {
-    if (IS_NUMBER(value)) {
-      clip->width = AS_NUMBER(value);
-    } else {
-      runtimeError("Expected Number but got %s", getKindName(value));
-    }
-  } else if (name == vm.heightString) {
-    if (IS_NUMBER(value)) {
-      clip->height = AS_NUMBER(value);
-    } else {
-      runtimeError("Expected Number but got %s", getKindName(value));
-    }
-  } else {
-    runtimeError("Field %s not found in TextureClip", name->chars);
-    return UFALSE;
-  }
-  return UTRUE;
-}
-
-static CFunction funcTextureClipSetattr = {
-  implTextureClipSetattr, "__setattr__", 2, 0, argsSetattr,
-};
-
-static ubool implTextureClipBlit(i16 argc, Value *args, Value *out) {
-  ObjTextureClip *clip = AS_TEXTURE_CLIP(args[-1]);
-  Vector dstPos = AS_VECTOR(args[0]);
-  double rotation = argc > 1 ? AS_NUMBER(args[1]) : 0;
-  return textureClipBlit(clip, dstPos.x, dstPos.y, rotation);
-}
-
-static TypePattern argsTextureClipBlit[] = {
-  { TYPE_PATTERN_VECTOR },
-  { TYPE_PATTERN_NUMBER },
-};
-
-static CFunction funcTextureClipBlit = {
-  implTextureClipBlit, "blit", 1, 2, argsTextureClipBlit,
-};
 
 static ubool implSpriteSheetGetattr(i16 argc, Value *args, Value *out) {
   ObjSpriteSheet *spriteSheet = AS_SPRITE_SHEET(args[-1]);
@@ -1600,18 +1430,8 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &funcTextureGetattr,
     &funcTextureBlit,
     &funcTextureNewSpriteSheet,
-    &funcTexureClip,
     &funcTextureIsStreaming,
     &funcTextureUpdate,
-    NULL,
-  };
-  CFunction *textureClipStaticMethods[] = {
-    NULL,
-  };
-  CFunction *textureClipMethods[] = {
-    &funcTextureClipGetattr,
-    &funcTextureClipSetattr,
-    &funcTextureClipBlit,
     NULL,
   };
   CFunction *spriteSheetStaticMethods[] = {
@@ -1722,12 +1542,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &descriptorTexture,
     textureMethods,
     textureStaticMethods);
-
-  newNativeClass(
-    module,
-    &descriptorTextureClip,
-    textureClipMethods,
-    textureClipStaticMethods);
 
   newNativeClass(
     module,
