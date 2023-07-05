@@ -1,0 +1,5 @@
+{
+  "$schema": "https://raw.githubusercontent.com/mtots/mtots/main/misc/schema/app.schema.json",
+  "exclude": ["app.json"],
+  "extensions": ["paco"]
+}

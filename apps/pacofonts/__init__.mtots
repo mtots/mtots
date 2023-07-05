@@ -1,0 +1,51 @@
+import paco as p
+import fs
+import data
+
+
+var f8x8  p.SpriteSheet? = nil
+var f8x16 p.SpriteSheet? = nil
+
+
+def _load8x8() p.SpriteSheet:
+  final sheet = p.loadSheetFromBuffer(
+    data.fromBundle(__file__, 'font8x8.bmp').toBuffer(), 8, 8, false)
+  f8x8 = sheet
+  return sheet
+
+
+def load8x8(active Bool=true) p.SpriteSheet:
+  """
+  Loads and returns the 8x8 font sheet
+
+  Parameters:
+  * active - indicates whether or not the function should also set the
+    newly loaded font as the active font.
+    Defaults to true.
+  """
+  final font = f8x8 or _load8x8()
+  if active:
+    p.font(font)
+  return font
+
+
+def _load8x16() p.SpriteSheet:
+  final sheet = p.loadSheetFromBuffer(
+    data.fromBundle(__file__, 'font8x16.bmp').toBuffer(), 8, 16, false)
+  f8x16 = sheet
+  return sheet
+
+
+def load8x16(active Bool=true) p.SpriteSheet:
+  """
+  Loads and returns the 8x16 font sheet
+
+  Parameters:
+  * active - indicates whether or not the function should also set the
+    newly loaded font as the active font.
+    Defaults to true.
+  """
+  final font = f8x16 or _load8x16()
+  if active:
+    p.font(font)
+  return font
