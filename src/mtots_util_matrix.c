@@ -33,9 +33,9 @@ void initIdentityMatrix(Matrix *matrix) {
 
 void initMatrixTranslate(Matrix *m, Vector v) {
   initIdentityMatrix(m);
-  m->row[3][0] = v.x;
-  m->row[3][1] = v.y;
-  m->row[3][2] = v.z;
+  m->row[0][3] = v.x;
+  m->row[1][3] = v.y;
+  m->row[2][3] = v.z;
 }
 
 void initMatrixRotateX(Matrix *m, double angle) {
