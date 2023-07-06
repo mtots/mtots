@@ -1,0 +1,20 @@
+import gg
+
+
+final window = gg.Window('geometry', 300, 300)
+final rect = window.newPolygon([
+  Vector(0,     0),
+  Vector(100,   0),
+  Vector(100, 100),
+  Vector(0,   100),
+])
+rect.setVertexColor(0, gg.BLUE)
+rect.setVertexColor(1, gg.GREEN)
+rect.setVertexColor(2, gg.ORANGE)
+rect.setVertexColor(3, gg.BROWN)
+
+@window.onUpdate
+def() nil:
+  ""
+  rect.blit()
+

@@ -195,6 +195,11 @@ class Window:
     state of `image`.
     """
 
+  def newPolygon(points List[Vector]) Geometry:
+    """
+    Create a new polygon `Geometry` with the given points.
+    """
+
   def newSpriteSheet(image Image, spriteWidth Int=0, spriteHeight Int=0) SpriteSheet:
     """
     Creates a uniform rectangular grid sprite sheet from an image.
@@ -302,6 +307,25 @@ class Texture:
     current state of the associated `Image`.
 
     Otherwise, this method raises an error.
+    """
+
+
+class Geometry:
+  """
+  A Geometry is a list of vertices and indices into those vertices
+  that describes a set of triangles that can be rendered.
+
+  Each vertex can be set to a specific color to create gradient images.
+  """
+
+  def blit() nil:
+    """
+    Draw this `Geometry` to the associated window
+    """
+
+  def setVertexColor(i Int, color Color) nil:
+    """
+    Sets the color of the given Geometry's vertex.
     """
 
 

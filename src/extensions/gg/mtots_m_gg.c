@@ -37,12 +37,14 @@
 
 #define AS_WINDOW(v) ((ObjWindow*)AS_OBJ((v)))
 #define AS_TEXTURE(v) ((ObjTexture*)AS_OBJ((v)))
+#define AS_GEOMETRY(v) ((ObjGeometry*)AS_OBJ((v)))
 #define AS_SPRITE_SHEET(v) ((ObjSpriteSheet*)AS_OBJ((v)))
 #define AS_CLICK_EVENT(v) ((ObjClickEvent*)AS_OBJ((v)))
 #define AS_KEY_EVENT(v) ((ObjKeyEvent*)AS_OBJ((v)))
 #define AS_MOTION_EVENT(v) ((ObjMotionEvent*)AS_OBJ((v)))
 #define IS_WINDOW(v) ((getNativeObjectDescriptor((v)) == &descriptorWindow))
 #define IS_TEXTURE(v) ((getNativeObjectDescriptor((v)) == &descriptorTexture))
+#define IS_GEOMETRY(v) ((getNativeObjectDescriptor((v)) == &descriptorGeometry))
 #define IS_SPRITE_SHEET(v) (getNativeObjectDescriptor(v) == &descriptorSpriteSheet)
 #define IS_CLICK_EVENT(v) ((getNativeObjectDescriptor((v)) == &descriptorClickEvent))
 #define IS_KEY_EVENT(v) ((getNativeObjectDescriptor((v)) == &descriptorKeyEvent))
@@ -81,6 +83,15 @@ struct ObjTexture {
   ObjImage *image;       /* for streaming textures */
   Color colorMod;
 };
+
+typedef struct ObjGeometry {
+  ObjNative obj;
+  ObjWindow *window;
+  u32 vertexCount, indexCount;
+  SDL_Vertex *vertices;
+  u32 *indices;
+  ObjTexture *texture;
+} ObjGeometry;
 
 struct ObjSpriteSheet {
   ObjNative obj;
@@ -150,12 +161,16 @@ static Value TEXTURE_VAL(ObjTexture *texture) {
   return OBJ_VAL_EXPLICIT((Obj*)texture);
 }
 
-static Value CLICK_EVENT_VAL(ObjClickEvent *clickEvent) {
-  return OBJ_VAL_EXPLICIT((Obj*)clickEvent);
+static Value GEOMETRY_VAL(ObjGeometry *geometry) {
+  return OBJ_VAL_EXPLICIT((Obj*)geometry);
 }
 
 static Value SPRITE_SHEET_VAL(ObjSpriteSheet *spriteSheet) {
   return OBJ_VAL_EXPLICIT((Obj*)spriteSheet);
+}
+
+static Value CLICK_EVENT_VAL(ObjClickEvent *clickEvent) {
+  return OBJ_VAL_EXPLICIT((Obj*)clickEvent);
 }
 
 static Value KEY_EVENT_VAL(ObjKeyEvent *keyEvent) {
@@ -198,6 +213,18 @@ static void freeTexture(ObjNative *n) {
   }
 }
 
+static void blackenGeometry(ObjNative *n) {
+  ObjGeometry *geo = (ObjGeometry*)n;
+  markObject((Obj*)geo->window);
+  markObject((Obj*)geo->texture);
+}
+
+static void freeGeometry(ObjNative *n) {
+  ObjGeometry *geo = (ObjGeometry*)n;
+  FREE_ARRAY(SDL_Vertex, geo->vertices, geo->vertexCount);
+  FREE_ARRAY(u32, geo->indices, geo->indexCount);
+}
+
 static void blackenSpriteSheet(ObjNative *n) {
   ObjSpriteSheet *ss = (ObjSpriteSheet*)n;
   markObject((Obj*)ss->texture);
@@ -209,6 +236,10 @@ static NativeObjectDescriptor descriptorWindow = {
 
 static NativeObjectDescriptor descriptorTexture = {
   blackenTexture, freeTexture, sizeof(ObjTexture), "Texture"
+};
+
+static NativeObjectDescriptor descriptorGeometry = {
+  blackenGeometry, freeGeometry, sizeof(ObjGeometry), "Geometry"
 };
 
 static NativeObjectDescriptor descriptorSpriteSheet = {
@@ -672,6 +703,62 @@ static ubool windowNewCanvas(ObjWindow *window, size_t width, size_t height) {
   return UTRUE;
 }
 
+static SDL_Color toSDLColor(Color color) {
+  SDL_Color sc;
+  sc.r = color.red;
+  sc.g = color.green;
+  sc.b = color.blue;
+  sc.a = color.alpha;
+  return sc;
+}
+
+static ObjGeometry *newGeometry(ObjWindow *window, u32 vertexCount, u32 indexCount) {
+  ObjGeometry *geo = NEW_NATIVE(ObjGeometry, &descriptorGeometry);
+  ubool gcPause;
+  LOCAL_GC_PAUSE(gcPause);
+  geo->window = window;
+  geo->vertexCount = vertexCount;
+  geo->indexCount = indexCount;
+  geo->vertices = ALLOCATE(SDL_Vertex, vertexCount);
+  geo->indices = ALLOCATE(u32, indexCount);
+  geo->texture = NULL;
+  LOCAL_GC_UNPAUSE(gcPause);
+  return geo;
+}
+
+static ubool newPolygonGeometry(ObjWindow *window, ObjList *vectors, ObjGeometry **out) {
+  u32 vertexCount = vectors->length;
+  u32 indexCount;
+  size_t i;
+  ObjGeometry *geo;
+  if (vertexCount < 3) {
+    runtimeError("Polygons require at least 3 vertices but got %d", (int)vertexCount);
+    return UFALSE;
+  }
+  indexCount = (vertexCount - 2) * 3;
+  geo = newGeometry(window, vertexCount, indexCount);
+  for (i = 0; i < vertexCount; i++) {
+    Vector vec;
+    if (!IS_VECTOR(vectors->buffer[i])) {
+      runtimeError("Expected Vector but got %s", getKindName(vectors->buffer[i]));
+      return UFALSE;
+    }
+    vec = AS_VECTOR(vectors->buffer[i]);
+    geo->vertices[i].color = toSDLColor(newColor(255, 255, 255, 255));
+    geo->vertices[i].tex_coord.x = 0;
+    geo->vertices[i].tex_coord.y = 0;
+    geo->vertices[i].position.x = vec.x;
+    geo->vertices[i].position.y = vec.y;
+  }
+  for (i = 0; i < vertexCount - 2; i++) { /* triangle fan */
+    geo->indices[3 * i + 0] = 0;
+    geo->indices[3 * i + 1] = i + 1;
+    geo->indices[3 * i + 2] = i + 2;
+  }
+  *out = geo;
+  return UTRUE;
+}
+
 static ubool newSpriteSheet(
     ObjTexture *texture,
     u32 spriteWidth,
@@ -968,6 +1055,25 @@ static CFunction funcWindowNewTexture = {
   implWindowNewTexture, "newTexture", 1, 2, argsWindowNewTexture,
 };
 
+static ubool implWindowNewPolygon(i16 argc, Value *args, Value *out) {
+  ObjWindow *window = AS_WINDOW(args[-1]);
+  ObjList *points = AS_LIST(args[0]);
+  ObjGeometry *geo;
+  if (!newPolygonGeometry(window, points, &geo)) {
+    return UFALSE;
+  }
+  *out = GEOMETRY_VAL(geo);
+  return UTRUE;
+}
+
+static TypePattern argsWindowNewPolygon[] = {
+  { TYPE_PATTERN_LIST_VECTOR },
+};
+
+static CFunction funcWindowNewPolygon = {
+  implWindowNewPolygon, "newPolygon", 1, 0, argsWindowNewPolygon
+};
+
 static ubool implWindowNewSpriteSheet(i16 argc, Value *args, Value *out) {
   ObjWindow *window = AS_WINDOW(args[-1]);
   ObjImage *image = AS_IMAGE(args[0]);
@@ -1179,6 +1285,38 @@ static ubool implTextureUpdate(i16 argc, Value *args, Value *out) {
 }
 
 static CFunction funcTextureUpdate = { implTextureUpdate, "update" };
+
+static ubool implGeometryBlit(i16 argc, Value *args, Value *out) {
+  ObjGeometry *geo = AS_GEOMETRY(args[-1]);
+  if (SDL_RenderGeometry(
+      geo->window->renderer,
+      geo->texture ? geo->texture->handle : NULL,
+      geo->vertices,
+      (int)geo->vertexCount,
+      (const i32*)geo->indices,
+      (int)geo->indexCount) != 0) {
+    return sdlError("SDL_RenderGeometry");
+  }
+  return UTRUE;
+}
+
+static CFunction funcGeometryBlit = { implGeometryBlit, "blit" };
+
+static ubool implGeometrySetVertexColor(i16 argc, Value *args, Value *out) {
+  ObjGeometry *geo = AS_GEOMETRY(args[-1]);
+  size_t vi = AS_INDEX(args[0], (size_t)geo->vertexCount);
+  geo->vertices[vi].color = toSDLColor(AS_COLOR(args[1]));
+  return UTRUE;
+}
+
+static TypePattern argsGeometrySetVertexColor[] = {
+  { TYPE_PATTERN_NUMBER },
+  { TYPE_PATTERN_COLOR },
+};
+
+static CFunction funcGeometrySetVertexColor = {
+  implGeometrySetVertexColor, "setVertexColor", 2, 0, argsGeometrySetVertexColor
+};
 
 static ubool implSpriteSheetGetattr(i16 argc, Value *args, Value *out) {
   ObjSpriteSheet *spriteSheet = AS_SPRITE_SHEET(args[-1]);
@@ -1418,6 +1556,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &funcWindowNewCanvas,
     &funcWindowClear,
     &funcWindowNewTexture,
+    &funcWindowNewPolygon,
     &funcWindowNewSpriteSheet,
     &funcWindowSpr,
     &funcWindowSspr,
@@ -1432,6 +1571,14 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &funcTextureNewSpriteSheet,
     &funcTextureIsStreaming,
     &funcTextureUpdate,
+    NULL,
+  };
+  CFunction *geometryStaticMethods[] = {
+    NULL,
+  };
+  CFunction *geometryMethods[] = {
+    &funcGeometryBlit,
+    &funcGeometrySetVertexColor,
     NULL,
   };
   CFunction *spriteSheetStaticMethods[] = {
@@ -1542,6 +1689,12 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &descriptorTexture,
     textureMethods,
     textureStaticMethods);
+
+  newNativeClass(
+    module,
+    &descriptorGeometry,
+    geometryMethods,
+    geometryStaticMethods);
 
   newNativeClass(
     module,
