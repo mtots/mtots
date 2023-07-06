@@ -749,6 +749,11 @@ class Matrix:
     Any values beyond the fourth row or column are ignored.
     """
 
+  def clone() Matrix:
+    """
+    Create a new `Matrix` containing the current values of this `Matrix`
+    """
+
   def get(row Int, column Int) Float:
     """
     Gets the value of a cell in this matrix

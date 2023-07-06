@@ -157,6 +157,14 @@ static ubool implMatrixStaticOne(i16 argc, Value *args, Value *out) {
 
 static CFunction funcMatrixStaticOne = { implMatrixStaticOne, "one" };
 
+static ubool implMatrixClone(i16 argc, Value *args, Value *out) {
+  ObjMatrix *a = AS_MATRIX(args[-1]);
+  *out = MATRIX_VAL(newMatrixFromValues(&a->handle.row[0][0]));
+  return UTRUE;
+}
+
+static CFunction funcMatrixClone = { implMatrixClone, "clone" };
+
 static ubool implMatrixGet(i16 argc, Value *args, Value *out) {
   ObjMatrix *a = AS_MATRIX(args[-1]);
   size_t row = AS_INDEX(args[0], 4);
@@ -504,6 +512,7 @@ void initMatrixClass() {
     NULL,
   };
   CFunction *methods[] = {
+    &funcMatrixClone,
     &funcMatrixGet,
     &funcMatrixSet,
     &funcMatrixReset,
