@@ -72,6 +72,21 @@ void initMatrixRotateZ(Matrix *m, double angle) {
   m->row[1][1] = cost;
 }
 
+void initMatrixFlipX(Matrix *m) {
+  initIdentityMatrix(m);
+  m->row[0][0] = -1;
+}
+
+void initMatrixFlipY(Matrix *m) {
+  initIdentityMatrix(m);
+  m->row[1][1] = -1;
+}
+
+void initMatrixFlipZ(Matrix *m) {
+  initIdentityMatrix(m);
+  m->row[2][2] = -1;
+}
+
 /* in-place matrix scalar multiplication */
 void matrixISMul(Matrix *a, double factor) {
   size_t i, j;
@@ -164,6 +179,27 @@ void matrixIRotateY(Matrix *m, double angle) {
 void matrixIRotateZ(Matrix *m, double angle) {
   Matrix r;
   initMatrixRotateZ(&r, angle);
+  matrixIMul(&r, m);
+  *m = r;
+}
+
+void matrixIFlipX(Matrix *m) {
+  Matrix r;
+  initMatrixFlipX(&r);
+  matrixIMul(&r, m);
+  *m = r;
+}
+
+void matrixIFlipY(Matrix *m) {
+  Matrix r;
+  initMatrixFlipY(&r);
+  matrixIMul(&r, m);
+  *m = r;
+}
+
+void matrixIFlipZ(Matrix *m) {
+  Matrix r;
+  initMatrixFlipZ(&r);
   matrixIMul(&r, m);
   *m = r;
 }

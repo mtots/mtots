@@ -711,7 +711,7 @@ class Matrix:
 
   * 2D/3D Transformations:
     * `reset`, `translate`, `scaleX`, `scaleY`, `scaleZ`,
-      `rotateX`, `rotateY`, `rotateZ`
+      `rotateX`, `rotateY`, `rotateZ`, `flipX`, `flipY`, `flipZ`
     * Common matrix transformations useful for 2D and 3D graphics.
     * All operations in this category modify the `this` `Matrix` in-place.
 
@@ -967,4 +967,19 @@ class Matrix:
     and x points right, this is a clockwise rotation.
 
     `this` `Matrix` is modified
+    """
+
+  def flipX() nil:
+    """
+    Applies a transform that flips the sign of the X-coordinate
+    """
+
+  def flipY() nil:
+    """
+    Applies a transform that flips the sign of the Y-coordinate
+    """
+
+  def flipZ() nil:
+    """
+    Applies a transform that flips the sign of the Z-coordinate
     """

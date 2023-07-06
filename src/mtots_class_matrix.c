@@ -474,6 +474,30 @@ static CFunction funcMatrixRotateZ = {
   implMatrixRotateZ, "rotateZ",  1, 2, argsMatrixRotate
 };
 
+static ubool implMatrixFlipX(i16 argc, Value *args, Value *out) {
+  ObjMatrix *a = AS_MATRIX(args[-1]);
+  matrixIFlipX(&a->handle);
+  return UTRUE;
+}
+
+static CFunction funcMatrixFlipX = { implMatrixFlipX, "flipX" };
+
+static ubool implMatrixFlipY(i16 argc, Value *args, Value *out) {
+  ObjMatrix *a = AS_MATRIX(args[-1]);
+  matrixIFlipY(&a->handle);
+  return UTRUE;
+}
+
+static CFunction funcMatrixFlipY = { implMatrixFlipY, "flipY" };
+
+static ubool implMatrixFlipZ(i16 argc, Value *args, Value *out) {
+  ObjMatrix *a = AS_MATRIX(args[-1]);
+  matrixIFlipZ(&a->handle);
+  return UTRUE;
+}
+
+static CFunction funcMatrixFlipZ = { implMatrixFlipZ, "flipZ" };
+
 static ubool implMatrixRepr(i16 argc, Value *args, Value *out) {
   ObjMatrix *a = AS_MATRIX(args[-1]);
   Buffer buf;
@@ -539,6 +563,9 @@ void initMatrixClass() {
     &funcMatrixRotateX,
     &funcMatrixRotateY,
     &funcMatrixRotateZ,
+    &funcMatrixFlipX,
+    &funcMatrixFlipY,
+    &funcMatrixFlipZ,
     &funcMatrixRepr,
     NULL,
   };
