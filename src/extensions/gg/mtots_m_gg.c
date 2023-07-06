@@ -38,20 +38,17 @@
 #define AS_WINDOW(v) ((ObjWindow*)AS_OBJ((v)))
 #define AS_TEXTURE(v) ((ObjTexture*)AS_OBJ((v)))
 #define AS_GEOMETRY(v) ((ObjGeometry*)AS_OBJ((v)))
-#define AS_SPRITE_SHEET(v) ((ObjSpriteSheet*)AS_OBJ((v)))
 #define AS_CLICK_EVENT(v) ((ObjClickEvent*)AS_OBJ((v)))
 #define AS_KEY_EVENT(v) ((ObjKeyEvent*)AS_OBJ((v)))
 #define AS_MOTION_EVENT(v) ((ObjMotionEvent*)AS_OBJ((v)))
 #define IS_WINDOW(v) ((getNativeObjectDescriptor((v)) == &descriptorWindow))
 #define IS_TEXTURE(v) ((getNativeObjectDescriptor((v)) == &descriptorTexture))
 #define IS_GEOMETRY(v) ((getNativeObjectDescriptor((v)) == &descriptorGeometry))
-#define IS_SPRITE_SHEET(v) (getNativeObjectDescriptor(v) == &descriptorSpriteSheet)
 #define IS_CLICK_EVENT(v) ((getNativeObjectDescriptor((v)) == &descriptorClickEvent))
 #define IS_KEY_EVENT(v) ((getNativeObjectDescriptor((v)) == &descriptorKeyEvent))
 #define IS_MOTION_EVENT(v) ((getNativeObjectDescriptor((v)) == &descriptorMotionEvent))
 
 typedef struct ObjTexture ObjTexture;
-typedef struct ObjSpriteSheet ObjSpriteSheet;
 typedef struct ObjClickEvent ObjClickEvent;
 typedef struct ObjKeyEvent ObjKeyEvent;
 typedef struct ObjMotionEvent ObjMotionEvent;
@@ -72,7 +69,6 @@ typedef struct ObjWindow {
   Color backgroundColor;
   ObjCanvas *canvas;
   ObjTexture *canvasTexture;
-  ObjSpriteSheet *spriteSheet;
   ObjMatrix *transform;
 } ObjWindow;
 
@@ -82,7 +78,6 @@ struct ObjTexture {
   ObjWindow *window;
   u32 width, height;
   ObjImage *image;       /* for streaming textures */
-  Color colorMod;
 };
 
 typedef struct ObjGeometry {
@@ -95,13 +90,6 @@ typedef struct ObjGeometry {
   Vector *vectors;              /* original points */
   ObjMatrix *transform;         /* transform on vectors to determine vertices */
 } ObjGeometry;
-
-struct ObjSpriteSheet {
-  ObjNative obj;
-  ObjTexture *texture;
-  u32 spriteWidth, spriteHeight;
-  u32 xCount, yCount, spriteCount;
-};
 
 struct ObjClickEvent {
   ObjNative obj;
@@ -132,14 +120,6 @@ typedef struct AudioChannel {
   ubool pause;
 } AudioChannel;
 
-static String *backgroundColorString;
-static String *textureString;
-static String *rectString;
-static String *colorString;
-static String *clipString;
-static String *rotationString;
-static String *spriteWidthString;
-static String *spriteHeightString;
 static String *buttonString;
 static String *keyString;
 static String *scancodeString;
@@ -169,10 +149,6 @@ static Value GEOMETRY_VAL(ObjGeometry *geometry) {
   return OBJ_VAL_EXPLICIT((Obj*)geometry);
 }
 
-static Value SPRITE_SHEET_VAL(ObjSpriteSheet *spriteSheet) {
-  return OBJ_VAL_EXPLICIT((Obj*)spriteSheet);
-}
-
 static Value CLICK_EVENT_VAL(ObjClickEvent *clickEvent) {
   return OBJ_VAL_EXPLICIT((Obj*)clickEvent);
 }
@@ -195,7 +171,6 @@ static void blackenWindow(ObjNative *n) {
   markValue(window->onMotion);
   markObject((Obj*)window->canvas);
   markObject((Obj*)window->canvasTexture);
-  markObject((Obj*)window->spriteSheet);
   markObject((Obj*)window->transform);
 }
 
@@ -232,11 +207,6 @@ static void freeGeometry(ObjNative *n) {
   FREE_ARRAY(Vector, geo->vectors, geo->vertexCount);
 }
 
-static void blackenSpriteSheet(ObjNative *n) {
-  ObjSpriteSheet *ss = (ObjSpriteSheet*)n;
-  markObject((Obj*)ss->texture);
-}
-
 static NativeObjectDescriptor descriptorWindow = {
   blackenWindow, freeWindow, sizeof(ObjWindow), "Window"
 };
@@ -247,10 +217,6 @@ static NativeObjectDescriptor descriptorTexture = {
 
 static NativeObjectDescriptor descriptorGeometry = {
   blackenGeometry, freeGeometry, sizeof(ObjGeometry), "Geometry"
-};
-
-static NativeObjectDescriptor descriptorSpriteSheet = {
-  blackenSpriteSheet, nopFree, sizeof(ObjSpriteSheet), "SpriteSheet"
 };
 
 static NativeObjectDescriptor descriptorClickEvent = {
@@ -435,7 +401,6 @@ static ubool newWindow(
   window->backgroundColor = newColor(162, 136, 121, 255); /* MEDIUM_GREY */
   window->canvas = NULL;
   window->canvasTexture = NULL;
-  window->spriteSheet = NULL;
   window->transform = newIdentityMatrix();
   LOCAL_GC_UNPAUSE(gcPause);
 
@@ -627,7 +592,6 @@ static ubool newStaticTexture(ObjWindow *window, ObjImage *image, ObjTexture **o
   texture->width = image->width;
   texture->height = image->height;
   texture->image = NULL;
-  texture->colorMod = newColor(255, 255, 255, 255);
   *out = texture;
   return UTRUE;
 }
@@ -658,7 +622,6 @@ static ubool newStreamingTexture(ObjWindow *window, ObjImage *image, ObjTexture 
   texture->width = image->width;
   texture->height = image->height;
   texture->image = image;
-  texture->colorMod = newColor(255, 255, 255, 255);
   *out = texture;
   return UTRUE;
 }
@@ -674,21 +637,6 @@ static ubool updateStreamingTexture(SDL_Texture *texture, ObjImage *image) {
     memcpy(pixels, image->pixels + row * image->width, 4 * image->width);
   }
   SDL_UnlockTexture(texture);
-  return UTRUE;
-}
-
-static ubool setTextureColorMod(ObjTexture *texture, Color color) {
-  if (colorEquals(texture->colorMod, color)) {
-    return UTRUE;
-  }
-  if (SDL_SetTextureColorMod(
-      texture->handle,
-      color.red,
-      color.green,
-      color.blue) != 0) {
-    return sdlError("SDL_SetTextureColorMod");
-  }
-  texture->colorMod = color;
   return UTRUE;
 }
 
@@ -819,7 +767,6 @@ static ubool newPolygonGeometry(
         }
       }
     }
-    oprintln("i=%d => tex_coord=(%f,%f)", (int)i, texCoord.x, texCoord.y);
     geo->vertices[i].color = color;
     geo->vertices[i].tex_coord = texCoord;
     geo->vertices[i].position.x = 0; /* position should be overwritten on blit */
@@ -870,97 +817,6 @@ static ubool geometryBlit(ObjGeometry *geo) {
   }
 
   return UTRUE;
-}
-
-static ubool newSpriteSheet(
-    ObjTexture *texture,
-    u32 spriteWidth,
-    u32 spriteHeight,
-    ObjSpriteSheet **out) {
-  ObjSpriteSheet *spriteSheet = NEW_NATIVE(ObjSpriteSheet, &descriptorSpriteSheet);
-  if (spriteWidth == 0) {
-    spriteWidth = texture->width;
-  }
-  if (spriteHeight == 0) {
-    spriteHeight = texture->height;
-  }
-  spriteSheet->spriteWidth = spriteWidth;
-  spriteSheet->spriteHeight = spriteHeight;
-  spriteSheet->texture = texture;
-  spriteSheet->xCount = texture->width / spriteWidth;
-  spriteSheet->yCount = texture->height / spriteHeight;
-  spriteSheet->spriteCount = spriteSheet->xCount * spriteSheet->yCount;
-  *out = spriteSheet;
-  return UTRUE;
-}
-
-/* Draw a region of the sprite sheet - like the sspr function in PICO-8 */
-static ubool sspr(
-    ObjSpriteSheet *spriteSheet,
-    i32 sx, i32 sy, i32 sw, i32 sh,
-    i32 dx, i32 dy, i32 dw, i32 dh,
-    ubool flipX, ubool flipY,
-    double angle,
-    Color color) {
-  SDL_Rect srcRect;
-  SDL_Rect dstRect;
-  SDL_RendererFlip flip = SDL_FLIP_NONE
-    | (flipX ? SDL_FLIP_HORIZONTAL : 0)
-    | (flipY ? SDL_FLIP_VERTICAL : 0);
-  srcRect.x = sx;
-  srcRect.y = sy;
-  srcRect.w = sw;
-  srcRect.h = sh;
-  dstRect.x = dx;
-  dstRect.y = dy;
-  dstRect.w = dw;
-  dstRect.h = dh;
-  if (!setTextureColorMod(spriteSheet->texture, color)) {
-    return UFALSE;
-  }
-  if (SDL_RenderCopyEx(
-      spriteSheet->texture->window->renderer,
-      spriteSheet->texture->handle,
-      &srcRect,
-      &dstRect,
-      angle,
-      NULL,
-      flip) != 0) {
-    return sdlError("SDL_RenderCopyEx");
-  }
-  return UTRUE;
-}
-
-/* Draw a sprite from the sprite sheet - like the spr function in PICO-8 */
-static ubool spr(
-    ObjSpriteSheet *spriteSheet,
-    u32 n,
-    i32 x,
-    i32 y,
-    float w,
-    float h,
-    ubool flipX,
-    ubool flipY,
-    double angle,
-    Color color) {
-  u32 spriteWidth = spriteSheet->spriteWidth;
-  u32 spriteHeight = spriteSheet->spriteHeight;
-  u32 xCount = spriteSheet->xCount;
-  u32 spriteCount = spriteSheet->spriteCount;
-  i32 sx, sy, sw, sh, dx, dy, dw, dh;
-  if (n >= spriteCount) {
-    runtimeError("Invalid sprite index (spriteCount = %d)", (int)spriteCount);
-    return UFALSE;
-  }
-  sx = spriteWidth  * (n % xCount);
-  sy = spriteHeight * (n / xCount);
-  sw = (i32)(w * spriteWidth);
-  sh = (i32)(h * spriteHeight);
-  dx = x;
-  dy = y;
-  dw = sw;
-  dh = sh;
-  return sspr(spriteSheet, sx, sy, sw, sh, dx, dy, dw, dh, flipX, flipY, angle, color);
 }
 
 static ubool implMainLoop(i16 argc, Value *args, Value *out) {
@@ -1209,128 +1065,6 @@ static CFunction funcWindowNewPolygon = {
   implWindowNewPolygon, "newPolygon", 1, 4, argsWindowNewPolygon
 };
 
-static ubool implWindowNewSpriteSheet(i16 argc, Value *args, Value *out) {
-  ObjWindow *window = AS_WINDOW(args[-1]);
-  ObjImage *image = AS_IMAGE(args[0]);
-  u32 spriteWidth = argc > 1 ? AS_U32(args[1]) : 0;
-  u32 spriteHeight = argc > 2 ? AS_U32(args[2]) : 0;
-  ObjTexture *texture;
-  ObjSpriteSheet *spriteSheet;
-  ubool gcPause;
-
-  LOCAL_GC_PAUSE(gcPause);
-
-  if (!newStaticTexture(window, image, &texture)) {
-    LOCAL_GC_UNPAUSE(gcPause);
-    return UFALSE;
-  }
-  if (!newSpriteSheet(texture, spriteWidth, spriteHeight, &spriteSheet)) {
-    LOCAL_GC_UNPAUSE(gcPause);
-    return UFALSE;
-  }
-
-  LOCAL_GC_UNPAUSE(gcPause);
-
-  window->spriteSheet = spriteSheet;
-  *out = SPRITE_SHEET_VAL(spriteSheet);
-  return UTRUE;
-}
-
-static TypePattern argsWindowNewSpriteSheet[] = {
-  { TYPE_PATTERN_NATIVE, &descriptorImage },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-};
-
-static CFunction funcWindowNewSpriteSheet = {
-  implWindowNewSpriteSheet, "newSpriteSheet", 1, 3, argsWindowNewSpriteSheet
-};
-
-static ubool implWindowSpr(i16 argc, Value *args, Value *out) {
-  ObjWindow *window = AS_WINDOW(args[-1]);
-  ObjSpriteSheet *spriteSheet = window->spriteSheet;
-  u32 n, x, y;
-  float w, h;
-  ubool flipX, flipY;
-  double angle;
-  Color color;
-  if (!spriteSheet) {
-    runtimeError("Window.spr() could not find an active sprite sheet");
-    return UFALSE;
-  }
-  n = AS_INDEX(args[0], spriteSheet->spriteCount);
-  x = argc > 1 && !IS_NIL(args[1]) ? AS_I32(args[1]) : 0;
-  y = argc > 2 && !IS_NIL(args[2]) ? AS_I32(args[2]) : 0;
-  w = argc > 3 && !IS_NIL(args[3]) ? AS_NUMBER(args[3]) : 1;
-  h = argc > 4 && !IS_NIL(args[4]) ? AS_NUMBER(args[4]) : 1;
-  flipX = argc > 5 && !IS_NIL(args[5]) ? AS_BOOL(args[5]) : UFALSE;
-  flipY = argc > 6 && !IS_NIL(args[6]) ? AS_BOOL(args[6]) : UFALSE;
-  angle = argc > 7 && !IS_NIL(args[7]) ? AS_NUMBER(args[7]) : 0;
-  color = argc > 8 && !IS_NIL(args[8]) ? AS_COLOR(args[8]) : newColor(255, 255, 255, 255);
-  return spr(spriteSheet, n, x, y, w, h, flipX, flipY, angle, color);
-}
-
-static TypePattern argsWindowSpr[] = {
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER_OR_NIL },
-  { TYPE_PATTERN_NUMBER_OR_NIL },
-  { TYPE_PATTERN_NUMBER_OR_NIL },
-  { TYPE_PATTERN_NUMBER_OR_NIL },
-  { TYPE_PATTERN_BOOL }, /* TODO _OR_NIL */
-  { TYPE_PATTERN_BOOL }, /* TODO _OR_NIL */
-  { TYPE_PATTERN_NUMBER_OR_NIL },
-  { TYPE_PATTERN_COLOR_OR_NIL },
-};
-
-static CFunction funcWindowSpr = {
-  implWindowSpr, "spr", 1, 9, argsWindowSpr
-};
-
-static ubool implWindowSspr(i16 argc, Value *args, Value *out) {
-  ObjWindow *window = AS_WINDOW(args[-1]);
-  ObjSpriteSheet *spriteSheet = window->spriteSheet;
-  i32 sx, sy, sw, sh, dx, dy, dw, dh;
-  ubool flipX, flipY;
-  double angle;
-  Color color;
-  if (!spriteSheet) {
-    runtimeError("Window.spr() could not find an active sprite sheet");
-    return UFALSE;
-  }
-  sx = AS_I32(args[0]);
-  sy = AS_I32(args[1]);
-  sw = AS_I32(args[2]);
-  sh = AS_I32(args[3]);
-  dx = AS_I32(args[4]);
-  dy = AS_I32(args[5]);
-  dw = argc > 8 && AS_I32(args[6]) != -1 ? AS_I32(args[6]) : sw;
-  dh = argc > 9 && AS_I32(args[7]) != -1 ? AS_I32(args[7]) : sh;
-  flipX = argc > 8 && !IS_NIL(args[8]) ? AS_BOOL(args[8]) : UFALSE;
-  flipY = argc > 9 && !IS_NIL(args[9]) ? AS_BOOL(args[9]) : UFALSE;
-  angle = argc > 10 && !IS_NIL(args[10]) ? AS_NUMBER(args[10]) : 0;
-  color = argc > 11 && !IS_NIL(args[11]) ? AS_COLOR(args[11]) : newColor(255, 255, 255, 255);
-  return sspr(spriteSheet, sx, sy, sw, sh, dx, dy, dw, dh, flipX, flipY, angle, color);
-}
-
-static TypePattern argsWindowSspr[] = {
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_BOOL }, /* TODO _OR_NIL */
-  { TYPE_PATTERN_BOOL }, /* TODO _OR_NIL */
-  { TYPE_PATTERN_NUMBER_OR_NIL },
-  { TYPE_PATTERN_COLOR_OR_NIL },
-};
-
-static CFunction funcWindowSspr = {
-  implWindowSspr, "sspr", 6, 12, argsWindowSspr,
-};
-
 static ubool implTextureGetattr(i16 argc, Value *args, Value *out) {
   ObjTexture *texture = AS_TEXTURE(args[-1]);
   String *name = AS_STRING(args[0]);
@@ -1372,29 +1106,6 @@ static TypePattern argsTextureBlit[] = {
 
 static CFunction funcTextureBlit = {
   implTextureBlit, "blit", 1, 0, argsTextureBlit,
-};
-
-static ubool implTextureNewSpriteSheet(i16 argc, Value *args, Value *out) {
-  ObjTexture *texture = AS_TEXTURE(args[-1]);
-  u32 spriteWidth = argc > 1 ? AS_U32(args[0]) : 0;
-  u32 spriteHeight = argc > 2 ? AS_U32(args[1]) : 0;
-  ObjSpriteSheet *spriteSheet;
-
-  if (!newSpriteSheet(texture, spriteWidth, spriteHeight, &spriteSheet)) {
-    return UFALSE;
-  }
-
-  *out = SPRITE_SHEET_VAL(spriteSheet);
-  return UTRUE;
-}
-
-static TypePattern argsTextureNewSpriteSheet[] = {
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-};
-
-static CFunction funcTextureNewSpriteSheet = {
-  implTextureNewSpriteSheet, "newSpriteSheet", 0, 2, argsTextureNewSpriteSheet
 };
 
 static ubool implTextureIsStreaming(i16 argc, Value *args, Value *out) {
@@ -1475,109 +1186,6 @@ static TypePattern argsGeometrySetVertexColor[] = {
 
 static CFunction funcGeometrySetVertexColor = {
   implGeometrySetVertexColor, "setVertexColor", 2, 0, argsGeometrySetVertexColor
-};
-
-static ubool implSpriteSheetGetattr(i16 argc, Value *args, Value *out) {
-  ObjSpriteSheet *spriteSheet = AS_SPRITE_SHEET(args[-1]);
-  String *name = AS_STRING(args[0]);
-  if (name == spriteWidthString) {
-    *out = NUMBER_VAL(spriteSheet->spriteWidth);
-  } else if (name == spriteHeightString) {
-    *out = NUMBER_VAL(spriteSheet->spriteHeight);
-  } else if (name == textureString) {
-    *out = TEXTURE_VAL(spriteSheet->texture);
-  } else {
-    runtimeError("Field %s not found in SpriteSheet", name->chars);
-    return UFALSE;
-  }
-  return UTRUE;
-}
-
-static CFunction funcSpriteSheetGetattr = {
-  implSpriteSheetGetattr, "__getattr__", 1, 0, argsStrings
-};
-
-static ubool implSpriteSheetLen(i16 argc, Value *args, Value *out) {
-  ObjSpriteSheet *spriteSheet = AS_SPRITE_SHEET(args[-1]);
-  *out = NUMBER_VAL(spriteSheet->spriteCount);
-  return UTRUE;
-}
-
-static CFunction funcSpriteSheetLen = { implSpriteSheetLen, "__len__" };
-
-static ubool implSpriteSheetSpr(i16 argc, Value *args, Value *out) {
-  ObjSpriteSheet *spriteSheet = AS_SPRITE_SHEET(args[-1]);
-  u32 n, x, y;
-  float w, h;
-  ubool flipX, flipY;
-  double angle;
-  Color color;
-  n = AS_INDEX(args[0], spriteSheet->spriteCount);
-  x = argc > 1 && !IS_NIL(args[1]) ? AS_I32(args[1]) : 0;
-  y = argc > 2 && !IS_NIL(args[2]) ? AS_I32(args[2]) : 0;
-  w = argc > 3 && !IS_NIL(args[3]) ? AS_NUMBER(args[3]) : 1;
-  h = argc > 4 && !IS_NIL(args[4]) ? AS_NUMBER(args[4]) : 1;
-  flipX = argc > 5 && !IS_NIL(args[5]) ? AS_BOOL(args[5]) : UFALSE;
-  flipY = argc > 6 && !IS_NIL(args[6]) ? AS_BOOL(args[6]) : UFALSE;
-  angle = argc > 7 && !IS_NIL(args[7]) ? AS_NUMBER(args[7]) : 0;
-  color = argc > 8 && !IS_NIL(args[8]) ? AS_COLOR(args[8]) : newColor(255, 255, 255, 255);
-  return spr(spriteSheet, n, x, y, w, h, flipX, flipY, angle, color);
-}
-
-static TypePattern argsSpriteSheetSpr[] = {
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER_OR_NIL },
-  { TYPE_PATTERN_NUMBER_OR_NIL },
-  { TYPE_PATTERN_NUMBER_OR_NIL },
-  { TYPE_PATTERN_NUMBER_OR_NIL },
-  { TYPE_PATTERN_BOOL }, /* TODO _OR_NIL */
-  { TYPE_PATTERN_BOOL }, /* TODO _OR_NIL */
-  { TYPE_PATTERN_NUMBER_OR_NIL },
-  { TYPE_PATTERN_COLOR_OR_NIL },
-};
-
-static CFunction funcSpriteSheetSpr = {
-  implSpriteSheetSpr, "spr", 1, 9, argsSpriteSheetSpr
-};
-
-static ubool implSpriteSheetSspr(i16 argc, Value *args, Value *out) {
-  ObjSpriteSheet *spriteSheet = AS_SPRITE_SHEET(args[-1]);
-  i32 sx, sy, sw, sh, dx, dy, dw, dh;
-  ubool flipX, flipY;
-  double angle;
-  Color color;
-  sx = AS_I32(args[0]);
-  sy = AS_I32(args[1]);
-  sw = AS_I32(args[2]);
-  sh = AS_I32(args[3]);
-  dx = AS_I32(args[4]);
-  dy = AS_I32(args[5]);
-  dw = argc > 8 && AS_I32(args[6]) != -1 ? AS_I32(args[6]) : sw;
-  dh = argc > 9 && AS_I32(args[7]) != -1 ? AS_I32(args[7]) : sh;
-  flipX = argc > 8 && !IS_NIL(args[8]) ? AS_BOOL(args[8]) : UFALSE;
-  flipY = argc > 9 && !IS_NIL(args[9]) ? AS_BOOL(args[9]) : UFALSE;
-  angle = argc > 10 && !IS_NIL(args[10]) ? AS_NUMBER(args[10]) : 0;
-  color = argc > 11 && !IS_NIL(args[11]) ? AS_COLOR(args[11]) : newColor(255, 255, 255, 255);
-  return sspr(spriteSheet, sx, sy, sw, sh, dx, dy, dw, dh, flipX, flipY, angle, color);
-}
-
-static TypePattern argsSpriteSheetSspr[] = {
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_BOOL }, /* TODO _OR_NIL */
-  { TYPE_PATTERN_BOOL }, /* TODO _OR_NIL */
-  { TYPE_PATTERN_NUMBER_OR_NIL },
-  { TYPE_PATTERN_COLOR_OR_NIL },
-};
-
-static CFunction funcSpriteSheetSspr = {
-  implSpriteSheetSspr, "sspr", 6, 12, argsSpriteSheetSspr,
 };
 
 static ubool implClickEventGetattr(i16 argc, Value *args, Value *out) {
@@ -1717,9 +1325,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &funcWindowClear,
     &funcWindowNewTexture,
     &funcWindowNewPolygon,
-    &funcWindowNewSpriteSheet,
-    &funcWindowSpr,
-    &funcWindowSspr,
     NULL,
   };
   CFunction *textureStaticMethods[] = {
@@ -1728,7 +1333,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
   CFunction *textureMethods[] = {
     &funcTextureGetattr,
     &funcTextureBlit,
-    &funcTextureNewSpriteSheet,
     &funcTextureIsStreaming,
     &funcTextureUpdate,
     NULL,
@@ -1741,16 +1345,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &funcGeometryBlit,
     &funcGeometrySetColor,
     &funcGeometrySetVertexColor,
-    NULL,
-  };
-  CFunction *spriteSheetStaticMethods[] = {
-    NULL,
-  };
-  CFunction *spriteSheetMethods[] = {
-    &funcSpriteSheetGetattr,
-    &funcSpriteSheetLen,
-    &funcSpriteSheetSpr,
-    &funcSpriteSheetSspr,
     NULL,
   };
   CFunction *clickEventStaticMethods[] = {
@@ -1803,14 +1397,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
 
   LOCAL_GC_PAUSE(gcPause);
 
-  moduleRetain(module, STRING_VAL(backgroundColorString = internCString("backgroundColor")));
-  moduleRetain(module, STRING_VAL(textureString = internCString("texture")));
-  moduleRetain(module, STRING_VAL(rectString = internCString("rect")));
-  moduleRetain(module, STRING_VAL(colorString = internCString("color")));
-  moduleRetain(module, STRING_VAL(clipString = internCString("clip")));
-  moduleRetain(module, STRING_VAL(rotationString = internCString("rotation")));
-  moduleRetain(module, STRING_VAL(spriteWidthString = internCString("spriteWidth")));
-  moduleRetain(module, STRING_VAL(spriteHeightString = internCString("spriteHeight")));
   moduleRetain(module, STRING_VAL(buttonString = internCString("button")));
   moduleRetain(module, STRING_VAL(keyString = internCString("key")));
   moduleRetain(module, STRING_VAL(scancodeString = internCString("scancode")));
@@ -1858,12 +1444,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &descriptorGeometry,
     geometryMethods,
     geometryStaticMethods);
-
-  newNativeClass(
-    module,
-    &descriptorSpriteSheet,
-    spriteSheetMethods,
-    spriteSheetStaticMethods);
 
   newNativeClass(
     module,

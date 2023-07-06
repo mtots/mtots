@@ -225,77 +225,6 @@ class Window:
     zero and one.
     """
 
-  def newSpriteSheet(image Image, spriteWidth Int=0, spriteHeight Int=0) SpriteSheet:
-    """
-    Creates a uniform rectangular grid sprite sheet from an image.
-
-    If `spriteWidth` or `spriteHeight` is omitted or set to zero, they will be
-    set to match the dimensions of the entire image. So if both `spriteWidth`
-    and `spriteHeight` is omitted, the resulting `SpriteSheet` will contain
-    exactly a single sprite consisting of the entire image.
-
-    The newly created `SpriteSheet` will be set as the 'active' `SpriteSheet`
-    for this `Window` replacing any previously active `SpriteSheet`.
-    """
-
-  def spr(
-      n Int,
-      x Int, y Int,
-      w Float=1, h Float=1,
-      flipX Bool=false, flipY Bool=false,
-      angle Float=0,
-      color Color?=nil):
-    """
-    Draws a sprite from the active sprite sheet.
-
-    Compare with PICO-8's `spr()` function.
-
-    Parameters:
-    * n - the index of the sprite in the sheet (sprites are ordered left to right, top down,
-      like English text).
-    * x - the x coordinate of the upper left corner to draw
-    * y - the y coordinate of the upper left corner to draw
-    * w - width in number of sprites (in pixels, the drawn width will be w * spriteWidth)
-    * h - height in number of sprites (in pixels, the drawn height will be h * spriteHeight)
-    * flipX - if true (i.e. non-zero), the sprite is drawn inverted left to right.
-      Defaults to 0.
-    * flipY - if true (i.e. non-zero), the sprite is drawn inverted top to bottom.
-      Defaults to 0.
-    * angle - angle to rotate the rendered sprite by around its center, in degrees
-    * color - the color to modulate with. Defaults to Color(255, 255, 255)
-    """
-
-  def sspr(
-      sx Int, sy Int, sw Int, sh Int,
-      dx Int, dy Int, dw Int=-1, dh Int=-1,
-      flipX Bool=false, flipY Bool=false,
-      angle Float=0,
-      color Color?=nil):
-    """
-    Draws a rectangle of pixels from the active sprite sheet, optionally stretching the
-    image to fit a rectangle on the screen.
-
-    Compare with PICO-8's `sspr()` function.
-
-    Parameters:
-    * sx - The x coordinate of the upper left corner of the rectangle in the sprite sheet.
-    * sy - The y coordinate of the upper left corner of the rectangle in the sprite sheet.
-    * sw - The width of the rectangle in the sprite sheet, as a number of pixels.
-    * sh - The height of the rectangle in the sprite sheet, as a number of pixels.
-    * dx - The x coordinate of the upper left corner of the rectangle area of the screen.
-    * dy - The y coordinate of the upper left corner of the rectangle area of the screen.
-    * dw - The width of the rectangle area of the screen.
-      Defaults to -1. If -1, it is set to match the image width (sw).
-    * dh - The height of the rectangle area of the screen.
-      Defaults to -1. If -1, it is set to match the image height (sh).
-    * flipX - if true (i.e. non-zero), the sprite is drawn inverted left to right.
-      Defaults to 0.
-    * flipY - if true (i.e. non-zero), the sprite is drawn inverted top to bottom.
-      Defaults to 0.
-    * angle - angle to rotate the rendered sprite by around its center, in degrees
-    * color - the color to modulate with. Defaults to Color(255, 255, 255)
-    """
-
 
 class Texture:
   """
@@ -308,16 +237,6 @@ class Texture:
   def blit(pos Vector) nil:
     """
     Draws this texture at the given position
-    """
-
-  def newSpriteSheet(spriteWidth Int=0, spriteHeight Int=0) SpriteSheet:
-    """
-    Creates and returns a `SpriteSheet` from this `Texture`.
-
-    If `spriteWidth` or `spriteHeight` is omitted or set to zero, they will be
-    set to match the dimensions of the entire image. So if both `spriteWidth`
-    and `spriteHeight` is omitted, the resulting `SpriteSheet` will contain
-    exactly a single sprite consisting of the entire image.
     """
 
   def isStreaming() Bool:
@@ -361,78 +280,6 @@ class Geometry:
   def setVertexColor(i Int, color Color) nil:
     """
     Sets the color of the given Geometry's vertex.
-    """
-
-
-class SpriteSheet:
-  """
-  A rectangular grid of sprites from a texture.
-  """
-  final texture Texture "The texture sprites are drawn from"
-  final spriteWidth Int "The width of a single sprite in pixels"
-  final spriteHeight Int "The height of a single sprite in pixels"
-
-  def __len__() Int:
-    """
-    Returns the number of sprites in this sheet.
-    """
-
-  def spr(
-      n Int,
-      x Int, y Int,
-      w Float=1, h Float=1,
-      flipX Bool=false, flipY Bool=false,
-      angle Float=0,
-      color Color?=nil):
-    """
-    Draws a sprite from this sprite sheet.
-
-    Compare with PICO-8's `spr()` function.
-
-    Parameters:
-    * n - the index of the sprite in the sheet (sprites are ordered left to right, top down,
-      like English text).
-    * x - the x coordinate of the upper left corner to draw
-    * y - the y coordinate of the upper left corner to draw
-    * w - width in number of sprites (in pixels, the drawn width will be w * spriteWidth)
-    * h - height in number of sprites (in pixels, the drawn height will be h * spriteHeight)
-    * flipX - if true (i.e. non-zero), the sprite is drawn inverted left to right.
-      Defaults to 0.
-    * flipY - if true (i.e. non-zero), the sprite is drawn inverted top to bottom.
-      Defaults to 0.
-    * angle - angle to rotate the rendered sprite by around its center, in degrees
-    * color - the color to modulate with. Defaults to Color(255, 255, 255)
-    """
-
-  def sspr(
-      sx Int, sy Int, sw Int, sh Int,
-      dx Int, dy Int, dw Int=-1, dh Int=-1,
-      flipX Bool=false, flipY Bool=false,
-      angle Float=0,
-      color Color?=nil):
-    """
-    Draws a rectangle of pixels from this sprite sheet, optionally stretching the
-    image to fit a rectangle on the screen.
-
-    Compare with PICO-8's `sspr()` function.
-
-    Parameters:
-    * sx - The x coordinate of the upper left corner of the rectangle in the sprite sheet.
-    * sy - The y coordinate of the upper left corner of the rectangle in the sprite sheet.
-    * sw - The width of the rectangle in the sprite sheet, as a number of pixels.
-    * sh - The height of the rectangle in the sprite sheet, as a number of pixels.
-    * dx - The x coordinate of the upper left corner of the rectangle area of the screen.
-    * dy - The y coordinate of the upper left corner of the rectangle area of the screen.
-    * dw - The width of the rectangle area of the screen.
-      Defaults to -1. If -1, it is set to match the image width (sw).
-    * dh - The height of the rectangle area of the screen.
-      Defaults to -1. If -1, it is set to match the image height (sh).
-    * flipX - if true (i.e. non-zero), the sprite is drawn inverted left to right.
-      Defaults to 0.
-    * flipY - if true (i.e. non-zero), the sprite is drawn inverted top to bottom.
-      Defaults to 0.
-    * angle - angle to rotate the rendered sprite by around its center, in degrees
-    * color - the color to modulate with. Defaults to Color(255, 255, 255)
     """
 
 
