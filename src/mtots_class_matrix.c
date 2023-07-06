@@ -258,109 +258,6 @@ static ubool implMatrixItranspose(i16 argc, Value *args, Value *out) {
 
 static CFunction funcMatrixItranspose = { implMatrixItranspose, "itranspose" };
 
-static ubool implMatrixITranslate(i16 argc, Value *args, Value *out) {
-  ObjMatrix *a = AS_MATRIX(args[-1]);
-  matrixITranslate(&a->handle, AS_VECTOR(args[0]));
-  return UTRUE;
-}
-
-static TypePattern argsMatrixITranslate[] = {
-  { TYPE_PATTERN_VECTOR },
-};
-
-static CFunction funcMatrixITranslate = {
-  implMatrixITranslate, "itranslate", 1, 0, argsMatrixITranslate
-};
-
-static ubool implMatrixIScaleX(i16 argc, Value *args, Value *out) {
-  ObjMatrix *a = AS_MATRIX(args[-1]);
-  matrixIScale(&a->handle, newVector(AS_NUMBER(args[0]), 1, 1));
-  return UTRUE;
-}
-
-static CFunction funcMatrixIScaleX = {
-  implMatrixIScaleX, "iscaleX", 1, 0, argsNumbers
-};
-
-static ubool implMatrixIScaleY(i16 argc, Value *args, Value *out) {
-  ObjMatrix *a = AS_MATRIX(args[-1]);
-  matrixIScale(&a->handle, newVector(1, AS_NUMBER(args[0]), 1));
-  return UTRUE;
-}
-
-static CFunction funcMatrixIScaleY = {
-  implMatrixIScaleY, "iscaleY", 1, 0, argsNumbers
-};
-
-static ubool implMatrixIScaleZ(i16 argc, Value *args, Value *out) {
-  ObjMatrix *a = AS_MATRIX(args[-1]);
-  matrixIScale(&a->handle, newVector(1, 1, AS_NUMBER(args[0])));
-  return UTRUE;
-}
-
-static CFunction funcMatrixIScaleZ = {
-  implMatrixIScaleZ, "iscaleZ", 1, 0, argsNumbers
-};
-
-static TypePattern argsMatrixIRotate[] = {
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_VECTOR_OR_NIL },
-};
-
-static ubool implMatrixIRotateX(i16 argc, Value *args, Value *out) {
-  ObjMatrix *a = AS_MATRIX(args[-1]);
-  double angle = AS_NUMBER(args[0]);
-  if (argc > 1 && IS_VECTOR(args[1])) {
-    Vector v = AS_VECTOR(args[1]);
-    matrixITranslate(&a->handle, newVector(-v.x, -v.y, -v.z));
-    matrixIRotateX(&a->handle, angle);
-    matrixITranslate(&a->handle, v);
-  } else {
-    matrixIRotateX(&a->handle, angle);
-  }
-  return UTRUE;
-}
-
-static CFunction funcMatrixIRotateX = {
-  implMatrixIRotateX, "irotateX", 1, 2, argsMatrixIRotate
-};
-
-static ubool implMatrixIRotateY(i16 argc, Value *args, Value *out) {
-  ObjMatrix *a = AS_MATRIX(args[-1]);
-  double angle = AS_NUMBER(args[0]);
-  if (argc > 1 && IS_VECTOR(args[1])) {
-    Vector v = AS_VECTOR(args[1]);
-    matrixITranslate(&a->handle, newVector(-v.x, -v.y, -v.z));
-    matrixIRotateY(&a->handle, angle);
-    matrixITranslate(&a->handle, v);
-  } else {
-    matrixIRotateY(&a->handle, angle);
-  }
-  return UTRUE;
-}
-
-static CFunction funcMatrixIRotateY = {
-  implMatrixIRotateY, "irotateY",  1, 2, argsMatrixIRotate
-};
-
-static ubool implMatrixIRotateZ(i16 argc, Value *args, Value *out) {
-  ObjMatrix *a = AS_MATRIX(args[-1]);
-  double angle = AS_NUMBER(args[0]);
-  if (argc > 1 && IS_VECTOR(args[1])) {
-    Vector v = AS_VECTOR(args[1]);
-    matrixITranslate(&a->handle, newVector(-v.x, -v.y, -v.z));
-    matrixIRotateZ(&a->handle, angle);
-    matrixITranslate(&a->handle, v);
-  } else {
-    matrixIRotateZ(&a->handle, angle);
-  }
-  return UTRUE;
-}
-
-static CFunction funcMatrixIRotateZ = {
-  implMatrixIRotateZ, "irotateZ",  1, 2, argsMatrixIRotate
-};
-
 static ubool implMatrixSmul(i16 argc, Value *args, Value *out) {
   ObjMatrix *a = AS_MATRIX(args[-1]);
   double factor = AS_NUMBER(args[0]);
@@ -474,6 +371,109 @@ static TypePattern argsMatrixApply[] = {
 
 static CFunction funcMatrixApply = { implMatrixApply, "apply", 1, 0, argsMatrixApply };
 
+static ubool implMatrixTranslate(i16 argc, Value *args, Value *out) {
+  ObjMatrix *a = AS_MATRIX(args[-1]);
+  matrixITranslate(&a->handle, AS_VECTOR(args[0]));
+  return UTRUE;
+}
+
+static TypePattern argsMatrixTranslate[] = {
+  { TYPE_PATTERN_VECTOR },
+};
+
+static CFunction funcMatrixTranslate = {
+  implMatrixTranslate, "translate", 1, 0, argsMatrixTranslate
+};
+
+static ubool implMatrixScaleX(i16 argc, Value *args, Value *out) {
+  ObjMatrix *a = AS_MATRIX(args[-1]);
+  matrixIScale(&a->handle, newVector(AS_NUMBER(args[0]), 1, 1));
+  return UTRUE;
+}
+
+static CFunction funcMatrixScaleX = {
+  implMatrixScaleX, "scaleX", 1, 0, argsNumbers
+};
+
+static ubool implMatrixScaleY(i16 argc, Value *args, Value *out) {
+  ObjMatrix *a = AS_MATRIX(args[-1]);
+  matrixIScale(&a->handle, newVector(1, AS_NUMBER(args[0]), 1));
+  return UTRUE;
+}
+
+static CFunction funcMatrixScaleY = {
+  implMatrixScaleY, "scaleY", 1, 0, argsNumbers
+};
+
+static ubool implMatrixScaleZ(i16 argc, Value *args, Value *out) {
+  ObjMatrix *a = AS_MATRIX(args[-1]);
+  matrixIScale(&a->handle, newVector(1, 1, AS_NUMBER(args[0])));
+  return UTRUE;
+}
+
+static CFunction funcMatrixScaleZ = {
+  implMatrixScaleZ, "scaleZ", 1, 0, argsNumbers
+};
+
+static TypePattern argsMatrixRotate[] = {
+  { TYPE_PATTERN_NUMBER },
+  { TYPE_PATTERN_VECTOR_OR_NIL },
+};
+
+static ubool implMatrixRotateX(i16 argc, Value *args, Value *out) {
+  ObjMatrix *a = AS_MATRIX(args[-1]);
+  double angle = AS_NUMBER(args[0]);
+  if (argc > 1 && IS_VECTOR(args[1])) {
+    Vector v = AS_VECTOR(args[1]);
+    matrixITranslate(&a->handle, newVector(-v.x, -v.y, -v.z));
+    matrixIRotateX(&a->handle, angle);
+    matrixITranslate(&a->handle, v);
+  } else {
+    matrixIRotateX(&a->handle, angle);
+  }
+  return UTRUE;
+}
+
+static CFunction funcMatrixRotateX = {
+  implMatrixRotateX, "rotateX", 1, 2, argsMatrixRotate
+};
+
+static ubool implMatrixRotateY(i16 argc, Value *args, Value *out) {
+  ObjMatrix *a = AS_MATRIX(args[-1]);
+  double angle = AS_NUMBER(args[0]);
+  if (argc > 1 && IS_VECTOR(args[1])) {
+    Vector v = AS_VECTOR(args[1]);
+    matrixITranslate(&a->handle, newVector(-v.x, -v.y, -v.z));
+    matrixIRotateY(&a->handle, angle);
+    matrixITranslate(&a->handle, v);
+  } else {
+    matrixIRotateY(&a->handle, angle);
+  }
+  return UTRUE;
+}
+
+static CFunction funcMatrixRotateY = {
+  implMatrixRotateY, "rotateY",  1, 2, argsMatrixRotate
+};
+
+static ubool implMatrixRotateZ(i16 argc, Value *args, Value *out) {
+  ObjMatrix *a = AS_MATRIX(args[-1]);
+  double angle = AS_NUMBER(args[0]);
+  if (argc > 1 && IS_VECTOR(args[1])) {
+    Vector v = AS_VECTOR(args[1]);
+    matrixITranslate(&a->handle, newVector(-v.x, -v.y, -v.z));
+    matrixIRotateZ(&a->handle, angle);
+    matrixITranslate(&a->handle, v);
+  } else {
+    matrixIRotateZ(&a->handle, angle);
+  }
+  return UTRUE;
+}
+
+static CFunction funcMatrixRotateZ = {
+  implMatrixRotateZ, "rotateZ",  1, 2, argsMatrixRotate
+};
+
 static ubool implMatrixRepr(i16 argc, Value *args, Value *out) {
   ObjMatrix *a = AS_MATRIX(args[-1]);
   Buffer buf;
@@ -522,13 +522,6 @@ void initMatrixClass() {
     &funcMatrixImul,
     &funcMatrixIpow,
     &funcMatrixItranspose,
-    &funcMatrixITranslate,
-    &funcMatrixIScaleX,
-    &funcMatrixIScaleY,
-    &funcMatrixIScaleZ,
-    &funcMatrixIRotateX,
-    &funcMatrixIRotateY,
-    &funcMatrixIRotateZ,
     &funcMatrixSmul,
     &funcMatrixAdd,
     &funcMatrixSub,
@@ -539,6 +532,13 @@ void initMatrixClass() {
     &funcMatrixDet3x3,
     &funcMatrixDet,
     &funcMatrixApply,
+    &funcMatrixTranslate,
+    &funcMatrixScaleX,
+    &funcMatrixScaleY,
+    &funcMatrixScaleZ,
+    &funcMatrixRotateX,
+    &funcMatrixRotateY,
+    &funcMatrixRotateZ,
     &funcMatrixRepr,
     NULL,
   };

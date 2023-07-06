@@ -682,6 +682,39 @@ class Matrix:
   3D space.
 
   Unlike Vectors, Matrices are mutable.
+
+  Non-static methods of `Matrix` fall into a few categories:
+
+  * Ad-hoc
+    * `get`, `set`, `clone`
+    * These methods provide access to individual cells in a matrix and
+      a convenient way to clone a given matrix.
+
+  * Matrix Results:
+    * `smul`, `__add__`, `__sub__`, `__mul__`, `__pow__`, `transpose`
+    * Common matrix operations that produce matrix results.
+    * A method in this categorydoes not modify `this` or any of its arguments,
+      but returns a new `Matrix`.
+
+  * In-place Matrix Results:
+    * `ismul`, `iadd`, `isub`, `imul`, `ipow`, `itranspose`,
+    * These methods are the in-place mutable counterparts to the 'Matrix
+      Results' methods. Names of methods in this category always
+      start with the letter 'i'.
+
+  * Primitive type results:
+    * `det2x2`, `det3x3`, `det`, `apply`
+    * Common matrix operations that produce results that do not require any
+      memory allocations.
+    * NOTE: `apply` returns a `Vector`, but in Mtots `Vector`s do not
+      require dynamic memory allocations.
+
+  * 2D/3D Transformations:
+    * `reset`, `translate`, `scaleX`, `scaleY`, `scaleZ`,
+      `rotateX`, `rotateY`, `rotateZ`
+    * Common matrix transformations useful for 2D and 3D graphics.
+    * All operations in this category modify the `this` `Matrix` in-place.
+
   """
 
   static def zero() Matrix:
@@ -764,11 +797,6 @@ class Matrix:
     Sets the value of a cell in this matrix
     """
 
-  def reset() nil:
-    """
-    Reset the values of this matrix to be the identity matrix.
-    """
-
   def ismul(factor Float) nil:
     """
     Inplace scalar multiplication
@@ -797,57 +825,6 @@ class Matrix:
   def itranspose() nil:
     """
     Inplace matrix transpose
-    """
-
-  def itranslate(offset Vector) nil:
-    """
-    Applies a translation to this linear transformation.
-
-    If `this` matrix is `M`, and `T` is the translation matrix
-    described by `offset`, this method replaces `this` with
-    the product `TM`.
-    """
-
-  def iscaleX(factor Float) nil:
-    """
-    Scales up the transformation of this matrix along the X axis by the given factor
-    """
-
-  def iscaleY(factor Float) nil:
-    """
-    Scales up the transformation of this matrix along the Y axis by the given factor
-    """
-
-  def iscaleZ(factor Float) nil:
-    """
-    Scales up the transformation of this matrix along the Z axis by the given factor
-    """
-
-  def irotateX(angle Float, center Vector?=nil) nil:
-    """
-    Applies a rotation of `angle` radians about the X axis through `center`.
-
-    If omitted or nil, `center` is assumed to be the origin
-    """
-
-  def irotateY(angle Float, center Vector?=nil) nil:
-    """
-    Applies a rotation of `angle` radians about the Y axis through `center`.
-
-    If omitted or nil, `center` is assumed to be the origin
-    """
-
-  def irotateZ(angle Float, center Vector?=nil) nil:
-    """
-    Applies a rotation of `angle` radians about the Z axis through `center`.
-
-    If omitted or nil, `center` is assumed to be the origin
-
-    In 2D standard mathematical cartesian coordinates, this would constitute
-    a counterclockwise rotation.
-
-    In 2D coordinate systems more common in games, where y points down
-    and x points right, this is a clockwise rotation.
     """
 
   def smul(factor Float) Matrix:
@@ -920,4 +897,74 @@ class Matrix:
 
     If this matrix represents an affine transformation, this method
     applies the affine transformation to the given vector.
+    """
+
+  def reset() nil:
+    """
+    Reset the values of this matrix to be the identity matrix.
+    """
+
+  def translate(offset Vector) nil:
+    """
+    Applies a translation to this linear transformation.
+
+    If `this` matrix is `M`, and `T` is the translation matrix
+    described by `offset`, this method replaces `this` with
+    the product `TM`.
+
+    `this` `Matrix` is modified
+    """
+
+  def scaleX(factor Float) nil:
+    """
+    Scales up the transformation of this matrix along the X axis by the given factor
+
+    `this` `Matrix` is modified
+    """
+
+  def scaleY(factor Float) nil:
+    """
+    Scales up the transformation of this matrix along the Y axis by the given factor
+
+    `this` `Matrix` is modified
+    """
+
+  def scaleZ(factor Float) nil:
+    """
+    Scales up the transformation of this matrix along the Z axis by the given factor
+
+    `this` `Matrix` is modified
+    """
+
+  def rotateX(angle Float, center Vector?=nil) nil:
+    """
+    Applies a rotation of `angle` radians about the X axis through `center`.
+
+    If omitted or nil, `center` is assumed to be the origin
+
+    `this` `Matrix` is modified
+    """
+
+  def rotateY(angle Float, center Vector?=nil) nil:
+    """
+    Applies a rotation of `angle` radians about the Y axis through `center`.
+
+    If omitted or nil, `center` is assumed to be the origin
+
+    `this` `Matrix` is modified
+    """
+
+  def rotateZ(angle Float, center Vector?=nil) nil:
+    """
+    Applies a rotation of `angle` radians about the Z axis through `center`.
+
+    If omitted or nil, `center` is assumed to be the origin
+
+    In 2D standard mathematical cartesian coordinates, this would constitute
+    a counterclockwise rotation.
+
+    In 2D coordinate systems more common in games, where y points down
+    and x points right, this is a clockwise rotation.
+
+    `this` `Matrix` is modified
     """

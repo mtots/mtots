@@ -28,16 +28,16 @@ var angle = 0
 def() nil:
   ""
   rect.transform.reset()
-  rect.transform.itranslate(Vector(-50, -50))
-  rect.transform.irotateZ(angle)
-  rect.transform.itranslate(Vector(100, 100))
+  rect.transform.translate(Vector(-50, -50))
+  rect.transform.rotateZ(angle)
+  rect.transform.translate(Vector(100, 100))
   rect.blit()
 
   pentagon.transform.reset()
-  pentagon.transform.iscaleX(2)
-  pentagon.transform.iscaleY(2)
-  pentagon.transform.irotateZ(angle)
-  pentagon.transform.itranslate(Vector(200, 200))
+  pentagon.transform.scaleX(2)
+  pentagon.transform.scaleY(2)
+  pentagon.transform.rotateZ(angle)
+  pentagon.transform.translate(Vector(200, 200))
   pentagon.blit()
 
   angle = angle + 0.1
