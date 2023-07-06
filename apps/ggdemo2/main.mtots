@@ -1,0 +1,39 @@
+import sys
+import gg
+from media import Image
+from random import Random
+
+final rand = Random()
+final WIDTH = 400
+final HEIGHT = 400
+final window = gg.Window("Fake3D", WIDTH, HEIGHT, 60)
+var tick = 0
+final ballImage = Image(100, 100)
+for i in range(ballImage.width):
+  for j in range(ballImage.height):
+    if ((i - ballImage.width // 2) ** 2) + ((j - ballImage.height // 2) ** 2) < 30 ** 2:
+      ballImage.set(i, j, Color(255, 255, 255))
+final ballGeometry = window.newPolygon(
+  [V(-1, -1), V(1, -1), V(1, 1), V(-1, 1)],
+  nil,
+  window.newTexture(ballImage))
+
+var angleY = 0
+var angleZ = 0
+
+@window.onUpdate
+def():
+  tick = tick + 1
+  ballGeometry.setVertexColor(0, gg.RED)
+  ballGeometry.setVertexColor(1, gg.GREEN)
+  ballGeometry.setVertexColor(2, gg.BLUE)
+  ballGeometry.setVertexColor(3, gg.LIGHT_YELLOW)
+  ballGeometry.transform.reset()
+  ballGeometry.transform.scaleX(100)
+  ballGeometry.transform.scaleY(100)
+  ballGeometry.transform.rotateY(angleY)
+  ballGeometry.transform.rotateZ(angleZ)
+  ballGeometry.transform.translate(V(WIDTH / 2, HEIGHT / 2))
+  ballGeometry.blit()
+  angleZ = angleZ + 0.014
+  angleY = angleY + 0.06

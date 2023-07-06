@@ -14,12 +14,6 @@ final window = gg.Window("Hello", WIDTH, HEIGHT, 60)
 
 var tick = 0
 
-final colors = [
-  Color(255, 0, 0),
-  Color(255, 255, 0),
-  Color(255, 255, 255),
-]
-
 final ballImage = Image(100, 100)
 for i in range(ballImage.width):
   for j in range(ballImage.height):
@@ -71,7 +65,6 @@ var angleZ = 0
 @window.onUpdate
 def():
   tick = tick + 1
-  # window.clear(colors[(tick // 60) % len(colors)])
 
   if tick % 1 == 0:
     # window.clear(Color(0, 0, 0, 255))
