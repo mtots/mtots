@@ -22,7 +22,7 @@ void initMatrixTranslate(Matrix *m, Vector v);
 void initMatrixRotateX(Matrix *m, double angle);
 void initMatrixRotateY(Matrix *m, double angle);
 void initMatrixRotateZ(Matrix *m, double angle);
-void matrixIScale(Matrix *a, double factor);
+void matrixISMul(Matrix *a, double factor);
 void matrixIAdd(Matrix *a, const Matrix *b);
 void matrixISub(Matrix *a, const Matrix *b);
 void matrixIMul(Matrix *a, const Matrix *b);

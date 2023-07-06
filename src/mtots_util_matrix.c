@@ -66,7 +66,7 @@ void initMatrixRotateZ(Matrix *m, double angle) {
 }
 
 /* in-place matrix scalar multiplication */
-void matrixIScale(Matrix *a, double factor) {
+void matrixISMul(Matrix *a, double factor) {
   size_t i, j;
   for (i = 0; i < 4; i++) {
     for (j = 0; j < 4; j++) {

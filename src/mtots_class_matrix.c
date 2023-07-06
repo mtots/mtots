@@ -186,14 +186,14 @@ static ubool implMatrixReset(i16 argc, Value *args, Value *out) {
 
 static CFunction funcMatrixReset = { implMatrixReset, "reset" };
 
-static ubool implMatrixIscale(i16 argc, Value *args, Value *out) {
+static ubool implMatrixIsmul(i16 argc, Value *args, Value *out) {
   ObjMatrix *a = AS_MATRIX(args[-1]);
   double factor = AS_NUMBER(args[0]);
-  matrixIScale(&a->handle, factor);
+  matrixISMul(&a->handle, factor);
   return UTRUE;
 }
 
-static CFunction funcMatrixIscale = { implMatrixIscale, "iscale", 1, 0, argsNumbers };
+static CFunction funcMatrixIsmul = { implMatrixIsmul, "ismul", 1, 0, argsNumbers };
 
 static ubool implMatrixIadd(i16 argc, Value *args, Value *out) {
   ObjMatrix *a = AS_MATRIX(args[-1]);
@@ -323,16 +323,16 @@ static CFunction funcMatrixIRotateZ = {
   implMatrixIRotateZ, "irotateZ",  1, 2, argsMatrixIRotate
 };
 
-static ubool implMatrixScale(i16 argc, Value *args, Value *out) {
+static ubool implMatrixSmul(i16 argc, Value *args, Value *out) {
   ObjMatrix *a = AS_MATRIX(args[-1]);
   double factor = AS_NUMBER(args[0]);
   ObjMatrix *ret = newMatrixFromValues(&a->handle.row[0][0]);
-  matrixIScale(&ret->handle, factor);
+  matrixISMul(&ret->handle, factor);
   *out = MATRIX_VAL(ret);
   return UTRUE;
 }
 
-static CFunction funcMatrixScale = { implMatrixScale, "scale", 1, 0, argsNumbers };
+static CFunction funcMatrixSmul = { implMatrixSmul, "smul", 1, 0, argsNumbers };
 
 static ubool implMatrixAdd(i16 argc, Value *args, Value *out) {
   ObjMatrix *a = AS_MATRIX(args[-1]);
@@ -477,7 +477,7 @@ void initMatrixClass() {
     &funcMatrixGet,
     &funcMatrixSet,
     &funcMatrixReset,
-    &funcMatrixIscale,
+    &funcMatrixIsmul,
     &funcMatrixIadd,
     &funcMatrixIsub,
     &funcMatrixImul,
@@ -487,7 +487,7 @@ void initMatrixClass() {
     &funcMatrixIRotateX,
     &funcMatrixIRotateY,
     &funcMatrixIRotateZ,
-    &funcMatrixScale,
+    &funcMatrixSmul,
     &funcMatrixAdd,
     &funcMatrixSub,
     &funcMatrixMul,
