@@ -13,6 +13,15 @@ rect.setVertexColor(1, gg.GREEN)
 rect.setVertexColor(2, gg.ORANGE)
 rect.setVertexColor(3, gg.BROWN)
 
+final pentagon = window.newPolygon([
+  Vector(-10, -10),
+  Vector( 10, -10),
+  Vector( 15,  10),
+  Vector(  0,  15),
+  Vector(-15,  10),
+])
+pentagon.setColor(gg.DARK_PEACH)
+
 var angle = 0
 
 @window.onUpdate
@@ -22,6 +31,14 @@ def() nil:
   rect.transform.itranslate(Vector(-50, -50))
   rect.transform.irotateZ(angle)
   rect.transform.itranslate(Vector(100, 100))
+  rect.blit()
+
+  pentagon.transform.reset()
+  pentagon.transform.iscaleX(2)
+  pentagon.transform.iscaleY(2)
+  pentagon.transform.irotateZ(angle)
+  pentagon.transform.itranslate(Vector(200, 200))
+  pentagon.blit()
+
   angle = angle + 0.1
 
-  rect.blit()

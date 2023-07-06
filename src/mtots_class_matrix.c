@@ -264,6 +264,36 @@ static CFunction funcMatrixITranslate = {
   implMatrixITranslate, "itranslate", 1, 0, argsMatrixITranslate
 };
 
+static ubool implMatrixIScaleX(i16 argc, Value *args, Value *out) {
+  ObjMatrix *a = AS_MATRIX(args[-1]);
+  matrixIScale(&a->handle, newVector(AS_NUMBER(args[0]), 1, 1));
+  return UTRUE;
+}
+
+static CFunction funcMatrixIScaleX = {
+  implMatrixIScaleX, "iscaleX", 1, 0, argsNumbers
+};
+
+static ubool implMatrixIScaleY(i16 argc, Value *args, Value *out) {
+  ObjMatrix *a = AS_MATRIX(args[-1]);
+  matrixIScale(&a->handle, newVector(1, AS_NUMBER(args[0]), 1));
+  return UTRUE;
+}
+
+static CFunction funcMatrixIScaleY = {
+  implMatrixIScaleY, "iscaleY", 1, 0, argsNumbers
+};
+
+static ubool implMatrixIScaleZ(i16 argc, Value *args, Value *out) {
+  ObjMatrix *a = AS_MATRIX(args[-1]);
+  matrixIScale(&a->handle, newVector(1, 1, AS_NUMBER(args[0])));
+  return UTRUE;
+}
+
+static CFunction funcMatrixIScaleZ = {
+  implMatrixIScaleZ, "iscaleZ", 1, 0, argsNumbers
+};
+
 static TypePattern argsMatrixIRotate[] = {
   { TYPE_PATTERN_NUMBER },
   { TYPE_PATTERN_VECTOR_OR_NIL },
@@ -484,6 +514,9 @@ void initMatrixClass() {
     &funcMatrixIpow,
     &funcMatrixItranspose,
     &funcMatrixITranslate,
+    &funcMatrixIScaleX,
+    &funcMatrixIScaleY,
+    &funcMatrixIScaleZ,
     &funcMatrixIRotateX,
     &funcMatrixIRotateY,
     &funcMatrixIRotateZ,

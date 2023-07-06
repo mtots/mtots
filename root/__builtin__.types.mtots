@@ -803,6 +803,21 @@ class Matrix:
     the product `TM`.
     """
 
+  def iscaleX(factor Float) nil:
+    """
+    Scales up the transformation of this matrix along the X axis by the given factor
+    """
+
+  def iscaleY(factor Float) nil:
+    """
+    Scales up the transformation of this matrix along the Y axis by the given factor
+    """
+
+  def iscaleZ(factor Float) nil:
+    """
+    Scales up the transformation of this matrix along the Z axis by the given factor
+    """
+
   def irotateX(angle Float, center Vector?=nil) nil:
     """
     Applies a rotation of `angle` radians about the X axis through `center`.

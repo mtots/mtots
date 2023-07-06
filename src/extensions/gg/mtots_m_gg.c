@@ -1341,6 +1341,24 @@ static ubool implGeometryBlit(i16 argc, Value *args, Value *out) {
 
 static CFunction funcGeometryBlit = { implGeometryBlit, "blit" };
 
+static ubool implGeometrySetColor(i16 argc, Value *args, Value *out) {
+  ObjGeometry *geo = AS_GEOMETRY(args[-1]);
+  SDL_Color color = toSDLColor(AS_COLOR(args[0]));
+  u32 i;
+  for (i = 0; i < geo->vertexCount; i++) {
+    geo->vertices[i].color = color;
+  }
+  return UTRUE;
+}
+
+static TypePattern argsGeometrySetColor[] = {
+  { TYPE_PATTERN_COLOR },
+};
+
+static CFunction funcGeometrySetColor = {
+  implGeometrySetColor, "setColor", 1, 0, argsGeometrySetColor
+};
+
 static ubool implGeometrySetVertexColor(i16 argc, Value *args, Value *out) {
   ObjGeometry *geo = AS_GEOMETRY(args[-1]);
   size_t vi = AS_INDEX(args[0], (size_t)geo->vertexCount);
@@ -1618,6 +1636,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
   CFunction *geometryMethods[] = {
     &funcGeometryGetattr,
     &funcGeometryBlit,
+    &funcGeometrySetColor,
     &funcGeometrySetVertexColor,
     NULL,
   };

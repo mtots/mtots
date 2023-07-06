@@ -328,6 +328,11 @@ class Geometry:
     Draw this `Geometry` to the associated window
     """
 
+  def setColor(color Color) nil:
+    """
+    Set the color of all vertices of this Geometry to the given color
+    """
+
   def setVertexColor(i Int, color Color) nil:
     """
     Sets the color of the given Geometry's vertex.

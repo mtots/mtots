@@ -38,6 +38,13 @@ void initMatrixTranslate(Matrix *m, Vector v) {
   m->row[2][3] = v.z;
 }
 
+void initMatrixScale(Matrix *m, Vector v) {
+  initIdentityMatrix(m);
+  m->row[0][0] = v.x;
+  m->row[1][1] = v.y;
+  m->row[2][2] = v.z;
+}
+
 void initMatrixRotateX(Matrix *m, double angle) {
   double cost = cos(angle), sint = sin(angle);
   initIdentityMatrix(m);
@@ -129,6 +136,13 @@ void matrixITranspose(Matrix *m) {
 void matrixITranslate(Matrix *m, Vector v) {
   Matrix t;
   initMatrixTranslate(&t, v);
+  matrixIMul(&t, m);
+  *m = t;
+}
+
+void matrixIScale(Matrix *m, Vector v) {
+  Matrix t;
+  initMatrixScale(&t, v);
   matrixIMul(&t, m);
   *m = t;
 }
