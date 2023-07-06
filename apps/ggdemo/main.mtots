@@ -25,8 +25,10 @@ for i in range(ballImage.width):
   for j in range(ballImage.height):
     if ((i - ballImage.width // 2) ** 2) + ((j - ballImage.height // 2) ** 2) < 30 ** 2:
       ballImage.set(i, j, Color(255, 255, 255))
-# final texture = window.newTexture(ballImage, true)
-final spriteSheet = window.newTexture(ballImage).newSpriteSheet()
+final ballGeometry = window.newPolygon(
+  [V(-1, -1), V(1, -1), V(1, 1), V(-1, 1)],
+  nil,
+  window.newTexture(ballImage))
 
 
 class Ball:
@@ -45,10 +47,13 @@ class Ball:
     this.angle = angle
 
   def blit():
-    spriteSheet.sspr(
-      0, 0, spriteSheet.spriteWidth, spriteSheet.spriteHeight,
-      this.x, this.y, this.width, this.height,
-      false, false, this.angle, this.color)
+    ballGeometry.setColor(this.color)
+    ballGeometry.transform.reset()
+    ballGeometry.transform.scaleX(this.width / 2)
+    ballGeometry.transform.scaleY(this.height / 2)
+    ballGeometry.transform.rotateZ(this.angle)
+    ballGeometry.transform.translate(V(this.x, this.y))
+    ballGeometry.blit()
 
 
 final balls List[Ball] = []
@@ -60,6 +65,8 @@ for i in range(100):
   final height = 50 + 100 * rand.number()
   balls.append(Ball(color, x, y, width, height, 0))
 
+var angleY = 0
+var angleZ = 0
 
 @window.onUpdate
 def():
@@ -70,10 +77,25 @@ def():
     # window.clear(Color(0, 0, 0, 255))
 
     for ball in balls:
-      ball.angle = (2 * PI) * (tick / 15)
+      ball.angle = TAU * (tick / 60)
 
   sys.enableMallocFreeLogs(true)
   for ball in balls:
     ball.blit()
-  sys.enableMallocFreeLogs(false)
 
+  ballGeometry.setVertexColor(0, gg.RED)
+  ballGeometry.setVertexColor(1, gg.GREEN)
+  ballGeometry.setVertexColor(2, gg.BLUE)
+  ballGeometry.setVertexColor(3, gg.LIGHT_YELLOW)
+  ballGeometry.transform.reset()
+  ballGeometry.transform.scaleX(80)
+  ballGeometry.transform.scaleY(80)
+  ballGeometry.transform.rotateY(angleY)
+  ballGeometry.transform.rotateZ(angleZ)
+  ballGeometry.transform.translate(V(WIDTH / 2, HEIGHT / 2))
+  ballGeometry.blit()
+
+  angleZ = angleZ + 0.014
+  angleY = angleY + 0.06
+
+  sys.enableMallocFreeLogs(false)

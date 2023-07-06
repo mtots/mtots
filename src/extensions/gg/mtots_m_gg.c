@@ -739,8 +739,14 @@ static ObjGeometry *newGeometry(ObjWindow *window, u32 vertexCount, u32 indexCou
   return geo;
 }
 
-static ubool newPolygonGeometry(ObjWindow *window, ObjList *vectors, ObjGeometry **out) {
-  u32 vertexCount = vectors->length;
+static ubool newPolygonGeometry(
+    ObjWindow *window,
+    ObjList *points,
+    ObjList *colors,
+    ObjTexture *texture,
+    ObjList *textureCoordinates,
+    ObjGeometry **out) {
+  u32 vertexCount = points->length;
   u32 indexCount;
   size_t i;
   ObjGeometry *geo;
@@ -748,21 +754,77 @@ static ubool newPolygonGeometry(ObjWindow *window, ObjList *vectors, ObjGeometry
     runtimeError("Polygons require at least 3 vertices but got %d", (int)vertexCount);
     return UFALSE;
   }
+  if (colors && colors->length != 1 && colors->length != vertexCount) {
+    runtimeError(
+      "Polygons require that the colors list length match the point list length "
+      "but got %d points and %d colors", (int)vertexCount, (int)colors->length);
+    return UFALSE;
+  }
+  if (textureCoordinates && textureCoordinates->length != vertexCount) {
+    runtimeError(
+      "Polygons require that the textureCoordinates list length match the point "
+      "length but got %d points and %d texture coordinates", (int)vertexCount,
+      (int)textureCoordinates->length);
+    return UFALSE;
+  }
   indexCount = (vertexCount - 2) * 3;
   geo = newGeometry(window, vertexCount, indexCount);
+  geo->texture = texture;
   for (i = 0; i < vertexCount; i++) {
-    Vector vec;
-    if (!IS_VECTOR(vectors->buffer[i])) {
-      runtimeError("Expected Vector but got %s", getKindName(vectors->buffer[i]));
+    Vector point;
+    SDL_Color color;
+    SDL_FPoint texCoord;
+    if (!IS_VECTOR(points->buffer[i])) {
+      runtimeError("Expected Vector but got %s", getKindName(points->buffer[i]));
       return UFALSE;
     }
-    vec = AS_VECTOR(vectors->buffer[i]);
-    geo->vertices[i].color = toSDLColor(newColor(255, 255, 255, 255));
-    geo->vertices[i].tex_coord.x = 0;
-    geo->vertices[i].tex_coord.y = 0;
-    geo->vertices[i].position.x = 0;
+    point = AS_VECTOR(points->buffer[i]);
+    if (colors) {
+      size_t colorIndex = colors->length == 1 ? 0 : i;
+      if (!IS_COLOR(colors->buffer[colorIndex])) {
+        runtimeError("Expected Color but got %s", getKindName(colors->buffer[colorIndex]));
+        return UFALSE;
+      }
+      color = toSDLColor(AS_COLOR(colors->buffer[colorIndex]));
+    } else {
+      color = toSDLColor(newColor(255, 255, 255, 255));
+    }
+    if (textureCoordinates) {
+      Vector vec;
+      if (!IS_VECTOR(textureCoordinates->buffer[i])) {
+        runtimeError("Expected Vector but got %s", getKindName(
+          textureCoordinates->buffer[i]));
+        return UFALSE;
+      }
+      vec = AS_VECTOR(textureCoordinates->buffer[i]);
+      texCoord.x = vec.x;
+      texCoord.y = vec.y;
+    } else {
+      texCoord.x = 0;
+      texCoord.y = 0;
+      if (texture) {
+        switch (i) {
+          case 0:
+            break;
+          case 1:
+            texCoord.x = 1;
+            break;
+          case 2:
+            texCoord.x = 1;
+            texCoord.y = 1;
+            break;
+          case 3:
+            texCoord.y = 1;
+            break;
+        }
+      }
+    }
+    oprintln("i=%d => tex_coord=(%f,%f)", (int)i, texCoord.x, texCoord.y);
+    geo->vertices[i].color = color;
+    geo->vertices[i].tex_coord = texCoord;
+    geo->vertices[i].position.x = 0; /* position should be overwritten on blit */
     geo->vertices[i].position.y = 0;
-    geo->vectors[i] = vec;
+    geo->vectors[i] = point;
   }
   for (i = 0; i < vertexCount - 2; i++) { /* triangle fan */
     geo->indices[3 * i + 0] = 0;
@@ -1125,8 +1187,11 @@ static CFunction funcWindowNewTexture = {
 static ubool implWindowNewPolygon(i16 argc, Value *args, Value *out) {
   ObjWindow *window = AS_WINDOW(args[-1]);
   ObjList *points = AS_LIST(args[0]);
+  ObjList *colors = argc > 1 && !IS_NIL(args[1]) ? AS_LIST(args[1]) : NULL;
+  ObjTexture *texture = argc > 2 && !IS_NIL(args[2]) ? AS_TEXTURE(args[2]) : NULL;
+  ObjList *textureCoordinates = argc > 3 && !IS_NIL(args[3]) ? AS_LIST(args[3]) : NULL;
   ObjGeometry *geo;
-  if (!newPolygonGeometry(window, points, &geo)) {
+  if (!newPolygonGeometry(window, points, colors, texture, textureCoordinates, &geo)) {
     return UFALSE;
   }
   *out = GEOMETRY_VAL(geo);
@@ -1134,11 +1199,14 @@ static ubool implWindowNewPolygon(i16 argc, Value *args, Value *out) {
 }
 
 static TypePattern argsWindowNewPolygon[] = {
-  { TYPE_PATTERN_LIST_VECTOR },
+  { TYPE_PATTERN_LIST },
+  { TYPE_PATTERN_LIST_OR_NIL },
+  { TYPE_PATTERN_NATIVE_OR_NIL, &descriptorTexture },
+  { TYPE_PATTERN_LIST_OR_NIL },
 };
 
 static CFunction funcWindowNewPolygon = {
-  implWindowNewPolygon, "newPolygon", 1, 0, argsWindowNewPolygon
+  implWindowNewPolygon, "newPolygon", 1, 4, argsWindowNewPolygon
 };
 
 static ubool implWindowNewSpriteSheet(i16 argc, Value *args, Value *out) {

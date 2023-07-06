@@ -200,9 +200,29 @@ class Window:
     state of `image`.
     """
 
-  def newPolygon(points List[Vector]) Geometry:
+  def newPolygon(
+      points List[Vector],
+      colors List[Color]?=nil,
+      texture Texture?=nil,
+      textureCoordinates List[Vector]?=nil) Geometry:
     """
     Create a new polygon `Geometry` with the given points.
+
+    If the `colors` list is provided, it must match the length of `points`
+    and will assign colors to each vertex. If not provided or nil, the color
+    of each vertex will be assumed to be `Color(255, 255, 255)`.
+
+    If `texture` is provided, it will be used when rendering the polygon.
+    Further, `textureCorodinates` will be used to determine the texture coordinates
+    for each vertex. `textureCoordinates` should also match the length of `points`
+    when provided.
+
+    If `textureCoordinates` is omitted or nil, the first 4 points will be set to
+    point to the four corners of the texture starting from the upper-left corner
+    going clockwise.
+
+    Texture coordinates are normalized - so each component should be a value between
+    zero and one.
     """
 
   def newSpriteSheet(image Image, spriteWidth Int=0, spriteHeight Int=0) SpriteSheet:

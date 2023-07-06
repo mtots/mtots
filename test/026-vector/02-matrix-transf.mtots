@@ -1,6 +1,6 @@
 
 final tr = Matrix.one()
-tr.irotateZ(PI/4)
+tr.rotateZ(PI/4)
 final inv = tr ** -1
 final v1 = Vector(1, 1)
 
