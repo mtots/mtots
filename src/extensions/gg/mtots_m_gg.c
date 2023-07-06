@@ -73,6 +73,7 @@ typedef struct ObjWindow {
   ObjCanvas *canvas;
   ObjTexture *canvasTexture;
   ObjSpriteSheet *spriteSheet;
+  ObjMatrix *transform;
 } ObjWindow;
 
 struct ObjTexture {
@@ -195,6 +196,7 @@ static void blackenWindow(ObjNative *n) {
   markObject((Obj*)window->canvas);
   markObject((Obj*)window->canvasTexture);
   markObject((Obj*)window->spriteSheet);
+  markObject((Obj*)window->transform);
 }
 
 static void freeWindow(ObjNative *n) {
@@ -398,6 +400,7 @@ static ubool newWindow(
   SDL_Window *handle;
   SDL_Renderer *renderer;
   ObjWindow *window;
+  ubool gcPause;
 
   handle = SDL_CreateWindow(
     title,
@@ -419,6 +422,7 @@ static ubool newWindow(
   }
 
   window = NEW_NATIVE(ObjWindow, &descriptorWindow);
+  LOCAL_GC_PAUSE(gcPause);
   window->handle = handle;
   window->framesPerSecond = framesPerSecond;
   window->renderer = renderer;
@@ -432,6 +436,8 @@ static ubool newWindow(
   window->canvas = NULL;
   window->canvasTexture = NULL;
   window->spriteSheet = NULL;
+  window->transform = newIdentityMatrix();
+  LOCAL_GC_UNPAUSE(gcPause);
 
   *out = window;
   return UTRUE;
@@ -767,15 +773,27 @@ static ubool newPolygonGeometry(ObjWindow *window, ObjList *vectors, ObjGeometry
   return UTRUE;
 }
 
-static ubool geometryBlit(ObjGeometry *geo) {
+/* Update the coordinates of the geometry based on vectors and
+  * the transform matrix.
+  *
+  * We take into account:
+  *   1. the transform matrix of the window, and
+  *   2. the transform matrix of the geometry */
+static ubool geometryUpdateVertexPositions(ObjGeometry *geo) {
   size_t i;
-
-  /* Update the coordinates of the geometry based on vectors and
-   * the transform matrix */
+  Matrix transform = geo->window->transform->handle;
+  matrixIMul(&transform, &geo->transform->handle);
   for (i = 0; i < geo->vertexCount; i++) {
-    Vector vec = matrixApply(&geo->transform->handle, geo->vectors[i]);
+    Vector vec = matrixApply(&transform, geo->vectors[i]);
     geo->vertices[i].position.x = vec.x;
     geo->vertices[i].position.y = vec.y;
+  }
+  return UTRUE;
+}
+
+static ubool geometryBlit(ObjGeometry *geo) {
+  if (!geometryUpdateVertexPositions(geo)) {
+    return UFALSE;
   }
 
   /* Actually render the geometry */
@@ -917,6 +935,22 @@ static TypePattern argsWindowStaticCall[] = {
 
 static CFunction funcWindowStaticCall = {
   implWindowStaticCall, "__call__", 0, 4, argsWindowStaticCall,
+};
+
+static ubool implWindowGetattr(i16 argc, Value *args, Value *out) {
+  ObjWindow *window = AS_WINDOW(args[-1]);
+  String *name = AS_STRING(args[0]);
+  if (name == transformString) {
+    *out = MATRIX_VAL(window->transform);
+  } else {
+    runtimeError("Field %s not found on Window", name->chars);
+    return UFALSE;
+  }
+  return UTRUE;
+}
+
+static CFunction funcWindowGetattr = {
+  implWindowGetattr, "__getattr__", 1, 0, argsStrings
 };
 
 static ubool implWindowMainLoop(i16 argc, Value *args, Value *out) {
@@ -1600,6 +1634,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     NULL,
   };
   CFunction *windowMethods[] = {
+    &funcWindowGetattr,
     &funcWindowMainLoop,
     &funcWindowSetTitle,
     &funcWindowSetBackgroundColor,

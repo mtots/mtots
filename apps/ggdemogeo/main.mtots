@@ -2,6 +2,8 @@ import gg
 
 
 final window = gg.Window('geometry', 300, 300)
+window.transform.translate(Vector(200, 200))
+
 final rect = window.newPolygon([
   Vector(0,     0),
   Vector(100,   0),
@@ -12,6 +14,7 @@ rect.setVertexColor(0, gg.BLUE)
 rect.setVertexColor(1, gg.GREEN)
 rect.setVertexColor(2, gg.ORANGE)
 rect.setVertexColor(3, gg.BROWN)
+rect.transform.translate(Vector(-50, -50))
 
 final pentagon = window.newPolygon([
   Vector(-10, -10),
@@ -21,24 +24,18 @@ final pentagon = window.newPolygon([
   Vector(-15,  10),
 ])
 pentagon.setColor(gg.DARK_PEACH)
+pentagon.transform.scaleX(2)
+pentagon.transform.scaleY(2)
 
-var angle = 0
+# var angle = 0
 
 @window.onUpdate
 def() nil:
   ""
-  rect.transform.reset()
-  rect.transform.translate(Vector(-50, -50))
-  rect.transform.rotateZ(angle)
-  rect.transform.translate(Vector(100, 100))
+  rect.transform.rotateZ(0.1)
   rect.blit()
 
-  pentagon.transform.reset()
-  pentagon.transform.scaleX(2)
-  pentagon.transform.scaleY(2)
-  pentagon.transform.rotateZ(angle)
-  pentagon.transform.translate(Vector(200, 200))
+  pentagon.transform.rotateZ(0.2)
   pentagon.blit()
 
-  angle = angle + 0.1
-
+  # angle = angle + 0.1

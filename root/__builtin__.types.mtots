@@ -347,13 +347,13 @@ def M(row1 List[Float],
   """
   Convenience method for creating a `Matrix`.
 
-  Any missing values will be filled out with the corresponding
+  Any missing rows will be filled out with the corresponding
   values in the identity matrix.
   """
 
 
 class Buffer:
-  r"""
+  """
   Mutable, appendable array of bytes.
 
   NOTE: Because Buffer is appendable, the location of the bytes
@@ -648,21 +648,21 @@ class Vector:
   def __mul__(scale Number) Vector:
     "Vector-scalar multiplication"
 
-  def irotateX(angle Number) Vector:
+  def rotateX(angle Number) Vector:
     """
     Rotate the vector counterclockwise around the X axis by `angle` radians.
     Standard right handed 3D coordinate system where positive x points right,
     positive y points up, and positive z points towards the viewer is assumed.
     """
 
-  def irotateY(angle Number) Vector:
+  def rotateY(angle Number) Vector:
     """
     Rotate the vector counterclockwise around the Y axis by `angle` radians.
     Standard right handed 3D coordinate system where positive x points right,
     positive y points up, and positive z points towards the viewer is assumed.
     """
 
-  def irotateZ(angle Number) Vector:
+  def rotateZ(angle Number) Vector:
     """
     Rotate the vector counterclockwise around the Z axis by `angle` radians.
     Standard right handed 3D coordinate system where positive x points right,

@@ -89,6 +89,11 @@ class Window:
   queued to run when the program exits
   """
 
+  final transform Matrix """
+    Transformation matrix to apply when rendering geometries.
+    Used to control the camera.
+  """
+
   def __init__(
       title String = "",
       width Int = 0,
