@@ -88,9 +88,11 @@ typedef struct ObjGeometry {
   ObjNative obj;
   ObjWindow *window;
   u32 vertexCount, indexCount;
-  SDL_Vertex *vertices;
+  SDL_Vertex *vertices;         /* SDL vertices used for rendering */
   u32 *indices;
   ObjTexture *texture;
+  Vector *vectors;              /* original points */
+  ObjMatrix *transform;         /* transform on vectors to determine vertices */
 } ObjGeometry;
 
 struct ObjSpriteSheet {
@@ -143,6 +145,7 @@ static String *scancodeString;
 static String *repeatString;
 static String *dxString;
 static String *dyString;
+static String *transformString;
 static String *scancodeKeys[SCANCODE_KEY_COUNT];
 static ObjClickEvent *clickEvent;
 static ObjKeyEvent *keyEvent;
@@ -217,12 +220,14 @@ static void blackenGeometry(ObjNative *n) {
   ObjGeometry *geo = (ObjGeometry*)n;
   markObject((Obj*)geo->window);
   markObject((Obj*)geo->texture);
+  markObject((Obj*)geo->transform);
 }
 
 static void freeGeometry(ObjNative *n) {
   ObjGeometry *geo = (ObjGeometry*)n;
   FREE_ARRAY(SDL_Vertex, geo->vertices, geo->vertexCount);
   FREE_ARRAY(u32, geo->indices, geo->indexCount);
+  FREE_ARRAY(Vector, geo->vectors, geo->vertexCount);
 }
 
 static void blackenSpriteSheet(ObjNative *n) {
@@ -722,6 +727,8 @@ static ObjGeometry *newGeometry(ObjWindow *window, u32 vertexCount, u32 indexCou
   geo->vertices = ALLOCATE(SDL_Vertex, vertexCount);
   geo->indices = ALLOCATE(u32, indexCount);
   geo->texture = NULL;
+  geo->vectors = ALLOCATE(Vector, vertexCount);
+  geo->transform = newIdentityMatrix();
   LOCAL_GC_UNPAUSE(gcPause);
   return geo;
 }
@@ -747,8 +754,9 @@ static ubool newPolygonGeometry(ObjWindow *window, ObjList *vectors, ObjGeometry
     geo->vertices[i].color = toSDLColor(newColor(255, 255, 255, 255));
     geo->vertices[i].tex_coord.x = 0;
     geo->vertices[i].tex_coord.y = 0;
-    geo->vertices[i].position.x = vec.x;
-    geo->vertices[i].position.y = vec.y;
+    geo->vertices[i].position.x = 0;
+    geo->vertices[i].position.y = 0;
+    geo->vectors[i] = vec;
   }
   for (i = 0; i < vertexCount - 2; i++) { /* triangle fan */
     geo->indices[3 * i + 0] = 0;
@@ -756,6 +764,31 @@ static ubool newPolygonGeometry(ObjWindow *window, ObjList *vectors, ObjGeometry
     geo->indices[3 * i + 2] = i + 2;
   }
   *out = geo;
+  return UTRUE;
+}
+
+static ubool geometryBlit(ObjGeometry *geo) {
+  size_t i;
+
+  /* Update the coordinates of the geometry based on vectors and
+   * the transform matrix */
+  for (i = 0; i < geo->vertexCount; i++) {
+    Vector vec = matrixApply(&geo->transform->handle, geo->vectors[i]);
+    geo->vertices[i].position.x = vec.x;
+    geo->vertices[i].position.y = vec.y;
+  }
+
+  /* Actually render the geometry */
+  if (SDL_RenderGeometry(
+      geo->window->renderer,
+      geo->texture ? geo->texture->handle : NULL,
+      geo->vertices,
+      (int)geo->vertexCount,
+      (const i32*)geo->indices,
+      (int)geo->indexCount) != 0) {
+    return sdlError("SDL_RenderGeometry");
+  }
+
   return UTRUE;
 }
 
@@ -1286,18 +1319,24 @@ static ubool implTextureUpdate(i16 argc, Value *args, Value *out) {
 
 static CFunction funcTextureUpdate = { implTextureUpdate, "update" };
 
-static ubool implGeometryBlit(i16 argc, Value *args, Value *out) {
+static ubool implGeometryGetattr(i16 argc, Value *args, Value *out) {
   ObjGeometry *geo = AS_GEOMETRY(args[-1]);
-  if (SDL_RenderGeometry(
-      geo->window->renderer,
-      geo->texture ? geo->texture->handle : NULL,
-      geo->vertices,
-      (int)geo->vertexCount,
-      (const i32*)geo->indices,
-      (int)geo->indexCount) != 0) {
-    return sdlError("SDL_RenderGeometry");
+  String *name = AS_STRING(args[0]);
+  if (name == transformString) {
+    *out = MATRIX_VAL(geo->transform);
+  } else {
+    runtimeError("Field %s not found in Geometry", name->chars);
+    return UFALSE;
   }
   return UTRUE;
+}
+
+static CFunction funcGeometryGetattr = {
+  implGeometryGetattr, "__getattr__", 1, 0, argsStrings
+};
+
+static ubool implGeometryBlit(i16 argc, Value *args, Value *out) {
+  return geometryBlit(AS_GEOMETRY(args[-1]));
 }
 
 static CFunction funcGeometryBlit = { implGeometryBlit, "blit" };
@@ -1577,6 +1616,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     NULL,
   };
   CFunction *geometryMethods[] = {
+    &funcGeometryGetattr,
     &funcGeometryBlit,
     &funcGeometrySetVertexColor,
     NULL,
@@ -1655,6 +1695,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
   moduleRetain(module, STRING_VAL(repeatString = internCString("repeat")));
   moduleRetain(module, STRING_VAL(dxString = internCString("dx")));
   moduleRetain(module, STRING_VAL(dyString = internCString("dy")));
+  moduleRetain(module, STRING_VAL(transformString = internCString("transform")));
 
   {
     ScancodeEntry *entry = scancodeEntries;

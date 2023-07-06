@@ -759,6 +759,11 @@ class Matrix:
     Sets the value of a cell in this matrix
     """
 
+  def reset() nil:
+    """
+    Reset the values of this matrix to be the identity matrix.
+    """
+
   def iscale(factor Float) nil:
     """
     Inplace scalar multiplication

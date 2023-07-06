@@ -178,6 +178,14 @@ static ubool implMatrixSet(i16 argc, Value *args, Value *out) {
 
 static CFunction funcMatrixSet = { implMatrixSet, "set", 3, 0, argsNumbers };
 
+static ubool implMatrixReset(i16 argc, Value *args, Value *out) {
+  ObjMatrix *a = AS_MATRIX(args[-1]);
+  initIdentityMatrix(&a->handle);
+  return UTRUE;
+}
+
+static CFunction funcMatrixReset = { implMatrixReset, "reset" };
+
 static ubool implMatrixIscale(i16 argc, Value *args, Value *out) {
   ObjMatrix *a = AS_MATRIX(args[-1]);
   double factor = AS_NUMBER(args[0]);
@@ -468,6 +476,7 @@ void initMatrixClass() {
   CFunction *methods[] = {
     &funcMatrixGet,
     &funcMatrixSet,
+    &funcMatrixReset,
     &funcMatrixIscale,
     &funcMatrixIadd,
     &funcMatrixIsub,

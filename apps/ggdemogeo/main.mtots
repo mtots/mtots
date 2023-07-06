@@ -13,8 +13,15 @@ rect.setVertexColor(1, gg.GREEN)
 rect.setVertexColor(2, gg.ORANGE)
 rect.setVertexColor(3, gg.BROWN)
 
+var angle = 0
+
 @window.onUpdate
 def() nil:
   ""
-  rect.blit()
+  rect.transform.reset()
+  rect.transform.itranslate(Vector(-50, -50))
+  rect.transform.irotateZ(angle)
+  rect.transform.itranslate(Vector(100, 100))
+  angle = angle + 0.1
 
+  rect.blit()

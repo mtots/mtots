@@ -318,6 +318,11 @@ class Geometry:
   Each vertex can be set to a specific color to create gradient images.
   """
 
+  final transform Matrix """
+    The transformation matrix for this geometry.
+    Usually initialized to the identity matrix.
+  """
+
   def blit() nil:
     """
     Draw this `Geometry` to the associated window
