@@ -75,6 +75,7 @@ typedef struct ObjWindow {
   ObjCanvas *canvas;
   ObjTexture *canvasTexture;
   ObjMatrix *transform;
+  u32 width, height;
 } ObjWindow;
 
 struct ObjTexture {
@@ -372,6 +373,7 @@ static ubool newWindow(
   SDL_Window *handle;
   SDL_Renderer *renderer;
   ObjWindow *window;
+  int foundWidth, foundHeight;
   ubool gcPause;
 
   handle = SDL_CreateWindow(
@@ -393,6 +395,16 @@ static ubool newWindow(
     return UFALSE;
   }
 
+  /* NOTE: foundHeight/foundWidth might not match requested width
+   * and height depending on the context - e.g. if we are in fullscreen mode.
+   * To account for this, we get the actual render size here */
+  if (SDL_GetRendererOutputSize(renderer, &foundWidth, &foundHeight) != 0) {
+    sdlError("SDL_GetRendererOutputSize");
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(handle);
+    return UFALSE;
+  }
+
   window = NEW_NATIVE(ObjWindow, &descriptorWindow);
   LOCAL_GC_PAUSE(gcPause);
   window->handle = handle;
@@ -408,6 +420,8 @@ static ubool newWindow(
   window->canvas = NULL;
   window->canvasTexture = NULL;
   window->transform = newIdentityMatrix();
+  window->width = (u32)foundWidth;
+  window->height = (u32)foundHeight;
   LOCAL_GC_UNPAUSE(gcPause);
 
   *out = window;
@@ -497,6 +511,30 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
             return UFALSE;
           }
           pop();
+        }
+        break;
+
+      case SDL_WINDOWEVENT:
+        switch (event.window.event) {
+          case SDL_WINDOWEVENT_SIZE_CHANGED: {
+            /* https://stackoverflow.com/questions/55076649
+             * SDL_WINDOWEVENT_SIZE_CHANGED is emitted wherever
+             * SDL_WINDOWEVENT_RESIZED is emitted,
+             * but not vice versa */
+            int w, h;
+            if (SDL_GetRendererOutputSize(mainWindow->renderer, &w, &h) != 0) {
+              return sdlError("SDL_GetRendererOutputSize");
+            }
+            mainWindow->width = (u32)w;
+            mainWindow->height = (u32)h;
+
+            /* The previous canvas, if any, is invalidated */
+            mainWindow->canvas = NULL;
+            mainWindow->canvasTexture = NULL;
+
+            break;
+          }
+          default: break;
         }
         break;
     }
@@ -872,6 +910,24 @@ static CFunction funcWindowStaticDefaultFPS = {
   implWindowStaticDefaultFPS, "defaultFPS",
 };
 
+static ubool implWindowStaticFlagFIXEDFULLSCREEN(i16 argc, Value *args, Value *out) {
+  *out = NUMBER_VAL(SDL_WINDOW_FULLSCREEN);
+  return UTRUE;
+}
+
+static CFunction funcWindowStaticFlagFIXEDFULLSCREEN = {
+  implWindowStaticFlagFIXEDFULLSCREEN, "flagFIXEDFULLSCREEN",
+};
+
+static ubool implWindowStaticFlagFULLSCREEN(i16 argc, Value *args, Value *out) {
+  *out = NUMBER_VAL(SDL_WINDOW_FULLSCREEN_DESKTOP);
+  return UTRUE;
+}
+
+static CFunction funcWindowStaticFlagFULLSCREEN = {
+  implWindowStaticFlagFULLSCREEN, "flagFULLSCREEN",
+};
+
 static ubool implWindowStaticFlagRESIZABLE(i16 argc, Value *args, Value *out) {
   *out = NUMBER_VAL(SDL_WINDOW_RESIZABLE);
   return UTRUE;
@@ -886,6 +942,10 @@ static ubool implWindowGetattr(i16 argc, Value *args, Value *out) {
   String *name = AS_STRING(args[0]);
   if (name == transformString) {
     *out = MATRIX_VAL(window->transform);
+  } else if (name == vm.widthString) {
+    *out = NUMBER_VAL(window->width);
+  } else if (name == vm.heightString) {
+    *out = NUMBER_VAL(window->height);
   } else {
     runtimeError("Field %s not found on Window", name->chars);
     return UFALSE;
@@ -1431,6 +1491,8 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
   CFunction *windowStaticMethods[] = {
     &funcWindowStaticCall,
     &funcWindowStaticDefaultFPS,
+    &funcWindowStaticFlagFIXEDFULLSCREEN,
+    &funcWindowStaticFlagFULLSCREEN,
     &funcWindowStaticFlagRESIZABLE,
     NULL,
   };

@@ -4,12 +4,16 @@ from media import Image
 from random import Random
 
 final rand = Random()
-final WIDTH = 400
-final HEIGHT = 400
 final window = gg.Window(
-  "Fake3D", WIDTH, HEIGHT,
+  "Fake3D", 400, 400,
   gg.Window.defaultFPS(),
-  gg.Window.flagRESIZABLE())
+  # gg.Window.flagRESIZABLE()
+  gg.Window.flagFIXEDFULLSCREEN()
+  # gg.Window.flagFULLSCREEN()
+)
+
+print("window dim = %s, %s" % [window.width, window.height])
+
 var tick = 0
 final ballImage = Image(100, 100)
 for i in range(ballImage.width):
@@ -26,6 +30,8 @@ var angleZ = 0
 
 @window.onUpdate
 def():
+  if tick == 0:
+    print("(tick0) window dim = %s, %s" % [window.width, window.height])
   tick = tick + 1
   ballGeometry.setVertexColor(0, gg.RED)
   ballGeometry.setVertexColor(1, gg.GREEN)
@@ -36,7 +42,7 @@ def():
   ballGeometry.transform.scaleY(100)
   ballGeometry.transform.rotateY(angleY)
   ballGeometry.transform.rotateZ(angleZ)
-  ballGeometry.transform.translate(V(WIDTH / 2, HEIGHT / 2))
+  ballGeometry.transform.translate(V(window.width / 2, window.height / 2))
   ballGeometry.blit()
   angleZ = angleZ + 0.014
   angleY = angleY + 0.06

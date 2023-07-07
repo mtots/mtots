@@ -95,14 +95,57 @@ class Window:
     Always returns 30.
     """
 
+  static def flagFIXEDFULLSCREEN() Int:
+    """
+    Flag to pass to the constructor to start the window in 'true' fullscreen mode.
+
+    This will try to force the actual render resolution to match the requested
+    resolution, but this is not always guaranteed. You should be able to
+    check the `width` and `height` parameters of the resulting `Window` to
+    verify the actual dimensions you got.
+
+    Corresponds to `SDL_WINDOW_FULLSCREEN`.
+
+    Compare with the `flagFULLSCREEN()` method.
+    """
+
+  static def flagFULLSCREEN() Int:
+    """
+    Flag to pass to the constructor to start the window in fullscreen mode.
+
+    The requested window dimensions will be ignored and the window will go into
+    fullscreen at the current desktop resolution.
+
+    Corresponds to `SDL_WINDOW_FULLSCREEN_DESKTOP`.
+
+    `SDL_WINDOW_FULLSCREEN_DESKTOP` is chosen instead of `SDL_WINDOW_FULLSCREEN`,
+    because that is probably what you want. An old school fullscreen is rather
+    disruptive. But if that is really what you want, you can use
+    `flagFIXEDFULLSCREEN()`.
+    """
+
   static def flagRESIZABLE() Int:
     """
-    Flag to pass to the constructor to enable resizing
+    Flag to pass to the constructor to enable resizing.
+
+    Corresponds to `SDL_WINDOW_RESIZABLE`
     """
 
   final transform Matrix """
     Transformation matrix to apply when rendering geometries.
     Used to control the camera.
+  """
+
+  final width Int """
+    Width of the renderer output size.
+    This value might not necessarily correspond to the actual
+    width of the window.
+  """
+
+  final height Int """
+    Height of the renderer output size.
+    This value might not necessarily correspond to the actual
+    height of the window.
   """
 
   def __init__(
