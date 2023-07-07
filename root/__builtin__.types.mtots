@@ -683,6 +683,8 @@ class Matrix:
 
   Unlike Vectors, Matrices are mutable.
 
+  NOTE: If you want to invert the matrix in-place, you can: `matrix.ipow(-1)`
+
   Non-static methods of `Matrix` fall into a few categories:
 
   * Ad-hoc
@@ -697,7 +699,7 @@ class Matrix:
       but returns a new `Matrix`.
 
   * In-place Matrix Results:
-    * `ismul`, `iadd`, `isub`, `imul`, `ipow`, `itranspose`,
+    * `ismul`, `iadd`, `isub`, `imul`, `irmul`, `ipow`, `itranspose`,
     * These methods are the in-place mutable counterparts to the 'Matrix
       Results' methods. Names of methods in this category always
       start with the letter 'i'.
@@ -817,6 +819,14 @@ class Matrix:
     Inplace matrix multiplication
     """
 
+  def imul(other Matrix) nil:
+    """
+    Inplace matrix multiplication, but reverse order.
+
+    That is, like `imul`, but computes `other * this` instead of
+    `this * other`.
+    """
+
   def ipow(exponent Int) nil:
     """
     Inplace matrix exponentiation
@@ -912,28 +922,28 @@ class Matrix:
     described by `offset`, this method replaces `this` with
     the product `TM`.
 
-    `this` `Matrix` is modified
+    This method modifies `this` `Matrix`
     """
 
   def scaleX(factor Float) nil:
     """
     Scales up the transformation of this matrix along the X axis by the given factor
 
-    `this` `Matrix` is modified
+    This method modifies `this` `Matrix`
     """
 
   def scaleY(factor Float) nil:
     """
     Scales up the transformation of this matrix along the Y axis by the given factor
 
-    `this` `Matrix` is modified
+    This method modifies `this` `Matrix`
     """
 
   def scaleZ(factor Float) nil:
     """
     Scales up the transformation of this matrix along the Z axis by the given factor
 
-    `this` `Matrix` is modified
+    This method modifies `this` `Matrix`
     """
 
   def rotateX(angle Float, center Vector?=nil) nil:
@@ -942,7 +952,7 @@ class Matrix:
 
     If omitted or nil, `center` is assumed to be the origin
 
-    `this` `Matrix` is modified
+    This method modifies `this` `Matrix`
     """
 
   def rotateY(angle Float, center Vector?=nil) nil:
@@ -951,7 +961,7 @@ class Matrix:
 
     If omitted or nil, `center` is assumed to be the origin
 
-    `this` `Matrix` is modified
+    This method modifies `this` `Matrix`
     """
 
   def rotateZ(angle Float, center Vector?=nil) nil:
@@ -966,20 +976,51 @@ class Matrix:
     In 2D coordinate systems more common in games, where y points down
     and x points right, this is a clockwise rotation.
 
-    `this` `Matrix` is modified
+    This method modifies `this` `Matrix`
     """
 
   def flipX() nil:
     """
     Applies a transform that flips the sign of the X-coordinate
+
+    This method modifies `this` `Matrix`
     """
 
   def flipY() nil:
     """
     Applies a transform that flips the sign of the Y-coordinate
+
+    This method modifies `this` `Matrix`
     """
 
   def flipZ() nil:
     """
     Applies a transform that flips the sign of the Z-coordinate
+
+    This method modifies `this` `Matrix`
+    """
+
+  def changeOfBasis(
+      a1 Vector, b1 Vector,
+      a2 Vector, b2 Vector,
+      a3 Vector, b3 Vector,
+      a4 Vector, b4 Vector) nil:
+    """
+    Computes the change of basis matrix for for the given set of
+    vectors.
+
+    That is, the value of `this` will be updated so that
+    ```
+      this * a1 == b1 and
+      this * a2 == b2 and
+      this * a3 == b3 and
+      this * a4 == b4
+    ```
+
+    If `[a1, a2, a3, a4]` do not form a basis,
+    this method will throw.
+
+    `[b1, b2, b3, b4]` does not have to form a basis.
+
+    This method modifies `this` `Matrix`
     """

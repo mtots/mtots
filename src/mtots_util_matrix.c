@@ -87,6 +87,41 @@ void initMatrixFlipZ(Matrix *m) {
   m->row[2][2] = -1;
 }
 
+void initMatrixFromColumnVectors(Matrix *m, Vector a1, Vector a2, Vector a3, Vector a4) {
+  m->row[0][0] = a1.x;
+  m->row[1][0] = a1.y;
+  m->row[2][0] = a1.z;
+  m->row[3][0] = 1;
+  m->row[0][1] = a2.x;
+  m->row[1][1] = a2.y;
+  m->row[2][1] = a2.z;
+  m->row[3][1] = 1;
+  m->row[0][2] = a3.x;
+  m->row[1][2] = a3.y;
+  m->row[2][2] = a3.z;
+  m->row[3][2] = 1;
+  m->row[0][3] = a4.x;
+  m->row[1][3] = a4.y;
+  m->row[2][3] = a4.z;
+  m->row[3][3] = 1;
+}
+
+ubool initChangeOfBasisMatrix(
+    Matrix *m,
+    Vector a1, Vector b1,
+    Vector a2, Vector b2,
+    Vector a3, Vector b3,
+    Vector a4, Vector b4) {
+  Matrix r;
+  initMatrixFromColumnVectors( &r, a1, a2, a3, a4 ); /* destBasis */
+  initMatrixFromColumnVectors(  m, b1, b2, b3, b4 ); /* srcBasis */
+  if (!matrixIInverse(&r)) {
+    return UFALSE;
+  }
+  matrixIMul(m, &r);
+  return UTRUE;
+}
+
 /* in-place matrix scalar multiplication */
 void matrixISMul(Matrix *a, double factor) {
   size_t i, j;
@@ -134,6 +169,13 @@ void matrixIMul(Matrix *a, const Matrix *b) {
     }
   }
   initMatrixFromValues(a, &values[0][0]);
+}
+
+/* Like matrixIMul, but performs b*a instead of a*b */
+void matrixIRMul(Matrix *a, const Matrix *b) {
+  Matrix tmp = *b;
+  matrixIMul(&tmp, a);
+  *a = tmp;
 }
 
 /* in-place matrix transpose */

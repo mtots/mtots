@@ -263,6 +263,15 @@ class Window:
     state of `image`.
     """
 
+  def setCamera(upperLeft Vector, lowerRight Vector) nil:
+    """
+    Update `this.transform` so that the the upper left corner of the
+    screen corresponds to `upperLeft` and the lower right corner of the
+    screen corresponds to `lowerRight`.
+
+    Further, the camera will remain parallel to the original X and Y axes.
+    """
+
   def newPolygon(
       points List[Vector],
       colors List[Color]?=nil,

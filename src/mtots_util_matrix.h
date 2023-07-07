@@ -26,10 +26,18 @@ void initMatrixRotateZ(Matrix *m, double angle);
 void initMatrixFlipX(Matrix *m);
 void initMatrixFlipY(Matrix *m);
 void initMatrixFlipZ(Matrix *m);
+void initMatrixFromColumnVectors(Matrix *m, Vector a1, Vector a2, Vector a3, Vector a4);
+ubool initChangeOfBasisMatrix(
+  Matrix *m,
+  Vector a1, Vector b1,
+  Vector a2, Vector b2,
+  Vector a3, Vector b3,
+  Vector a4, Vector b4);
 void matrixISMul(Matrix *a, double factor);
 void matrixIAdd(Matrix *a, const Matrix *b);
 void matrixISub(Matrix *a, const Matrix *b);
 void matrixIMul(Matrix *a, const Matrix *b);
+void matrixIRMul(Matrix *a, const Matrix *b);
 void matrixITranspose(Matrix *m);
 void matrixITranslate(Matrix *m, Vector v);
 void matrixIScale(Matrix *m, Vector v);

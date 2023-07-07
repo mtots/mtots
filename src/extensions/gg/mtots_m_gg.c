@@ -688,6 +688,25 @@ static ubool updateStreamingTexture(SDL_Texture *texture, ObjImage *image) {
   return UTRUE;
 }
 
+static ubool windowSetCamera(ObjWindow *window, Vector upperLeft, Vector lowerRight) {
+  float w = (float)window->width;
+  float h = (float)window->height;
+
+  /* The transformation that the camera needs to perform can be described
+   * as a change of basis:
+      (  upperLeft.x,  upperLeft.y, 0) => (0, 0, 0)
+      ( lowerRight.x,  upperLeft.y, 0) => (W, 0, 0)
+      ( lowerRight.x, lowerRight.y, 0) => (W, H, 0)
+      (  upperLeft.x,  upperLeft.y, 1) => (0, 0, 1) */
+
+  return initChangeOfBasisMatrix(
+    &window->transform->handle,
+    newVector(  upperLeft.x,  upperLeft.y, 0), newVector(0, 0, 0),
+    newVector( lowerRight.x,  upperLeft.y, 0), newVector(w, 0, 0),
+    newVector( lowerRight.x, lowerRight.y, 0), newVector(w, h, 0),
+    newVector(  upperLeft.x,  upperLeft.y, 1), newVector(0, 0, 1));
+}
+
 static ubool windowNewCanvas(ObjWindow *window, size_t width, size_t height) {
   ObjImage *image;
   ubool gcPause;
@@ -1124,6 +1143,22 @@ static CFunction funcWindowNewTexture = {
   implWindowNewTexture, "newTexture", 1, 2, argsWindowNewTexture,
 };
 
+static ubool implWindowSetCamera(i16 argc, Value *args, Value *out) {
+  ObjWindow *window = AS_WINDOW(args[-1]);
+  Vector upperLeft = AS_VECTOR(args[0]);
+  Vector lowerRight = AS_VECTOR(args[1]);
+  return windowSetCamera(window, upperLeft, lowerRight);
+}
+
+static TypePattern argsWindowSetCamera[] = {
+  { TYPE_PATTERN_VECTOR },
+  { TYPE_PATTERN_VECTOR },
+};
+
+static CFunction funcWindowSetCamera = {
+  implWindowSetCamera, "setCamera", 2, 0, argsWindowSetCamera
+};
+
 static ubool implWindowNewPolygon(i16 argc, Value *args, Value *out) {
   ObjWindow *window = AS_WINDOW(args[-1]);
   ObjList *points = AS_LIST(args[0]);
@@ -1516,6 +1551,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &funcWindowNewCanvas,
     &funcWindowClear,
     &funcWindowNewTexture,
+    &funcWindowSetCamera,
     &funcWindowNewPolygon,
     &funcWindowNewGeometry,
     NULL,

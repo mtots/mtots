@@ -230,6 +230,15 @@ static ubool implMatrixImul(i16 argc, Value *args, Value *out) {
 
 static CFunction funcMatrixImul = { implMatrixImul, "imul", 1, 0, argsMatrices };
 
+static ubool implMatrixIrmul(i16 argc, Value *args, Value *out) {
+  ObjMatrix *a = AS_MATRIX(args[-1]);
+  ObjMatrix *b = AS_MATRIX(args[0]);
+  matrixIMul(&a->handle, &b->handle);
+  return UTRUE;
+}
+
+static CFunction funcMatrixIrmul = { implMatrixIrmul, "irmul", 1, 0, argsMatrices };
+
 static ubool implMatrixIpow(i16 argc, Value *args, Value *out) {
   ObjMatrix *a = AS_MATRIX(args[-1]);
   double exponentDouble = AS_NUMBER(args[0]);
@@ -498,6 +507,34 @@ static ubool implMatrixFlipZ(i16 argc, Value *args, Value *out) {
 
 static CFunction funcMatrixFlipZ = { implMatrixFlipZ, "flipZ" };
 
+static ubool implMatrixChangeOfBasis(i16 argc, Value *args, Value *out) {
+  ObjMatrix *a = AS_MATRIX(args[-1]);
+  Vector a1 = AS_VECTOR(args[0]);
+  Vector b1 = AS_VECTOR(args[1]);
+  Vector a2 = AS_VECTOR(args[2]);
+  Vector b2 = AS_VECTOR(args[3]);
+  Vector a3 = AS_VECTOR(args[4]);
+  Vector b3 = AS_VECTOR(args[5]);
+  Vector a4 = AS_VECTOR(args[6]);
+  Vector b4 = AS_VECTOR(args[7]);
+  return initChangeOfBasisMatrix(&a->handle, a1, b1, a2, b2, a3, b3, a4, b4);
+}
+
+static TypePattern argsMatrixChangeOfBasis[] = {
+  { TYPE_PATTERN_VECTOR },
+  { TYPE_PATTERN_VECTOR },
+  { TYPE_PATTERN_VECTOR },
+  { TYPE_PATTERN_VECTOR },
+  { TYPE_PATTERN_VECTOR },
+  { TYPE_PATTERN_VECTOR },
+  { TYPE_PATTERN_VECTOR },
+  { TYPE_PATTERN_VECTOR },
+};
+
+static CFunction funcMatrixChangeOfBasis = {
+  implMatrixChangeOfBasis, "changeOfBasis", 8, 0, argsMatrixChangeOfBasis
+};
+
 static ubool implMatrixRepr(i16 argc, Value *args, Value *out) {
   ObjMatrix *a = AS_MATRIX(args[-1]);
   Buffer buf;
@@ -544,6 +581,7 @@ void initMatrixClass() {
     &funcMatrixIadd,
     &funcMatrixIsub,
     &funcMatrixImul,
+    &funcMatrixIrmul,
     &funcMatrixIpow,
     &funcMatrixItranspose,
     &funcMatrixSmul,
@@ -566,6 +604,7 @@ void initMatrixClass() {
     &funcMatrixFlipX,
     &funcMatrixFlipY,
     &funcMatrixFlipZ,
+    &funcMatrixChangeOfBasis,
     &funcMatrixRepr,
     NULL,
   };

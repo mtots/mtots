@@ -11,6 +11,21 @@ final window = gg.Window(
   # gg.Window.flagFIXEDFULLSCREEN()
   # gg.Window.flagFULLSCREEN()
 )
+print(window.transform)
+window.transform.translate(V(window.width / 2, window.height / 2))
+print(window.transform)
+print("Manual")
+print("(upper-left)  -> %s" % [window.transform.apply(V(-window.width/2, -window.height/2))])
+print("(upper-right) -> %s" % [window.transform.apply(V(window.width/2, -window.height/2))])
+print("(lower-right) -> %s" % [window.transform.apply(V(window.width/2, window.height/2))])
+print("(lower-left)  -> %s" % [window.transform.apply(V(-window.width/2, window.height/2))])
+window.setCamera(V(-window.width/2, -window.height/2), V(window.width/2, window.height/2))
+print("setCamera")
+print("(upper-left)  -> %s" % [window.transform.apply(V(-window.width/2, -window.height/2))])
+print("(upper-right) -> %s" % [window.transform.apply(V(window.width/2, -window.height/2))])
+print("(lower-right) -> %s" % [window.transform.apply(V(window.width/2, window.height/2))])
+print("(lower-left)  -> %s" % [window.transform.apply(V(-window.width/2, window.height/2))])
+print(window.transform)
 
 print("window dim = %s, %s" % [window.width, window.height])
 
@@ -26,11 +41,21 @@ final ballGeometry = window.newPolygon(
 
 var angleY = 0
 var angleZ = 0
+var zoomExp = 0
+
+@window.onKeyDown
+def(e gg.KeyEvent):
+  if e.key == "F":
+    zoomExp = zoomExp + 1
+  if e.key == "G":
+    zoomExp = zoomExp - 1
 
 @window.onUpdate
 def():
-  if window.tick == 0:
-    print("(tick0) window dim = %s, %s" % [window.width, window.height])
+  final zoom = 1.5 ** zoomExp
+  window.setCamera(
+    V(zoom * -window.width/2, zoom * -window.height/2),
+    V(zoom * window.width/2, zoom * window.height/2))
   ballGeometry.setVertexColor(0, gg.RED)
   ballGeometry.setVertexColor(1, gg.GREEN)
   ballGeometry.setVertexColor(2, gg.BLUE)
@@ -40,7 +65,6 @@ def():
   ballGeometry.transform.scaleY(100)
   ballGeometry.transform.rotateY(angleY)
   ballGeometry.transform.rotateZ(angleZ)
-  ballGeometry.transform.translate(V(window.width / 2, window.height / 2))
   ballGeometry.blit()
   angleZ = angleZ + 0.014
   angleY = angleY + 0.06
