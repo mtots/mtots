@@ -1087,13 +1087,17 @@ static ubool implWindowNewGeometry(i16 argc, Value *args, Value *out) {
   ObjWindow *window = AS_WINDOW(args[-1]);
   u32 vertexCount = AS_U32(args[0]);
   u32 indexCount = AS_U32(args[1]);
+  ObjGeometry *geo;
   if (vertexCount == 0 || indexCount == 0) {
     runtimeError(
       "A geometry's vertex and index counts must be non-zero (got %d and %d)",
       (int)vertexCount, (int)indexCount);
     return UFALSE;
   }
-  *out = GEOMETRY_VAL(newGeometry(window, vertexCount, indexCount));
+  *out = GEOMETRY_VAL(geo = newGeometry(window, vertexCount, indexCount));
+  memset(geo->indices, 0, sizeof(geo->indices[0]) * geo->indexCount);
+  memset(geo->vertices, 0, sizeof(geo->vertices[0]) * geo->vertexCount);
+  memset(geo->vectors, 0, sizeof(geo->vectors[0]) * geo->vertexCount);
   return UTRUE;
 }
 

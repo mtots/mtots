@@ -211,6 +211,8 @@ class Window:
     """
     Create a new polygon `Geometry` with the given points.
 
+    To create more general shapes, see the `newGeometry` method.
+
     If the `colors` list is provided, its length must be either 1 or `len(points)`
     and will assign colors to each vertex. If `len(colors)` is 1, every vertex
     will be assigned the same color.
