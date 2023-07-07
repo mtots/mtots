@@ -6,7 +6,10 @@ from random import Random
 final rand = Random()
 final WIDTH = 400
 final HEIGHT = 400
-final window = gg.Window("Fake3D", WIDTH, HEIGHT, 60)
+final window = gg.Window(
+  "Fake3D", WIDTH, HEIGHT,
+  gg.Window.defaultFPS(),
+  gg.Window.flagRESIZABLE())
 var tick = 0
 final ballImage = Image(100, 100)
 for i in range(ballImage.width):

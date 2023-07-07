@@ -85,9 +85,20 @@ class Window:
 
   Currently, only one Window may be created per program.
 
-  When created, the `mainLoop` for the Window will be
-  queued to run when the program exits
+  Once created, the Window's main loop will be queued to run
+  when the __main__ module has finished.
   """
+
+  static def defaultFPS() Int:
+    """
+    Gets the default frames per second.
+    Always returns 30.
+    """
+
+  static def flagRESIZABLE() Int:
+    """
+    Flag to pass to the constructor to enable resizing
+    """
 
   final transform Matrix """
     Transformation matrix to apply when rendering geometries.
@@ -98,7 +109,8 @@ class Window:
       title String = "",
       width Int = 0,
       height Int = 0,
-      framesPerSecond Int = 30):
+      framesPerSecond Int = 30,
+      flags Int = 0):
     ""
 
   def setTitle(title String) nil:
@@ -199,8 +211,10 @@ class Window:
     """
     Create a new polygon `Geometry` with the given points.
 
-    If the `colors` list is provided, it must match the length of `points`
-    and will assign colors to each vertex. If not provided or nil, the color
+    If the `colors` list is provided, its length must be either 1 or `len(points)`
+    and will assign colors to each vertex. If `len(colors)` is 1, every vertex
+    will be assigned the same color.
+    If `colors` is not provided or nil, the color
     of each vertex will be assumed to be `Color(255, 255, 255)`.
 
     If `texture` is provided, it will be used when rendering the polygon.
@@ -214,6 +228,15 @@ class Window:
 
     Texture coordinates are normalized - so each component should be a value between
     zero and one.
+    """
+
+  def newGeometry(vertexCount Int, indexCount Int) Geometry:
+    """
+    Create a new `Geometry` with the given number of vertices and indices.
+
+    This low-level interface is useful when you want to render more than a single polygon
+    in a single blit and you are willing to manually modify the geometry's
+    attributes.
     """
 
 
@@ -247,10 +270,17 @@ class Texture:
 
 class Geometry:
   """
+  One of the two primary mechanisms used for rendering graphics on the screen.
+  (the other mechanism being `Canvas` - for drawing text, HUD, and other
+  kind of rendering that does not require a notion of 'space')
+
   A Geometry is a list of vertices and indices into those vertices
   that describes a set of triangles that can be rendered.
 
   Each vertex can be set to a specific color to create gradient images.
+
+  Almost everything about a geometry can be modified through its methods
+  except for the number of vertices and indices it has.
   """
 
   final transform Matrix """
@@ -263,14 +293,52 @@ class Geometry:
     Draw this `Geometry` to the associated window
     """
 
+  def setTexture(texture Texture?) nil:
+    """
+    Assigns a texture to this geometry.
+    A `nil` value will remove the prior texture associated with this
+    geometry, if any.
+    """
+
   def setColor(color Color) nil:
     """
     Set the color of all vertices of this Geometry to the given color
     """
 
+  def getVertexCount() Int:
+    """
+    Returns the number of vertices in this geometry
+    """
+
   def setVertexColor(i Int, color Color) nil:
     """
-    Sets the color of the given Geometry's vertex.
+    Sets the color of the vertex specified by `i`.
+    """
+
+  def setVertexTextureCoordinates(i Int, coords Vector) nil:
+    """
+    Sets the (normalized) texture coordinates of the vertex specified by `i`.
+    """
+
+  def setVertexPosition(i Int, position Vector) nil:
+    """
+    Sets the position of the vertex specified by `i`.
+
+    NOTE: the position specified is not the final position used to draw the location
+    on the screen. The given position will be modified by the transform matrices of
+    both the geometry and the window.
+    """
+
+  def getIndexCount() Int:
+    """
+    Returns the number of indices in this geometry
+    """
+
+  def setIndex(j Int, index Int) nil:
+    """
+    Sets the index specified by `j` to the value `index`.
+
+    `index` should be an index into the list of vertices.
     """
 
 

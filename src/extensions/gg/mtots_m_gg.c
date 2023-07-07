@@ -25,6 +25,11 @@
 
 #define DEFAULT_PEN_FONT_SIZE 32
 
+#define WINDOW_FLAGS_MASK ( \
+  SDL_WINDOW_FULLSCREEN|\
+  SDL_WINDOW_FULLSCREEN_DESKTOP|\
+  SDL_WINDOW_RESIZABLE)
+
 /*
   * NOTE: SDL pixel format enums are counterintuitive to me.
   * SDL_PIXELFORMAT_RGBA8888 and SDL_PIXELFORMAT_ABGR8888 seem
@@ -362,6 +367,7 @@ static ubool newWindow(
     i32 width,
     i32 height,
     Uint64 framesPerSecond,
+    u32 flags,
     ObjWindow **out) {
   SDL_Window *handle;
   SDL_Renderer *renderer;
@@ -372,7 +378,7 @@ static ubool newWindow(
     title,
     SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
     width, height,
-    0);
+    flags&WINDOW_FLAGS_MASK);
   if (!handle) {
     return sdlError("SDL_CreateWindow");
   }
@@ -831,11 +837,12 @@ static ubool implWindowStaticCall(i16 argc, Value *args, Value *out) {
   i32 width = argc > 1 ? AS_I32(args[1]) : 0;
   i32 height = argc > 2 ? AS_I32(args[2]) : 0;
   u32 framesPerSecond = argc > 3 ? AS_U32(args[3]) : DEFAULT_FRAMES_PER_SECOND;
+  u32 flags = argc > 4 ? AS_U32_BITS(args[4]) : 0;
   if (activeWindow) {
-    runtimeError("Only one window is allowed at a time");
+    runtimeError("Only one window is supported at this time");
     return UFALSE;
   }
-  if (!newWindow(title, width, height, framesPerSecond, &activeWindow)) {
+  if (!newWindow(title, width, height, framesPerSecond, flags, &activeWindow)) {
     return UFALSE;
   }
   vm.runOnFinish = &funcMainLoop;
@@ -849,10 +856,29 @@ static TypePattern argsWindowStaticCall[] = {
   { TYPE_PATTERN_NUMBER },
   { TYPE_PATTERN_NUMBER },
   { TYPE_PATTERN_NUMBER },
+  { TYPE_PATTERN_NUMBER },
 };
 
 static CFunction funcWindowStaticCall = {
-  implWindowStaticCall, "__call__", 0, 4, argsWindowStaticCall,
+  implWindowStaticCall, "__call__", 0, 5, argsWindowStaticCall,
+};
+
+static ubool implWindowStaticDefaultFPS(i16 argc, Value *args, Value *out) {
+  *out = NUMBER_VAL(DEFAULT_FRAMES_PER_SECOND);
+  return UTRUE;
+}
+
+static CFunction funcWindowStaticDefaultFPS = {
+  implWindowStaticDefaultFPS, "defaultFPS",
+};
+
+static ubool implWindowStaticFlagRESIZABLE(i16 argc, Value *args, Value *out) {
+  *out = NUMBER_VAL(SDL_WINDOW_RESIZABLE);
+  return UTRUE;
+}
+
+static CFunction funcWindowStaticFlagRESIZABLE = {
+  implWindowStaticFlagRESIZABLE, "flagRESIZABLE",
 };
 
 static ubool implWindowGetattr(i16 argc, Value *args, Value *out) {
@@ -1057,6 +1083,24 @@ static CFunction funcWindowNewPolygon = {
   implWindowNewPolygon, "newPolygon", 1, 4, argsWindowNewPolygon
 };
 
+static ubool implWindowNewGeometry(i16 argc, Value *args, Value *out) {
+  ObjWindow *window = AS_WINDOW(args[-1]);
+  u32 vertexCount = AS_U32(args[0]);
+  u32 indexCount = AS_U32(args[1]);
+  if (vertexCount == 0 || indexCount == 0) {
+    runtimeError(
+      "A geometry's vertex and index counts must be non-zero (got %d and %d)",
+      (int)vertexCount, (int)indexCount);
+    return UFALSE;
+  }
+  *out = GEOMETRY_VAL(newGeometry(window, vertexCount, indexCount));
+  return UTRUE;
+}
+
+static CFunction funcWindowNewGeometry = {
+  implWindowNewGeometry, "newGeometry", 2, 0, argsNumbers
+};
+
 static ubool implTextureGetattr(i16 argc, Value *args, Value *out) {
   ObjTexture *texture = AS_TEXTURE(args[-1]);
   String *name = AS_STRING(args[0]);
@@ -1146,6 +1190,21 @@ static ubool implGeometryBlit(i16 argc, Value *args, Value *out) {
 
 static CFunction funcGeometryBlit = { implGeometryBlit, "blit" };
 
+static ubool implGeometrySetTexture(i16 argc, Value *args, Value *out) {
+  ObjGeometry *geo = AS_GEOMETRY(args[-1]);
+  ObjTexture *texture = IS_NIL(args[0]) ? NULL : AS_TEXTURE(args[0]);
+  geo->texture = texture;
+  return UTRUE;
+}
+
+static TypePattern argsGeometrySetTexture[] = {
+  { TYPE_PATTERN_NATIVE_OR_NIL, &descriptorTexture },
+};
+
+static CFunction funcGeometrySetTexture = {
+  implGeometrySetTexture, "setTexture", 1, 0, argsGeometrySetTexture
+};
+
 static ubool implGeometrySetColor(i16 argc, Value *args, Value *out) {
   ObjGeometry *geo = AS_GEOMETRY(args[-1]);
   SDL_Color color = toSDLColor(AS_COLOR(args[0]));
@@ -1164,6 +1223,16 @@ static CFunction funcGeometrySetColor = {
   implGeometrySetColor, "setColor", 1, 0, argsGeometrySetColor
 };
 
+static ubool implGeometryGetVertexCount(i16 argc, Value *args, Value *out) {
+  ObjGeometry *geo = AS_GEOMETRY(args[-1]);
+  *out = NUMBER_VAL(geo->vertexCount);
+  return UTRUE;
+}
+
+static CFunction funcGeometryGetVertexCount = {
+  implGeometryGetVertexCount, "getVertexCount",
+};
+
 static ubool implGeometrySetVertexColor(i16 argc, Value *args, Value *out) {
   ObjGeometry *geo = AS_GEOMETRY(args[-1]);
   size_t vi = AS_INDEX(args[0], (size_t)geo->vertexCount);
@@ -1178,6 +1247,64 @@ static TypePattern argsGeometrySetVertexColor[] = {
 
 static CFunction funcGeometrySetVertexColor = {
   implGeometrySetVertexColor, "setVertexColor", 2, 0, argsGeometrySetVertexColor
+};
+
+static ubool implGeometrySetVertexTextureCoordinates(i16 argc, Value *args, Value *out) {
+  ObjGeometry *geo = AS_GEOMETRY(args[-1]);
+  size_t vi = AS_INDEX(args[0], (size_t)geo->vertexCount);
+  Vector coords = AS_VECTOR(args[1]);
+  geo->vertices[vi].position.x = coords.x;
+  geo->vertices[vi].position.y = coords.y;
+  return UTRUE;
+}
+
+static TypePattern argsGeometrySetVertexTextureCoordinates[] = {
+  { TYPE_PATTERN_NUMBER },
+  { TYPE_PATTERN_VECTOR },
+};
+
+static CFunction funcGeometrySetVertexTextureCoordinates = {
+  implGeometrySetVertexTextureCoordinates, "setVertexTextureCoordinates", 2, 0,
+  argsGeometrySetVertexTextureCoordinates
+};
+
+static ubool implGeometrySetVertexPosition(i16 argc, Value *args, Value *out) {
+  ObjGeometry *geo = AS_GEOMETRY(args[-1]);
+  size_t vi = AS_INDEX(args[0], (size_t)geo->vertexCount);
+  Vector pos = AS_VECTOR(args[1]);
+  geo->vectors[vi] = pos;
+  return UTRUE;
+}
+
+static TypePattern argsGeometrySetVertexPosition[] = {
+  { TYPE_PATTERN_NUMBER },
+  { TYPE_PATTERN_VECTOR },
+};
+
+static CFunction funcGeometrySetVertexPosition = {
+  implGeometrySetVertexPosition, "setVertexPosition", 2, 0, argsGeometrySetVertexPosition,
+};
+
+static ubool implGeometryGetIndexCount(i16 argc, Value *args, Value *out) {
+  ObjGeometry *geo = AS_GEOMETRY(args[-1]);
+  *out = NUMBER_VAL(geo->indexCount);
+  return UTRUE;
+}
+
+static CFunction funcGeometryGetIndexCount = {
+  implGeometryGetIndexCount, "getIndexCount"
+};
+
+static ubool implGeometrySetIndex(i16 argc, Value *args, Value *out) {
+  ObjGeometry *geo = AS_GEOMETRY(args[-1]);
+  size_t ii = AS_INDEX(args[0], (size_t)geo->indexCount);
+  size_t vi = AS_INDEX(args[1], (size_t)geo->vertexCount);
+  geo->indices[ii] = (u32)vi;
+  return UTRUE;
+}
+
+static CFunction funcGeometrySetIndex = {
+  implGeometrySetIndex, "setIndex", 2, 0, argsNumbers
 };
 
 static ubool implClickEventGetattr(i16 argc, Value *args, Value *out) {
@@ -1299,6 +1426,8 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
   ObjModule *module = AS_MODULE(args[0]);
   CFunction *windowStaticMethods[] = {
     &funcWindowStaticCall,
+    &funcWindowStaticDefaultFPS,
+    &funcWindowStaticFlagRESIZABLE,
     NULL,
   };
   CFunction *windowMethods[] = {
@@ -1316,6 +1445,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &funcWindowClear,
     &funcWindowNewTexture,
     &funcWindowNewPolygon,
+    &funcWindowNewGeometry,
     NULL,
   };
   CFunction *textureStaticMethods[] = {
@@ -1334,8 +1464,14 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
   CFunction *geometryMethods[] = {
     &funcGeometryGetattr,
     &funcGeometryBlit,
+    &funcGeometrySetTexture,
     &funcGeometrySetColor,
+    &funcGeometryGetVertexCount,
     &funcGeometrySetVertexColor,
+    &funcGeometrySetVertexTextureCoordinates,
+    &funcGeometrySetVertexPosition,
+    &funcGeometryGetIndexCount,
+    &funcGeometrySetIndex,
     NULL,
   };
   CFunction *clickEventStaticMethods[] = {
