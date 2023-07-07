@@ -1,6 +1,7 @@
 #include "mtots_util_matrix.h"
 
 #include "mtots_util_error.h"
+#include "mtots_util_number.h"
 
 #include <string.h>
 #include <math.h>
@@ -384,4 +385,34 @@ Vector matrixApply(const Matrix *m, Vector v) {
     m->row[0][0] * v.x + m->row[0][1] * v.y + m->row[0][2] * v.z + m->row[0][3],
     m->row[1][0] * v.x + m->row[1][1] * v.y + m->row[1][2] * v.z + m->row[1][3],
     m->row[2][0] * v.x + m->row[2][1] * v.y + m->row[2][2] * v.z + m->row[2][3]);
+}
+
+ubool matrixEquals(const Matrix *a, const Matrix *b) {
+  size_t i, j;
+  if (a == b) {
+    return UTRUE;
+  }
+  for (i = 0; i < 4; i++) {
+    for (j = 0; j < 4; j++) {
+      if (a->row[i][j] != b->row[i][j]) {
+        return UFALSE;
+      }
+    }
+  }
+  return UTRUE;
+}
+
+ubool matrixIsCloseEx(const Matrix *a, const Matrix *b, double relTol, double absTol) {
+  size_t i, j;
+  if (a == b) {
+    return UTRUE;
+  }
+  for (i = 0; i < 4; i++) {
+    for (j = 0; j < 4; j++) {
+      if (!doubleIsCloseEx(a->row[i][j], b->row[i][j], relTol, absTol)) {
+        return UFALSE;
+      }
+    }
+  }
+  return UTRUE;
 }

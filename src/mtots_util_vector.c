@@ -1,5 +1,7 @@
 #include "mtots_util_vector.h"
 
+#include "mtots_util_number.h"
+
 #include <math.h>
 
 Vector newVector(float x, float y, float z) {
@@ -12,6 +14,12 @@ Vector newVector(float x, float y, float z) {
 
 ubool vectorEquals(Vector a, Vector b) {
   return a.x == b.x && a.y == b.y && a.z == b.z;
+}
+
+ubool vectorIsCloseEx(Vector a, Vector b, double relTol, double absTol) {
+  return doubleIsCloseEx(a.x, b.x, relTol, absTol) &&
+    doubleIsCloseEx(a.y, b.y, relTol, absTol) &&
+    doubleIsCloseEx(a.z, b.z, relTol, absTol);
 }
 
 Vector vectorAdd(Vector a, Vector b) {

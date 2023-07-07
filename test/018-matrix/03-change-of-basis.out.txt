@@ -7,3 +7,8 @@ m2.apply(V( 80,  0, 0)) = Vector(1, 1, 0)
 m2.apply(V( 80, 60, 0)) = Vector(1, -1, 0)
 m2.apply(V(  0,  0, 1)) = Vector(-1, 1, 1)
 m1 * m2 = Matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+isClose(m1, Matrix.one()) = false
+isClose(m2, Matrix.one()) = false
+isClose(m1 * m2, Matrix.one()) = true
+(m1 * m2 == Matrix.one()) = true
+(Matrix.one() == Matrix.one()) = true

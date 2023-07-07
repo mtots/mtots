@@ -308,6 +308,15 @@ def flog2(x Float) Int:
   "Computes floor(log2(x))"
 
 
+def isClose(a Any, b Any, relTol Float=0.000000001, absTol Float=0) Bool:
+  """
+  Tests whether two Numbers, Vectors or Matrices are 'close' to each other.
+
+  More or less follows the approach used by Python described
+  in https://peps.python.org/pep-0485
+  """
+
+
 def sin(x Float) Float:
   "Returns the sine of x radians"
 
@@ -782,6 +791,11 @@ class Matrix:
     """
     Creates a matrix from the given values in row major order.
     Any values beyond the fourth row or column are ignored.
+    """
+
+  def __eq__(other Matrix) Bool:
+    """
+    Tests whether `this` and `other` contain the same values
     """
 
   def clone() Matrix:

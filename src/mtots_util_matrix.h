@@ -53,5 +53,7 @@ double matrixDet2x2(const Matrix *m);
 double matrixDet3x3(const Matrix *m);
 double matrixDet(const Matrix *z);    /* 4D matrix */
 Vector matrixApply(const Matrix *m, Vector v);
+ubool matrixEquals(const Matrix *a, const Matrix *b);
+ubool matrixIsCloseEx(const Matrix *a, const Matrix *b, double relTol, double absTol);
 
 #endif/*mtots_util_matrix_h*/

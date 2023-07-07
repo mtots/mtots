@@ -104,6 +104,18 @@ ubool valuesEqual(Value a, Value b) {
           ObjDict *dictA = (ObjDict*)objA, *dictB = (ObjDict*)objB;
           return mapsEqual(&dictA->map, &dictB->map);
         }
+        case OBJ_NATIVE: {
+          /* TODO: Consider supporting overridable __eq__ */
+          ObjNative *na = (ObjNative*)objA;
+          ObjNative *nb = (ObjNative*)objB;
+          if (na->descriptor != nb->descriptor) {
+            return UFALSE;
+          }
+          if (na->descriptor == &descriptorMatrix) {
+            return matrixEquals(&((ObjMatrix*)na)->handle, &((ObjMatrix*)nb)->handle);
+          }
+          return objA == objB;
+        }
         default: return objA == objB;
       }
     }

@@ -38,3 +38,7 @@ double dmax(double a, double b) {
 double dabs(double a) {
   return a < 0 ? -a : a;
 }
+
+ubool doubleIsCloseEx(double a, double b, double relTol, double absTol) {
+  return dabs(a - b) <= dmax(relTol * dmax(dabs(a), dabs(b)), absTol);
+}

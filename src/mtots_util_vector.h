@@ -11,6 +11,7 @@ typedef struct Vector {
 
 Vector newVector(float x, float y, float z);
 ubool vectorEquals(Vector a, Vector b);
+ubool vectorIsCloseEx(Vector a, Vector b, double relTol, double absTol);
 Vector vectorAdd(Vector a, Vector b);
 Vector vectorSub(Vector a, Vector b);
 Vector vectorScale(Vector a, double scale);

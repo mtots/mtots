@@ -26,3 +26,8 @@ print("m2.apply(V( 80, 60, 0)) = %s" % [m2.apply(V( 80, 60, 0))])
 print("m2.apply(V(  0,  0, 1)) = %s" % [m2.apply(V(  0,  0, 1))])
 
 print("m1 * m2 = %s" % [m1 * m2])
+print("isClose(m1, Matrix.one()) = %s" % [isClose(m1, Matrix.one())])
+print("isClose(m2, Matrix.one()) = %s" % [isClose(m2, Matrix.one())])
+print("isClose(m1 * m2, Matrix.one()) = %s" % [isClose(m1 * m2, Matrix.one())])
+print("(m1 * m2 == Matrix.one()) = %s" % [m1 * m2 == Matrix.one()])
+print("(Matrix.one() == Matrix.one()) = %s" % [Matrix.one() == Matrix.one()])

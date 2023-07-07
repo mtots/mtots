@@ -486,6 +486,39 @@ static TypePattern argsInt[] = {
 
 static CFunction funcInt = { implInt, "int", 1, 2, argsInt };
 
+static ubool implIsClose(i16 argc, Value *args, Value *out) {
+  Value a = args[0];
+  Value b = args[1];
+  double relTol = argc > 2 ? AS_NUMBER(args[2]) : DEFAULT_RELATIVE_TOLERANCE;
+  double absTol = argc > 3 ? AS_NUMBER(args[3]) : DEFAULT_ABSOLUTE_TOLERANCE;
+  if (IS_NUMBER(args[0]) && IS_NUMBER(args[1])) {
+    *out = BOOL_VAL(doubleIsCloseEx(AS_NUMBER(a), AS_NUMBER(b), relTol, absTol));
+    return UTRUE;
+  }
+  if (IS_VECTOR(args[0]) && IS_VECTOR(args[1])) {
+    *out = BOOL_VAL(vectorIsCloseEx(AS_VECTOR(a), AS_VECTOR(b), relTol, absTol));
+    return UTRUE;
+  }
+  if (IS_MATRIX(args[0]) && IS_MATRIX(args[1])) {
+    *out = BOOL_VAL(matrixIsCloseEx(
+      &AS_MATRIX(a)->handle, &AS_MATRIX(b)->handle, relTol, absTol));
+    return UTRUE;
+  }
+  runtimeError(
+    "Expectecd two Numbers, Vectors or Matrices, but got %s and %s",
+    getKindName(a), getKindName(b));
+  return UFALSE;
+}
+
+static TypePattern argsIsClose[] = {
+  { TYPE_PATTERN_ANY },
+  { TYPE_PATTERN_ANY },
+  { TYPE_PATTERN_NUMBER },
+  { TYPE_PATTERN_NUMBER },
+};
+
+static CFunction funcIsClose = { implIsClose, "isClose", 2, 4, argsIsClose };
+
 static ubool implSin(i16 argCount, Value *args, Value *out) {
   *out = NUMBER_VAL(sin(AS_NUMBER(args[0])));
   return UTRUE;
@@ -648,6 +681,7 @@ void defineDefaultGlobals() {
     &cfunctionRange,
     &funcFloat,
     &funcInt,
+    &funcIsClose,
     &funcSin,
     &funcCos,
     &funcTan,
