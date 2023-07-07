@@ -871,14 +871,6 @@ static CFunction funcWindowGetattr = {
   implWindowGetattr, "__getattr__", 1, 0, argsStrings
 };
 
-static ubool implWindowMainLoop(i16 argc, Value *args, Value *out) {
-  ObjWindow *window = AS_WINDOW(args[-1]);
-  vm.runOnFinish = NULL;
-  return mainLoop(window);
-}
-
-static CFunction funcWindowMainLoop = { implWindowMainLoop, "mainLoop" };
-
 static ubool implWindowSetTitle(i16 argc, Value *args, Value *out) {
   ObjWindow *window = AS_WINDOW(args[-1]);
   const char *title = AS_STRING(args[0])->chars;
@@ -1311,7 +1303,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
   };
   CFunction *windowMethods[] = {
     &funcWindowGetattr,
-    &funcWindowMainLoop,
     &funcWindowSetTitle,
     &funcWindowSetBackgroundColor,
     &funcWindowOnUpdate,

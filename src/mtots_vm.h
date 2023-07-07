@@ -51,7 +51,9 @@ typedef struct VM {
   Map frozenLists;         /* table of all interned frozenLists */
   Map frozenDicts;         /* a table of all interned FrozenDicts */
 
-  /* If set, will be run once the main script finishes */
+  /* If set, will be run once the main script finishes -
+   * a hack to get gg to work without an explicit
+   * call to `window.mainLoop()` */
   CFunction *runOnFinish;
 
   String *initString;

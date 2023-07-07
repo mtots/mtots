@@ -180,15 +180,6 @@ class Window:
     directly, but is easier and simpler to get something on the screen.
     """
 
-  def mainLoop() nil:
-    """
-    Starts the main user interface event loop around this Window
-
-    This method does not have to be called explicitly because
-    the main loop will be queued to run after the script ends by
-    the Window's constructor.
-    """
-
   def newTexture(image Image, streaming Bool = false) Texture:
     """
     Creates a texture from an image that can be used to
