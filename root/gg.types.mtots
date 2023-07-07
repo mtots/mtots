@@ -138,14 +138,31 @@ class Window:
 
   final width Int """
     Width of the renderer output size.
-    This value might not necessarily correspond to the actual
-    width of the window.
+    Due to high-dpi displays, you might end up with a rendering context
+    that has more pixels than the window that contains it;
+    as such, this value might not necessarily correspond to the actual
+    pixel width of the window.
   """
 
   final height Int """
     Height of the renderer output size.
-    This value might not necessarily correspond to the actual
-    height of the window.
+    Due to high-dpi displays, you might end up with a rendering context
+    that has more pixels than the window that contains it;
+    as such, this value might not necessarily correspond to the actual
+    pixel height of the window.
+  """
+
+  final tick Int """
+    The number of fully processed frames so far.
+    Can be used to roughly gauge how many times `onUpdate` has been called.
+
+    NOTE: Some consideration about whether we may encounter issues with
+    retrieveing this value as a double (since all numbers in Mtots are doubles):
+    The largest integer such that it and all smaller integers can be stored in
+    IEEE 64-bit doubles without losing precision, seems to be ~2**53
+    (See https://stackoverflow.com/a/1848762/)
+    At 60 frames per second, this means that will will reach this many ticks
+    in over 4000 years.
   """
 
   def __init__(

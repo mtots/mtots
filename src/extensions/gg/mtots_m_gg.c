@@ -64,6 +64,7 @@ typedef struct ObjWindow {
   ObjNative obj;
   SDL_Window *handle;      /* SDL window*/
   Uint64 framesPerSecond;
+  Uint64 tick;             /* number of fully processed frames so far */
   SDL_Renderer *renderer;
   Value onUpdate;
   Value onClick;
@@ -126,6 +127,7 @@ typedef struct AudioChannel {
   ubool pause;
 } AudioChannel;
 
+static String *tickString;
 static String *buttonString;
 static String *keyString;
 static String *scancodeString;
@@ -409,6 +411,7 @@ static ubool newWindow(
   LOCAL_GC_PAUSE(gcPause);
   window->handle = handle;
   window->framesPerSecond = framesPerSecond;
+  window->tick = 0;
   window->renderer = renderer;
   window->onUpdate = NIL_VAL();
   window->onClick = NIL_VAL();
@@ -561,6 +564,7 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
     }
   }
   SDL_RenderPresent(mainWindow->renderer);
+  mainWindow->tick++;
   return UTRUE;
 }
 
@@ -584,13 +588,13 @@ static ubool mainLoop(ObjWindow *mainWindow) {
   emscripten_set_main_loop(mainLoopIterationEmscripten, mainWindow->framesPerSecond, 1);
   return UTRUE;
 #else
-  Uint64 tick = 0;
   Uint64 framesPerSecond = mainWindow->framesPerSecond;
   Uint64 countPerSecond = SDL_GetPerformanceFrequency();
   Uint64 countPerFrame = countPerSecond / framesPerSecond;
   ubool quit = UFALSE;
   push(WINDOW_VAL(mainWindow));
-  for(tick = 0;; tick++) {
+  for(;;) {
+    Uint64 tick = mainWindow->tick;
     Uint64 startTime = SDL_GetPerformanceCounter(), endTime, elapsedTime;
     if (!mainLoopIteration(mainWindow, &quit)) {
       return UFALSE;
@@ -946,6 +950,8 @@ static ubool implWindowGetattr(i16 argc, Value *args, Value *out) {
     *out = NUMBER_VAL(window->width);
   } else if (name == vm.heightString) {
     *out = NUMBER_VAL(window->height);
+  } else if (name == tickString) {
+    *out = NUMBER_VAL(window->tick);
   } else {
     runtimeError("Field %s not found on Window", name->chars);
     return UFALSE;
@@ -1590,6 +1596,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
 
   LOCAL_GC_PAUSE(gcPause);
 
+  moduleRetain(module, STRING_VAL(tickString = internCString("tick")));
   moduleRetain(module, STRING_VAL(buttonString = internCString("button")));
   moduleRetain(module, STRING_VAL(keyString = internCString("key")));
   moduleRetain(module, STRING_VAL(scancodeString = internCString("scancode")));
