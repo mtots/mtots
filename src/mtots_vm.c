@@ -614,7 +614,19 @@ loop:
             push(value);
             break;
           }
-          runtimeError("Field '%s' not found in Map", name->chars);
+          runtimeError("Field '%s' not found in Dict", name->chars);
+          RETURN_RUNTIME_ERROR();
+        }
+
+        if (IS_FROZEN_DICT(peek(0))) {
+          ObjFrozenDict *d = AS_FROZEN_DICT(peek(0));
+          name = READ_STRING();
+          if (mapGet(&d->map, STRING_VAL(name), &value)) {
+            pop(); /* Instance */
+            push(value);
+            break;
+          }
+          runtimeError("Field '%s' not found in FrozenDict", name->chars);
           RETURN_RUNTIME_ERROR();
         }
 

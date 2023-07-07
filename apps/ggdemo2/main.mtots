@@ -42,20 +42,29 @@ final ballGeometry = window.newPolygon(
 var angleY = 0
 var angleZ = 0
 var zoomExp = 0
-
-@window.onKeyDown
-def(e gg.KeyEvent):
-  if e.key == "F":
-    zoomExp = zoomExp + 1
-  if e.key == "G":
-    zoomExp = zoomExp - 1
+var viewX = 0
+var viewY = 0
 
 @window.onUpdate
 def():
+
+  if gg.key(gg.SCANCODE.F):
+    zoomExp = zoomExp + 0.05
+  if gg.key(gg.SCANCODE.G):
+    zoomExp = zoomExp - 0.05
+  if gg.key(gg.SCANCODE.LEFT):
+    viewX = viewX - 15
+  if gg.key(gg.SCANCODE.RIGHT):
+    viewX = viewX + 15
+  if gg.key(gg.SCANCODE.UP):
+    viewY = viewY - 15
+  if gg.key(gg.SCANCODE.DOWN):
+    viewY = viewY + 15
+
   final zoom = 1.5 ** zoomExp
   window.setCamera(
-    V(zoom * -window.width/2, zoom * -window.height/2),
-    V(zoom * window.width/2, zoom * window.height/2))
+    V(viewX + zoom * -window.width/2, viewY + zoom * -window.height/2),
+    V(viewX + zoom * window.width/2, viewY + zoom * window.height/2))
   ballGeometry.setVertexColor(0, gg.RED)
   ballGeometry.setVertexColor(1, gg.GREEN)
   ballGeometry.setVertexColor(2, gg.BLUE)

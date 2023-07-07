@@ -136,6 +136,8 @@ static String *dxString;
 static String *dyString;
 static String *transformString;
 static String *scancodeKeys[SCANCODE_KEY_COUNT];
+static const u8 *keyboardState;
+static size_t keyboardStateLen;
 static ObjClickEvent *clickEvent;
 static ObjKeyEvent *keyEvent;
 static ObjMotionEvent *motionEvent;
@@ -546,7 +548,9 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
   SDL_RenderClear(mainWindow->renderer);
   if (!IS_NIL(mainWindow->onUpdate)) {
     push(mainWindow->onUpdate);
-    callFunction(0);
+    if (!callFunction(0)) {
+      return UFALSE;
+    }
     pop();
   }
   if (mainWindow->canvasTexture) {
@@ -1474,6 +1478,14 @@ static CFunction funcMotionEventGetattr = {
   implMotionEventGetattr, "__getattr__", 1, 0, argsStrings,
 };
 
+static ubool implKey(i16 argc, Value *args, Value *out) {
+  size_t scancode = AS_INDEX(args[0], keyboardStateLen);
+  *out = BOOL_VAL(!!keyboardState[scancode]);
+  return UTRUE;
+}
+
+static CFunction funcKey = { implKey, "key", 1, 0, argsNumbers };
+
 static ubool implLoadAudio(i16 argc, Value *args, Value *out) {
   ObjAudio *audio = AS_AUDIO(args[0]);
   size_t channel = argc > 1 ? AS_INDEX(args[1], CHANNEL_COUNT) : 0;
@@ -1604,6 +1616,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     NULL,
   };
   CFunction *functions[] = {
+    &funcKey,
     &funcLoadAudio,
     &funcPlayAudio,
     &funcPauseAudio,
@@ -1700,6 +1713,17 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     motionEventStaticMethods);
 
   {
+    size_t i;
+    Map map;
+    initMap(&map);
+    for (i = 0; scancodeEntries[i].name; i++) {
+      mapSetN(&map, scancodeEntries[i].name, NUMBER_VAL(scancodeEntries[i].scancode));
+    }
+    mapSetN(&module->fields, "SCANCODE", FROZEN_DICT_VAL(newFrozenDict(&map)));
+    freeMap(&map);
+  }
+
+  {
     ColorEntry *entry;
     Value *colors;
     size_t colorCount = 0, i;
@@ -1719,6 +1743,12 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
 
   if (!initSDL()) {
     return UFALSE;
+  }
+
+  {
+    int numkeys;
+    keyboardState = SDL_GetKeyboardState(&numkeys);
+    keyboardStateLen = (size_t)numkeys;
   }
 
   audioMutex = SDL_CreateMutex();
