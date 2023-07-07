@@ -52,12 +52,13 @@ def build() -> None:
 
     shutil.copy(buildExePath, exePath)
 
-    buildArchive(
-        versionString=versionString,
-        logger=logger,
-        outDir=outDir,
-        platform='windows',
-    )
+    if release:
+        buildArchive(
+            versionString=versionString,
+            logger=logger,
+            outDir=outDir,
+            platform='windows',
+        )
 
 
 if __name__ == "__main__":

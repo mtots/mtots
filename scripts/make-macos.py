@@ -112,13 +112,14 @@ def build() -> None:
         ),
         objectFiles=objectFiles,
     )
-    buildArchive(
-        versionString=versionString,
-        logger=logger,
-        outDir=outDir,
-        platform='macos',
-        useDitto=useDitto,
-    )
+    if release:
+        buildArchive(
+            versionString=versionString,
+            logger=logger,
+            outDir=outDir,
+            platform='macos',
+            useDitto=useDitto,
+        )
 
 
 if __name__ == "__main__":
