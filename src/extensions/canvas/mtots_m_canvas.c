@@ -704,20 +704,6 @@ static CFunction funcCanvasCopyScaled = {
   implCanvasCopyScaled, "copyScaled", 1, 5, argsCanvasCopyScaled,
 };
 
-static ubool implCanvasSaveToPNG(i16 argc, Value *args, Value *out) {
-  ObjCanvas *canvas = AS_CANVAS(args[-1]);
-  ObjDataSink *sink = AS_DATA_SINK(args[0]);
-  return savePNGImage(sink, canvas->image);
-}
-
-static TypePattern argsCanvasSaveToPNG[] = {
-  { TYPE_PATTERN_NATIVE, &descriptorDataSink},
-};
-
-static CFunction funcCanvasSaveToPNG = {
-  implCanvasSaveToPNG, "saveToPNG", 1, 0, argsCanvasSaveToPNG
-};
-
 static ubool impl(i16 argc, Value *args, Value *out) {
   ObjModule *module = AS_MODULE(args[0]);
   CFunction *staticCanvasMethods[] = {
@@ -740,7 +726,6 @@ static ubool impl(i16 argc, Value *args, Value *out) {
     &funcCanvasStrokeOval,
     &funcCanvasCopy,
     &funcCanvasCopyScaled,
-    &funcCanvasSaveToPNG,
     NULL,
   };
 

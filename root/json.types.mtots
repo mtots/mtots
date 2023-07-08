@@ -1,4 +1,18 @@
+from data import DataSink
+from data import DataSource
 
+
+def load(src DataSource) Any:
+  """
+  Deserialize data from a JSON string source -
+  resulting in nil, Bool, Number, String, List and Map
+  """
+
+
+def dump(data Any, sink DataSink) nil:
+  """
+  Serialize data into JSON from nil, Bool, Number, String, List or Map
+  """
 
 
 def loads(json String) Any:

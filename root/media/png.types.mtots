@@ -6,7 +6,7 @@ from media.image import Image
 import data
 
 
-def savePNG(sink data.DataSink, image Image):
+def savePNG(image Image, sink data.DataSink):
   """
   Saves an `Image` as a PNG file into the given `DataSink`.
   """

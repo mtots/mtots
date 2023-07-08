@@ -62,7 +62,7 @@ static ubool savePNGImageToBuffer(Buffer *buffer, ObjImage *image) {
   return UTRUE;
 }
 
-ubool savePNGImage(ObjDataSink *ds, ObjImage *image) {
+ubool savePNGImage(ObjImage *image, ObjDataSink *ds) {
   switch (ds->type) {
     case DATA_SINK_BUFFER:
       return savePNGImageToBuffer(&ds->as.buffer->handle, image);
@@ -105,14 +105,14 @@ static TypePattern argsLoadPNG[] = {
 static CFunction funcLoadPNG = { implLoadPNG, "loadPNG", 1, 0, argsLoadPNG };
 
 static ubool implSavePNG(i16 argc, Value *args, Value *out) {
-  ObjDataSink *ds = AS_DATA_SINK(args[0]);
-  ObjImage *image = AS_IMAGE(args[1]);
-  return savePNGImage(ds, image);
+  ObjImage *image = AS_IMAGE(args[0]);
+  ObjDataSink *ds = AS_DATA_SINK(args[1]);
+  return savePNGImage(image, ds);
 }
 
 static TypePattern argsSavePNG[] = {
-  { TYPE_PATTERN_NATIVE, &descriptorDataSink },
   { TYPE_PATTERN_NATIVE, &descriptorImage },
+  { TYPE_PATTERN_NATIVE, &descriptorDataSink },
 };
 
 static CFunction funcSavePNG = { implSavePNG, "savePNG", 2, 0, argsSavePNG };
