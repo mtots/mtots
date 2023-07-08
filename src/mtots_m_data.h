@@ -70,6 +70,6 @@ ObjDataSink *newDataSinkFromFile(String *filePath);
 ubool dataSinkWriteBytes(ObjDataSink *ds, const u8 *data, size_t dataLen);
 ubool dataSinkWrite(ObjDataSink *sink, ObjDataSource *src);
 
-void addNativeModuleData();
+void addNativeModuleData(void);
 
 #endif/*mtots_m_data_h*/

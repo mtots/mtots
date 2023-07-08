@@ -15,6 +15,6 @@ typedef struct ObjRandom {
 
 extern NativeObjectDescriptor descriptorRandom;
 
-void addNativeModuleRandom();
+void addNativeModuleRandom(void);
 
 #endif/*mtots_m_random_h*/

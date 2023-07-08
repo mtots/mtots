@@ -3,6 +3,6 @@
 
 /* Native Module gg */
 
-void addNativeModuleGG();
+void addNativeModuleGG(void);
 
 #endif/*mtots_m_gg_h*/

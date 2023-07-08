@@ -7,6 +7,6 @@
 
 ubool loadRobotoMonoFont(ObjFont **out);
 
-void addNativeModuleMediaFontRobotoMono();
+void addNativeModuleMediaFontRobotoMono(void);
 
 #endif/*mtots_m_fontrm_h*/

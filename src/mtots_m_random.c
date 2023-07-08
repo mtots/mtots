@@ -123,6 +123,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
 
 static CFunction func = { impl, "random", 1 };
 
-void addNativeModuleRandom() {
+void addNativeModuleRandom(void) {
   addNativeModule(&func);
 }

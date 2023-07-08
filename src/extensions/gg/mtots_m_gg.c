@@ -1801,6 +1801,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
 
 static CFunction func = { impl, "gg", 1 };
 
-void addNativeModuleGG() {
+void addNativeModuleGG(void) {
   addNativeModule(&func);
 }

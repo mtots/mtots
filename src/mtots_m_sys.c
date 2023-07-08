@@ -94,6 +94,6 @@ static ubool impl(i16 argc, Value *args, Value *out) {
 
 static CFunction func = { impl, "sys", 1 };
 
-void addNativeModuleSys() {
+void addNativeModuleSys(void) {
   addNativeModule(&func);
 }

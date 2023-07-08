@@ -3,6 +3,6 @@
 
 /* Native Module paco */
 
-void addNativeModulePaco();
+void addNativeModulePaco(void);
 
 #endif/*mtots_m_paco_h*/

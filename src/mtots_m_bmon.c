@@ -296,6 +296,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
 
 static CFunction func = { impl, "bmon", 1 };
 
-void addNativeModuleBmon() {
+void addNativeModuleBmon(void) {
   addNativeModule(&func);
 }

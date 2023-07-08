@@ -41,7 +41,7 @@
 #include "mtots_m_paco.h"
 #endif
 
-void addNativeModules() {
+void addNativeModules(void) {
   addNativeModuleSys();
   addNativeModuleOs();
   addNativeModuleFs();

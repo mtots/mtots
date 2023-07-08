@@ -19,7 +19,7 @@ Value CANVAS_VAL(ObjCanvas *canvas);
 
 ObjCanvas *newCanvas(ObjImage *image);
 ubool canvasNewPen(ObjCanvas *canvas);
-void addNativeModuleMediaCanvas();
+void addNativeModuleMediaCanvas(void);
 
 extern NativeObjectDescriptor descriptorCanvas;
 

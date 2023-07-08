@@ -15,7 +15,7 @@ typedef struct ObjAudio {
 
 Value AUDIO_VAL(ObjAudio *audio);
 
-void addNativeModuleMediaAudio();
+void addNativeModuleMediaAudio(void);
 
 extern NativeObjectDescriptor descriptorAudio;
 

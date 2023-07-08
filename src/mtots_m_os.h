@@ -3,6 +3,6 @@
 
 /* Native Module os */
 
-void addNativeModuleOs();
+void addNativeModuleOs(void);
 
 #endif/*mtots_m_os_h*/

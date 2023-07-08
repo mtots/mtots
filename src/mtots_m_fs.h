@@ -3,6 +3,6 @@
 
 /* Native Module fs */
 
-void addNativeModuleFs();
+void addNativeModuleFs(void);
 
 #endif/*mtots_m_fs_h*/

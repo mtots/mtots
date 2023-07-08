@@ -94,6 +94,11 @@ def build() -> None:
         flags=(
             "-DMTOTS_USE_PRINTFLIKE=1",
 
+            # "-Weverything",
+            "-Wno-padded",
+            "-Wno-undef",
+            "-Wno-float-equal",
+
             # SDL
             "-framework", "AudioToolbox",
             "-framework", "AudioToolbox",

@@ -18,7 +18,7 @@ typedef struct ObjZipArchive {
 Value ZIP_ARCHIVE_VAL(ObjZipArchive *zip);
 
 ubool openZipArchiveFromFile(const char *path, ObjZipArchive **out);
-void addNativeModuleZip();
+void addNativeModuleZip(void);
 
 extern NativeObjectDescriptor descriptorZipArchive;
 

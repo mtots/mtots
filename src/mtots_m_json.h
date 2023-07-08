@@ -3,6 +3,6 @@
 
 /* Native Module os */
 
-void addNativeModuleJson();
+void addNativeModuleJson(void);
 
 #endif/*mtots_m_json_h*/

@@ -8,6 +8,6 @@
 
 ubool loadImage(ObjDataSource *ds, ObjImage **out);
 
-void addNativeModuleMediaImageLoader();
+void addNativeModuleMediaImageLoader(void);
 
 #endif/*mtots_m_imageloader_h*/

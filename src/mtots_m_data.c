@@ -403,6 +403,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
 
 static CFunction func = { impl, "data", 1 };
 
-void addNativeModuleData() {
+void addNativeModuleData(void) {
   addNativeModule(&func);
 }

@@ -70,9 +70,9 @@ static ubool implZipArchiveGetFileName(i16 argc, Value *args, Value *out) {
   char *buffer;
   u32 fileNameSize;
   /* fileNameSize is inclusive of the null terminator */
-  fileNameSize = mz_zip_reader_get_filename(&za->handle, index, NULL, 0);
+  fileNameSize = mz_zip_reader_get_filename(&za->handle, (mz_uint)index, NULL, 0);
   buffer = (char*)malloc(fileNameSize);
-  mz_zip_reader_get_filename(&za->handle, index, buffer, fileNameSize);
+  mz_zip_reader_get_filename(&za->handle, (mz_uint)index, buffer, fileNameSize);
   *out = STRING_VAL(internCString(buffer));
   free(buffer);
   return UTRUE;
@@ -85,7 +85,7 @@ static CFunction funcZipArchiveGetFileName = {
 static ubool implZipArchiveIsDirectory(i16 argc, Value *args, Value *out) {
   ObjZipArchive *za = AS_ZIP_ARCHIVE(args[-1]);
   size_t index = AS_INDEX(args[0], mz_zip_reader_get_num_files(&za->handle));
-  *out = BOOL_VAL(mz_zip_reader_is_file_a_directory(&za->handle, index));
+  *out = BOOL_VAL(!!mz_zip_reader_is_file_a_directory(&za->handle, (mz_uint)index));
   return UTRUE;
 }
 
@@ -97,7 +97,7 @@ static ubool implZipArchiveExtractToFile(i16 argc, Value *args, Value *out) {
   ObjZipArchive *za = AS_ZIP_ARCHIVE(args[-1]);
   size_t index = AS_INDEX(args[0], mz_zip_reader_get_num_files(&za->handle));
   String *path = AS_STRING(args[1]);
-  if (!mz_zip_reader_extract_to_file(&za->handle, index, path->chars, 0)) {
+  if (!mz_zip_reader_extract_to_file(&za->handle, (mz_uint)index, path->chars, 0)) {
     return minizErr(&za->handle, "mz_zip_reader_extract_to_file");
   }
   return UTRUE;
@@ -133,6 +133,6 @@ static ubool impl(i16 argc, Value *args, Value *out) {
 
 static CFunction func = { impl, "zip", 1 };
 
-void addNativeModuleZip() {
+void addNativeModuleZip(void) {
   addNativeModule(&func);
 }

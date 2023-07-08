@@ -1110,6 +1110,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
 
 static CFunction func = { impl, "paco", 1 };
 
-void addNativeModulePaco() {
+void addNativeModulePaco(void) {
   addNativeModule(&func);
 }

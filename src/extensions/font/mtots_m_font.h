@@ -23,7 +23,7 @@ size_t fontGetEmHeight(ObjFont *font);
 ubool fontSetEmHeight(ObjFont *font, size_t newEmHeight);
 ObjPen *newPen(ObjFont *font, ObjImage *image, double x, double y, Color color);
 
-void addNativeModuleMediaFont();
+void addNativeModuleMediaFont(void);
 
 extern NativeObjectDescriptor descriptorFont;
 extern NativeObjectDescriptor descriptorPen;

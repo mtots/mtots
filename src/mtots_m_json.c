@@ -50,6 +50,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
 
 static CFunction func = { impl, "json", 1 };
 
-void addNativeModuleJson() {
+void addNativeModuleJson(void) {
   addNativeModule(&func);
 }

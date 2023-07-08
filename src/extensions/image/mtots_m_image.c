@@ -114,6 +114,6 @@ static ubool impl(i16 argc, Value *args, Value *out) {
 
 static CFunction func = { impl, "media.image", 1 };
 
-void addNativeModuleMediaImage() {
+void addNativeModuleMediaImage(void) {
   addNativeModule(&func);
 }

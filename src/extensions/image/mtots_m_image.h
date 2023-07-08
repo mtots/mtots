@@ -18,7 +18,7 @@ typedef struct ObjImage {
 Value IMAGE_VAL(ObjImage *image);
 
 ObjImage *newImage(size_t width, size_t height);
-void addNativeModuleMediaImage();
+void addNativeModuleMediaImage(void);
 
 extern NativeObjectDescriptor descriptorImage;
 

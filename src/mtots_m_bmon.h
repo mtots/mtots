@@ -20,6 +20,6 @@ ubool bmonDump(Value value, Buffer *out);
  * even JSON, since there's no need to worry about formatting and
  * string literal escapes.
  */
-void addNativeModuleBmon();
+void addNativeModuleBmon(void);
 
 #endif/*mtots_m_bmon_h*/

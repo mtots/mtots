@@ -43,6 +43,6 @@ static ubool impl(i16 argc, Value *args, Value *out) {
 
 static CFunction func = { impl, "media.font.roboto.mono", 1 };
 
-void addNativeModuleMediaFontRobotoMono() {
+void addNativeModuleMediaFontRobotoMono(void) {
   addNativeModule(&func);
 }

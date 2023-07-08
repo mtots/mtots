@@ -8,6 +8,6 @@
 
 ubool savePNGImage(ObjDataSink *ds, ObjImage *image);
 
-void addNativeModuleMediaPNG();
+void addNativeModuleMediaPNG(void);
 
 #endif/*mtots_m_png_h*/
