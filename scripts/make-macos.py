@@ -106,6 +106,12 @@ def build() -> None:
             # Forces rewrite of what might look like ambiguities in some cases
             "-Wcomma",
 
+            # https://stackoverflow.com/a/58993253
+            # TL;DR: In C89, you can call functions that have not been declared,
+            # this can kind of help check this, although it probably is not critical
+            # since other warnings will probably catch these as well
+            "-Wbad-function-cast",
+
             # Other explicitly enabled warnings.
             # These are nice to have even if "-Weverything" is currently on,
             # it may be disabled at some point in time - explicitly listing warnings

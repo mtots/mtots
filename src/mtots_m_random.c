@@ -70,7 +70,7 @@ static ubool implRandomInt(i16 argCount, Value *args, Value *out) {
       "low = %ld, high = %ld", (long)low, (long)high);
     return UFALSE;
   }
-  *out = NUMBER_VAL(low + (double)randomInt(&random->handle, high - low));
+  *out = NUMBER_VAL(((double)low) + randomInt(&random->handle, high - low));
   return UTRUE;
 }
 
@@ -93,7 +93,7 @@ static ubool implRandomRange(i16 argCount, Value *args, Value *out) {
       "start = %ld,  end = %ld", (long)start, (long)end);
     return UFALSE;
   }
-  *out = NUMBER_VAL(start + (double)randomInt(&random->handle, end - start - 1));
+  *out = NUMBER_VAL(((double)start) + randomInt(&random->handle, end - start - 1));
   return UTRUE;
 }
 
