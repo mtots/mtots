@@ -520,7 +520,7 @@ static CFunction funcBufferStaticFromList = {
   implBufferStaticFromList, "fromList", 1, 0, argsBufferStaticFromList,
 };
 
-void initBufferClass() {
+void initBufferClass(void) {
   CFunction *methods[] = {
     &funcBufferLock,
     &funcBufferIsLocked,

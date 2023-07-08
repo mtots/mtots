@@ -278,7 +278,7 @@ static ubool implListIter(i16 argCount, Value *args, Value *out) {
 
 static CFunction funcListIter = { implListIter, "__iter__", 0 };
 
-void initListClass() {
+void initListClass(void) {
   {
     CFunction *methods[] = {
       &funcListClear,

@@ -11,7 +11,7 @@ ubool sdlError(const char *functionName) {
   return UFALSE;
 }
 
-ubool initSDL() {
+ubool initSDL(void) {
   if (SDL_Init(SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_GAMECONTROLLER) != 0) {
     return sdlError("SDL_Init");
   }

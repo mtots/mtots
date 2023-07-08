@@ -13,10 +13,10 @@ void runtimeError(const char *format, ...) __printflike(1, 2);
 
 /* Returns the current error string.
  * Returns NULL if runtimeError has never been called .*/
-const char *getErrorString();
+const char *getErrorString(void);
 
 /* Clears the current error string so that 'getErrorString()' returns NULL */
-void clearErrorString();
+void clearErrorString(void);
 
 /* Adds a context provider that can add additional context to error messages.
  * The provider will be called for both 'panic' and 'runtimeError'. */
@@ -26,12 +26,12 @@ void setErrorContextProvider(void (*contextProvider)(Buffer*));
 NORETURN void assertionError(const char *message);
 
 /* Save the error string you would get with 'getErrorString()' */
-void saveCurrentErrorString();
+void saveCurrentErrorString(void);
 
 /* Get the erorr string you saved with 'saveCurrentErrorString()' */
-const char *getSavedErrorString();
+const char *getSavedErrorString(void);
 
 /* Clear the error string saved with 'saveCurrentErrorString()' */
-void clearSavedErrorString();
+void clearSavedErrorString(void);
 
 #endif/*mtots_util_error_h*/

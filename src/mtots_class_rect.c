@@ -123,7 +123,7 @@ static TypePattern argsRectCopy[] = {
 
 static CFunction funcRectCopy = { implRectCopy, "copy", 1, 0, argsRectCopy };
 
-void initRectClass() {
+void initRectClass(void) {
   CFunction *staticMethods[] = {
     &funcRectStaticCall,
     NULL,

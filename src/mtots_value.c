@@ -164,7 +164,7 @@ size_t AS_INDEX_UPPER(Value value, size_t length) {
   return (size_t)x;
 }
 
-Value NIL_VAL() {
+Value NIL_VAL(void) {
   Value v = { VAL_NIL };
   return v;
 }

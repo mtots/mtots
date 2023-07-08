@@ -80,7 +80,7 @@ static size_t pressedKeysLength, pressedKeysNext;
 static u8 releasedKeys[KEY_QUEUE_MAX];
 static size_t releasedKeysLength, releasedKeysNext;
 
-static void resetClip() {
+static void resetClip(void) {
   clipXStart = clipYStart = 0;
   clipXEnd = clipYEnd = I32_MAX;
 }
@@ -106,7 +106,7 @@ static void normalizeRenderTarget(RenderTarget *rt) {
   rt->palette = palette->handle.data;
 }
 
-static RenderTarget screenAsRenderTarget() {
+static RenderTarget screenAsRenderTarget(void) {
   RenderTarget rt;
   rt.width = renderWidth;
   rt.height = renderHeight;
@@ -124,15 +124,15 @@ static RenderTarget spriteSheetAsRenderTarget(ObjSpriteSheet *sheet) {
   return rt;
 }
 
-static RenderTarget getActiveRenderTarget() {
+static RenderTarget getActiveRenderTarget(void) {
   return renderTarget ? spriteSheetAsRenderTarget(renderTarget) : screenAsRenderTarget();
 }
 
-static ObjSpriteSheet *getActiveSpriteSheet() {
+static ObjSpriteSheet *getActiveSpriteSheet(void) {
   return activeSpriteSheet;
 }
 
-static ObjSpriteSheet *getActiveFont() {
+static ObjSpriteSheet *getActiveFont(void) {
   return activeFont;
 }
 
@@ -144,7 +144,7 @@ static RenderTarget getActiveRenderTargetForPrint(u8 color) {
   return rt;
 }
 
-static void tickButtons() {
+static void tickButtons(void) {
   memset(buttons, 0, PLAYER_COUNT * BUTTON_COUNT * 2);
 }
 
@@ -177,7 +177,7 @@ static ubool queryButton(u8 query, u8 buttonID, u8 playerID) {
   return buttons[query][playerID][buttonID];
 }
 
-static void tickClicks() {
+static void tickClicks(void) {
   memset(clicks, 0, 2 * 3);
 }
 
@@ -246,7 +246,7 @@ static void setPalette(ObjBuffer *newPalette) {
   palette = newPalette;
 }
 
-static ObjBuffer *newPalette() {
+static ObjBuffer *newPalette(void) {
   ObjBuffer *palette = newBuffer();
   push(BUFFER_VAL(palette));
   bufferSetLength(&palette->handle, U8_COUNT);
@@ -255,7 +255,7 @@ static ObjBuffer *newPalette() {
   return palette;
 }
 
-static void initPalette() {
+static void initPalette(void) {
   size_t i;
   ObjBuffer *palette = newPalette();
   palette->handle.data[0] = U8_MAX;
@@ -265,7 +265,7 @@ static void initPalette() {
   setPalette(palette);
 }
 
-static ubool resetSurfaces() {
+static ubool resetSurfaces(void) {
   windowSurface = SDL_GetWindowSurface(window);
   if (!windowSurface) {
     runtimeError("paco.init(): SDL_getWindowSurface failed: %s", SDL_GetError());
@@ -311,7 +311,7 @@ static ubool resetSurfaces() {
   return UTRUE;
 }
 
-static ubool resetWindow() {
+static ubool resetWindow(void) {
   int scaledWidth = renderWidth * scalingFactor;
   int scaledHeight = renderHeight * scalingFactor;
   SDL_SetWindowSize(window, scaledWidth, scaledHeight);

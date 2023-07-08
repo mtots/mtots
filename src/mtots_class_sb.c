@@ -7,7 +7,7 @@ static void sbFree(ObjNative *n) {
   freeBuffer(&sb->buf);
 }
 
-ObjStringBuilder *newStringBuilder() {
+ObjStringBuilder *newStringBuilder(void) {
   ObjStringBuilder *sb = NEW_NATIVE(ObjStringBuilder, &descriptorStringBuilder);
   initBuffer(&sb->buf);
   return sb;
@@ -66,7 +66,7 @@ static ubool implStringBuilderBuild(i16 argCount, Value *args, Value *out) {
 
 static CFunction funcStringBuilderBuild = { implStringBuilderBuild, "build" };
 
-void initStringBuilderClass() {
+void initStringBuilderClass(void) {
   CFunction *methods[] = {
     &funcStringBuilderClear,
     &funcStringBuilderAdd,

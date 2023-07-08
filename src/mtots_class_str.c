@@ -399,7 +399,7 @@ static CFunction funcStringStaticFromUTF8 = {
   implStringStaticFromUTF8, "fromUTF8", 1, 0, argsStringStaticFromUTF8,
 };
 
-void initStringClass() {
+void initStringClass(void) {
   {
     CFunction *methods[] = {
       &funcStringIter,

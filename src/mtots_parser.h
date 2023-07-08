@@ -7,6 +7,6 @@
 /* Compiles the given source into an ObjThunk */
 ubool parse(const char *source, String *moduleName, ObjThunk **out);
 
-void markParserRoots();
+void markParserRoots(void);
 
 #endif/*mtots_parser_h*/

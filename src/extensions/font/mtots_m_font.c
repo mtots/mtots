@@ -84,7 +84,7 @@ static ubool fterr(const char *tag, int error) {
   return UFALSE;
 }
 
-static ObjFont *allocFont() {
+static ObjFont *allocFont(void) {
   ObjFont *font = NEW_NATIVE(ObjFont, &descriptorFont);
   font->underlying = NIL_VAL();
   return font;

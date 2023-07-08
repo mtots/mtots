@@ -125,7 +125,7 @@ static ubool implFrozenListIter(i16 argCount, Value *args, Value *out) {
 
 static CFunction funcFrozenListIter = { implFrozenListIter, "__iter__", 0 };
 
-void initFrozenListClass() {
+void initFrozenListClass(void) {
   {
     CFunction *methods[] = {
       &funcFrozenListMul,

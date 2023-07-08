@@ -29,7 +29,7 @@ static size_t getSampleCount(ObjAudio *audio) {
   return audio->buffer.length / BYTES_PER_SAMPLE;
 }
 
-static ObjAudio *newAudio() {
+static ObjAudio *newAudio(void) {
   ObjAudio *audio = NEW_NATIVE(ObjAudio, &descriptorAudio);
   initBuffer(&audio->buffer);
   return audio;

@@ -6,6 +6,7 @@
 #include "mtots_m_image.h"
 #include "mtots_m_data.h"
 
+ubool loadPNGImage(ObjDataSource *ds, ObjImage **out);
 ubool savePNGImage(ObjDataSink *ds, ObjImage *image);
 
 void addNativeModuleMediaPNG(void);

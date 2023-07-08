@@ -11,6 +11,6 @@
 #include "mtots_common.h"
 
 ubool sdlError(const char *functionName);
-ubool initSDL();
+ubool initSDL(void);
 
 #endif/*mtots_sdl_h*/

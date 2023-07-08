@@ -1,4 +1,5 @@
 #include "mtots_vm.h"
+#include "mtots_class_vector.h"
 
 static TypePattern argsVectors[] = {
   { TYPE_PATTERN_VECTOR },
@@ -102,7 +103,7 @@ static CFunction funcVectorRotateZ = {
   implVectorRotateZ, "rotateZ", 1, 0, argsNumbers,
 };
 
-void initVectorClass() {
+void initVectorClass(void) {
   CFunction *staticMethods[] = {
     &funcVectorStaticCall,
     NULL,

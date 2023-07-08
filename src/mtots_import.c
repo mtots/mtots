@@ -186,6 +186,7 @@ ubool importModuleAndPop(const char *moduleName) {
 /**
  * Loads a module, and runs a function in the module with the given arguments.
  */
+/*
 ubool runFunctionInModule(
     String *moduleName,
     String *functionName,
@@ -205,3 +206,4 @@ ubool runFunctionInModule(
   *out = pop();
   return UTRUE;
 }
+*/

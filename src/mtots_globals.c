@@ -651,7 +651,7 @@ static TypePattern argsM[] = {
 
 static CFunction funcM = { implM, "M", 2, 4, argsM };
 
-void defineDefaultGlobals() {
+void defineDefaultGlobals(void) {
   NativeObjectDescriptor *descriptors[] = {
     &descriptorStringBuilder,
     &descriptorMatrix,

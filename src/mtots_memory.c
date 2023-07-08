@@ -262,7 +262,7 @@ static void freeObject(Obj *object) {
   }
 }
 
-static void markRoots() {
+static void markRoots(void) {
   Value *slot;
   i16 i;
   ObjUpvalue *upvalue;
@@ -290,14 +290,14 @@ static void markRoots() {
   markParserRoots();
 }
 
-static void traceReferences() {
+static void traceReferences(void) {
   while (vm.memory.grayCount > 0) {
     Obj *object = vm.memory.grayStack[--vm.memory.grayCount];
     blackenObject(object);
   }
 }
 
-static void sweep() {
+static void sweep(void) {
   Obj *previous = NULL;
   Obj *object = vm.memory.objects;
   while (object != NULL) {
@@ -318,7 +318,7 @@ static void sweep() {
   }
 }
 
-void freeObjects() {
+void freeObjects(void) {
   Obj *object = vm.memory.objects;
   while (object != NULL) {
     Obj *next = object->next;
@@ -329,7 +329,7 @@ void freeObjects() {
   free(vm.memory.grayStack);
 }
 
-static size_t countObjects() {
+static size_t countObjects(void) {
   size_t count = 0;
   Obj *object;
   for (object = vm.memory.objects; object; object = object->next) {
@@ -338,7 +338,7 @@ static size_t countObjects() {
   return count;
 }
 
-void collectGarbage() {
+void collectGarbage(void) {
   size_t before, objectCountBefore;
 
   if (vm.localGCPause) {

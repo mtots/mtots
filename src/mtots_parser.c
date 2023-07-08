@@ -131,7 +131,7 @@ static ubool parseDeclaration(Parser *parser);
 static ubool parseStatement(Parser *parser);
 static ubool parseExpression(Parser *parser);
 static ubool parsePrec(Parser *parser, Precedence prec);
-static void initParseRulesPrivate();
+static void initParseRulesPrivate(void);
 static ubool addConstValue(Parser *parser, Value value, u8 *ref);
 static ubool stringTokenToObjString(Parser *parser, String **out);
 static ubool parseBlock(Parser *parser, ubool newScope);
@@ -1794,7 +1794,7 @@ static ParseRule newRule(ParseFn prefix, ParseFn infix, Precedence prec) {
   return rule;
 }
 
-static void initParseRulesPrivate() {
+static void initParseRulesPrivate(void) {
   if (!parseRulesInitialized) {
     parseRulesInitialized = UTRUE;
   }
@@ -1846,7 +1846,7 @@ static void initParseRulesPrivate() {
   rules[TOKEN_TRY] = newRule(parseTry, NULL, PREC_NONE);
 }
 
-void markParserRoots() {
+void markParserRoots(void) {
   Parser *parser = activeParser;
   if (parser) {
     Environment *env = parser->env;

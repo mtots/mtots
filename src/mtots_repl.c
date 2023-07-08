@@ -15,18 +15,18 @@
 static Value *replStackTop;
 static i16 replFrameCount;
 
-static void saveState() {
+static void saveState(void) {
   replStackTop = vm.stackTop;
   replFrameCount = vm.frameCount;
 }
 
-static void restoreState() {
+static void restoreState(void) {
   closeUpvalues(replStackTop);
   vm.stackTop = replStackTop;
   vm.frameCount = replFrameCount;
 }
 
-void repl() {
+void repl(void) {
   char line[1024];
   ObjModule *module;
   String *mainModuleName;

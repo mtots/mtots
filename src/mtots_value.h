@@ -184,7 +184,7 @@ size_t AS_INDEX(Value value, size_t length);
 size_t AS_INDEX_LOWER(Value value, size_t length);
 size_t AS_INDEX_UPPER(Value value, size_t length);
 
-Value NIL_VAL();
+Value NIL_VAL(void);
 Value BOOL_VAL(ubool value);
 Value NUMBER_VAL(double value);
 Value COLOR_VAL(Color value);

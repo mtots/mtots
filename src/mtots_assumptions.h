@@ -32,6 +32,6 @@
 
 /* Some assumptions cannot be checked just with macros
  * (e.g. endianness)*/
-void checkAssumptions();
+void checkAssumptions(void);
 
 #endif/*mtots_assumptions_h*/

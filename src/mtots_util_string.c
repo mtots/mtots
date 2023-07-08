@@ -22,7 +22,7 @@ static String *emptyString;
 /* If called, the empty string and one character ASCII strings will
  * be cached. These strings will never be freed, and when calling
  * internString, these will be retrieved very quickly. */
-void initSpecialStrings() {
+void initSpecialStrings(void) {
   if (!specialStringsInitialized) {
     char ch;
     for (ch = 0; ((unsigned char)ch) < 128; ch++) {
@@ -192,11 +192,11 @@ ubool sliceString(String *string, size_t start, size_t end, String **out) {
   return internUTF32(string->utf32 + start, end - start, out);
 }
 
-size_t getInternedStringsAllocationSize() {
+size_t getInternedStringsAllocationSize(void) {
   return allStrings.allocationSize;
 }
 
-void freeUnmarkedStrings() {
+void freeUnmarkedStrings(void) {
   size_t i, cap = allStrings.capacity;
   String **oldEntries = allStrings.strings;
   String **newEntries = (String**)malloc(sizeof(String*) * cap);

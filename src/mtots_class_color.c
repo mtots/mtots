@@ -1,4 +1,5 @@
 #include "mtots_vm.h"
+#include "mtots_class_color.h"
 
 static ubool implColorStaticCall(i16 argc, Value *args, Value *out) {
   u8 red = AS_U8(args[0]);
@@ -35,7 +36,7 @@ static CFunction funcColorGetattr = {
   implColorGetattr, "__getattr__", 1, 0, argsStrings,
 };
 
-void initColorClass() {
+void initColorClass(void) {
   CFunction *staticMethods[] = {
     &funcColorStaticCall,
     NULL,

@@ -29,7 +29,7 @@ VM vm;
 
 static ubool invoke(String *name, i16 argCount);
 
-static void resetStack() {
+static void resetStack(void) {
   vm.stackTop = vm.stack;
   vm.frameCount = 0;
   vm.openUpvalues = NULL;
@@ -87,7 +87,7 @@ static void initNoMethodClass(ObjClass **clsptr, const char *name) {
   newBuiltinClass(name, clsptr, TYPE_PATTERN_ANY, NULL, NULL);
 }
 
-void initVM() {
+void initVM(void) {
   setErrorContextProvider(printStackToStringBuffer);
   checkAssumptions();
   initSpecialStrings();
@@ -192,7 +192,7 @@ void initVM() {
   addNativeModules();
 }
 
-void freeVM() {
+void freeVM(void) {
   freeMap(&vm.globals);
   freeMap(&vm.modules);
   freeMap(&vm.nativeModuleThunks);
@@ -209,7 +209,7 @@ void push(Value value) {
   vm.stackTop++;
 }
 
-Value pop() {
+Value pop(void) {
   if (vm.stackTop <= vm.stack) {
     panic("stack underflow");
   }
@@ -433,7 +433,7 @@ static ubool isFalsey(Value value) {
     (IS_NUMBER(value) && AS_NUMBER(value) == 0);
 }
 
-static void concatenate() {
+static void concatenate(void) {
   String *result;
   String *b = AS_STRING(peek(0));
   String *a = AS_STRING(peek(1));
@@ -448,7 +448,7 @@ static void concatenate() {
   push(STRING_VAL(result));
 }
 
-static ubool run() {
+static ubool run(void) {
   i16 returnFrameCount = vm.frameCount - 1;
   CallFrame *frame = &vm.frames[vm.frameCount - 1];
   i16 trySnapShotCountAtStart = vm.trySnapshotsCount;

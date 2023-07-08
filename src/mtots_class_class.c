@@ -16,7 +16,7 @@ static CFunction funcClassGetName = {
   implClassGetName, "getName", 1, 0, argsClassGetName
 };
 
-void initClassClass() {
+void initClassClass(void) {
   CFunction *staticMethods[] = {
     &funcClassGetName,
     NULL,

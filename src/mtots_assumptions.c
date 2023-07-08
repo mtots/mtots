@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 
-void checkAssumptions() {
+void checkAssumptions(void) {
   /* check type sizes */
   if (sizeof(char) != 1) { /* standard should guarantee this */
     fprintf(stderr, "char is not 1 bytes (got %lu)", (unsigned long)sizeof(char));

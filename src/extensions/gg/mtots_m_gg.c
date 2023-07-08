@@ -242,13 +242,13 @@ static NativeObjectDescriptor descriptorMotionEvent = {
   nopBlacken, nopFree, sizeof(ObjMotionEvent), "MotionEvent"
 };
 
-static void lockAudioMutex() {
+static void lockAudioMutex(void) {
   if (SDL_LockMutex(audioMutex) != 0) {
     panic("SDL_LockMutex(audioMutex) failed");
   }
 }
 
-static void unlockAudioMutex() {
+static void unlockAudioMutex(void) {
   if (SDL_UnlockMutex(audioMutex) != 0) {
     panic("SDL_UnlockMutex(audioMutex) failed");
   }
@@ -580,7 +580,7 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
 
 #ifdef __EMSCRIPTEN__
 static ObjWindow *mainWindowForEmscripten;
-static void mainLoopIterationEmscripten() {
+static void mainLoopIterationEmscripten(void) {
   ubool quit = UFALSE;
   if (!mainLoopIteration(mainWindowForEmscripten, &quit)) {
     panic("mainLoop: %s", getErrorString());

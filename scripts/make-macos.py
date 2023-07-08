@@ -95,9 +95,35 @@ def build() -> None:
             "-DMTOTS_USE_PRINTFLIKE=1",
 
             # "-Weverything",
+
+            # This is useful for
+            #  * catching functions that were meant to be static
+            #  * zero-argument functions that do not have 'void'
+            #    in the parameter list
+            "-Wmissing-prototypes",
+
+            # TODO: Consider reenabling these warnings
+            "-Wno-sign-conversion",
+            "-Wno-shorten-64-to-32",
+            "-Wno-implicit-float-conversion",
+            "-Wno-implicit-int-conversion",
+            "-Wno-float-conversion",
+            "-Wno-double-promotion",
+
+            # These seem ok to turn off
+            "-Wno-poison-system-directories",
             "-Wno-padded",
             "-Wno-undef",
             "-Wno-float-equal",
+            "-Wno-switch-enum",
+
+            # Documentation Errors from freetype
+            # These seem ok to turn off, but I only need to turn them
+            # off because I needed to include freetype headers.
+            # TODO: add an adapter to the freetype source so that we do not
+            # have to add accomodations here for freetype headers.
+            "-Wno-documentation-unknown-command",
+            "-Wno-documentation",
 
             # SDL
             "-framework", "AudioToolbox",

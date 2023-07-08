@@ -1,3 +1,4 @@
+#include "mtots_main.h"
 #include "mtots_vm.h"
 #include "mtots_repl.h"
 #include "mtots_env.h"
@@ -38,7 +39,7 @@ static ubool getModuleNameFromArchivePath(const char *path, char **out) {
   return UTRUE;
 }
 
-ubool runMainModule(int argc, const char **argv) {
+static ubool runMainModule(int argc, const char **argv) {
   String *mainModuleName;
   registerArgs(argc - 1, argv + 1);
   mainModuleName = internCString("__main__");

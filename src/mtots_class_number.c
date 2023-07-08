@@ -56,7 +56,7 @@ static ubool implNumberBase(i16 argCount, Value *args, Value *out) {
 
 static CFunction funcNumberBase = { implNumberBase, "base", 1, 0, argsNumbers };
 
-void initNumberClass() {
+void initNumberClass(void) {
   CFunction *methods[] = {
     &funcNumberToU32,
     &funcNumberBase,

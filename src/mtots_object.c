@@ -239,7 +239,7 @@ ObjClosure *newClosure(ObjThunk *thunk, ObjModule *module) {
   return closure;
 }
 
-ObjThunk *newThunk() {
+ObjThunk *newThunk(void) {
   ObjThunk *thunk = ALLOCATE_OBJ(ObjThunk, OBJ_THUNK);
   thunk->arity = 0;
   thunk->upvalueCount = 0;
@@ -277,7 +277,7 @@ static u32 hashFrozenList(Value *buffer, size_t length) {
   return hash;
 }
 
-ObjBuffer *newBuffer() {
+ObjBuffer *newBuffer(void) {
   ObjBuffer *buffer = ALLOCATE_OBJ(ObjBuffer, OBJ_BUFFER);
   initBuffer(&buffer->handle);
   buffer->memoryRegionOwner = NIL_VAL();
@@ -403,7 +403,7 @@ ubool newFrozenListFromIterable(Value iterable, ObjFrozenList **out) {
   return UTRUE;
 }
 
-ObjDict *newDict() {
+ObjDict *newDict(void) {
   ObjDict *dict = ALLOCATE_OBJ(ObjDict, OBJ_DICT);
   initMap(&dict->map);
   return dict;

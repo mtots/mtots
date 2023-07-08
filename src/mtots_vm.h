@@ -122,8 +122,8 @@ typedef struct VM {
 
 extern VM vm;
 
-void initVM();
-void freeVM();
+void initVM(void);
+void freeVM(void);
 ubool interpret(const char *source, ObjModule *module);
 void defineGlobal(const char *name, Value value);
 void closeUpvalues(Value *last);
@@ -138,7 +138,7 @@ void addNativeModule(CFunction *func);
 /* Stack manipulation.
  * Alternative to using the Ref API. */
 void push(Value value);
-Value pop();
+Value pop(void);
 
 void listAppend(ObjList *list, Value value);
 

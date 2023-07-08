@@ -25,7 +25,7 @@ static ubool implFastRangeIter(i16 argCount, Value *args, Value *out) {
 /* We still need this because the 'iter/next' API cannot support FastRangeIterator */
 static CFunction funcFastRangeIter = { implFastRangeIter, "__iter__" };
 
-void initFastRangeClass() {
+void initFastRangeClass(void) {
   CFunction *methods[] = {
     &funcFastRangeIter,
     NULL,
@@ -64,7 +64,7 @@ static ubool implRangeRepr(i16 argCount, Value *args, Value *out) {
 
 static CFunction funcRangeRepr = { implRangeRepr, "__repr__" };
 
-void initRangeClass() {
+void initRangeClass(void) {
   CFunction *methods[] = {
     &funcRangeIter,
     &funcRangeRepr,
@@ -91,7 +91,7 @@ static ubool implRangeIteratorCall(i16 argCount, Value *args, Value *out) {
 
 static CFunction funcRangeIteratorCall = { implRangeIteratorCall, "__call__" };
 
-void initRangeIteratorClass() {
+void initRangeIteratorClass(void) {
   CFunction *methods[] = {
     &funcRangeIteratorCall,
     NULL,

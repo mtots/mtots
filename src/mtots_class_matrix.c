@@ -17,17 +17,17 @@ Value MATRIX_VAL(ObjMatrix *matrix) {
   return OBJ_VAL_EXPLICIT((Obj*)matrix);
 }
 
-ObjMatrix *allocMatrix() {
+ObjMatrix *allocMatrix(void) {
   return NEW_NATIVE(ObjMatrix, &descriptorMatrix);
 }
 
-ObjMatrix *newZeroMatrix() {
+ObjMatrix *newZeroMatrix(void) {
   ObjMatrix *matrix = allocMatrix();
   initZeroMatrix(&matrix->handle);
   return matrix;
 }
 
-ObjMatrix *newIdentityMatrix() {
+ObjMatrix *newIdentityMatrix(void) {
   ObjMatrix *matrix = allocMatrix();
   initIdentityMatrix(&matrix->handle);
   return matrix;
@@ -578,7 +578,7 @@ static ubool implMatrixRepr(i16 argc, Value *args, Value *out) {
 
 static CFunction funcMatrixRepr = { implMatrixRepr, "__repr__" };
 
-void initMatrixClass() {
+void initMatrixClass(void) {
   CFunction *staticMethods[] = {
     &funcMatrixStaticCall,
     &funcMatrixStaticFromColumnValues,

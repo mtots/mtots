@@ -32,6 +32,7 @@ void eprintln(const char *format, ...) {
   va_end(args);
 }
 
+/*
 void eprint(const char *format, ...) {
   va_list args;
   va_start(args, format);
@@ -42,3 +43,4 @@ void eprint(const char *format, ...) {
 #endif
   va_end(args);
 }
+*/

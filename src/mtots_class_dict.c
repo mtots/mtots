@@ -1,4 +1,5 @@
 #include "mtots_vm.h"
+#include "mtots_class_dict.h"
 
 static ubool implInstantiateDict(i16 argCount, Value *args, Value *out) {
   ObjDict *dict;
@@ -170,7 +171,7 @@ static CFunction funcDictStaticFromPairs = {
   implDictStaticFromPairs, "fromPairs", 1
 };
 
-void initDictClass() {
+void initDictClass(void) {
   {
     CFunction *methods[] = {
       &funcDictGetOrNil,

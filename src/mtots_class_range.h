@@ -23,9 +23,9 @@ typedef struct ObjRangeIterator {
   double step;
 } ObjRangeIterator;
 
-void initFastRangeClass();
-void initRangeClass();
-void initRangeIteratorClass();
+void initFastRangeClass(void);
+void initRangeClass(void);
+void initRangeIteratorClass(void);
 
 ObjRange *newRange(double start, double stop, double step);
 ObjRangeIterator *newRangeIterator(double start, double stop, double step);

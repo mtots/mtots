@@ -1,4 +1,5 @@
 #include "mtots_vm.h"
+#include "mtots_class_frozendict.h"
 
 typedef struct ObjFrozenDictIterator {
   ObjNative obj;
@@ -100,7 +101,7 @@ static ubool implFrozenDictRget(i16 argCount, Value *args, Value *out) {
 
 static CFunction funcFrozenDictRget = { implFrozenDictRget, "rget", 1, 2 };
 
-void initFrozenDictClass() {
+void initFrozenDictClass(void) {
   {
     CFunction *methods[] = {
       &funcFrozenDictGetItem,

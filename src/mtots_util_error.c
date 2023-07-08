@@ -73,11 +73,11 @@ void runtimeError(const char *format, ...) {
   freeBuffer(&buf);
 }
 
-const char *getErrorString() {
+const char *getErrorString(void) {
   return errorString;
 }
 
-void clearErrorString() {
+void clearErrorString(void) {
   free(errorString);
   errorString = NULL;
 }
@@ -90,17 +90,17 @@ NORETURN void assertionError(const char *message) {
   panic("assertion error: %s", message);
 }
 
-void saveCurrentErrorString() {
+void saveCurrentErrorString(void) {
   clearSavedErrorString();
   savedErrorString = errorString;
   errorString = NULL;
 }
 
-const char *getSavedErrorString() {
+const char *getSavedErrorString(void) {
   return savedErrorString;
 }
 
-void clearSavedErrorString() {
+void clearSavedErrorString(void) {
   free(savedErrorString);
   savedErrorString = NULL;
 }

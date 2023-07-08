@@ -359,9 +359,11 @@ void initMapIterator(MapIterator *di, Map *map) {
   di->entry = map->first;
 }
 
+/*
 ubool mapIteratorDone(MapIterator *di) {
   return di->entry == NULL;
 }
+*/
 
 ubool mapIteratorNext(MapIterator *di, MapEntry **out) {
   if (di->entry) {
@@ -380,4 +382,3 @@ ubool mapIteratorNextKey(MapIterator *di, Value *out) {
   }
   return UFALSE;
 }
-

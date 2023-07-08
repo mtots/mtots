@@ -14,7 +14,7 @@ typedef struct ObjRect {
 Value RECT_VAL(ObjRect *rect);
 ObjRect *allocRect(Rect handle);
 
-void initRectClass();
+void initRectClass(void);
 
 extern NativeObjectDescriptor descriptorRect;
 

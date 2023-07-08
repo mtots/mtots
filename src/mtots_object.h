@@ -220,16 +220,16 @@ ObjClass *newBuiltinClass(
   CFunction **methods,
   CFunction **staticMethods);
 ObjClosure *newClosure(ObjThunk *function, ObjModule *module);
-ObjThunk *newThunk();
+ObjThunk *newThunk(void);
 ObjInstance *newInstance(ObjClass *klass);
-ObjBuffer *newBuffer();
+ObjBuffer *newBuffer(void);
 ObjBuffer *newBufferWithExternalData(Value owner, u8 *data, size_t length);
 ObjList *newList(size_t size);
 ObjList *newListFromArray(Value *values, size_t length);
 ubool newListFromIterable(Value iterable, ObjList **out);
 ObjFrozenList *copyFrozenList(Value *buffer, size_t length);
 ubool newFrozenListFromIterable(Value iterable, ObjFrozenList **out);
-ObjDict *newDict();
+ObjDict *newDict(void);
 ubool newDictFromMap(Value map, ObjDict **out);
 ubool newDictFromPairs(Value iterable, ObjDict **out);
 ObjFrozenDict *newFrozenDict(Map *map);

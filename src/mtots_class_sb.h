@@ -11,9 +11,9 @@ typedef struct ObjStringBuilder {
   Buffer buf;
 } ObjStringBuilder;
 
-void initStringBuilderClass();
+void initStringBuilderClass(void);
 
-ObjStringBuilder *newStringBuilder();
+ObjStringBuilder *newStringBuilder(void);
 
 extern NativeObjectDescriptor descriptorStringBuilder;
 

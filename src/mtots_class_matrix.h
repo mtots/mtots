@@ -13,11 +13,11 @@ typedef struct ObjMatrix {
 
 Value MATRIX_VAL(ObjMatrix *matrix);
 
-ObjMatrix *allocMatrix();
-ObjMatrix *newZeroMatrix();
-ObjMatrix *newIdentityMatrix();
+ObjMatrix *allocMatrix(void);
+ObjMatrix *newZeroMatrix(void);
+ObjMatrix *newIdentityMatrix(void);
 ObjMatrix *newMatrixFromValues(float *values);
-void initMatrixClass();
+void initMatrixClass(void);
 
 extern NativeObjectDescriptor descriptorMatrix;
 

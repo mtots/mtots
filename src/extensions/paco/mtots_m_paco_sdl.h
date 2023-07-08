@@ -8,7 +8,7 @@
 
 #ifdef __EMSCRIPTEN__
 typedef int Mutex;
-Mutex *CREATE_MUTEX() { static Mutex m; return &m; }
+Mutex *CREATE_MUTEX(void) { static Mutex m; return &m; }
 int LOCK_MUTEX  (Mutex *m) { return 0; }
 int UNLOCK_MUTEX(Mutex *m) { return 0; }
 #else
