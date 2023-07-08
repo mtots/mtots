@@ -272,7 +272,10 @@ static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
   lockAudioMutex();
   {
     size_t sampleCount = ((size_t)byteLength) / 4, i, j;
-    i16 *dat = (i16*)stream;
+    i16 *dat = (i16*)(void*)stream;
+    /* NOTE: this (void*) trick is to avoid '-Wcast-align' warnigns
+     * it should be ok in this case, as we always assume 16-bit stereo */
+
     for (i = 0; i < sampleCount; i++) {
       i32 left = 0, right = 0;
       for (j = 0; j < CHANNEL_COUNT; j++) {
