@@ -259,6 +259,13 @@ static CFunction funcMatrixIpow = {
   implMatrixIpow, "ipow", 1, 0, argsNumbers
 };
 
+static ubool implMatrixIInverse(i16 argc, Value *args, Value *out) {
+  ObjMatrix *a = AS_MATRIX(args[-1]);
+  return matrixIInverse(&a->handle);
+}
+
+static CFunction funcMatrixIInverse = { implMatrixIInverse, "iinverse" };
+
 static ubool implMatrixItranspose(i16 argc, Value *args, Value *out) {
   ObjMatrix *a = AS_MATRIX(args[-1]);
   matrixITranspose(&a->handle);
@@ -583,6 +590,7 @@ void initMatrixClass() {
     &funcMatrixImul,
     &funcMatrixIrmul,
     &funcMatrixIpow,
+    &funcMatrixIInverse,
     &funcMatrixItranspose,
     &funcMatrixSmul,
     &funcMatrixAdd,

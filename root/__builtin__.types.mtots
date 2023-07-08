@@ -708,7 +708,7 @@ class Matrix:
       but returns a new `Matrix`.
 
   * In-place Matrix Results:
-    * `ismul`, `iadd`, `isub`, `imul`, `irmul`, `ipow`, `itranspose`,
+    * `ismul`, `iadd`, `isub`, `imul`, `irmul`, `ipow`, `iinverse`, `itranspose`,
     * These methods are the in-place mutable counterparts to the 'Matrix
       Results' methods. Names of methods in this category always
       start with the letter 'i'.
@@ -844,6 +844,11 @@ class Matrix:
   def ipow(exponent Int) nil:
     """
     Inplace matrix exponentiation
+    """
+
+  def iinverse() nil:
+    """
+    Inplace matrix inverse
     """
 
   def itranspose() nil:
