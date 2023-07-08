@@ -118,6 +118,7 @@ def build() -> None:
             # allows these warnings to survive even if "-Weverything" is removed.
             "-Wshadow",
             "-Wcast-align",
+            "-Wcast-qual",
 
             # TODO: Re-enable these warnings when I get a chance
             # to address all the places in which they are violated.

@@ -71,7 +71,7 @@ static ubool runMainModule(int argc, const char **argv) {
     free(moduleNameCString);
 
     setIsArchiveScript(UTRUE);
-    if (!importModuleWithPathAndSource(mainModuleName, dataPath, data, UTRUE, UTRUE)) {
+    if (!importModuleWithPathAndSource(mainModuleName, dataPath, data, dataPath, data)) {
       return UFALSE;
     }
   } else if (!importModuleWithPath(mainModuleName, argv[1])) {

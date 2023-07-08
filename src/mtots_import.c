@@ -17,12 +17,16 @@ ubool importModuleWithPath(String *moduleName, const char *path) {
   if (!readFile(path, &source, NULL)) {
     return UFALSE;
   }
-  return importModuleWithPathAndSource(moduleName, path, (char*)source, UFALSE, UTRUE);
+  return importModuleWithPathAndSource(moduleName, path, (char*)source, NULL, (char*)source);
 }
 
+/* NOTE: 'freePath' and 'freeSource' should match 'path' and 'source'.
+ * These should only be provided if 'path' or 'source' should be freed
+ * after use. Requiring that they be specified twice is to work around
+ * the fact that 'path' and 'source' are 'const char*'. */
 ubool importModuleWithPathAndSource(
     String *moduleName, const char *path, const char *source,
-    ubool freePath, ubool freeSource) {
+    char *freePath, char *freeSource) {
   ObjClosure *closure;
   ObjThunk *thunk;
   ObjModule *module;
@@ -34,21 +38,21 @@ ubool importModuleWithPathAndSource(
 
   pathStr = internCString(path);
   if (freePath) {
-    free((void*)path);
+    free((void*)freePath);
   }
   push(STRING_VAL(pathStr));
   mapSetN(&module->fields, "__file__", STRING_VAL(pathStr));
   pop(); /* pathStr */
 
-  if (!parse((char*)source, moduleName, &thunk)) {
+  if (!parse((const char*)source, moduleName, &thunk)) {
     /* runtimeError("Failed to compile %s", path); */
     if (freeSource) {
-      free((void*)source);
+      free((void*)freeSource);
     }
     return UFALSE;
   }
   if (freeSource) {
-    free((void*)source);
+    free((void*)freeSource);
   }
 
   push(THUNK_VAL(thunk));
@@ -116,7 +120,7 @@ static ubool importModuleNoCache(String *moduleName) {
     /* Check for a script in the archive */
     char *moduleData, *path;
     if (readMtotsModuleFromArchive(moduleName->chars, &moduleData, &path) && moduleData) {
-      return importModuleWithPathAndSource(moduleName, path, moduleData, UTRUE, UTRUE);
+      return importModuleWithPathAndSource(moduleName, path, moduleData, path, moduleData);
     }
   }
 #endif

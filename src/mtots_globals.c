@@ -9,7 +9,7 @@
 
 
 static ubool implClock(i16 argCount, Value *args, Value *out) {
-  *out = NUMBER_VAL((double) clock() / CLOCKS_PER_SEC);
+  *out = NUMBER_VAL(clock() / (double) CLOCKS_PER_SEC);
   return UTRUE;
 }
 

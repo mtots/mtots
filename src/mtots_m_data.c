@@ -177,7 +177,7 @@ ubool dataSinkWriteBytes(ObjDataSink *ds, const u8 *data, size_t dataLen) {
       bufferAddBytes(&ds->as.buffer->handle, (const void*)data, dataLen);
       return UTRUE;
     case DATA_SINK_FILE:
-      return writeFile((void*)data, dataLen, ds->as.file.path->chars);
+      return writeFile((const void*)data, dataLen, ds->as.file.path->chars);
     default: break;
   }
   runtimeError("dataSinkWriteBytes: invalid data sink type %d", ds->type);

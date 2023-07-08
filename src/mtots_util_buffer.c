@@ -271,7 +271,7 @@ void bputchar(Buffer *buf, char ch) {
 }
 
 void bputstrlen(Buffer *buf, const char *chars, size_t byteLength) {
-  bufferAddBytes(buf, (void*)chars, byteLength);
+  bufferAddBytes(buf, (const void*)chars, byteLength);
 }
 
 void bputstr(Buffer *buf, const char *string) {

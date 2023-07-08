@@ -3,6 +3,6 @@
 
 #include "mtots_common.h"
 
-ubool writeFile(void *data, size_t length, const char *path);
+ubool writeFile(const void *data, size_t length, const char *path);
 
 #endif/*mtots_util_writefile_h*/
