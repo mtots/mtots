@@ -507,7 +507,7 @@ ubool strMod(Buffer *out, const char *format, ObjList *args) {
   const char *p;
   size_t j;
 
-  for (p = format, j = 0; *p != '\0'; p++) {
+  for ((void)(p = format), j = 0; *p != '\0'; p++) {
     if (*p == '%') {
       Value item;
       p++;

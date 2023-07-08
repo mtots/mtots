@@ -106,7 +106,7 @@ static ubool drawLine(RenderTarget *rt, i32 x0, i32 y0, i32 x1, i32 y1, u8 style
      *   - the line is exactly along a diagonal
      */
     i32 x, y;
-    for (x = x0, y = y0; x != x1 + stepX; x += stepX, y += stepY) {
+    for ((void)(x = x0), y = y0; x != x1 + stepX; x += stepX, y += stepY) {
       setPixel(rt, x, y, color);
     }
   } else if (iabs(y1 - y0) < iabs(x1 - x0)) {

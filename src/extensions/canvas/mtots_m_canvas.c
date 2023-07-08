@@ -89,7 +89,7 @@ static ubool drawLine(
      *   - the line is exactly along a diagonal
      */
     i32 x, y;
-    for (x = x0, y = y0; x != x1 + stepX; x += stepX, y += stepY) {
+    for ((void)(x = x0), y = y0; x != x1 + stepX; x += stepX, y += stepY) {
       setPixel(canvas, x, y, color);
     }
   } else if (iabs(y1 - y0) < iabs(x1 - x0)) {

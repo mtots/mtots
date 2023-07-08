@@ -1772,7 +1772,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
       colorCount++;
     }
     colors = malloc(sizeof(Value) * colorCount);
-    for (entry = colorEntries, i = 0; entry->name; entry++, i++) {
+    for ((void)(entry = colorEntries), i = 0; entry->name; entry++, i++) {
       colors[i] = COLOR_VAL(entry->color);
     }
     mapSetN(&module->fields, "COLORS", FROZEN_LIST_VAL(copyFrozenList(colors, colorCount)));

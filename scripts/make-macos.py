@@ -102,7 +102,11 @@ def build() -> None:
             #    in the parameter list
             "-Wmissing-prototypes",
 
-            # TODO: Consider reenabling these warnings
+            # Forces rewrite of what might look like ambiguities in some cases
+            "-Wcomma",
+
+            # TODO: Re-enable these warnings when I get a chance
+            # to address all the places where they are used.
             "-Wno-sign-conversion",
             "-Wno-shorten-64-to-32",
             "-Wno-implicit-float-conversion",
@@ -116,6 +120,14 @@ def build() -> None:
             "-Wno-undef",
             "-Wno-float-equal",
             "-Wno-switch-enum",
+
+            # Covered switch defaults allow me to handle potentially bad cases
+            # where an enum variable contains an invalid value
+            "-Wno-covered-switch-default",
+
+            # Sometimes some macros are 'expected' to fit a pattern, but might
+            # not be used (yet). E.g. 'IS_WINDOW' in 'mtots_m_gg.c'.
+            "-Wno-unused-macros",
 
             # Documentation Errors from freetype
             # These seem ok to turn off, but I only need to turn them

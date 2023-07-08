@@ -23,7 +23,7 @@ static void maybeReverseBytes(
   if (byteOrder != PLATFORM_BYTE_ORDER) {
     size_t i, j;
     if (length) {
-      for (i = 0, j = length - 1; i < j; i++, j--) {
+      for ((void)(i = 0), j = length - 1; i < j; i++, j--) {
         u8 tmp = data[i];
         data[i] = data[j];
         data[j] = tmp;
