@@ -79,4 +79,14 @@
 #endif
 #endif
 
+/****************************************************************
+ * Other Compiler Features
+ ****************************************************************/
+
+#ifdef __GNUC__
+#define MTOTS_PRINTFLIKE(n,m) __attribute__((format(printf,n,m)))
+#else
+#define MTOTS_PRINTFLIKE(n,m)
+#endif /* __GNUC__ */
+
 #endif/*mtots_config_h*/

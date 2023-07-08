@@ -2,7 +2,6 @@
 #define mtots_util_buffer_h
 
 #include "mtots_common.h"
-#include "mtots_util_printflike.h"
 #include "mtots_util_string.h"
 
 typedef enum ByteOrder {

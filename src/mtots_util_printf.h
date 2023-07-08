@@ -1,7 +1,7 @@
 #ifndef mtots_util_printf_h
 #define mtots_util_printf_h
 
-#include "mtots_util_printflike.h"
+#include "mtots_common.h"
 
 /**
  * Like printf, but will handle properly on platforms

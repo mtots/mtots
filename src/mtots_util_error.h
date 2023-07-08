@@ -1,7 +1,6 @@
 #ifndef mtots_util_error_h
 #define mtots_util_error_h
 
-#include "mtots_util_printflike.h"
 #include "mtots_util_buffer.h"
 
 /* Flag a fatal error. The message is written to stderr and the program exits
