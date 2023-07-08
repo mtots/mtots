@@ -11,21 +11,7 @@ final window = gg.Window(
   # gg.Window.flagFIXEDFULLSCREEN()
   # gg.Window.flagFULLSCREEN()
 )
-print(window.transform)
-window.transform.translate(V(window.width / 2, window.height / 2))
-print(window.transform)
-print("Manual")
-print("(upper-left)  -> %s" % [window.transform.apply(V(-window.width/2, -window.height/2))])
-print("(upper-right) -> %s" % [window.transform.apply(V(window.width/2, -window.height/2))])
-print("(lower-right) -> %s" % [window.transform.apply(V(window.width/2, window.height/2))])
-print("(lower-left)  -> %s" % [window.transform.apply(V(-window.width/2, window.height/2))])
 window.setCamera(V(-window.width/2, -window.height/2), V(window.width/2, window.height/2))
-print("setCamera")
-print("(upper-left)  -> %s" % [window.transform.apply(V(-window.width/2, -window.height/2))])
-print("(upper-right) -> %s" % [window.transform.apply(V(window.width/2, -window.height/2))])
-print("(lower-right) -> %s" % [window.transform.apply(V(window.width/2, window.height/2))])
-print("(lower-left)  -> %s" % [window.transform.apply(V(-window.width/2, window.height/2))])
-print(window.transform)
 
 print("window dim = %s, %s" % [window.width, window.height])
 
@@ -48,17 +34,17 @@ var viewY = 0
 @window.onUpdate
 def():
 
-  if gg.key(gg.SCANCODE.F):
+  if gg.key(gg.KEY.F):
     zoomExp = zoomExp + 0.05
-  if gg.key(gg.SCANCODE.G):
+  if gg.key(gg.KEY.G):
     zoomExp = zoomExp - 0.05
-  if gg.key(gg.SCANCODE.LEFT):
+  if gg.key(gg.KEY.LEFT):
     viewX = viewX - 15
-  if gg.key(gg.SCANCODE.RIGHT):
+  if gg.key(gg.KEY.RIGHT):
     viewX = viewX + 15
-  if gg.key(gg.SCANCODE.UP):
+  if gg.key(gg.KEY.UP):
     viewY = viewY - 15
-  if gg.key(gg.SCANCODE.DOWN):
+  if gg.key(gg.KEY.DOWN):
     viewY = viewY + 15
 
   final zoom = 1.5 ** zoomExp

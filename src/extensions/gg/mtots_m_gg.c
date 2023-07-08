@@ -107,8 +107,7 @@ struct ObjClickEvent {
 
 struct ObjKeyEvent {
   ObjNative obj;
-  i32 scancode;
-  String *key;
+  u32 key;
   ubool repeat;
 };
 
@@ -130,7 +129,6 @@ typedef struct AudioChannel {
 static String *tickString;
 static String *buttonString;
 static String *keyString;
-static String *scancodeString;
 static String *repeatString;
 static String *dxString;
 static String *dyString;
@@ -468,12 +466,11 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
         break;
       case SDL_KEYDOWN:
         if (!IS_NIL(mainWindow->onKeyDown)) {
-          i32 scancode = event.key.keysym.scancode;
+          u32 scancode = event.key.keysym.scancode;
           if (scancode < SCANCODE_KEY_COUNT) {
             String *key = scancodeKeys[scancode];
             if (key) {
-              keyEvent->scancode = scancode;
-              keyEvent->key = key;
+              keyEvent->key = scancode;
               keyEvent->repeat = !!event.key.repeat;
               push(mainWindow->onKeyDown);
               push(KEY_EVENT_VAL(keyEvent));
@@ -491,8 +488,7 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
           if (scancode < SCANCODE_KEY_COUNT) {
             String *key = scancodeKeys[scancode];
             if (key) {
-              keyEvent->scancode = scancode;
-              keyEvent->key = key;
+              keyEvent->key = scancode;
               keyEvent->repeat = !!event.key.repeat;
               push(mainWindow->onKeyUp);
               push(KEY_EVENT_VAL(keyEvent));
@@ -1440,9 +1436,7 @@ static ubool implKeyEventGetattr(i16 argc, Value *args, Value *out) {
   ObjKeyEvent *keyEvent = AS_KEY_EVENT(args[-1]);
   String *name = AS_STRING(args[0]);
   if (name == keyString) {
-    *out = STRING_VAL(keyEvent->key);
-  } else if (name == scancodeString) {
-    *out = NUMBER_VAL(keyEvent->scancode);
+    *out = NUMBER_VAL(keyEvent->key);
   } else if (name == repeatString) {
     *out = BOOL_VAL(keyEvent->repeat);
   } else {
@@ -1648,7 +1642,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
   moduleRetain(module, STRING_VAL(tickString = internCString("tick")));
   moduleRetain(module, STRING_VAL(buttonString = internCString("button")));
   moduleRetain(module, STRING_VAL(keyString = internCString("key")));
-  moduleRetain(module, STRING_VAL(scancodeString = internCString("scancode")));
   moduleRetain(module, STRING_VAL(repeatString = internCString("repeat")));
   moduleRetain(module, STRING_VAL(dxString = internCString("dx")));
   moduleRetain(module, STRING_VAL(dyString = internCString("dy")));
@@ -1719,7 +1712,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     for (i = 0; scancodeEntries[i].name; i++) {
       mapSetN(&map, scancodeEntries[i].name, NUMBER_VAL(scancodeEntries[i].scancode));
     }
-    mapSetN(&module->fields, "SCANCODE", FROZEN_DICT_VAL(newFrozenDict(&map)));
+    mapSetN(&module->fields, "KEY", FROZEN_DICT_VAL(newFrozenDict(&map)));
     freeMap(&map);
   }
 

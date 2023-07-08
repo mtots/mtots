@@ -79,7 +79,7 @@ final COLORS """
 ]
 
 
-final SCANCODE """
+final KEY """
 Maps the name of each key to the scancode of the key for use with function `key()`
 """ = final{
   "A":           0x04,
@@ -545,14 +545,9 @@ class KeyEvent:
   up (onKeyUp)
   """
 
-  final key String """
-    Name of the key that was pressed.
-    The key disregards keyboard layout and the names are based
-    purely on the scancode.
-  """
+  final key Int """
+    The scancode of the key that was pressed.
 
-  final scancode Int """
-    The raw scancode value that represents the key that was just pressed.
     Scancodes disregard keyboard layout and locale.
 
     For more information see:
