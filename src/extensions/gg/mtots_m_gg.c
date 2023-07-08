@@ -139,9 +139,9 @@ static size_t keyboardStateLen;
 static Vector mousePos;
 static u32 previousMouseButtonState;
 static u32 currentMouseButtonState;
-static ObjClickEvent *clickEvent;
-static ObjKeyEvent *keyEvent;
-static ObjMotionEvent *motionEvent;
+static ObjClickEvent *theClickEvent;
+static ObjKeyEvent *theKeyEvent;
+static ObjMotionEvent *theMotionEvent;
 static AudioChannel audioChannels[CHANNEL_COUNT];
 static SDL_mutex *audioMutex;
 static SDL_AudioDeviceID audioDevice;
@@ -443,11 +443,11 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
         return UTRUE;
       case SDL_MOUSEBUTTONDOWN:
         if (!IS_NIL(mainWindow->onClick)) {
-          clickEvent->x = event.button.x;
-          clickEvent->y = event.button.y;
-          clickEvent->button = event.button.button;
+          theClickEvent->x = event.button.x;
+          theClickEvent->y = event.button.y;
+          theClickEvent->button = event.button.button;
           push(mainWindow->onClick);
-          push(CLICK_EVENT_VAL(clickEvent));
+          push(CLICK_EVENT_VAL(theClickEvent));
           if (!callFunction(1)) {
             return UFALSE;
           }
@@ -456,11 +456,11 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
         break;
       case SDL_MOUSEBUTTONUP:
         if (!IS_NIL(mainWindow->onClickUp)) {
-          clickEvent->x = event.button.x;
-          clickEvent->y = event.button.y;
-          clickEvent->button = event.button.button;
+          theClickEvent->x = event.button.x;
+          theClickEvent->y = event.button.y;
+          theClickEvent->button = event.button.button;
           push(mainWindow->onClickUp);
-          push(CLICK_EVENT_VAL(clickEvent));
+          push(CLICK_EVENT_VAL(theClickEvent));
           if (!callFunction(1)) {
             return UFALSE;
           }
@@ -473,10 +473,10 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
           if (scancode < SCANCODE_KEY_COUNT) {
             String *key = scancodeKeys[scancode];
             if (key) {
-              keyEvent->key = scancode;
-              keyEvent->repeat = !!event.key.repeat;
+              theKeyEvent->key = scancode;
+              theKeyEvent->repeat = !!event.key.repeat;
               push(mainWindow->onKeyDown);
-              push(KEY_EVENT_VAL(keyEvent));
+              push(KEY_EVENT_VAL(theKeyEvent));
               if (!callFunction(1)) {
                 return UFALSE;
               }
@@ -491,10 +491,10 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
           if (scancode < SCANCODE_KEY_COUNT) {
             String *key = scancodeKeys[scancode];
             if (key) {
-              keyEvent->key = scancode;
-              keyEvent->repeat = !!event.key.repeat;
+              theKeyEvent->key = scancode;
+              theKeyEvent->repeat = !!event.key.repeat;
               push(mainWindow->onKeyUp);
-              push(KEY_EVENT_VAL(keyEvent));
+              push(KEY_EVENT_VAL(theKeyEvent));
               if (!callFunction(1)) {
                 return UFALSE;
               }
@@ -505,12 +505,12 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
         break;
       case SDL_MOUSEMOTION:
         if (!IS_NIL(mainWindow->onMotion)) {
-          motionEvent->x = event.motion.x;
-          motionEvent->y = event.motion.y;
-          motionEvent->dx = event.motion.xrel;
-          motionEvent->dy = event.motion.yrel;
+          theMotionEvent->x = event.motion.x;
+          theMotionEvent->y = event.motion.y;
+          theMotionEvent->dx = event.motion.xrel;
+          theMotionEvent->dy = event.motion.yrel;
           push(mainWindow->onMotion);
-          push(MOTION_EVENT_VAL(motionEvent));
+          push(MOTION_EVENT_VAL(theMotionEvent));
           if (!callFunction(1)) {
             return UFALSE;
           }
@@ -1708,11 +1708,11 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
   }
 
   moduleRetain(module, CLICK_EVENT_VAL(
-    clickEvent = NEW_NATIVE(ObjClickEvent, &descriptorClickEvent)));
+    theClickEvent = NEW_NATIVE(ObjClickEvent, &descriptorClickEvent)));
   moduleRetain(module, KEY_EVENT_VAL(
-    keyEvent = NEW_NATIVE(ObjKeyEvent, &descriptorKeyEvent)));
+    theKeyEvent = NEW_NATIVE(ObjKeyEvent, &descriptorKeyEvent)));
   moduleRetain(module, MOTION_EVENT_VAL(
-    motionEvent = NEW_NATIVE(ObjMotionEvent, &descriptorMotionEvent)));
+    theMotionEvent = NEW_NATIVE(ObjMotionEvent, &descriptorMotionEvent)));
 
   moduleAddFunctions(module, functions);
 

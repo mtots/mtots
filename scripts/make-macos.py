@@ -101,12 +101,20 @@ def build() -> None:
             #  * zero-argument functions that do not have 'void'
             #    in the parameter list
             "-Wmissing-prototypes",
+            "-Wstrict-prototypes",
 
             # Forces rewrite of what might look like ambiguities in some cases
             "-Wcomma",
 
+            # Other explicitly enabled warnings.
+            # These are nice to have even if "-Weverything" is currently on,
+            # it may be disabled at some point in time - explicitly listing warnings
+            # allows these warnings to survive even if "-Weverything" is removed.
+            "-Wshadow",
+
             # TODO: Re-enable these warnings when I get a chance
-            # to address all the places where they are used.
+            # to address all the places in which they are violated.
+            "-Wno-sign-compare",
             "-Wno-sign-conversion",
             "-Wno-shorten-64-to-32",
             "-Wno-implicit-float-conversion",
@@ -120,6 +128,8 @@ def build() -> None:
             "-Wno-undef",
             "-Wno-float-equal",
             "-Wno-switch-enum",
+            "-Wno-unused-parameter",
+            "-Wno-missing-field-initializers",
 
             # Covered switch defaults allow me to handle potentially bad cases
             # where an enum variable contains an invalid value
@@ -136,6 +146,9 @@ def build() -> None:
             # have to add accomodations here for freetype headers.
             "-Wno-documentation-unknown-command",
             "-Wno-documentation",
+
+            # Required for FreeType
+            "-Wno-long-long",
 
             # SDL
             "-framework", "AudioToolbox",

@@ -201,14 +201,6 @@ class Compiler:
             *self.flags,
             *flags,
 
-            "-Wno-unused-parameter",
-            "-Wno-missing-field-initializers",
-            "-Wno-sign-compare",
-            "-Wno-strict-prototypes",
-
-            # Required for FreeType
-            "-Wno-long-long",
-
             "-Isrc",
             "-fsanitize=address",
 

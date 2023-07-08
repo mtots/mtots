@@ -247,22 +247,22 @@ static void setPalette(ObjBuffer *newPalette) {
 }
 
 static ObjBuffer *newPalette(void) {
-  ObjBuffer *palette = newBuffer();
-  push(BUFFER_VAL(palette));
-  bufferSetLength(&palette->handle, U8_COUNT);
-  bufferLock(&palette->handle);
-  pop(); /* palette */
-  return palette;
+  ObjBuffer *pal = newBuffer();
+  push(BUFFER_VAL(pal));
+  bufferSetLength(&pal->handle, U8_COUNT);
+  bufferLock(&pal->handle);
+  pop(); /* pal */
+  return pal;
 }
 
 static void initPalette(void) {
   size_t i;
-  ObjBuffer *palette = newPalette();
-  palette->handle.data[0] = U8_MAX;
+  ObjBuffer *pal = newPalette();
+  pal->handle.data[0] = U8_MAX;
   for (i = 1; i < U8_COUNT; i++) {
-    palette->handle.data[i] = i;
+    pal->handle.data[i] = i;
   }
-  setPalette(palette);
+  setPalette(pal);
 }
 
 static ubool resetSurfaces(void) {
