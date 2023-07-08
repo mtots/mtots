@@ -123,7 +123,7 @@ def buildArchive(
     shutil.rmtree(
         os.path.join(outDir, archiveRootName), ignore_errors=True)
     shutil.copytree(
-        os.path.join(outDir),
+        os.path.join(outDir, 'desktop'),
         os.path.join(outDir, archiveRootName))
     if useDitto:
         run([
