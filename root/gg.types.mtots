@@ -576,6 +576,34 @@ def key(scancode Int) Bool:
   """
 
 
+def mousePosition() Vector:
+  """
+  Retrieves the current mouse position relative to the window
+  """
+
+
+def mouseButton(buttonID Int, query Int=0) Bool:
+  """
+  Queries the state of a mouse button.
+
+  Parameters:
+  * mouseButtonID - an integer between 0-2 inclusive indicating the mouse button.
+    Defaults to 0.
+    * 0 (LEFT) - the left mouse button
+    * 1 (RIGHT) - the right mouse button
+    * 2 (MIDDLE) - the middle mouse button
+  * query - an integer between 0-2 inclusive indicating the kind of button
+    event to query for.
+    Defaults to 0.
+    * 0 (PRESSED) - tests for whether the given button was just clicked
+      within the past frame.
+    * 1 (RELEASED) - tests whether the given button was just released within
+      the past frame.
+    * 2 (HELD) - test whether the button is currently being held down by
+      the player.
+  """
+
+
 def loadAudio(audio Audio, channel Int=0) nil:
   """
   Load audio to play.

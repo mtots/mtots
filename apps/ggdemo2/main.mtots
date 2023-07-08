@@ -30,9 +30,14 @@ var angleZ = 0
 var zoomExp = 0
 var viewX = 0
 var viewY = 0
+final invTransform = Matrix.one()
+var position = Vector(0, 0)
 
 @window.onUpdate
 def():
+
+  invTransform.copy(window.transform)
+  invTransform.iinverse()
 
   if gg.key(gg.KEY.F):
     zoomExp = zoomExp + 0.05
@@ -47,6 +52,9 @@ def():
   if gg.key(gg.KEY.DOWN):
     viewY = viewY + 15
 
+  if gg.mouseButton(0):
+    position = invTransform.apply(gg.mousePosition())
+
   final zoom = 1.5 ** zoomExp
   window.setCamera(
     V(viewX + zoom * -window.width/2, viewY + zoom * -window.height/2),
@@ -60,6 +68,7 @@ def():
   ballGeometry.transform.scaleY(100)
   ballGeometry.transform.rotateY(angleY)
   ballGeometry.transform.rotateZ(angleZ)
+  ballGeometry.transform.translate(position)
   ballGeometry.blit()
   angleZ = angleZ + 0.014
   angleY = angleY + 0.06

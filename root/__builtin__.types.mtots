@@ -697,9 +697,9 @@ class Matrix:
   Non-static methods of `Matrix` fall into a few categories:
 
   * Ad-hoc
-    * `get`, `set`, `clone`
+    * `get`, `set`, `copy`, `clone`
     * These methods provide access to individual cells in a matrix and
-      a convenient way to clone a given matrix.
+      a convenient way to copy and clone a given matrix.
 
   * Matrix Results:
     * `smul`, `__add__`, `__sub__`, `__mul__`, `__pow__`, `transpose`
@@ -796,6 +796,11 @@ class Matrix:
   def __eq__(other Matrix) Bool:
     """
     Tests whether `this` and `other` contain the same values
+    """
+
+  def copy(other Matrix) nil:
+    """
+    Copy the contents of `other` to `this`.
     """
 
   def clone() Matrix:

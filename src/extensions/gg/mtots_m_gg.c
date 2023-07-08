@@ -136,6 +136,9 @@ static String *transformString;
 static String *scancodeKeys[SCANCODE_KEY_COUNT];
 static const u8 *keyboardState;
 static size_t keyboardStateLen;
+static Vector mousePos;
+static u32 previousMouseButtonState;
+static u32 currentMouseButtonState;
 static ObjClickEvent *clickEvent;
 static ObjKeyEvent *keyEvent;
 static ObjMotionEvent *motionEvent;
@@ -539,6 +542,13 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
         }
         break;
     }
+  }
+  {
+    int x, y;
+    previousMouseButtonState = currentMouseButtonState;
+    currentMouseButtonState = SDL_GetMouseState(&x, &y);
+    mousePos.x = (float)x;
+    mousePos.y = (float)y;
   }
   setDrawColor(mainWindow, mainWindow->backgroundColor);
   SDL_RenderClear(mainWindow->renderer);
@@ -1480,6 +1490,41 @@ static ubool implKey(i16 argc, Value *args, Value *out) {
 
 static CFunction funcKey = { implKey, "key", 1, 0, argsNumbers };
 
+static ubool implMousePosition(i16 argc, Value *args, Value *out) {
+  *out = VECTOR_VAL(mousePos);
+  return UTRUE;
+}
+
+static CFunction funcMousePosition = { implMousePosition, "mousePosition" };
+
+static ubool implMouseButton(i16 argc, Value *args, Value *out) {
+  u32 buttonID = AS_U32(args[0]);
+  u32 query = argc > 1 ? AS_U32(args[1]) : 0;
+  u32 bit;
+  u32 previous = previousMouseButtonState, current = currentMouseButtonState;
+  ubool result;
+  switch (buttonID) {
+    case 0: bit = SDL_BUTTON(1); break;
+    case 1: bit = SDL_BUTTON(2); break;
+    case 2: bit = SDL_BUTTON(3); break;
+    default:
+      runtimeError("Invalid mouse button ID: %d", (int)buttonID);
+      return UFALSE;
+  }
+  switch (query) {
+    case 0: result = !(previous&bit) &&  (current&bit); break; /* PRESSED */
+    case 1: result =  (previous&bit) && !(current&bit); break; /* RELEASED */
+    case 2: result =                     (current&bit); break; /* HELD */
+    default:
+      runtimeError("Invalid mouse button query: %d", (int)query);
+      return UFALSE;
+  }
+  *out = BOOL_VAL(result);
+  return UTRUE;
+}
+
+static CFunction funcMouseButton = { implMouseButton, "mouseButton", 1, 2, argsNumbers };
+
 static ubool implLoadAudio(i16 argc, Value *args, Value *out) {
   ObjAudio *audio = AS_AUDIO(args[0]);
   size_t channel = argc > 1 ? AS_INDEX(args[1], CHANNEL_COUNT) : 0;
@@ -1611,6 +1656,8 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
   };
   CFunction *functions[] = {
     &funcKey,
+    &funcMousePosition,
+    &funcMouseButton,
     &funcLoadAudio,
     &funcPlayAudio,
     &funcPauseAudio,
