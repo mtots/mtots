@@ -1,12 +1,10 @@
 #ifndef mtots_util_printflike_h
 #define mtots_util_printflike_h
 
-#ifndef __printflike
-#if MTOTS_USE_PRINTFLIKE
-#include <sys/cdefs.h>
+#ifdef __GNUC__
+#define MTOTS_PRINTFLIKE(n,m) __attribute__((format(printf,n,m)))
 #else
-#define __printflike(a,b)
-#endif
-#endif
+#define MTOTS_PRINTFLIKE(n,m)
+#endif /* __GNUC__ */
 
 #endif/*mtots_util_printflike_h*/

@@ -74,6 +74,6 @@ void bputnumber(Buffer *buf, double number);
 void bputchar(Buffer *buf, char ch);
 void bputstrlen(Buffer *buf, const char *chars, size_t byteLength);
 void bputstr(Buffer *buf, const char *string);
-void bprintf(Buffer *buf, const char *format, ...) __printflike(2, 3);
+void bprintf(Buffer *buf, const char *format, ...) MTOTS_PRINTFLIKE(2, 3);
 
 #endif/*mtots_util_buffer_h*/

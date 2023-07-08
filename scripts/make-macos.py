@@ -94,9 +94,14 @@ def build() -> None:
         flags=(
             "-DMTOTS_USE_PRINTFLIKE=1",
 
-            # "-Weverything",
+            # Try to keep this on if possible, but it should be ok to
+            # remove if necessary.
+            # I try to keep individual warnings explicitly enabled
+            # below so that they stay enabled even if the everything
+            # flag is omitted
+            "-Weverything",
 
-            # This is useful for
+            # These are useful for
             #  * catching functions that were meant to be static
             #  * zero-argument functions that do not have 'void'
             #    in the parameter list
@@ -119,6 +124,8 @@ def build() -> None:
             "-Wshadow",
             "-Wcast-align",
             "-Wcast-qual",
+            "-Wuninitialized",
+            "-Wmissing-noreturn", # tenative - requires GNUC hacks or giving up C89
 
             # TODO: Re-enable these warnings when I get a chance
             # to address all the places in which they are violated.
@@ -138,6 +145,17 @@ def build() -> None:
             "-Wno-switch-enum",
             "-Wno-unused-parameter",
             "-Wno-missing-field-initializers",
+
+            # Enabling this might actually mask some logic errors -
+            # '-Wuninitialized' may be able to catch many situations in which
+            # a logic error happens, but the forced assignment may hide it.
+            "-Wno-conditional-uninitialized",
+
+            # Sometimes it's easier to write some code that is unreachable than
+            # to use macros. It should be mostly ok - most compilers should be
+            # able to optimize them out.
+            "-Wno-unreachable-code",
+            "-Wno-unreachable-code-return",
 
             # Covered switch defaults allow me to handle potentially bad cases
             # where an enum variable contains an invalid value

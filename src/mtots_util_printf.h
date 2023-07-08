@@ -9,7 +9,7 @@
  *
  * Also adds a newline at the end.
  */
-void oprintln(const char *format, ...) __printflike(1, 2);
+void oprintln(const char *format, ...) MTOTS_PRINTFLIKE(1, 2);
 
 /**
  * Like fprintf(stderr, ...), but will handle properly on platforms
@@ -17,6 +17,6 @@ void oprintln(const char *format, ...) __printflike(1, 2);
  *
  * Also adds a newline at the end.
  */
-void eprintln(const char *format, ...) __printflike(1, 2);
+void eprintln(const char *format, ...) MTOTS_PRINTFLIKE(1, 2);
 
 #endif/*mtots_util_printf_h*/

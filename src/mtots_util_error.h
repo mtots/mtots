@@ -6,10 +6,10 @@
 
 /* Flag a fatal error. The message is written to stderr and the program exits
  * with non-zero return code */
-NORETURN void panic(const char *format, ...) __printflike(1, 2);
+NORETURN void panic(const char *format, ...) MTOTS_PRINTFLIKE(1, 2);
 
 /* Potentially recoverable error. */
-void runtimeError(const char *format, ...) __printflike(1, 2);
+void runtimeError(const char *format, ...) MTOTS_PRINTFLIKE(1, 2);
 
 /* Returns the current error string.
  * Returns NULL if runtimeError has never been called .*/

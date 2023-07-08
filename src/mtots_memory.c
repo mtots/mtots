@@ -340,12 +340,13 @@ static size_t countObjects(void) {
 
 void collectGarbage(void) {
   size_t before, objectCountBefore;
+  const ubool emitLog = vm.enableGCLogs || vm.enableLogOnGC;
 
   if (vm.localGCPause) {
     return;
   }
 
-  if (vm.enableGCLogs || vm.enableLogOnGC) {
+  if (emitLog) {
     before = vm.memory.bytesAllocated + getInternedStringsAllocationSize();
     objectCountBefore = countObjects();
     eprintln("DEBUG: Starting garbage collector");
@@ -362,7 +363,7 @@ void collectGarbage(void) {
     (vm.memory.bytesAllocated + getInternedStringsAllocationSize()) *
     GC_HEAP_GROW_FACTOR;
 
-  if (vm.enableGCLogs || vm.enableLogOnGC) {
+  if (emitLog) {
     eprintln(
       "DEBUG: Finished collecting garbage\n"
       "       collected %zu bytes (from %zu to %zu) next at %zu\n"

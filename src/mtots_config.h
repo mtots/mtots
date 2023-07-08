@@ -38,6 +38,8 @@
 #define NORETURN [[ noreturn ]]
 #elif __STDC_VERSION__ >= 199901L /* C99 and above  */
 #define NORETURN _Noreturn
+#elif __GNUC__
+#define NORETURN __attribute__((noreturn))
 #else /* Assume C89 only */
 #define NORETURN
 #endif /* __cplusplus */
