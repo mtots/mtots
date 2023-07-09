@@ -17,10 +17,42 @@ I just wanted a language that that was:
 
 # BUILDING
 
-TODO
+## MacOS
 
-See `scripts/make-web.py`, `scripts/make-macos.py`. As mentioned above, for a ANSI C89 verison without any extensions,
-you can just compile all the `h` and `c` files in `src/`.
+`scripts/make-macos.py`
+
+On MacOS you need Xcode installed.
+
+## Windows
+
+`scripts/make-windows.py`
+
+On Windows you need Visual Studio installed. Currently only tested with Visual Studio 2022
+
+TODO: More details + add comment about the Visual Studio project at `projects/windows/mtots`
+
+## Linux
+
+`scripts/make-linux.py`
+
+You need to have SDL2 development libraries pre-installed. A minimum of version `2.0.18` is required
+and version `2.26.5` and above is recommended.
+
+TODO: More details
+
+## Web and WebAssembly
+
+`scripts/make-web.py`
+
+TODO: More details on how to use this to bundle mtots programs for web
+
+## C89 and manual builds
+
+Compiling all C files directly under `src` should produce a binary that runs
+the interpreter without any extensions.
+
+TODO: include some details on how one might go about adding the extensions
+to the build, in particular, SDL
 
 # IDE
 
