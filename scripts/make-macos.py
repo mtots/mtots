@@ -93,7 +93,10 @@ def build() -> None:
         exePath=exePath,
         flags=(
             "-DMTOTS_USE_PRINTFLIKE=1",
-            "-fsanitize=address",
+
+            *(() if release else (
+                "-fsanitize=address",
+            )),
 
             # Try to keep this on if possible, but it should be ok to
             # remove if necessary.
