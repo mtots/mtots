@@ -3,8 +3,6 @@ Test runner requires Python3
 """
 import os, sys, subprocess
 
-kind = 'c89'
-
 plat = (
     'win' if os.name == 'nt' # windows
     else '')
@@ -12,12 +10,9 @@ ansiRed = '\033[31m'
 ansiGreen = '\033[32m'
 ansiReset = '\033[0m'
 
-if len(sys.argv) == 2:
-  kind = sys.argv[1]
-
 repoDir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 testDir = os.path.join(repoDir, 'test')
-mtotsPath = os.path.join(repoDir, 'out', kind, 'mtots')
+mtotsPath = os.path.join(repoDir, 'out', 'desktop', 'mtots')
 
 dirnames = sorted(os.listdir(testDir))
 
