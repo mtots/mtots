@@ -196,6 +196,7 @@ static void freeObject(Obj *object) {
     case OBJ_CLASS: {
       ObjClass *klass = (ObjClass*)object;
       freeMap(&klass->methods);
+      freeMap(&klass->staticMethods);
       FREE(ObjClass, object);
       break;
     }

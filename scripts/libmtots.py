@@ -203,7 +203,6 @@ class Compiler:
             *flags,
 
             "-Isrc",
-            "-fsanitize=address",
 
             "-o", exePath,
 

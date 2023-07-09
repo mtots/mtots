@@ -80,7 +80,12 @@ def build() -> None:
     compiler.buildLibrary(
         "freetype",
         sources=getFreeTypeSources(),
-        flags=["-std=c99", "-DFT2_BUILD_LIBRARY", "-Ilib/freetype/include"],
+        flags=[
+            "-std=c99",
+            "-DFT2_BUILD_LIBRARY",
+            "-Ilib/freetype/include",
+            "-Wno-dangling-pointer",
+        ],
         objectFiles=objectFiles)
 
     compiler.buildLibrary(
@@ -179,19 +184,6 @@ def build() -> None:
 
             # SDL
             "-Ilib/sdl2/include",
-            # "-framework", "AudioToolbox",
-            # "-framework", "AudioToolbox",
-            # "-framework", "Carbon",
-            # "-framework", "Cocoa",
-            # "-framework", "CoreAudio",
-            # "-framework", "CoreFoundation",
-            # "-framework", "CoreVideo",
-            # "-framework", "ForceFeedback",
-            # "-framework", "GameController",
-            # "-framework", "IOKit",
-            # "-framework", "CoreHaptics",
-            # "-framework", "Metal",
-            # f"{mtotsDir}/lib/sdl2/targets/linux/libSDL2.a",
         ),
         objectFiles=objectFiles,
         finalFlags=(
