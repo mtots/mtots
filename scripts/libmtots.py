@@ -192,7 +192,8 @@ class Compiler:
             *,
             exePath: str,
             flags: Iterable[str],
-            objectFiles: List[str]):
+            objectFiles: List[str],
+            finalFlags: Iterable[str]=()):
         self.logger.debug(f"compiling mtots")
         run([
             self.cc,
@@ -271,4 +272,6 @@ class Compiler:
 
             # object files from libraries
             *objectFiles,
+
+            *finalFlags,
         ])

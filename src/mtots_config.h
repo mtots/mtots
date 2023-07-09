@@ -36,7 +36,7 @@
 /* #if __cplusplus >= 201103L || (defined(_MSC_VER) && _MSC_VER >= 1900) */
 #if __cplusplus >= 201103L /* C++11 and above */
 #define NORETURN [[ noreturn ]]
-#elif __STDC_VERSION__ >= 199901L /* C99 and above  */
+#elif __STDC_VERSION__ >= 201112L /* C11 and above  */
 #define NORETURN _Noreturn
 #elif __GNUC__
 #define NORETURN __attribute__((noreturn))
@@ -87,6 +87,12 @@
 #define MTOTS_PRINTFLIKE(n,m) __attribute__((format(printf,n,m)))
 #else
 #define MTOTS_PRINTFLIKE(n,m)
+#endif /* __GNUC__ */
+
+#ifdef __GNUC__
+#define MTOTS_FALLTHROUGH __attribute__((fallthrough))
+#else
+#define MTOTS_FALLTHROUGH
 #endif /* __GNUC__ */
 
 #endif/*mtots_config_h*/

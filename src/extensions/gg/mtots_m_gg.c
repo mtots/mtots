@@ -13,6 +13,9 @@
 #include <emscripten.h>
 #endif
 
+#include <string.h>
+#include <stdlib.h>
+
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
 
@@ -622,8 +625,11 @@ static ubool mainLoop(ObjWindow *mainWindow) {
       SDL_Delay(ms);
     } else {
       eprintln(
-        "WARNING: mainloop frame was delayed on tick %llu (%llu >= %llu, countPerSec=%llu)",
-        tick, elapsedTime, countPerFrame, countPerSecond);
+        "WARNING: mainloop frame was delayed on tick %lu (%lu >= %lu, countPerSec=%lu)",
+        (unsigned long)tick,
+        (unsigned long)elapsedTime,
+        (unsigned long)countPerFrame,
+        (unsigned long)countPerSecond);
     }
   }
   return UTRUE;

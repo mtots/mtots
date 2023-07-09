@@ -366,12 +366,14 @@ void collectGarbage(void) {
   if (emitLog) {
     eprintln(
       "DEBUG: Finished collecting garbage\n"
-      "       collected %zu bytes (from %zu to %zu) next at %zu\n"
+      "       collected %lu bytes (from %lu to %lu) next at %lu\n"
       "       object-count = %lu -> %lu",
-      before - (vm.memory.bytesAllocated + getInternedStringsAllocationSize()),
-      before,
-      vm.memory.bytesAllocated + getInternedStringsAllocationSize(),
-      vm.memory.nextGC,
+      (unsigned long)before - (vm.memory.bytesAllocated +
+        getInternedStringsAllocationSize()),
+      (unsigned long)before,
+      (unsigned long)vm.memory.bytesAllocated +
+        getInternedStringsAllocationSize(),
+      (unsigned long)vm.memory.nextGC,
       (unsigned long)objectCountBefore,
       (unsigned long)countObjects());
   }

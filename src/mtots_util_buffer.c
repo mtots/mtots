@@ -10,6 +10,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 /**
  * For now, we assume that we're always little endian.

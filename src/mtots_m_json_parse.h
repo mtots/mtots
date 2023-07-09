@@ -357,6 +357,7 @@ static ubool parseOneBlob(JSONParseState *s) {
         push(BOOL_VAL(UFALSE));
         return UTRUE;
       }
+      break;
     case 'n':
       if (startsWith(s, "null")) {
         size_t i, len = strlen("null");
@@ -366,6 +367,7 @@ static ubool parseOneBlob(JSONParseState *s) {
         push(NIL_VAL());
         return UTRUE;
       }
+      break;
     case 't':
       if (startsWith(s, "true")) {
         size_t i, len = strlen("true");
@@ -375,6 +377,7 @@ static ubool parseOneBlob(JSONParseState *s) {
         push(BOOL_VAL(UTRUE));
         return UTRUE;
       }
+      break;
   }
   runtimeError(
     "while parsing JSON, unrecognized char '%c' (%d) on line %lu column %lu",

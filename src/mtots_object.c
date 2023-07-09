@@ -627,6 +627,7 @@ void printObject(Value value) {
       printf(
         "<native-object %s>",
         AS_NATIVE(value)->descriptor->klass->name->chars);
+      break;
     case OBJ_UPVALUE:
       printf("<upvalue>");
       break;

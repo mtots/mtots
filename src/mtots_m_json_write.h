@@ -4,6 +4,7 @@
 #include "mtots_vm.h"
 
 #include <string.h>
+#include <stdio.h>
 
 static ubool writeJSON(Value value, size_t *outLen, char *out) {
   if (IS_NIL(value)) {

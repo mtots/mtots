@@ -85,7 +85,7 @@ String *internString(const char *chars, size_t byteLength) {
   if (specialStringsInitialized) {
     if (byteLength == 0) {
       return emptyString;
-    } else if (byteLength == 1 && chars[0] >= 0 && ((unsigned char)chars[0]) < 128) {
+    } else if (byteLength == 1 && ((unsigned char)chars[0]) < 128) {
       return oneCharAsciiStrings[(size_t)chars[0]];
     }
   }
