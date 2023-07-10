@@ -11,6 +11,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <math.h>
 
 /**
  * For now, we assume that we're always little endian.
@@ -257,6 +258,10 @@ String *bufferToString(Buffer *buf) {
 }
 
 void bputnumber(Buffer *buf, double number) {
+  if (number != number) {
+    bprintf(buf, "nan");
+    return;
+  }
   /* Trim the trailing zeros in the number representation */
   bprintf(buf, "%f", number);
   while (buf->length > 0 && buf->data[buf->length - 1] == '0') {

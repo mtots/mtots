@@ -719,15 +719,15 @@ void defineDefaultGlobals(void) {
   defineGlobal("PI", NUMBER_VAL(PI));
   defineGlobal("TAU", NUMBER_VAL(TAU));
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-  {
-    double one = 1.0;
-    double zero = one - one;
-    defineGlobal("NAN", NUMBER_VAL(zero / zero));
-    defineGlobal("INFINITY", NUMBER_VAL(one / zero));
-  }
+#ifdef NAN
+  defineGlobal("NAN", NUMBER_VAL(NAN));
 #else
   defineGlobal("NAN", NUMBER_VAL(0.0/0.0));
+#endif
+
+#ifdef INFINITY
+  defineGlobal("INFINITY", NUMBER_VAL(INFINITY));
+#else
   defineGlobal("INFINITY", NUMBER_VAL(1.0/0.0));
 #endif
 
