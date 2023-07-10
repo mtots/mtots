@@ -666,6 +666,20 @@ static ubool parseDefaultArgument(Parser *parser, Value *out) {
       ADVANCE();
       *out = NUMBER_VAL(strtod(parser->previous.start, NULL));
       return UTRUE;
+    case TOKEN_MINUS:
+      ADVANCE();
+      if (AT(TOKEN_NUMBER)) {
+        ADVANCE();
+        *out = NUMBER_VAL(-strtod(parser->previous.start, NULL));
+        return UTRUE;
+      } else {
+        runtimeError(
+          "[%s:%d] Expected number (for negation of) default argument expression but got %s",
+          MODULE_NAME_CHARS,
+          CURRENT_LINE,
+          tokenTypeToName(parser->current.type));
+        return UFALSE;
+      }
     case TOKEN_STRING: {
       String *str;
       ADVANCE();

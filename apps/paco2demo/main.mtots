@@ -1,0 +1,28 @@
+import paco2 as p
+
+
+final W = 256
+final H = 128
+p.setScalingFactor(6)
+
+p.init()
+
+p.clear(p.BLUE_GREEN)
+
+var color = 0
+var lastFrameDown = false
+
+@p.onUpdate
+def() nil:
+  if p.click(0) or (not lastFrameDown and p.key(0x09)):
+    color = (color + 1) % 32
+    p.clear(color)
+    p.rect(
+      W / 3,
+      H / 3,
+      W / 3 + 30,
+      H / 3 + 30,
+      0,
+      (color + 1) % 32)
+
+  lastFrameDown = p.key(0x09)

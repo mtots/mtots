@@ -1,0 +1,433 @@
+"""
+re-mplementation of paco - this time on top of gg rather than in raw C
+"""
+import gg
+from media import Canvas
+from media import Image
+
+final TRANSPARENT      = 32
+final BLACK            = 0
+final DARK_BLUE        = 1
+final DARK_PURPLE      = 2
+final DARK_GREEN       = 3
+final BROWN            = 4
+final DARK_GREY        = 5
+final LIGHT_GREY       = 6
+final WHITE            = 7
+final RED              = 8
+final ORANGE           = 9
+final YELLOW           = 10
+final GREEN            = 11
+final BLUE             = 12
+final LAVENDER         = 13
+final PINK             = 14
+final LIGHT_PEACH      = 15
+final BROWNISH_BLACK   = 16
+final DARKER_BLUE      = 17
+final DARKER_PURPLE    = 18
+final BLUE_GREEN       = 19
+final DARK_BROWN       = 20
+final DARKER_GREY      = 21
+final MEDIUM_GREY      = 22
+final LIGHT_YELLOW     = 23
+final DARK_RED         = 24
+final DARK_ORANGE      = 25
+final LIME_GREEN       = 26
+final MEDIUM_GREEN     = 27
+final TRUE_BLUE        = 28
+final MAUVE            = 29
+final DARK_PEACH       = 30
+final PEACH            = 31
+
+final COLORS = final[
+  BLACK,
+  DARK_BLUE,
+  DARK_PURPLE,
+  DARK_GREEN,
+  BROWN,
+  DARK_GREY,
+  LIGHT_GREY,
+  WHITE,
+  RED,
+  ORANGE,
+  YELLOW,
+  GREEN,
+  BLUE,
+  LAVENDER,
+  PINK,
+  LIGHT_PEACH,
+  BROWNISH_BLACK,
+  DARKER_BLUE,
+  DARKER_PURPLE,
+  BLUE_GREEN,
+  DARK_BROWN,
+  DARKER_GREY,
+  MEDIUM_GREY,
+  LIGHT_YELLOW,
+  DARK_RED,
+  DARK_ORANGE,
+  LIME_GREEN,
+  MEDIUM_GREEN,
+  TRUE_BLUE,
+  MAUVE,
+  DARK_PEACH,
+  PEACH,
+]
+
+final _COLORTABLE = final[
+  Color(   0,   0,   0, 255), # BLACK
+  Color(  29,  43,  83, 255), # DARK_BLUE
+  Color( 126,  37,  83, 255), # DARK_PURPLE
+  Color(   0, 135,  81, 255), # DARK_GREEN
+  Color( 171,  82,  54, 255), # BROWN
+  Color(  95,  87,  79, 255), # DARK_GREY
+  Color( 194, 195, 199, 255), # LIGHT_GREY
+  Color( 255, 241, 232, 255), # WHITE
+  Color( 255,   0,  77, 255), # RED
+  Color( 255, 163,   0, 255), # ORANGE
+  Color( 255, 236,  39, 255), # YELLOW
+  Color(   0, 228,  54, 255), # GREEN
+  Color(  41, 173, 255, 255), # BLUE
+  Color( 131, 118, 156, 255), # LAVENDER
+  Color( 255, 119, 168, 255), # PINK
+  Color( 255, 204, 170, 255), # LIGHT_PEACH
+  Color(  41,  24,  20, 255), # BROWNISH_BLACK
+  Color(  17,  29,  53, 255), # DARKER_BLUE
+  Color(  66,  33,  54, 255), # DARKER_PURPLE
+  Color(  18,  83,  89, 255), # BLUE_GREEN
+  Color( 116,  47,  41, 255), # DARK_BROWN
+  Color(  73,  51,  59, 255), # DARKER_GREY
+  Color( 162, 136, 121, 255), # MEDIUM_GREY
+  Color( 243, 239, 125, 255), # LIGHT_YELLOW
+  Color( 190,  18,  80, 255), # DARK_RED
+  Color( 255, 108,  36, 255), # DARK_ORANGE
+  Color( 168, 231,  46, 255), # LIME_GREEN
+  Color(   0, 181,  67, 255), # MEDIUM_GREEN
+  Color(   6,  90, 181, 255), # TRUE_BLUE
+  Color( 117,  70, 101, 255), # MAUVE
+  Color( 255, 110,  89, 255), # DARK_PEACH
+  Color( 255, 157, 129, 255), # PEACH
+  Color(   0,   0,   0,   0), # TRANSPARENT
+]
+
+
+## == TOO MANY CONSTANTS IN THUNK ==
+# final scancode """
+# Maps the name of each key to the scancode of the key for use with function `key()`
+# """ = final{
+#   "A":           0x04,
+#   "B":           0x05,
+#   "C":           0x06,
+#   "D":           0x07,
+#   "E":           0x08,
+#   "F":           0x09,
+#   "G":           0x0A,
+#   "H":           0x0B,
+#   "I":           0x0C,
+#   "J":           0x0D,
+#   "K":           0x0E,
+#   "L":           0x0F,
+#   "M":           0x10,
+#   "N":           0x11,
+#   "O":           0x12,
+#   "P":           0x13,
+#   "Q":           0x14,
+#   "R":           0x15,
+#   "S":           0x16,
+#   "T":           0x17,
+#   "U":           0x18,
+#   "V":           0x19,
+#   "W":           0x1A,
+#   "X":           0x1B,
+#   "Y":           0x1C,
+#   "Z":           0x1D,
+#   "1":           0x1E,
+#   "2":           0x1F,
+#   "3":           0x20,
+#   "4":           0x21,
+#   "5":           0x22,
+#   "6":           0x23,
+#   "7":           0x24,
+#   "8":           0x25,
+#   "9":           0x26,
+#   "0":           0x27,
+#   "ENTER":       0x28,
+#   "ESC":         0x29,
+#   "BACKSPACE":   0x2A,
+#   "TAB":         0x2B,
+#   "SPACE":       0x2C,
+#   "MINUS":       0x2D,
+#   "EQUAL":       0x2E,
+#   "LEFTBRACE":   0x2F,
+#   "RIGHTBRACE":  0x30,
+#   "BACKSLASH":   0x31,
+#   "HASHTILDE":   0x32,
+#   "SEMICOLON":   0x33,
+#   "APOSTROPHE":  0x34,
+#   "GRAVE":       0x35,
+#   "COMMA":       0x36,
+#   "DOT":         0x37,
+#   "SLASH":       0x38,
+#   "CAPSLOCK":    0x39,
+#   "F1":          0x3a,
+#   "F2":          0x3b,
+#   "F3":          0x3c,
+#   "F4":          0x3d,
+#   "F5":          0x3e,
+#   "F6":          0x3f,
+#   "F7":          0x40,
+#   "F8":          0x41,
+#   "F9":          0x42,
+#   "F10":         0x43,
+#   "F11":         0x44,
+#   "F12":         0x45,
+#   "SYSRQ":       0x46,
+#   "SCROLLLOCK":  0x47,
+#   "PAUSE":       0x48,
+#   "INSERT":      0x49,
+#   "HOME":        0x4A,
+#   "PAGEUP":      0x4B,
+#   "DELETE":      0x4C,
+#   "END":         0x4D,
+#   "PAGEDOWN":    0x4E,
+#   "RIGHT":       0x4F,
+#   "LEFT":        0x50,
+#   "DOWN":        0x51,
+#   "UP":          0x52,
+#   "NUMLOCK":     0x53,
+#   "KPSLASH":     0x54,
+#   "KPASTERISK":  0x55,
+#   "KPMINUS":     0x56,
+#   "KPPLUS":      0x57,
+#   "KPENTER":     0x58,
+#   "KP1":         0x59,
+#   "KP2":         0x5a,
+#   "KP3":         0x5b,
+#   "KP4":         0x5c,
+#   "KP5":         0x5d,
+#   "KP6":         0x5e,
+#   "KP7":         0x5f,
+#   "KP8":         0x60,
+#   "KP9":         0x61,
+#   "KP0":         0x62,
+#   "KPDOT":       0x63,
+#   "LEFTCTRL":    0xe0,
+#   "LEFTSHIFT":   0xe1,
+#   "LEFTALT":     0xe2,
+#   "LEFTMETA":    0xe3,
+#   "RIGHTCTRL":   0xe4,
+#   "RIGHTSHIFT":  0xe5,
+#   "RIGHTALT":    0xe6,
+#   "RIGHTMETA":   0xe7,
+# }
+
+
+var _window gg.Window? = nil
+var _title String = ""
+var _scalingFactor = 1
+var _width = 128
+var _height = 128
+final _fps = 30
+var _penColor = LIGHT_GREY
+var _canvas Canvas? = nil
+var _canvasTexture gg.Texture? = nil
+var _onUpdate = def():nil
+var _onDraw = def():nil
+
+
+def _getWindow() gg.Window:
+  if _window is nil:
+    raise "Tried to access window before paco.init()"
+  return _window
+
+
+def _getCanvas() Canvas:
+  if _canvas is nil:
+    raise "Tried to access canvas before paco.init()"
+  return _canvas
+
+
+def _getCanvasTexture() gg.Texture:
+  if _canvasTexture is nil:
+    raise "Tried to access canvas texture before paco.init()"
+  return _canvasTexture
+
+
+def setWindowTitle(title String) nil:
+  """
+  Sets the title of the window
+  """
+  _title = title
+  if _window:
+    _getWindow().setTitle(title)
+
+
+def setScalingFactor(scalingFactor Float) nil:
+  """
+  Sets the scaling factor (i.e. how much the rendering width and height will be
+  scaled on the window).
+  """
+  _scalingFactor = scalingFactor
+
+
+def setRenderDimensions(width Int, height Int) nil:
+  """
+  Sets the rendering dimensions in pixels.
+  """
+  _width = width
+  _height = height
+
+
+def init() nil:
+  """
+  Initializes paco and creates the window
+  """
+  final window = gg.Window(
+    _title, _width * _scalingFactor, _height * _scalingFactor, _fps, 0)
+  _window = window
+
+  final image = Image(_width, _height)
+  final canvas = Canvas(image)
+  _canvas = canvas
+  final canvasTexture = window.newTexture(image, true)
+  _canvasTexture = canvasTexture
+
+  @window.onUpdate
+  def() nil:
+    _onUpdate()
+    _onDraw()
+    final texture = _getCanvasTexture()
+    texture.update()
+    texture.blit(nil, nil)
+
+
+def onUpdate(callback Function[Any]) nil:
+  _onUpdate = callback
+
+
+def onDraw(callback Function[Any]) nil:
+  _onDraw = callback
+
+
+def mainLoop(update Function[Any], draw Function[Any]?=nil):
+  """
+  Sets up the update and draw callbacks
+  """
+  _onUpdate = update
+  if draw:
+    _onDraw = draw
+
+
+def clear(color Int) nil:
+  """
+  Clears the screen with the given color.
+  """
+  _getCanvas().fill(_COLORTABLE[color])
+
+
+class SpriteSheet:
+  """
+  A bitmap image that holds a grid of sheets.
+
+  When saved to a file, a sprite sheet will be a `.bmp` file with 8-bit pixel depth.
+  When a sheet is saved to a file, paco will match the palette for the file with its
+  own system colors.
+  However, when reading a sprite sheet from a file, paco will ignore the color palette.
+
+  Further, the sprite dimensions will be stored in the palette as color 255.
+  """
+
+  var width Int
+  var height Int
+  var spriteWidth Int
+  var spriteHeight Int
+
+  def __init__(width Int, height Int, spriteWidth Int, spriteHeight Int):
+    this.width = width
+    this.height = height
+    this.spriteWidth = spriteWidth
+    this.spriteHeight = spriteHeight
+
+
+var _rect_var = Rect(0, 0 ,0, 0)
+
+
+def rect(x0 Int, y0 Int, x1 Int, y1 Int, style Int=0, color Int=-1) nil:
+  """
+  Draws a rectangle to the framebuffer.
+
+  Parameters:
+  * x0 - x coordinate of the upper left corner of the rectangle,
+  * y0 - y coordinate of the upper left corner of the rectangle,
+  * x1 - x coordinate of the lower right corner of the rectangle,
+  * y1 - y coordinate of the lower right corner of the rectangle,
+  * style - specifies the way to draw the rectangle (defaults to 0, FILL).
+    * 0 (FILL) - Fills the rectangle.
+    * 1 (OUTLINE) - Draws just the outline of the rectangle.
+  * color - The color to use when drawing the rectangle.
+    If omitted or -1, color will default to the pen color.
+  """
+  if color == -1:
+    color = _penColor
+
+  final canvas = _getCanvas()
+  _rect_var.minX = x0
+  _rect_var.minY = y0
+  _rect_var.width = x1 - x0
+  _rect_var.height = y1 - y0
+  final rgbc = _COLORTABLE[color]
+
+  if style == 0:
+    canvas.fillRect(_rect_var, rgbc)
+  else:
+    canvas.strokeRect(_rect_var, rgbc)
+
+
+def click(mouseButtonID Int=0, query Int=0) Bool:
+  """
+  Queries the state of a mouse button.
+
+  Parameters:
+  * mouseButtonID - an integer between 0-2 inclusive indicating the mouse button.
+    Defaults to 0.
+    * 0 (LEFT) - the left mouse button
+    * 1 (RIGHT) - the right mouse button
+    * 2 (MIDDLE) - the middle mouse button
+  * query - an integer between 0-2 inclusive indicating the kind of button
+    event to query for.
+    Defaults to 0.
+    * 0 (PRESSED) - tests for whether the given button was just clicked
+      within the past frame.
+    * 1 (RELEASED) - tests whether the given button was just released within
+      the past frame.
+    * 2 (HELD) - test whether the button is currently being held down by
+      the player.
+  """
+  return gg.mouseButton(mouseButtonID, query)
+
+
+
+def key(scancode Int=-1, query Int=2) Int:
+  """
+  Checks the state of a key on the keyboard.
+
+  Parameters:
+  * scancode - If scancode is not -1, it will check if the key referenced by the
+    scancode is currently being HELD (if query = 2), was just PRESSED (if query = 0),
+    or was just RELEASED (if query = 1).
+
+    If scancode is -1, it will return the next key that was just pressed (if
+    query = 0 or query = 2), or just released (if query = 1). If no more keys
+    remain, this function will return -1.
+
+  * query - Determines the kind of query to make about a key on the keyboard.
+    Defaults to 2.
+
+    The three valid values for query are:
+    * 0 (PRESSED) - to see if the key was just recently pressed,
+    * 1 (RELEASED) - to see if the key was just recently released, or
+    * 2 (HELD) - to see if a key is currently being held down.
+  """
+  if query != 2:
+    raise "paco2.key() does not yet support any queries besides 'HELD' (2)"
+  return gg.key(scancode)
