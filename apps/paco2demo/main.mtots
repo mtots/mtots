@@ -14,7 +14,7 @@ var lastFrameDown = false
 
 @p.onUpdate
 def() nil:
-  if p.click(0) or (not lastFrameDown and p.key(0x09)):
+  if p.click(0) or (not lastFrameDown and p.key(p.scancode.F)):
     color = (color + 1) % 32
     p.clear(color)
     p.rect(
@@ -25,4 +25,4 @@ def() nil:
       0,
       (color + 1) % 32)
 
-  lastFrameDown = p.key(0x09)
+  lastFrameDown = p.key(p.scancode.F)
