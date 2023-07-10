@@ -1,0 +1,11 @@
+
+
+
+# There was a bug before where '?' appearing after a
+# function annotation would not be properly processed by the parser
+def foo(f Function[Any]?=nil):
+  print(f)
+
+
+foo(def():nil)
+foo(nil)

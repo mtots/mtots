@@ -422,6 +422,7 @@ static ubool parseTypeExpression(Parser *parser) {
         }
       }
       EXPECT(TOKEN_RIGHT_BRACKET);
+      continue;
     }
     break;
   }
