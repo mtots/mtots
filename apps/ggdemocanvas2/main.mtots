@@ -30,7 +30,3 @@ def() nil:
 
   if pos.y - RADIUS < 0 or pos.y + RADIUS >= HEIGHT:
     vel = Vector(vel.x, -vel.y)
-
-sys.enableLogOnGC(true)
-window.mainLoop()
-sys.enableLogOnGC(false)
