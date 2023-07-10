@@ -495,6 +495,8 @@ class Geometry:
   def blit() nil:
     """
     Draw this `Geometry` to the associated window
+
+    This function is more or less a wrapper of `SDL_RenderGeometry`
     """
 
   def setTexture(texture Texture?) nil:
