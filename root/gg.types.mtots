@@ -429,11 +429,17 @@ class Texture:
   final width Int
   final height Int
 
-  def blit(src Rect?, dst Rect?) nil:
+  def blit(
+      src Rect?,
+      dst Rect?,
+      angle Float=0,
+      center Vector?=nil,
+      flipX=false,
+      flipY=false) nil:
     """
     Draws a portion of this texture to a portion of the render target.
 
-    This function is a thin wrapper around `SDL_RenderCopy()`
+    This function is basically a wrapper around `SDL_RenderCopyEx()`
 
     Parameters:
     * src - the rectangular region of this texture to draw or `nil` for the
@@ -441,6 +447,14 @@ class Texture:
     * dst - the rectangular region of the render target to draw to, or
       `nil` for the entire rendering target; the texture will be
       stretched to fill the given rectangle
+    * angle - angle (in radians) of how much to rotate `dst` before blitting.
+      NOTE: unlike `SDL_RenderCopyEx`, `angle` here is in radians.
+    * center - the center to rotate `angle` radians around. If nil or omitted,
+      the center of mass of the rectangle is assumed.
+    * flipX - if true, the image will be flipped horizontally when blit on
+      the render target
+    * flipY - if true, the image will be flipped vertically when blit on
+      the render target
     """
 
   def isStreaming() Bool:

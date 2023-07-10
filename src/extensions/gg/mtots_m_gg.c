@@ -1247,8 +1247,14 @@ static ubool implTextureBlit(i16 argc, Value *args, Value *out) {
   ObjTexture *texture = AS_TEXTURE(args[-1]);
   ObjRect *srcRect = !IS_NIL(args[0]) ? AS_RECT(args[0]) : NULL;
   ObjRect *dstRect = !IS_NIL(args[1]) ? AS_RECT(args[1]) : NULL;
+  double rotateAngleRadians = argc > 2 && !IS_NIL(args[2]) ? AS_NUMBER(args[2]) : 0;
+  double rotateAngleDegrees = rotateAngleRadians * 180 / PI;
+  ubool centerProvided = argc > 3 && !IS_NIL(args[3]);
+  ubool flipX = argc > 4 && !IS_NIL(args[4]) ? AS_BOOL(args[4]) : UFALSE;
+  ubool flipY = argc > 5 && !IS_NIL(args[5]) ? AS_BOOL(args[5]) : UFALSE;
   SDL_Rect srcSDLRect;
   SDL_Rect dstSDLRect;
+  SDL_Point centerPoint;
   if (srcRect) {
     srcSDLRect.x = srcRect->handle.minX;
     srcSDLRect.y = srcRect->handle.minY;
@@ -1261,12 +1267,21 @@ static ubool implTextureBlit(i16 argc, Value *args, Value *out) {
     dstSDLRect.w = dstRect->handle.width;
     dstSDLRect.h = dstRect->handle.height;
   }
-  if (SDL_RenderCopy(
+  if (centerProvided) {
+    Vector center = AS_VECTOR(args[3]);
+    centerPoint.x = center.x;
+    centerPoint.y = center.y;
+  }
+  if (SDL_RenderCopyEx(
       texture->window->renderer,
       texture->handle,
       srcRect ? &srcSDLRect : NULL,
-      dstRect ? &dstSDLRect : NULL) != 0) {
-    return sdlError("SDL_RenderCopy");
+      dstRect ? &dstSDLRect : NULL,
+      rotateAngleDegrees,
+      centerProvided ? &centerPoint : NULL,
+      (flipX ? SDL_FLIP_HORIZONTAL : 0) |
+      (flipY ? SDL_FLIP_VERTICAL : 0)) != 0) {
+    return sdlError("SDL_RenderCopyEx");
   }
   return UTRUE;
 }
@@ -1274,6 +1289,10 @@ static ubool implTextureBlit(i16 argc, Value *args, Value *out) {
 static TypePattern argsTextureBlit[] = {
   { TYPE_PATTERN_NATIVE_OR_NIL, &descriptorRect },
   { TYPE_PATTERN_NATIVE_OR_NIL, &descriptorRect },
+  { TYPE_PATTERN_NUMBER },
+  { TYPE_PATTERN_VECTOR_OR_NIL },
+  { TYPE_PATTERN_BOOL },
+  { TYPE_PATTERN_BOOL },
 };
 
 static CFunction funcTextureBlit = {
