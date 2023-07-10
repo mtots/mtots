@@ -80,7 +80,6 @@ typedef struct ObjWindow {
   ObjTexture *canvasTexture;
   ObjMatrix *transform;
   u32 width, height;
-  SDL_Texture *renderTarget;
 } ObjWindow;
 
 struct ObjTexture {
@@ -191,7 +190,6 @@ static void blackenWindow(ObjNative *n) {
 
 static void freeWindow(ObjNative *n) {
   ObjWindow *window = (ObjWindow*)n;
-  SDL_DestroyTexture(window->renderTarget);
   SDL_DestroyRenderer(window->renderer);
   SDL_DestroyWindow(window->handle);
 }
@@ -384,7 +382,6 @@ static ubool newWindow(
     u32 flags,
     ObjWindow **out) {
   SDL_Window *handle;
-  SDL_Texture *renderTarget;
   SDL_Renderer *renderer;
   ObjWindow *window;
   int foundWidth, foundHeight;
@@ -419,23 +416,6 @@ static ubool newWindow(
     return UFALSE;
   }
 
-  renderTarget = SDL_CreateTexture(
-    renderer, PIXELFORMAT, SDL_TEXTUREACCESS_TARGET, foundWidth, foundHeight);
-  if (!renderTarget) {
-    sdlError("SDL_CreateTexture (SDL_TEXTUREACCESS_TARGET)");
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(handle);
-    return UFALSE;
-  }
-
-  if (SDL_SetRenderTarget(renderer, renderTarget) != 0) {
-    sdlError("SDL_SetRenderTarget (renderTarget)");
-    SDL_DestroyTexture(renderTarget);
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(handle);
-    return UFALSE;
-  }
-
   window = NEW_NATIVE(ObjWindow, &descriptorWindow);
   LOCAL_GC_PAUSE(gcPause);
   window->handle = handle;
@@ -454,7 +434,6 @@ static ubool newWindow(
   window->transform = newIdentityMatrix();
   window->width = (u32)foundWidth;
   window->height = (u32)foundHeight;
-  window->renderTarget = renderTarget;
   LOCAL_GC_UNPAUSE(gcPause);
 
   *out = window;
@@ -599,27 +578,6 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
         NULL) != 0) {
       return sdlError("SDL_RenderCopy");
     }
-  }
-  if (SDL_SetRenderTarget(mainWindow->renderer, NULL) != 0) {
-    return sdlError("SDL_SetRenderTarget (NULL)");
-  }
-  /*
-  {
-    SDL_Rect dstRect;
-    dstRect.x = mainWindow->width / 4;
-    dstRect.y = mainWindow->height / 4;
-    dstRect.w = mainWindow->width / 2;
-    dstRect.h = mainWindow->height / 2;
-    if (SDL_RenderCopy(mainWindow->renderer, mainWindow->renderTarget, NULL, &dstRect) != 0) {
-      return sdlError("SDL_RenderCopy (renderTarget -> *)");
-    }
-  }
-  */
-  if (SDL_RenderCopy(mainWindow->renderer, mainWindow->renderTarget, NULL, NULL) != 0) {
-    return sdlError("SDL_RenderCopy (renderTarget -> *)");
-  }
-  if (SDL_SetRenderTarget(mainWindow->renderer, mainWindow->renderTarget) != 0) {
-    return sdlError("SDL_SetRenderTarget (renderTarget)");
   }
   SDL_RenderPresent(mainWindow->renderer);
   mainWindow->tick++;
