@@ -53,6 +53,7 @@ def():
     viewY = viewY + 15
 
   if gg.mouseButton(0):
+    print("position = %s" % [gg.mousePosition()])
     position = invTransform.apply(gg.mousePosition())
 
   final zoom = 1.5 ** zoomExp
