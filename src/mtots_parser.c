@@ -21,6 +21,9 @@
 #define EMIT1(a)                 WRAP(emit1(parser,(a)))
 #define EMIT2(a,b)               WRAP(emit2(parser,(a),(b)))
 #define EMIT3(a,b,c)             WRAP(emit3(parser,(a),(b),(c)))
+#define EMIT_CONSTID(v)          WRAP(emitConstID(parser,(v)))
+#define EMIT1C(a,b)              WRAP(emit1C(parser,(a),(b)))
+#define EMIT1C1(a,b,c)           WRAP(emit1C1(parser,(a),(b),(c)))
 #define EMIT_CONST(v)            WRAP(emitConst(parser,(v)))
 #define TODO(n)                  do { runtimeError("TODO " # n); return UFALSE; } while (0)
 #define ENV                      (parser->env)
@@ -38,6 +41,12 @@
   ADD_CONST_SLICE(SLICE_PREVIOUS(),(r))
 
 #define EXPECT_STATEMENT_DELIMITER() CHECK(expectStatementDelimiter)
+
+#define CONST_ID_MAX U16_MAX
+
+typedef struct ConstID {
+  u16 value;
+} ConstID;
 
 typedef enum Precedence {
   PREC_NONE,
@@ -72,7 +81,7 @@ typedef struct Local {
 typedef struct VariableDeclaration {
   ubool isLocal;
   union {
-    u8 global;     /* the constant ID containing the name of the variable */
+    ConstID global;     /* the constant ID containing the name of the variable */
     Local *local;
   } as;
 } VariableDeclaration;
@@ -132,7 +141,7 @@ static ubool parseStatement(Parser *parser);
 static ubool parseExpression(Parser *parser);
 static ubool parsePrec(Parser *parser, Precedence prec);
 static void initParseRulesPrivate(void);
-static ubool addConstValue(Parser *parser, Value value, u8 *ref);
+static ubool addConstValue(Parser *parser, Value value, ConstID *ref);
 static ubool stringTokenToObjString(Parser *parser, String **out);
 static ubool parseBlock(Parser *parser, ubool newScope);
 static ubool loadVariableByName(Parser *parser, StringSlice name);
@@ -257,6 +266,31 @@ static ubool emit3(Parser *parser, u8 byte1, u8 byte2, u8 byte3) {
   return UTRUE;
 }
 
+static ubool emitConstID(Parser *parser, ConstID id) {
+  return emit2(parser, (id.value >> 8) & 0xFF, id.value & 0xFF);
+}
+
+/*
+ * Emit:
+ *   1 byte, followed by
+ *   1 ConstID
+ */
+static ubool emit1C(Parser *parser, u8 opcode, ConstID id) {
+  EMIT1(opcode);
+  return emitConstID(parser, id);
+}
+
+/*
+ * Emit:
+ *   1 byte, followed by
+ *   1 ConstID, followed by
+ *   1 byte
+ */
+static ubool emit1C1(Parser *parser, u8 opcode, ConstID id, u8 arg) {
+  EMIT1C(opcode, id);
+  return emit1(parser, arg);
+}
+
 static ubool emitLoop(Parser *parser, i32 loopStart) {
   i32 offset;
 
@@ -300,27 +334,29 @@ static ubool patchJump(Parser *parser, i32 offset) {
 }
 
 static ubool emitConst(Parser *parser, Value value) {
-  u8 constID;
+  ConstID constID;
   ADD_CONST_VALUE(value, &constID);
-  EMIT2(OP_CONSTANT, constID);
+  EMIT1C(OP_CONSTANT, constID);
   return UTRUE;
 }
 
 /* Add a new constant to the constant pool. The reference to the given value
  * will be stored in `ref`. */
-static ubool addConstValue(Parser *parser, Value value, u8 *ref) {
+static ubool addConstValue(Parser *parser, Value value, ConstID *ref) {
   size_t id = addConstant(&THUNK->chunk, value);
-  if (id >= U8_MAX) {
-    runtimeError("[%s:%d] Too many constants in thunk",
+  if (id >= CONST_ID_MAX) {
+    runtimeError("[%s:%d] Too many constants in thunk (count=%d, max=%d)",
       MODULE_NAME_CHARS,
-      PREVIOUS_LINE);
+      PREVIOUS_LINE,
+      (int)(id + 1),
+      (int)CONST_ID_MAX);
     return UFALSE;
   }
-  *ref = (u8)id;
+  ref->value = (u16)id;
   return UTRUE;
 }
 
-static ubool addConstSlice(Parser *parser, StringSlice slice, u8 *ref) {
+static ubool addConstSlice(Parser *parser, StringSlice slice, ConstID *ref) {
   return addConstValue(parser, STRING_VAL(internString(slice.chars, slice.length)), ref);
 }
 
@@ -383,7 +419,7 @@ static ubool defineVariable(Parser *parser, VariableDeclaration *decl) {
   if (decl->isLocal) {
     MARK_LOCAL_READY(decl->as.local);
   } else {
-    EMIT2(OP_DEFINE_GLOBAL, decl->as.global);
+    EMIT1C(OP_DEFINE_GLOBAL, decl->as.global);
   }
   return UTRUE;
 }
@@ -451,7 +487,7 @@ static ubool parseTypeParameters(Parser *parser) {
 
 static ubool parseImportStatement(Parser *parser) {
   /* Imports will always assume global scope */
-  u8 moduleName, memberName, alias;
+  ConstID moduleName, memberName, alias;
   ubool fromStmt;
   const char *moduleNameStart, *moduleNameEnd, *shortNameStart;
   size_t shortNameLen;
@@ -491,11 +527,11 @@ static ubool parseImportStatement(Parser *parser) {
     ADD_CONST_SLICE(newSlice(shortNameStart, shortNameLen), &alias);
   }
 
-  EMIT2(OP_IMPORT, moduleName);
+  EMIT1C(OP_IMPORT, moduleName);
   if (fromStmt) {
-    EMIT2(OP_GET_FIELD, memberName);
+    EMIT1C(OP_GET_FIELD, memberName);
   }
-  EMIT2(OP_DEFINE_GLOBAL, alias);
+  EMIT1C(OP_DEFINE_GLOBAL, alias);
 
   EXPECT_STATEMENT_DELIMITER();
 
@@ -522,7 +558,7 @@ static ubool parseFieldDeclaration(Parser *parser) {
 static ubool parseMethodDeclaration(Parser *parser) {
   ThunkContext thunkContext;
   StringSlice name;
-  u8 nameID;
+  ConstID nameID;
   initThunkContext(&thunkContext);
   thunkContext.isMethod = UTRUE;
   EXPECT(TOKEN_DEF);
@@ -533,14 +569,14 @@ static ubool parseMethodDeclaration(Parser *parser) {
   }
   ADD_CONST_SLICE(name, &nameID);
   CHECK2(parseFunctionCore, name, &thunkContext);
-  EMIT2(OP_METHOD, nameID);
+  EMIT1C(OP_METHOD, nameID);
   return UTRUE;
 }
 
 static ubool parseStaticMethodDeclaration(Parser *parser) {
   ThunkContext thunkContext;
   StringSlice name;
-  u8 nameID;
+  ConstID nameID;
   initThunkContext(&thunkContext);
   EXPECT(TOKEN_STATIC);
   EXPECT(TOKEN_DEF);
@@ -548,12 +584,12 @@ static ubool parseStaticMethodDeclaration(Parser *parser) {
   name = SLICE_PREVIOUS();
   ADD_CONST_SLICE(name, &nameID);
   CHECK2(parseFunctionCore, name, &thunkContext);
-  EMIT2(OP_STATIC_METHOD, nameID);
+  EMIT1C(OP_STATIC_METHOD, nameID);
   return UTRUE;
 }
 
 static ubool parseClassDeclaration(Parser *parser) {
-  u8 classNameID;
+  ConstID classNameID;
   VariableDeclaration classVariable;
   StringSlice className;
   ClassInfo classInfo;
@@ -566,7 +602,7 @@ static ubool parseClassDeclaration(Parser *parser) {
   EXPECT(TOKEN_IDENTIFIER);
   ADD_CONST_NAME_FROM_PREVIOUS_TOKEN(&classNameID);
   className = SLICE_PREVIOUS();
-  EMIT2(OP_CLASS, classNameID);
+  EMIT1C(OP_CLASS, classNameID);
   CHECK3(declareVariable, className, UTRUE, &classVariable);
   CHECK1(defineVariable, &classVariable);
 
@@ -744,7 +780,7 @@ static ubool parseFunctionCore(Parser *parser, StringSlice name, ThunkContext *t
   Environment env;
   ObjThunk *thunk;
   i16 i;
-  u8 thunkID;
+  ConstID thunkID;
 
   /* get the type parameters out of the way, if any */
   CHECK(parseTypeParameters);
@@ -793,7 +829,7 @@ static ubool parseFunctionCore(Parser *parser, StringSlice name, ThunkContext *t
   parser->env = parser->env->enclosing;
   ADD_CONST_VALUE(THUNK_VAL(thunk), &thunkID);
 
-  EMIT2(OP_CLOSURE, thunkID);
+  EMIT1C(OP_CLOSURE, thunkID);
   for (i = 0; i < thunk->upvalueCount; i++) {
     EMIT1(env.upvalues[i].isLocal ? 1 : 0);
     EMIT1(env.upvalues[i].index);
@@ -805,7 +841,7 @@ static ubool parseFunctionCore(Parser *parser, StringSlice name, ThunkContext *t
 static ubool parseDecoratorApplication(Parser *parser) {
   ThunkContext thunkContext;
   ubool methodCall = UFALSE;
-  u8 nameID;
+  ConstID nameID;
   EXPECT(TOKEN_AT);
   CHECK1(parsePrec, PREC_PRIMARY);
   if (AT(TOKEN_DOT)) {
@@ -819,7 +855,7 @@ static ubool parseDecoratorApplication(Parser *parser) {
   initThunkContext(&thunkContext);
   CHECK2(parseFunctionCore, newSlice("<def>", 5), &thunkContext);
   if (methodCall) {
-    EMIT3(OP_INVOKE, nameID, 1);
+    EMIT1C1(OP_INVOKE, nameID, 1);
   } else {
     /* Otherwise, do a function call */
     EMIT2(OP_CALL, 1);
@@ -1114,9 +1150,9 @@ static ubool loadVariableByName(Parser *parser, StringSlice name) {
     if (upvalueIndex != -1) {
       EMIT2(OP_GET_UPVALUE, (u8)upvalueIndex);
     } else {
-      u8 nameID;
+      ConstID nameID;
       ADD_CONST_SLICE(name, &nameID);
-      EMIT2(OP_GET_GLOBAL, nameID);
+      EMIT1C(OP_GET_GLOBAL, nameID);
     }
   }
   return UTRUE;
@@ -1134,9 +1170,9 @@ static ubool storeVariableByName(Parser *parser, StringSlice name) {
     if (upvalueIndex != -1) {
       EMIT2(OP_SET_UPVALUE, (u8)upvalueIndex);
     } else {
-      u8 nameID;
+      ConstID nameID;
       ADD_CONST_SLICE(name, &nameID);
-      EMIT2(OP_SET_GLOBAL, nameID);
+      EMIT1C(OP_SET_GLOBAL, nameID);
     }
   }
   return UTRUE;
@@ -1170,7 +1206,8 @@ static ubool parseThis(Parser *parser) {
 }
 
 static ubool parseSuper(Parser *parser) {
-  u8 methodNameID, argCount;
+  ConstID methodNameID;
+  u8 argCount;
   EXPECT(TOKEN_SUPER);
   if (!parser->classInfo || !parser->classInfo->hasSuperClass) {
     runtimeError("'super' cannot be used outside a class with a super class");
@@ -1182,7 +1219,7 @@ static ubool parseSuper(Parser *parser) {
   CHECK1(loadVariableByName, newSlice("this", 4));
   CHECK1(parseArgumentList, &argCount);
   CHECK1(loadVariableByName, newSlice("super", 5));
-  EMIT3(OP_SUPER_INVOKE, methodNameID, argCount);
+  EMIT1C1(OP_SUPER_INVOKE, methodNameID, argCount);
   return UTRUE;
 }
 
@@ -1398,7 +1435,7 @@ static ubool parseSubscript(Parser *parser) {
   }
 
   if (AT(TOKEN_COLON)) {
-    u8 nameID;
+    ConstID nameID;
     ADVANCE();
     ADD_CONST_STRING(vm.sliceString, &nameID);
     if (AT(TOKEN_RIGHT_BRACKET)) {
@@ -1407,19 +1444,19 @@ static ubool parseSubscript(Parser *parser) {
       CHECK(parseExpression);
     }
     EXPECT(TOKEN_RIGHT_BRACKET);
-    EMIT3(OP_INVOKE, nameID, 2);
+    EMIT1C1(OP_INVOKE, nameID, 2);
   } else {
     EXPECT(TOKEN_RIGHT_BRACKET);
     if (AT(TOKEN_EQUAL)) {
-      u8 nameID;
+      ConstID nameID;
       ADVANCE();
       ADD_CONST_STRING(vm.setitemString, &nameID);
       CHECK(parseExpression);
-      EMIT3(OP_INVOKE, nameID, 2);
+      EMIT1C1(OP_INVOKE, nameID, 2);
     } else {
-      u8 nameID;
+      ConstID nameID;
       ADD_CONST_STRING(vm.getitemString, &nameID);
-      EMIT3(OP_INVOKE, nameID, 1);
+      EMIT1C1(OP_INVOKE, nameID, 1);
     }
   }
 
@@ -1434,7 +1471,7 @@ static ubool parseAs(Parser *parser) {
 
 
 static ubool parseDot(Parser *parser) {
-  u8 nameID;
+  ConstID nameID;
 
   EXPECT(TOKEN_DOT);
   EXPECT(TOKEN_IDENTIFIER);
@@ -1443,13 +1480,13 @@ static ubool parseDot(Parser *parser) {
   if (AT(TOKEN_EQUAL)) {
     ADVANCE();
     CHECK(parseExpression);
-    EMIT2(OP_SET_FIELD, nameID);
+    EMIT1C(OP_SET_FIELD, nameID);
   } else if (AT(TOKEN_LEFT_PAREN)) {
     u8 argCount;
     CHECK1(parseArgumentList, &argCount);
-    EMIT3(OP_INVOKE, nameID, argCount);
+    EMIT1C1(OP_INVOKE, nameID, argCount);
   } else {
-    EMIT2(OP_GET_FIELD, nameID);
+    EMIT1C(OP_GET_FIELD, nameID);
   }
 
   return UTRUE;

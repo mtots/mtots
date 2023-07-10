@@ -12,13 +12,17 @@ void disassembleChunk(Chunk *chunk, const char *name) {
   }
 }
 
+static u16 readU16(u8 *code) {
+  return (((u16)code[0]) << 8) | (u16)code[1];
+}
+
 static int constantInstruction(
     const char *name, Chunk *chunk, int offset) {
-  u8 constant = chunk->code[offset + 1];
+  u16 constant = readU16(chunk->code + (offset + 1));
   printf("%-16s %4d '", name, constant);
   printValue(chunk->constants.values[constant]);
   printf("'\n");
-  return offset + 2;
+  return offset + 3;
 }
 
 static int invokeInstruction(const char *name, Chunk *chunk, int offset) {

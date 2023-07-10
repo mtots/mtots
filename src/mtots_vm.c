@@ -457,7 +457,7 @@ static ubool run(void) {
 #define READ_SHORT() \
   (frame->ip += 2, (u16)((frame->ip[-2] << 8) | frame->ip[-1]))
 #define READ_CONSTANT() \
-  (frame->closure->thunk->chunk.constants.values[READ_BYTE()])
+  (frame->closure->thunk->chunk.constants.values[READ_SHORT()])
 #define READ_STRING() AS_STRING(READ_CONSTANT())
 #define RETURN_RUNTIME_ERROR() \
   do { \
