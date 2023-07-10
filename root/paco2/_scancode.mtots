@@ -1,6 +1,3 @@
-"""
-I had to pull this out from `paco2/__init__.mtots` because of the 256 constants limit
-"""
 
 final scancode """
 Maps the name of each key to the scancode of the key for use with function `key()`
