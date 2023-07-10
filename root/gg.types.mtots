@@ -429,9 +429,18 @@ class Texture:
   final width Int
   final height Int
 
-  def blit(pos Vector) nil:
+  def blit(src Rect?, dst Rect?) nil:
     """
-    Draws this texture at the given position
+    Draws a portion of this texture to a portion of the render target.
+
+    This function is a thin wrapper around `SDL_RenderCopy()`
+
+    Parameters:
+    * src - the rectangular region of this texture to draw or `nil` for the
+      entire texture.
+    * dst - the rectangular region of the render target to draw to, or
+      `nil` for the entire rendering target; the texture will be
+      stretched to fill the given rectangle
     """
 
   def isStreaming() Bool:

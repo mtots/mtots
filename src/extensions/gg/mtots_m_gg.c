@@ -1245,27 +1245,39 @@ static CFunction funcTextureGetattr = {
 
 static ubool implTextureBlit(i16 argc, Value *args, Value *out) {
   ObjTexture *texture = AS_TEXTURE(args[-1]);
-  Vector dstPos = AS_VECTOR(args[0]);
-  SDL_FRect dstRect;
-  dstRect.x = dstPos.x;
-  dstRect.y = dstPos.y;
-  dstRect.w = texture->width;
-  dstRect.h = texture->height;
-  if (SDL_RenderCopyF(
+  ObjRect *srcRect = !IS_NIL(args[0]) ? AS_RECT(args[0]) : NULL;
+  ObjRect *dstRect = !IS_NIL(args[1]) ? AS_RECT(args[1]) : NULL;
+  SDL_Rect srcSDLRect;
+  SDL_Rect dstSDLRect;
+  if (srcRect) {
+    srcSDLRect.x = srcRect->handle.minX;
+    srcSDLRect.y = srcRect->handle.minY;
+    srcSDLRect.w = srcRect->handle.width;
+    srcSDLRect.h = srcRect->handle.height;
+  }
+  if (dstRect) {
+    dstSDLRect.x = dstRect->handle.minX;
+    dstSDLRect.y = dstRect->handle.minY;
+    dstSDLRect.w = dstRect->handle.width;
+    dstSDLRect.h = dstRect->handle.height;
+  }
+  if (SDL_RenderCopy(
       texture->window->renderer,
       texture->handle,
-      NULL, &dstRect) != 0) {
-    return sdlError("SDL_RenderCopyF");
+      srcRect ? &srcSDLRect : NULL,
+      dstRect ? &dstSDLRect : NULL) != 0) {
+    return sdlError("SDL_RenderCopy");
   }
   return UTRUE;
 }
 
 static TypePattern argsTextureBlit[] = {
-  { TYPE_PATTERN_VECTOR },
+  { TYPE_PATTERN_NATIVE_OR_NIL, &descriptorRect },
+  { TYPE_PATTERN_NATIVE_OR_NIL, &descriptorRect },
 };
 
 static CFunction funcTextureBlit = {
-  implTextureBlit, "blit", 1, 0, argsTextureBlit,
+  implTextureBlit, "blit", 2, 0, argsTextureBlit,
 };
 
 static ubool implTextureIsStreaming(i16 argc, Value *args, Value *out) {
