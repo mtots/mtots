@@ -610,6 +610,15 @@ def mousePosition() Vector:
   """
 
 
+def mouseMotion() Vector:
+  """
+  Retrieves the mouse motion if a mouse motion event was emitted since the
+  previous frame.
+
+  If no event was emitted, returns the zero vector.
+  """
+
+
 def mouseButton(buttonID Int, query Int=0) Bool:
   """
   Queries the state of a mouse button.

@@ -135,6 +135,7 @@ static u8 keyupStack[SCANCODE_KEY_COUNT];
 static u16 keydownStackLen;
 static u16 keyupStackLen;
 static Vector mousePos;
+static Vector mouseMotion;
 static u32 previousMouseButtonState;
 static u32 currentMouseButtonState;
 static ObjClickEvent *theClickEvent;
@@ -432,6 +433,7 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
   memset(keyupState, 0, sizeof(keyupState));
   keydownStackLen = 0;
   keyupStackLen = 0;
+  mouseMotion = newVector(0, 0, 0);
   while (SDL_PollEvent(&event)) {
     switch (event.type) {
       case SDL_QUIT:
@@ -476,20 +478,10 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
         }
         break;
       case SDL_MOUSEMOTION:
-        if (!IS_NIL(mainWindow->onMotion)) {
-          theMotionEvent->x = event.motion.x;
-          theMotionEvent->y = event.motion.y;
-          theMotionEvent->dx = event.motion.xrel;
-          theMotionEvent->dy = event.motion.yrel;
-          push(mainWindow->onMotion);
-          push(MOTION_EVENT_VAL(theMotionEvent));
-          if (!callFunction(1)) {
-            return UFALSE;
-          }
-          pop();
-        }
+        mouseMotion.x = event.motion.xrel;
+        mouseMotion.y = event.motion.yrel;
+        mouseMotion.z = 0;
         break;
-
       case SDL_WINDOWEVENT:
         switch (event.window.event) {
           case SDL_WINDOWEVENT_SIZE_CHANGED: {
@@ -1522,6 +1514,13 @@ static ubool implMousePosition(i16 argc, Value *args, Value *out) {
 
 static CFunction funcMousePosition = { implMousePosition, "mousePosition" };
 
+static ubool implMouseMotion(i16 argc, Value *args, Value *out) {
+  *out = VECTOR_VAL(mouseMotion);
+  return UTRUE;
+}
+
+static CFunction funcMouseMotion = { implMouseMotion, "mouseMotion" };
+
 static ubool implMouseButton(i16 argc, Value *args, Value *out) {
   u32 buttonID = AS_U32(args[0]);
   u32 query = argc > 1 ? AS_U32(args[1]) : 0;
@@ -1676,6 +1675,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &funcKey,
     &funcGetKey,
     &funcMousePosition,
+    &funcMouseMotion,
     &funcMouseButton,
     &funcLoadAudio,
     &funcPlayAudio,
