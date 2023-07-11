@@ -309,22 +309,6 @@ class Window:
     right before each frame is presented to the screen.
     """
 
-  def onClick(callback Function[ClickEvent, Any]) nil:
-    """
-    Sets the callback for when a mouse button or finger is pressed down.
-    """
-
-  def onClickUp(callback Function[ClickEvent, Any]) nil:
-    """
-    Sets the callback for when a mouse button or finger is released.
-    """
-
-  def onMotion(callback Function[MotionEvent, Any]) nil:
-    """
-    Sets the callback for when the mouse cursor or a touch moves across
-    the screen
-    """
-
   def getCanvas() Canvas:
     """
     Returns the `Canvas` currently associated with this `Window` (e.g. through
@@ -536,33 +520,6 @@ class Geometry:
 
     `index` should be an index into the list of vertices.
     """
-
-
-class ClickEvent:
-  """
-  Click events fire when a mouse clicks or a finger touches a
-  part of the window or screen (onClick and onClickUp).
-  """
-
-  final x Int "x coordinate, relative to the window"
-  final y Int "y coordinate, relative to the window"
-  final button Int """
-    The button that was pressed.
-    1 - left mouse button,
-    2 - middle mouse button,
-    3 - right mouse button
-  """
-
-
-class MotionEvent:
-  """
-  Motion events fire when the mouse or touch moves across the window
-  """
-
-  final x Int "x coordinate relative to the window"
-  final y Int "y coordinate relative to the window"
-  final dx Int "relative motion in the x direction"
-  final dy Int "relative motion in the y direction"
 
 
 def key(scancode Int, query Int=0, repeat Bool=true) Bool:
