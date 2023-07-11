@@ -598,6 +598,12 @@ def mouseButton(buttonID Int, query Int=0) Bool:
   """
 
 
+def setSynth(channelID Int, synthType Int, frequency Float, volume Float) nil:
+  """
+  Plays an audio
+  """
+
+
 def loadAudio(audio Audio, channel Int=0) nil:
   """
   Load audio to play.

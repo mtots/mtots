@@ -26,6 +26,10 @@
 #define DEFAULT_VOLUME      50
 #define CHANNEL_COUNT        8
 
+#define SYNTH_CHANNEL_COUNT   8
+
+#define SAMPLES_PER_SECOND 44100
+
 #define DEFAULT_PEN_FONT_SIZE 32
 
 #define WINDOW_FLAGS_MASK ( \
@@ -51,6 +55,10 @@
 #define IS_GEOMETRY(v) ((getNativeObjectDescriptor((v)) == &descriptorGeometry))
 
 typedef struct ObjTexture ObjTexture;
+
+typedef enum SynthType {
+  SYNTH_SINE
+} SynthType;
 
 static ubool updateStreamingTexture(SDL_Texture *texture, ObjImage *image);
 
@@ -94,6 +102,13 @@ typedef struct AudioChannel {
   ubool pause;
 } AudioChannel;
 
+typedef struct SynthChannel {
+  SynthType type;
+  u32 i;
+  float frequency;
+  float volume;
+} SynthChannel;
+
 static String *tickString;
 static String *buttonString;
 static String *dxString;
@@ -110,6 +125,7 @@ static Vector mousePos;
 static Vector mouseMotion;
 static u32 previousMouseButtonState;
 static u32 currentMouseButtonState;
+static SynthChannel synthChannels[SYNTH_CHANNEL_COUNT];
 static AudioChannel audioChannels[CHANNEL_COUNT];
 static SDL_mutex *audioMutex;
 static SDL_AudioDeviceID audioDevice;
@@ -202,21 +218,38 @@ static void checkChannel(size_t channelIndex) {
   }
 }
 
-static i16 clamp(i32 value) {
-  return value < I16_MIN ? I16_MIN :
-         value > I16_MAX ? I16_MAX : ((i16)value);
+static i16 clamp(double value) {
+  return value <= I16_MIN ? I16_MIN :
+         value >= I16_MAX ? I16_MAX : ((i16)value);
 }
 
 static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
   lockAudioMutex();
   {
-    size_t sampleCount = ((size_t)byteLength) / 4, i, j;
+    size_t sampleCount = ((size_t)byteLength) / 4, i;
     i16 *dat = (i16*)(void*)stream;
     /* NOTE: this (void*) trick is to avoid '-Wcast-align' warnigns
      * it should be ok in this case, as we always assume 16-bit stereo */
 
     for (i = 0; i < sampleCount; i++) {
       i32 left = 0, right = 0;
+      double synthTotal = 0;
+      size_t j;
+      for (j = 0; j < SYNTH_CHANNEL_COUNT; j++) {
+        SynthChannel *ch = synthChannels + j;
+        if (!ch->volume) {
+          continue;
+        }
+        switch (ch->type) {
+          case SYNTH_SINE:
+            synthTotal +=
+              sin((ch->i++) / (double)SAMPLES_PER_SECOND * ch->frequency * TAU) *
+              ch->volume;
+            break;
+          default: break;
+        }
+      }
+      /* oprintln("synthTotal = %f", synthTotal); */
       for (j = 0; j < CHANNEL_COUNT; j++) {
         AudioChannel *ch = audioChannels + j;
         if (ch->pause) {
@@ -232,8 +265,8 @@ static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
           ch->currentSample++;
         }
       }
-      dat[2 * i + 0] = clamp(left  / VOLUME_MAX);
-      dat[2 * i + 1] = clamp(right / VOLUME_MAX);
+      dat[2 * i + 0] = clamp(left  / VOLUME_MAX + (i32)(I16_MAX * synthTotal));
+      dat[2 * i + 1] = clamp(right / VOLUME_MAX + (i32)(I16_MAX * synthTotal));
     }
   }
   unlockAudioMutex();
@@ -255,11 +288,10 @@ static void loadAudio(ObjAudio *audio, size_t channelIndex) {
   unlockAudioMutex();
 }
 
-static void playAudio(size_t channelIndex, size_t repeats) {
-  checkChannel(channelIndex);
+static void prepareAudio() {
   if (!audioDevice) {
     SDL_AudioSpec spec;
-    spec.freq = 44100;
+    spec.freq = SAMPLES_PER_SECOND;
     spec.format = AUDIO_S16LSB;
     spec.channels = 2;
     spec.samples = 2048;
@@ -271,6 +303,11 @@ static void playAudio(size_t channelIndex, size_t repeats) {
     }
     SDL_PauseAudioDevice(audioDevice, 0);
   }
+}
+
+static void playAudio(size_t channelIndex, size_t repeats) {
+  checkChannel(channelIndex);
+  prepareAudio();
   lockAudioMutex();
   {
     AudioChannel *ch = audioChannels + channelIndex;
@@ -1386,6 +1423,25 @@ static ubool implMouseButton(i16 argc, Value *args, Value *out) {
 
 static CFunction funcMouseButton = { implMouseButton, "mouseButton", 1, 2, argsNumbers };
 
+static ubool implSetSynth(i16 argc, Value *args, Value *out) {
+  size_t channelID = AS_INDEX(args[0], SYNTH_CHANNEL_COUNT);
+  u32 synthType = AS_U32(args[1]);
+  double frequency = AS_NUMBER(args[2]);
+  double volume = AS_NUMBER(args[3]);
+  lockAudioMutex();
+  synthChannels[channelID].type = synthType;
+  synthChannels[channelID].frequency = frequency;
+  synthChannels[channelID].volume = volume;
+  synthChannels[channelID].i = 0;
+  unlockAudioMutex();
+  prepareAudio();
+  return UTRUE;
+}
+
+static CFunction funcSetSynth = {
+  implSetSynth, "setSynth", 4, 0, argsNumbers
+};
+
 static ubool implLoadAudio(i16 argc, Value *args, Value *out) {
   ObjAudio *audio = AS_AUDIO(args[0]);
   size_t channel = argc > 1 ? AS_INDEX(args[1], CHANNEL_COUNT) : 0;
@@ -1495,6 +1551,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &funcMousePosition,
     &funcMouseMotion,
     &funcMouseButton,
+    &funcSetSynth,
     &funcLoadAudio,
     &funcPlayAudio,
     &funcPauseAudio,

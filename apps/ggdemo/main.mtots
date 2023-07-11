@@ -72,6 +72,18 @@ def():
     for ball in balls:
       ball.angle = TAU * (tick / 60)
 
+  if gg.mouseButton(0, 0):
+    gg.setSynth(0, 0, 440, 1)
+
+  if gg.mouseButton(0, 1):
+    gg.setSynth(0, 0, 0, 0)
+
+  if gg.key(gg.KEY.F, 0, false):
+    gg.setSynth(0, 0, 300, 1)
+
+  if gg.key(gg.KEY.F, 1):
+    gg.setSynth(0, 0, 0, 0)
+
   sys.enableMallocFreeLogs(true)
   for ball in balls:
     ball.blit()
