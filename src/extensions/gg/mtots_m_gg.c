@@ -294,7 +294,7 @@ static void prepareAudio() {
     spec.freq = SAMPLES_PER_SECOND;
     spec.format = AUDIO_S16LSB;
     spec.channels = 2;
-    spec.samples = 2048;
+    spec.samples = 1024;
     spec.callback = audioCallback;
     spec.userdata = NULL;
     audioDevice = SDL_OpenAudioDevice(NULL, 0, &spec, NULL, 0);
