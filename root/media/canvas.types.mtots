@@ -81,25 +81,7 @@ class Canvas:
     """
 
   def copy(
-      src Canvas,
-      dstPos Vector,
-      srcRect Rect?=nil,
-      flipX Bool=false,
-      flipY Bool=false) nil:
-    """
-    Copy `src` to `this`. No scaling is done - the image will be copied
-    in its original size.
-
-    * `src` - the source image to copy from
-    * `dstPos` - the position in `src` to copy to.
-    * `srcRect` - the region in `src` to copy. If omitted or nil,
-      the entire `src` image will be copied over.
-    * `flipX` - if true, flip the image horizontally as it is copied
-    * `flipY` - if true, flip the image vertically as it is copied
-    """
-
-  def copyScaled(
-      src Canvas,
+      src Image,
       srcRect Rect?=nil,
       dstRect Rect?=nil,
       flipX Bool=false,

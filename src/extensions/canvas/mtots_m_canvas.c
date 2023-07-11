@@ -397,21 +397,6 @@ static ubool copyScaledCanvas(
   return UTRUE;
 }
 
-static ubool copyCanvas(
-    ObjCanvas *target,
-    ObjCanvas *source,
-    const Rect *srcRect,
-    i32 dstX, i32 dstY,
-    ubool flipX,
-    ubool flipY) {
-  Rect dstRect;
-  dstRect.minX = dstX;
-  dstRect.minY = dstY;
-  dstRect.width = srcRect ? srcRect->width : WIDTHOF(source);
-  dstRect.height = srcRect ? srcRect->height : HEIGHTOF(source);
-  return copyScaledCanvas(target, source, srcRect, &dstRect, flipX, flipY);
-}
-
 static ubool implCanvasStaticCall(i16 argc, Value *args, Value *out) {
   ObjCanvas *canvas = newCanvas(AS_IMAGE(args[0]));
   *out = CANVAS_VAL(canvas);
@@ -663,29 +648,6 @@ static CFunction funcCanvasStrokeOval = {
 static ubool implCanvasCopy(i16 argc, Value *args, Value *out) {
   ObjCanvas *target = AS_CANVAS(args[-1]);
   ObjCanvas *source = AS_CANVAS(args[0]);
-  Vector dst = AS_VECTOR(args[1]);
-  ubool hasSrcRect = argc > 2 && !IS_NIL(args[2]);
-  Rect srcRect = hasSrcRect ? AS_RECT(args[2]) : newRect(0, 0, 0, 0);
-  ubool flipX = argc > 3 && !IS_NIL(args[3]) ? AS_BOOL(args[3]) : UFALSE;
-  ubool flipY = argc > 4 && !IS_NIL(args[4]) ? AS_BOOL(args[4]) : UFALSE;
-  return copyCanvas(target, source, hasSrcRect ? &srcRect : NULL, dst.x, dst.y, flipX, flipY);
-}
-
-static TypePattern argsCanvasCopy[] = {
-  { TYPE_PATTERN_NATIVE, &descriptorCanvas },
-  { TYPE_PATTERN_VECTOR },
-  { TYPE_PATTERN_RECT },
-  { TYPE_PATTERN_BOOL },
-  { TYPE_PATTERN_BOOL },
-};
-
-static CFunction funcCanvasCopy = {
-  implCanvasCopy, "copy", 2, 5, argsCanvasCopy,
-};
-
-static ubool implCanvasCopyScaled(i16 argc, Value *args, Value *out) {
-  ObjCanvas *target = AS_CANVAS(args[-1]);
-  ObjCanvas *source = AS_CANVAS(args[0]);
   ubool hasSrcRect = argc > 1 && !IS_NIL(args[1]);
   Rect srcRect = hasSrcRect ? AS_RECT(args[1]) : newRect(0, 0, 0, 0);
   ubool hasDstRect = argc > 2 && !IS_NIL(args[2]);
@@ -701,7 +663,7 @@ static ubool implCanvasCopyScaled(i16 argc, Value *args, Value *out) {
     flipY);
 }
 
-static TypePattern argsCanvasCopyScaled[] = {
+static TypePattern argsCanvasCopy[] = {
   { TYPE_PATTERN_NATIVE, &descriptorCanvas },
   { TYPE_PATTERN_RECT },
   { TYPE_PATTERN_RECT },
@@ -709,8 +671,8 @@ static TypePattern argsCanvasCopyScaled[] = {
   { TYPE_PATTERN_BOOL },
 };
 
-static CFunction funcCanvasCopyScaled = {
-  implCanvasCopyScaled, "copyScaled", 1, 5, argsCanvasCopyScaled,
+static CFunction funcCanvasCopy = {
+  implCanvasCopy, "copy", 1, 5, argsCanvasCopy,
 };
 
 static ubool impl(i16 argc, Value *args, Value *out) {
@@ -734,7 +696,6 @@ static ubool impl(i16 argc, Value *args, Value *out) {
     &funcCanvasFillOval,
     &funcCanvasStrokeOval,
     &funcCanvasCopy,
-    &funcCanvasCopyScaled,
     NULL,
   };
 
