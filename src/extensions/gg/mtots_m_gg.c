@@ -47,18 +47,15 @@
 #define AS_TEXTURE(v) ((ObjTexture*)AS_OBJ((v)))
 #define AS_GEOMETRY(v) ((ObjGeometry*)AS_OBJ((v)))
 #define AS_CLICK_EVENT(v) ((ObjClickEvent*)AS_OBJ((v)))
-#define AS_KEY_EVENT(v) ((ObjKeyEvent*)AS_OBJ((v)))
 #define AS_MOTION_EVENT(v) ((ObjMotionEvent*)AS_OBJ((v)))
 #define IS_WINDOW(v) ((getNativeObjectDescriptor((v)) == &descriptorWindow))
 #define IS_TEXTURE(v) ((getNativeObjectDescriptor((v)) == &descriptorTexture))
 #define IS_GEOMETRY(v) ((getNativeObjectDescriptor((v)) == &descriptorGeometry))
 #define IS_CLICK_EVENT(v) ((getNativeObjectDescriptor((v)) == &descriptorClickEvent))
-#define IS_KEY_EVENT(v) ((getNativeObjectDescriptor((v)) == &descriptorKeyEvent))
 #define IS_MOTION_EVENT(v) ((getNativeObjectDescriptor((v)) == &descriptorMotionEvent))
 
 typedef struct ObjTexture ObjTexture;
 typedef struct ObjClickEvent ObjClickEvent;
-typedef struct ObjKeyEvent ObjKeyEvent;
 typedef struct ObjMotionEvent ObjMotionEvent;
 
 static ubool updateStreamingTexture(SDL_Texture *texture, ObjImage *image);
@@ -108,12 +105,6 @@ struct ObjClickEvent {
   u8 button;
 };
 
-struct ObjKeyEvent {
-  ObjNative obj;
-  u32 key;
-  ubool repeat;
-};
-
 struct ObjMotionEvent {
   ObjNative obj;
   i32 x;
@@ -147,7 +138,6 @@ static Vector mousePos;
 static u32 previousMouseButtonState;
 static u32 currentMouseButtonState;
 static ObjClickEvent *theClickEvent;
-static ObjKeyEvent *theKeyEvent;
 static ObjMotionEvent *theMotionEvent;
 static AudioChannel audioChannels[CHANNEL_COUNT];
 static SDL_mutex *audioMutex;
@@ -169,10 +159,6 @@ static Value GEOMETRY_VAL(ObjGeometry *geometry) {
 
 static Value CLICK_EVENT_VAL(ObjClickEvent *clickEvent) {
   return OBJ_VAL_EXPLICIT((Obj*)clickEvent);
-}
-
-static Value KEY_EVENT_VAL(ObjKeyEvent *keyEvent) {
-  return OBJ_VAL_EXPLICIT((Obj*)keyEvent);
 }
 
 static Value MOTION_EVENT_VAL(ObjMotionEvent *motionEvent) {
@@ -239,10 +225,6 @@ static NativeObjectDescriptor descriptorGeometry = {
 
 static NativeObjectDescriptor descriptorClickEvent = {
   nopBlacken, nopFree, sizeof(ObjClickEvent), "ClickEvent"
-};
-
-static NativeObjectDescriptor descriptorKeyEvent = {
-  nopBlacken, nopFree, sizeof(ObjKeyEvent), "KeyEvent"
 };
 
 static NativeObjectDescriptor descriptorMotionEvent = {
@@ -1468,24 +1450,6 @@ static CFunction funcClickEventGetattr = {
   implClickEventGetattr, "__getattr__", 1, 0, argsStrings
 };
 
-static ubool implKeyEventGetattr(i16 argc, Value *args, Value *out) {
-  ObjKeyEvent *keyEvent = AS_KEY_EVENT(args[-1]);
-  String *name = AS_STRING(args[0]);
-  if (name == keyString) {
-    *out = NUMBER_VAL(keyEvent->key);
-  } else if (name == repeatString) {
-    *out = BOOL_VAL(keyEvent->repeat);
-  } else {
-    runtimeError("Field %s not found in KeyEvent", name->chars);
-    return UFALSE;
-  }
-  return UTRUE;
-}
-
-static CFunction funcKeyEventGetattr = {
-  implKeyEventGetattr, "__getattr__", 1, 0, argsStrings
-};
-
 static ubool implMotionEventGetattr(i16 argc, Value *args, Value *out) {
   ObjMotionEvent *motionEvent = AS_MOTION_EVENT(args[-1]);
   String *name = AS_STRING(args[0]);
@@ -1701,13 +1665,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &funcClickEventGetattr,
     NULL,
   };
-  CFunction *keyEventStaticMethods[] = {
-    NULL,
-  };
-  CFunction *keyEventMethods[] = {
-    &funcKeyEventGetattr,
-    NULL,
-  };
   CFunction *motionEventStaticMethods[] = {
     NULL,
   };
@@ -1758,8 +1715,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
 
   moduleRetain(module, CLICK_EVENT_VAL(
     theClickEvent = NEW_NATIVE(ObjClickEvent, &descriptorClickEvent)));
-  moduleRetain(module, KEY_EVENT_VAL(
-    theKeyEvent = NEW_NATIVE(ObjKeyEvent, &descriptorKeyEvent)));
   moduleRetain(module, MOTION_EVENT_VAL(
     theMotionEvent = NEW_NATIVE(ObjMotionEvent, &descriptorMotionEvent)));
 
@@ -1788,12 +1743,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &descriptorClickEvent,
     clickEventMethods,
     clickEventStaticMethods);
-
-  newNativeClass(
-    module,
-    &descriptorKeyEvent,
-    keyEventMethods,
-    keyEventStaticMethods);
 
   newNativeClass(
     module,

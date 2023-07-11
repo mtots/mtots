@@ -319,16 +319,6 @@ class Window:
     Sets the callback for when a mouse button or finger is released.
     """
 
-  def onKeyDown(callback Function[KeyEvent, Any]) nil:
-    """
-    Sets the callback for when a key on the keyboard is pressed
-    """
-
-  def onKeyUp(callback Function[KeyEvent, Any]) nil:
-    """
-    Sets the callback for when a key on the keyboard is released
-    """
-
   def onMotion(callback Function[MotionEvent, Any]) nil:
     """
     Sets the callback for when the mouse cursor or a touch moves across
@@ -561,26 +551,6 @@ class ClickEvent:
     1 - left mouse button,
     2 - middle mouse button,
     3 - right mouse button
-  """
-
-
-class KeyEvent:
-  """
-  Keyboard events fire when a key is pressed down (onKeyDown) or
-  up (onKeyUp)
-  """
-
-  final key Int """
-    The scancode of the key that was pressed.
-
-    Scancodes disregard keyboard layout and locale.
-
-    For more information see:
-    https://gist.github.com/ekaitz-zarraga/2b25b94b711684ba4e969e5a5723969b
-  """
-
-  final repeat Bool """
-    True if this is keyboard event was fired as result of auto-repeat
   """
 
 
