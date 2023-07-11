@@ -46,17 +46,11 @@
 #define AS_WINDOW(v) ((ObjWindow*)AS_OBJ((v)))
 #define AS_TEXTURE(v) ((ObjTexture*)AS_OBJ((v)))
 #define AS_GEOMETRY(v) ((ObjGeometry*)AS_OBJ((v)))
-#define AS_CLICK_EVENT(v) ((ObjClickEvent*)AS_OBJ((v)))
-#define AS_MOTION_EVENT(v) ((ObjMotionEvent*)AS_OBJ((v)))
 #define IS_WINDOW(v) ((getNativeObjectDescriptor((v)) == &descriptorWindow))
 #define IS_TEXTURE(v) ((getNativeObjectDescriptor((v)) == &descriptorTexture))
 #define IS_GEOMETRY(v) ((getNativeObjectDescriptor((v)) == &descriptorGeometry))
-#define IS_CLICK_EVENT(v) ((getNativeObjectDescriptor((v)) == &descriptorClickEvent))
-#define IS_MOTION_EVENT(v) ((getNativeObjectDescriptor((v)) == &descriptorMotionEvent))
 
 typedef struct ObjTexture ObjTexture;
-typedef struct ObjClickEvent ObjClickEvent;
-typedef struct ObjMotionEvent ObjMotionEvent;
 
 static ubool updateStreamingTexture(SDL_Texture *texture, ObjImage *image);
 
@@ -67,11 +61,6 @@ typedef struct ObjWindow {
   Uint64 tick;             /* number of fully processed frames so far */
   SDL_Renderer *renderer;
   Value onUpdate;
-  Value onClick;
-  Value onClickUp;
-  Value onKeyDown;
-  Value onKeyUp;
-  Value onMotion;
   Color backgroundColor;
   ObjCanvas *canvas;
   ObjTexture *canvasTexture;
@@ -98,21 +87,6 @@ typedef struct ObjGeometry {
   ObjMatrix *transform;         /* transform on vectors to determine vertices */
 } ObjGeometry;
 
-struct ObjClickEvent {
-  ObjNative obj;
-  i32 x;
-  i32 y;
-  u8 button;
-};
-
-struct ObjMotionEvent {
-  ObjNative obj;
-  i32 x;
-  i32 y;
-  i32 dx;
-  i32 dy;
-};
-
 typedef struct AudioChannel {
   size_t sampleCount, currentSample, repeats;
   u16 volume;
@@ -122,8 +96,6 @@ typedef struct AudioChannel {
 
 static String *tickString;
 static String *buttonString;
-static String *keyString;
-static String *repeatString;
 static String *dxString;
 static String *dyString;
 static String *transformString;
@@ -138,8 +110,6 @@ static Vector mousePos;
 static Vector mouseMotion;
 static u32 previousMouseButtonState;
 static u32 currentMouseButtonState;
-static ObjClickEvent *theClickEvent;
-static ObjMotionEvent *theMotionEvent;
 static AudioChannel audioChannels[CHANNEL_COUNT];
 static SDL_mutex *audioMutex;
 static SDL_AudioDeviceID audioDevice;
@@ -158,22 +128,9 @@ static Value GEOMETRY_VAL(ObjGeometry *geometry) {
   return OBJ_VAL_EXPLICIT((Obj*)geometry);
 }
 
-static Value CLICK_EVENT_VAL(ObjClickEvent *clickEvent) {
-  return OBJ_VAL_EXPLICIT((Obj*)clickEvent);
-}
-
-static Value MOTION_EVENT_VAL(ObjMotionEvent *motionEvent) {
-  return OBJ_VAL_EXPLICIT((Obj*)motionEvent);
-}
-
 static void blackenWindow(ObjNative *n) {
   ObjWindow *window = (ObjWindow*)n;
   markValue(window->onUpdate);
-  markValue(window->onClick);
-  markValue(window->onClickUp);
-  markValue(window->onKeyDown);
-  markValue(window->onKeyUp);
-  markValue(window->onMotion);
   markObject((Obj*)window->canvas);
   markObject((Obj*)window->canvasTexture);
   markObject((Obj*)window->transform);
@@ -222,14 +179,6 @@ static NativeObjectDescriptor descriptorTexture = {
 
 static NativeObjectDescriptor descriptorGeometry = {
   blackenGeometry, freeGeometry, sizeof(ObjGeometry), "Geometry"
-};
-
-static NativeObjectDescriptor descriptorClickEvent = {
-  nopBlacken, nopFree, sizeof(ObjClickEvent), "ClickEvent"
-};
-
-static NativeObjectDescriptor descriptorMotionEvent = {
-  nopBlacken, nopFree, sizeof(ObjMotionEvent), "MotionEvent"
 };
 
 static void lockAudioMutex(void) {
@@ -410,11 +359,6 @@ static ubool newWindow(
   window->tick = 0;
   window->renderer = renderer;
   window->onUpdate = NIL_VAL();
-  window->onClick = NIL_VAL();
-  window->onClickUp = NIL_VAL();
-  window->onKeyDown = NIL_VAL();
-  window->onKeyUp = NIL_VAL();
-  window->onMotion = NIL_VAL();
   window->backgroundColor = newColor(162, 136, 121, 255); /* MEDIUM_GREY */
   window->canvas = NULL;
   window->canvasTexture = NULL;
@@ -449,32 +393,6 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
         if (event.key.keysym.scancode < SCANCODE_KEY_COUNT) {
           keyupState[event.key.keysym.scancode] = event.key.repeat ? 2 : 1;
           keyupStack[keyupStackLen++] = event.key.keysym.scancode;
-        }
-        break;
-      case SDL_MOUSEBUTTONDOWN:
-        if (!IS_NIL(mainWindow->onClick)) {
-          theClickEvent->x = event.button.x;
-          theClickEvent->y = event.button.y;
-          theClickEvent->button = event.button.button;
-          push(mainWindow->onClick);
-          push(CLICK_EVENT_VAL(theClickEvent));
-          if (!callFunction(1)) {
-            return UFALSE;
-          }
-          pop();
-        }
-        break;
-      case SDL_MOUSEBUTTONUP:
-        if (!IS_NIL(mainWindow->onClickUp)) {
-          theClickEvent->x = event.button.x;
-          theClickEvent->y = event.button.y;
-          theClickEvent->button = event.button.button;
-          push(mainWindow->onClickUp);
-          push(CLICK_EVENT_VAL(theClickEvent));
-          if (!callFunction(1)) {
-            return UFALSE;
-          }
-          pop();
         }
         break;
       case SDL_MOUSEMOTION:
@@ -993,46 +911,6 @@ static ubool implWindowOnUpdate(i16 argc, Value *args, Value *out) {
 
 static CFunction funcWindowOnUpdate = { implWindowOnUpdate, "onUpdate", 1 };
 
-static ubool implWindowOnClick(i16 argc, Value *args, Value *out) {
-  ObjWindow *window = AS_WINDOW(args[-1]);
-  window->onClick = args[0];
-  return UTRUE;
-}
-
-static CFunction funcWindowOnClick = { implWindowOnClick, "onClick", 1 };
-
-static ubool implWindowOnClickUp(i16 argc, Value *args, Value *out) {
-  ObjWindow *window = AS_WINDOW(args[-1]);
-  window->onClickUp = args[0];
-  return UTRUE;
-}
-
-static CFunction funcWindowOnClickUp = { implWindowOnClickUp, "onClickUp", 1 };
-
-static ubool implWindowOnKeyDown(i16 argc, Value *args, Value *out) {
-  ObjWindow *window = AS_WINDOW(args[-1]);
-  window->onKeyDown = args[0];
-  return UTRUE;
-}
-
-static CFunction funcWindowOnKeyDown = { implWindowOnKeyDown, "onKeyDown", 1 };
-
-static ubool implWindowOnKeyUp(i16 argc, Value *args, Value *out) {
-  ObjWindow *window = AS_WINDOW(args[-1]);
-  window->onKeyUp = args[0];
-  return UTRUE;
-}
-
-static CFunction funcWindowOnKeyUp = { implWindowOnKeyUp, "onKeyUp", 1 };
-
-static ubool implWindowOnMotion(i16 argc, Value *args, Value *out) {
-  ObjWindow *window = AS_WINDOW(args[-1]);
-  window->onMotion = args[0];
-  return UTRUE;
-}
-
-static CFunction funcWindowOnMotion = { implWindowOnMotion, "onMotion", 1 };
-
 static ubool implWindowGetCanvas(i16 argc, Value *args, Value *out) {
   ObjWindow *window = AS_WINDOW(args[-1]);
   if (!window->canvas) {
@@ -1422,48 +1300,6 @@ static CFunction funcGeometrySetIndex = {
   implGeometrySetIndex, "setIndex", 2, 0, argsNumbers
 };
 
-static ubool implClickEventGetattr(i16 argc, Value *args, Value *out) {
-  ObjClickEvent *clickEvent = AS_CLICK_EVENT(args[-1]);
-  String *name = AS_STRING(args[0]);
-  if (name == vm.xString) {
-    *out = NUMBER_VAL(clickEvent->x);
-  } else if (name == vm.yString) {
-    *out = NUMBER_VAL(clickEvent->y);
-  } else if (name == buttonString) {
-    *out = NUMBER_VAL(clickEvent->button);
-  } else {
-    runtimeError("Field %s not found in ClickEvent", name->chars);
-    return UFALSE;
-  }
-  return UTRUE;
-}
-
-static CFunction funcClickEventGetattr = {
-  implClickEventGetattr, "__getattr__", 1, 0, argsStrings
-};
-
-static ubool implMotionEventGetattr(i16 argc, Value *args, Value *out) {
-  ObjMotionEvent *motionEvent = AS_MOTION_EVENT(args[-1]);
-  String *name = AS_STRING(args[0]);
-  if (name == vm.xString) {
-    *out = NUMBER_VAL(motionEvent->x);
-  } else if (name == vm.yString) {
-    *out = NUMBER_VAL(motionEvent->y);
-  } else if (name == dxString) {
-    *out = NUMBER_VAL(motionEvent->dx);
-  } else if (name == dyString) {
-    *out = NUMBER_VAL(motionEvent->dy);
-  } else {
-    runtimeError("Field %s not found in MotionEvent", name->chars);
-    return UFALSE;
-  }
-  return UTRUE;
-}
-
-static CFunction funcMotionEventGetattr = {
-  implMotionEventGetattr, "__getattr__", 1, 0, argsStrings,
-};
-
 static ubool implKey(i16 argc, Value *args, Value *out) {
   size_t scancode = AS_INDEX(args[0], SCANCODE_KEY_COUNT);
   u32 query = argc > 1 ? AS_U32(args[1]) : 0;
@@ -1501,7 +1337,8 @@ static ubool implGetKey(i16 argc, Value *args, Value *out) {
     default: break;
   }
   runtimeError(
-    "Invalid getKey type %d (expects 0 for keydown or 1 for keyup)", type);
+    "Invalid getKey type, expected 0 for keydown or 1 for keyup, but got %d",
+    type);
   return UFALSE;
 }
 
@@ -1617,11 +1454,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &funcWindowSetTitle,
     &funcWindowSetBackgroundColor,
     &funcWindowOnUpdate,
-    &funcWindowOnClick,
-    &funcWindowOnClickUp,
-    &funcWindowOnKeyDown,
-    &funcWindowOnKeyUp,
-    &funcWindowOnMotion,
     &funcWindowGetCanvas,
     &funcWindowNewCanvas,
     &funcWindowClear,
@@ -1655,20 +1487,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &funcGeometrySetVertexPosition,
     &funcGeometryGetIndexCount,
     &funcGeometrySetIndex,
-    NULL,
-  };
-  CFunction *clickEventStaticMethods[] = {
-    NULL,
-  };
-  CFunction *clickEventMethods[] = {
-    &funcClickEventGetattr,
-    NULL,
-  };
-  CFunction *motionEventStaticMethods[] = {
-    NULL,
-  };
-  CFunction *motionEventMethods[] = {
-    &funcMotionEventGetattr,
     NULL,
   };
   CFunction *functions[] = {
@@ -1707,16 +1525,9 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
 
   moduleRetain(module, STRING_VAL(tickString = internCString("tick")));
   moduleRetain(module, STRING_VAL(buttonString = internCString("button")));
-  moduleRetain(module, STRING_VAL(keyString = internCString("key")));
-  moduleRetain(module, STRING_VAL(repeatString = internCString("repeat")));
   moduleRetain(module, STRING_VAL(dxString = internCString("dx")));
   moduleRetain(module, STRING_VAL(dyString = internCString("dy")));
   moduleRetain(module, STRING_VAL(transformString = internCString("transform")));
-
-  moduleRetain(module, CLICK_EVENT_VAL(
-    theClickEvent = NEW_NATIVE(ObjClickEvent, &descriptorClickEvent)));
-  moduleRetain(module, MOTION_EVENT_VAL(
-    theMotionEvent = NEW_NATIVE(ObjMotionEvent, &descriptorMotionEvent)));
 
   moduleAddFunctions(module, functions);
 
@@ -1737,18 +1548,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &descriptorGeometry,
     geometryMethods,
     geometryStaticMethods);
-
-  newNativeClass(
-    module,
-    &descriptorClickEvent,
-    clickEventMethods,
-    clickEventStaticMethods);
-
-  newNativeClass(
-    module,
-    &descriptorMotionEvent,
-    motionEventMethods,
-    motionEventStaticMethods);
 
   {
     size_t i;
