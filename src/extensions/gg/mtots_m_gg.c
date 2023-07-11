@@ -137,7 +137,12 @@ static String *dxString;
 static String *dyString;
 static String *transformString;
 static const u8 *keyboardState;
-static u8 previousKeyboardState[SCANCODE_KEY_COUNT];
+static u8 keydownState[SCANCODE_KEY_COUNT];
+static u8 keyupState[SCANCODE_KEY_COUNT];
+static u8 keydownStack[SCANCODE_KEY_COUNT];
+static u8 keyupStack[SCANCODE_KEY_COUNT];
+static u16 keydownStackLen;
+static u16 keyupStackLen;
 static Vector mousePos;
 static u32 previousMouseButtonState;
 static u32 currentMouseButtonState;
@@ -441,12 +446,27 @@ static ubool newWindow(
 
 static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
   SDL_Event event;
-  memcpy(previousKeyboardState, keyboardState, SCANCODE_KEY_COUNT);
+  memset(keydownState, 0, sizeof(keydownState));
+  memset(keyupState, 0, sizeof(keyupState));
+  keydownStackLen = 0;
+  keyupStackLen = 0;
   while (SDL_PollEvent(&event)) {
     switch (event.type) {
       case SDL_QUIT:
         *quit = UTRUE;
         return UTRUE;
+      case SDL_KEYDOWN:
+        if (event.key.keysym.scancode < SCANCODE_KEY_COUNT) {
+          keydownState[event.key.keysym.scancode] = event.key.repeat ? 2 : 1;
+          keydownStack[keydownStackLen++] = event.key.keysym.scancode;
+        }
+        break;
+      case SDL_KEYUP:
+        if (event.key.keysym.scancode < SCANCODE_KEY_COUNT) {
+          keyupState[event.key.keysym.scancode] = event.key.repeat ? 2 : 1;
+          keyupStack[keyupStackLen++] = event.key.keysym.scancode;
+        }
+        break;
       case SDL_MOUSEBUTTONDOWN:
         if (!IS_NIL(mainWindow->onClick)) {
           theClickEvent->x = event.button.x;
@@ -471,36 +491,6 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
             return UFALSE;
           }
           pop();
-        }
-        break;
-      case SDL_KEYDOWN:
-        if (!IS_NIL(mainWindow->onKeyDown)) {
-          u32 scancode = event.key.keysym.scancode;
-          if (scancode < SCANCODE_KEY_COUNT) {
-            theKeyEvent->key = scancode;
-            theKeyEvent->repeat = !!event.key.repeat;
-            push(mainWindow->onKeyDown);
-            push(KEY_EVENT_VAL(theKeyEvent));
-            if (!callFunction(1)) {
-              return UFALSE;
-            }
-            pop();
-          }
-        }
-        break;
-      case SDL_KEYUP:
-        if (!IS_NIL(mainWindow->onKeyUp)) {
-          i32 scancode = event.key.keysym.scancode;
-          if (scancode < SCANCODE_KEY_COUNT) {
-            theKeyEvent->key = scancode;
-            theKeyEvent->repeat = !!event.key.repeat;
-            push(mainWindow->onKeyUp);
-            push(KEY_EVENT_VAL(theKeyEvent));
-            if (!callFunction(1)) {
-              return UFALSE;
-            }
-            pop();
-          }
         }
         break;
       case SDL_MOUSEMOTION:
@@ -1521,22 +1511,45 @@ static CFunction funcMotionEventGetattr = {
 static ubool implKey(i16 argc, Value *args, Value *out) {
   size_t scancode = AS_INDEX(args[0], SCANCODE_KEY_COUNT);
   u32 query = argc > 1 ? AS_U32(args[1]) : 0;
-  ubool previous = !!previousKeyboardState[scancode];
-  ubool current = !!keyboardState[scancode];
-  ubool result;
+  ubool allowRepeat = argc > 2 ? AS_BOOL(args[2]) : UTRUE;
+  u8 result;
   switch (query) {
-    case 0: result = !previous &&  current; break; /* PRESSED */
-    case 1: result =  previous && !current; break; /* RELEASED */
-    case 2: result =               current; break; /* HELD */
+    case 0: result =   keydownState[scancode]; break; /* PRESSED */
+    case 1: result =     keyupState[scancode]; break; /* RELEASED */
+    case 2: result =  keyboardState[scancode]; break; /* HELD */
     default:
       runtimeError("Invalid keyboard key query: %d", (int)query);
       return UFALSE;
   }
-  *out = BOOL_VAL(result);
+  *out = BOOL_VAL((allowRepeat && result) || result == 1);
   return UTRUE;
 }
 
-static CFunction funcKey = { implKey, "key", 1, 2, argsNumbers };
+static TypePattern argsKey[] = {
+  { TYPE_PATTERN_NUMBER },
+  { TYPE_PATTERN_NUMBER },
+  { TYPE_PATTERN_BOOL },
+};
+
+static CFunction funcKey = { implKey, "key", 1, 3, argsKey };
+
+static ubool implGetKey(i16 argc, Value *args, Value *out) {
+  u8 type = argc > 0 ? AS_U8(args[0]) : 0;
+  switch (type) {
+    case 0:
+      *out = NUMBER_VAL(keydownStackLen ? keydownStack[--keydownStackLen] : -1);
+      return UTRUE;
+    case 1:
+      *out = NUMBER_VAL(keyupStackLen ? keyupStack[--keyupStackLen] : -1);
+      return UTRUE;
+    default: break;
+  }
+  runtimeError(
+    "Invalid getKey type %d (expects 0 for keydown or 1 for keyup)", type);
+  return UFALSE;
+}
+
+static CFunction funcGetKey = { implGetKey, "getKey", 1, 0, argsNumbers };
 
 static ubool implMousePosition(i16 argc, Value *args, Value *out) {
   *out = VECTOR_VAL(mousePos);
@@ -1704,6 +1717,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
   };
   CFunction *functions[] = {
     &funcKey,
+    &funcGetKey,
     &funcMousePosition,
     &funcMouseButton,
     &funcLoadAudio,
