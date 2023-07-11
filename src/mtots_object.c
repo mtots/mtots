@@ -556,6 +556,7 @@ ObjClass *getClassOfValue(Value value) {
     case VAL_FAST_LIST_ITERATOR: return vm.fastListIteratorClass;
     case VAL_COLOR: return vm.colorClass;
     case VAL_VECTOR: return vm.vectorClass;
+    case VAL_RECT: return vm.rectClass;
     case VAL_OBJ: {
       switch (AS_OBJ(value)->type) {
         case OBJ_CLASS: return vm.classClass;

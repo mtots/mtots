@@ -168,9 +168,6 @@ class SpriteSheet:
     this.spriteHeight = spriteHeight
 
 
-var _rect_var = Rect(0, 0 ,0, 0)
-
-
 def rect(x0 Int, y0 Int, x1 Int, y1 Int, style Int=0, color Int=-1) nil:
   """
   Draws a rectangle to the framebuffer.
@@ -190,16 +187,13 @@ def rect(x0 Int, y0 Int, x1 Int, y1 Int, style Int=0, color Int=-1) nil:
     color = _penColor
 
   final canvas = _getCanvas()
-  _rect_var.minX = x0
-  _rect_var.minY = y0
-  _rect_var.width = x1 - x0
-  _rect_var.height = y1 - y0
+  final rect = Rect(x0, y0, x1 - x0, y1 - y0)
   final rgbc = _COLORTABLE[color]
 
   if style == 0:
-    canvas.fillRect(_rect_var, rgbc)
+    canvas.fillRect(rect, rgbc)
   else:
-    canvas.strokeRect(_rect_var, rgbc)
+    canvas.strokeRect(rect, rgbc)
 
 
 def click(mouseButtonID Int=0, query Int=0) Bool:

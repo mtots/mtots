@@ -98,6 +98,7 @@ typedef struct VM {
   ObjClass *fastListIteratorClass;
   ObjClass *colorClass;
   ObjClass *vectorClass;
+  ObjClass *rectClass;
 
   ObjClass *nilClass;
   ObjClass *boolClass;

@@ -1,6 +1,6 @@
 
 
-final rect = Rect(5, 6, 7, 8)
+var rect = Rect(5, 6, 7, 8)
 print("rect = %s" % [rect])
 print("rect.minX = %s" % [rect.minX])
 print("rect.minY = %s" % [rect.minY])
@@ -9,7 +9,7 @@ print("rect.height = %s" % [rect.height])
 print("rect.maxX = %s" % [rect.maxX])
 print("rect.maxY = %s" % [rect.maxY])
 
-rect.minX = 15
+rect = rect.withMinX(15)
 print("> rect.minX = 15")
 print("rect = %s" % [rect])
 print("rect.minX = %s" % [rect.minX])
@@ -19,7 +19,7 @@ print("rect.height = %s" % [rect.height])
 print("rect.maxX = %s" % [rect.maxX])
 print("rect.maxY = %s" % [rect.maxY])
 
-rect.minY = -30
+rect = rect.withMinY(-30)
 print("> rect.minY = -30")
 print("rect = %s" % [rect])
 print("rect.minX = %s" % [rect.minX])
@@ -29,7 +29,7 @@ print("rect.height = %s" % [rect.height])
 print("rect.maxX = %s" % [rect.maxX])
 print("rect.maxY = %s" % [rect.maxY])
 
-rect.width = 12
+rect = rect.withWidth(12)
 print("> rect.width = 12")
 print("rect = %s" % [rect])
 print("rect.minX = %s" % [rect.minX])
@@ -39,7 +39,7 @@ print("rect.height = %s" % [rect.height])
 print("rect.maxX = %s" % [rect.maxX])
 print("rect.maxY = %s" % [rect.maxY])
 
-rect.height = 12
+rect = rect.withHeight(12)
 print("> rect.height = 12")
 print("rect = %s" % [rect])
 print("rect.minX = %s" % [rect.minX])
@@ -49,7 +49,7 @@ print("rect.height = %s" % [rect.height])
 print("rect.maxX = %s" % [rect.maxX])
 print("rect.maxY = %s" % [rect.maxY])
 
-rect.maxX = 300
+rect = rect.withMaxX(300)
 print("rect.maxX = 300")
 print("rect = %s" % [rect])
 print("rect.minX = %s" % [rect.minX])
@@ -59,7 +59,7 @@ print("rect.height = %s" % [rect.height])
 print("rect.maxX = %s" % [rect.maxX])
 print("rect.maxY = %s" % [rect.maxY])
 
-rect.maxY = -400
+rect = rect.withMaxY(-400)
 print("rect.maxY = -400")
 print("rect = %s" % [rect])
 print("rect.minX = %s" % [rect.minX])

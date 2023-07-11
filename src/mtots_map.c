@@ -47,6 +47,7 @@ u32 hashval(Value value) {
         (((u32)c.alpha) << 24));
     }
     case VAL_VECTOR: break;
+    case VAL_RECT: break;
     case VAL_OBJ: switch (AS_OBJ(value)->type) {
       case OBJ_FROZEN_LIST: return AS_FROZEN_LIST(value)->hash;
       case OBJ_FROZEN_DICT: return AS_FROZEN_DICT(value)->hash;

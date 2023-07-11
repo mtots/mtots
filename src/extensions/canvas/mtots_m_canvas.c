@@ -528,13 +528,13 @@ static CFunction funcCanvasDrawLine = {
 
 static ubool implCanvasFillRect(i16 argc, Value *args, Value *out) {
   ObjCanvas *canvas = AS_CANVAS(args[-1]);
-  ObjRect *rect = AS_RECT(args[0]);
+  Rect rect = AS_RECT(args[0]);
   Color color = AS_COLOR(args[1]);
-  return drawRect(canvas, &rect->handle, DRAW_STYLE_FILL, color);
+  return drawRect(canvas, &rect, DRAW_STYLE_FILL, color);
 }
 
 static TypePattern argsCanvasFillRect[] = {
-  { TYPE_PATTERN_NATIVE, &descriptorRect },
+  { TYPE_PATTERN_RECT },
   { TYPE_PATTERN_COLOR },
 };
 
@@ -544,13 +544,13 @@ static CFunction funcCanvasFillRect = {
 
 static ubool implCanvasStrokeRect(i16 argc, Value *args, Value *out) {
   ObjCanvas *canvas = AS_CANVAS(args[-1]);
-  ObjRect *rect = AS_RECT(args[0]);
+  Rect rect = AS_RECT(args[0]);
   Color color = AS_COLOR(args[1]);
-  return drawRect(canvas, &rect->handle, DRAW_STYLE_OUTLINE, color);
+  return drawRect(canvas, &rect, DRAW_STYLE_OUTLINE, color);
 }
 
 static TypePattern argsCanvasStrokeRect[] = {
-  { TYPE_PATTERN_NATIVE, &descriptorRect },
+  { TYPE_PATTERN_RECT },
   { TYPE_PATTERN_COLOR },
 };
 
@@ -622,17 +622,17 @@ static CFunction funcCanvasStrokeCircle = {
 
 static ubool implCanvasFillOval(i16 argc, Value *args, Value *out) {
   ObjCanvas *canvas = AS_CANVAS(args[-1]);
-  ObjRect *rect = AS_RECT(args[0]);
+  Rect rect = AS_RECT(args[0]);
   Color color = AS_COLOR(args[1]);
-  double cx = rect->handle.minX + rect->handle.width / 2;
-  double cy = rect->handle.minY + rect->handle.height / 2;
-  double a = rect->handle.width / 2;
-  double b = rect->handle.height / 2;
+  double cx = rect.minX + rect.width / 2;
+  double cy = rect.minY + rect.height / 2;
+  double a = rect.width / 2;
+  double b = rect.height / 2;
   return drawEllipse(canvas, cx, cy, a, b, DRAW_STYLE_FILL, color);
 }
 
 static TypePattern argsCanvasFillOval[] = {
-  { TYPE_PATTERN_NATIVE, &descriptorRect },
+  { TYPE_PATTERN_RECT },
   { TYPE_PATTERN_COLOR },
 };
 
@@ -642,17 +642,17 @@ static CFunction funcCanvasFillOval = {
 
 static ubool implCanvasStrokeOval(i16 argc, Value *args, Value *out) {
   ObjCanvas *canvas = AS_CANVAS(args[-1]);
-  ObjRect *rect = AS_RECT(args[0]);
+  Rect rect = AS_RECT(args[0]);
   Color color = AS_COLOR(args[1]);
-  double cx = rect->handle.minX + rect->handle.width / 2;
-  double cy = rect->handle.minY + rect->handle.height / 2;
-  double a = rect->handle.width / 2;
-  double b = rect->handle.height / 2;
+  double cx = rect.minX + rect.width / 2;
+  double cy = rect.minY + rect.height / 2;
+  double a = rect.width / 2;
+  double b = rect.height / 2;
   return drawEllipse(canvas, cx, cy, a, b, DRAW_STYLE_OUTLINE, color);
 }
 
 static TypePattern argsCanvasStrokeOval[] = {
-  { TYPE_PATTERN_NATIVE, &descriptorRect },
+  { TYPE_PATTERN_RECT },
   { TYPE_PATTERN_COLOR },
 };
 
@@ -664,16 +664,17 @@ static ubool implCanvasCopy(i16 argc, Value *args, Value *out) {
   ObjCanvas *target = AS_CANVAS(args[-1]);
   ObjCanvas *source = AS_CANVAS(args[0]);
   Vector dst = AS_VECTOR(args[1]);
-  Rect *srcRect = argc > 2 && !IS_NIL(args[2]) ? &AS_RECT(args[2])->handle : NULL;
+  ubool hasSrcRect = argc > 2 && !IS_NIL(args[2]);
+  Rect srcRect = hasSrcRect ? AS_RECT(args[2]) : newRect(0, 0, 0, 0);
   ubool flipX = argc > 3 && !IS_NIL(args[3]) ? AS_BOOL(args[3]) : UFALSE;
   ubool flipY = argc > 4 && !IS_NIL(args[4]) ? AS_BOOL(args[4]) : UFALSE;
-  return copyCanvas(target, source, srcRect, dst.x, dst.y, flipX, flipY);
+  return copyCanvas(target, source, hasSrcRect ? &srcRect : NULL, dst.x, dst.y, flipX, flipY);
 }
 
 static TypePattern argsCanvasCopy[] = {
   { TYPE_PATTERN_NATIVE, &descriptorCanvas },
   { TYPE_PATTERN_VECTOR },
-  { TYPE_PATTERN_NATIVE, &descriptorRect },
+  { TYPE_PATTERN_RECT },
   { TYPE_PATTERN_BOOL },
   { TYPE_PATTERN_BOOL },
 };
@@ -685,17 +686,25 @@ static CFunction funcCanvasCopy = {
 static ubool implCanvasCopyScaled(i16 argc, Value *args, Value *out) {
   ObjCanvas *target = AS_CANVAS(args[-1]);
   ObjCanvas *source = AS_CANVAS(args[0]);
-  Rect *srcRect = argc > 1 && !IS_NIL(args[1]) ? &AS_RECT(args[1])->handle : NULL;
-  Rect *dstRect = argc > 2 && !IS_NIL(args[2]) ? &AS_RECT(args[2])->handle : NULL;
+  ubool hasSrcRect = argc > 1 && !IS_NIL(args[1]);
+  Rect srcRect = hasSrcRect ? AS_RECT(args[1]) : newRect(0, 0, 0, 0);
+  ubool hasDstRect = argc > 2 && !IS_NIL(args[2]);
+  Rect dstRect = hasDstRect ? AS_RECT(args[2]) : newRect(0, 0, 0, 0);
   ubool flipX = argc > 3 && !IS_NIL(args[3]) ? AS_BOOL(args[3]) : UFALSE;
   ubool flipY = argc > 4 && !IS_NIL(args[4]) ? AS_BOOL(args[4]) : UFALSE;
-  return copyScaledCanvas(target, source, srcRect, dstRect, flipX, flipY);
+  return copyScaledCanvas(
+    target,
+    source,
+    hasSrcRect ? &srcRect : NULL,
+    hasDstRect ? &dstRect : NULL,
+    flipX,
+    flipY);
 }
 
 static TypePattern argsCanvasCopyScaled[] = {
   { TYPE_PATTERN_NATIVE, &descriptorCanvas },
-  { TYPE_PATTERN_NATIVE, &descriptorRect },
-  { TYPE_PATTERN_NATIVE, &descriptorRect },
+  { TYPE_PATTERN_RECT },
+  { TYPE_PATTERN_RECT },
   { TYPE_PATTERN_BOOL },
   { TYPE_PATTERN_BOOL },
 };

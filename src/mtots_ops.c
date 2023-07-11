@@ -26,6 +26,7 @@ ubool valuesIs(Value a, Value b) {
     case VAL_FAST_LIST_ITERATOR: return a.as.obj == b.as.obj && a.extra.index == b.extra.index;
     case VAL_COLOR: return colorEquals(AS_COLOR(a), AS_COLOR(b));
     case VAL_VECTOR: return vectorEquals(AS_VECTOR(a), AS_VECTOR(b));
+    case VAL_RECT: return rectEquals(AS_RECT(a), AS_RECT(b));
     case VAL_OBJ: return AS_OBJ(a) == AS_OBJ(b);
   }
   abort();
@@ -70,6 +71,7 @@ ubool valuesEqual(Value a, Value b) {
     case VAL_FAST_LIST_ITERATOR: return a.as.obj == b.as.obj && a.extra.index == b.extra.index;
     case VAL_COLOR: return colorEquals(AS_COLOR(a), AS_COLOR(b));
     case VAL_VECTOR: return vectorEquals(AS_VECTOR(a), AS_VECTOR(b));
+    case VAL_RECT: return rectEquals(AS_RECT(a), AS_RECT(b));
     case VAL_OBJ: {
       Obj *objA = AS_OBJ(a);
       Obj *objB = AS_OBJ(b);
@@ -162,6 +164,7 @@ ubool valueLessThan(Value a, Value b) {
     case VAL_FAST_LIST_ITERATOR: break;
     case VAL_COLOR: break;
     case VAL_VECTOR: break;
+    case VAL_RECT: break;
     case VAL_OBJ: {
       Obj *objA = AS_OBJ(a);
       Obj *objB = AS_OBJ(b);
@@ -373,6 +376,19 @@ ubool valueRepr(Buffer *out, Value value) {
       bputnumber(out, value.extra.number);
       bprintf(out, ")");
       return UTRUE;
+    case VAL_RECT: {
+      Rect rect = AS_RECT(value);
+      bputstr(out, "Rect(");
+      bputnumber(out, rect.minX);
+      bputstr(out, ", ");
+      bputnumber(out, rect.minY);
+      bputstr(out, ", ");
+      bputnumber(out, rect.width);
+      bputstr(out, ", ");
+      bputnumber(out, rect.height);
+      bputstr(out, ")");
+      return UTRUE;
+    }
     case VAL_OBJ: {
       Obj *obj = AS_OBJ(value);
       switch (obj->type) {

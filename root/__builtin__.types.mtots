@@ -578,20 +578,20 @@ class Rect:
 
   Internally, only minX, minY, width and height values are stored.
 
-  When maxX or maxY fields are modified, the minX and minY values are
-  adjusted.
+  Even using single precision floats, a Rect requires 16-bytes, and so
+  cannot fit into the 12 bytes for data avaiable in a value.
 
-  Even using floats, a Rect requires 16-bytes, and so cannot fit into
-  the 12 bytes for data avaiable in a value. So like Matrix, Rect
-  objects are allocated on the heap.
+  Still, `Rect` is often used in a way that would be hampered by
+  heap allocations. To avoid this, each value is stored in 3-bytes -
+  i8 holding exponent, and i16 holding the significand.
   """
 
-  var minX Float
-  var minY Float
-  var width Float
-  var height Float
-  var maxX Float
-  var maxY Float
+  final minX Float
+  final minY Float
+  final maxX Float
+  final maxY Float
+  final width Float
+  final height Float
 
   def __init__(minX Float, minY Float, width Float, height Float):
     ""
@@ -599,6 +599,40 @@ class Rect:
   def copy(other Rect) nil:
     """
     Updates the contents of `this` to match the values in `other`.
+    """
+
+  def withMinX(minX Float) Rect:
+    """
+    Returns a copy of `this` but with minX set to the given value
+    """
+
+  def withMinY(minY Float) Rect:
+    """
+    Returns a copy of `this` but with minY set to the given value
+    """
+
+  def withMaxX(maxX Float) Rect:
+    """
+    Returns a copy of `this` but with maxX set to the given value
+
+    Since maxX is not stored directly, minX is adjusted.
+    """
+
+  def withMaxY(maxY Float) Rect:
+    """
+    Returns a copy of `this` but with maxY set to the given value
+
+    Since maxY is not stored directly, minY is adjusted.
+    """
+
+  def withWidth(width Float) Rect:
+    """
+    Returns a copy of `this` but with width set to the given value
+    """
+
+  def withHeight(height Float) Rect:
+    """
+    Returns a copy of `this` but with height set to the given value
     """
 
 

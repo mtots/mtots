@@ -19,6 +19,8 @@ typedef enum TypePatternType {
   TYPE_PATTERN_COLOR,
   TYPE_PATTERN_VECTOR_OR_NIL,
   TYPE_PATTERN_VECTOR,
+  TYPE_PATTERN_RECT_OR_NIL,
+  TYPE_PATTERN_RECT,
   TYPE_PATTERN_LIST_OR_NIL,
   TYPE_PATTERN_LIST,
   TYPE_PATTERN_LIST_NUMBER_OR_NIL,
@@ -99,6 +101,7 @@ typedef enum ValueType {
    * but are quite useful in many applications */
   VAL_COLOR,
   VAL_VECTOR,
+  VAL_RECT,
 
   VAL_OBJ
 } ValueType;
@@ -109,9 +112,10 @@ typedef struct Value {
   ValueType type; /* 4-bytes */
 
   union {
-    i32 integer;   /* for FastRange and FastRangeIterator */
-    u32 index;     /* for FastListIterator */
-    float number;  /* for Vector */
+    i32 integer;       /* for FastRange and FastRangeIterator */
+    u32 index;         /* for FastListIterator */
+    float number;      /* for Vector */
+    RectExponent rect; /* for Rect */
   } extra; /* 4-bytes */
 
   /*
@@ -129,6 +133,7 @@ typedef struct Value {
     FastRangePartial fastRange;
     VectorPartial vector;
     Obj *obj;
+    RectFraction rect;
   } as; /* 8-bytes */
 } Value;
 
@@ -158,6 +163,7 @@ typedef struct ValueArray {
 #define IS_FAST_LIST_ITERATOR(value) ((value).type == VAL_FAST_LIST_ITERATOR)
 #define IS_COLOR(value) ((value).type == VAL_COLOR)
 #define IS_VECTOR(value) ((value).type == VAL_VECTOR)
+#define IS_RECT(value) ((value).type == VAL_RECT)
 #define IS_OBJ(value) ((value).type == VAL_OBJ)
 #define AS_OBJ(value) ((value).as.obj)
 #define AS_BOOL(value) ((value).as.boolean)
@@ -171,6 +177,7 @@ typedef struct ValueArray {
 FastRange AS_FAST_RANGE(Value value);
 FastRangeIterator AS_FAST_RANGE_ITERATOR(Value value);
 Vector AS_VECTOR(Value value);
+Rect AS_RECT(Value value);
 
 size_t AS_SIZE(Value value);
 u32 AS_U32_BITS(Value value);
@@ -189,6 +196,7 @@ Value BOOL_VAL(ubool value);
 Value NUMBER_VAL(double value);
 Value COLOR_VAL(Color value);
 Value VECTOR_VAL(Vector value);
+Value RECT_VAL(Rect value);
 Value STRING_VAL(String *string);
 Value CFUNCTION_VAL(CFunction *func);
 Value SENTINEL_VAL(Sentinel sentinel);

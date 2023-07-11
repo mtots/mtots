@@ -28,6 +28,10 @@ Vector AS_VECTOR(Value value) {
   return v;
 }
 
+Rect AS_RECT(Value value) {
+  return newRectFromParts(value.extra.rect, value.as.rect);
+}
+
 size_t AS_SIZE(Value value) {
   double x = AS_NUMBER(value);
 
@@ -190,6 +194,11 @@ Value VECTOR_VAL(Vector value) {
   v.extra.number = value.z;
   return v;
 }
+Value RECT_VAL(Rect value) {
+  Value v = { VAL_RECT };
+  rectToParts(value, &v.extra.rect, &v.as.rect);
+  return v;
+}
 Value STRING_VAL(String *string) {
   Value v = { VAL_STRING  };
   v.as.string = string;
@@ -300,6 +309,16 @@ void printValue(Value value) {
         value.as.vector.y,
         value.extra.number);
       return;
+    case VAL_RECT: {
+      Rect rect = AS_RECT(value);
+      printf(
+        "Rect(%f,%f,%f,%f)",
+        rect.minX,
+        rect.minY,
+        rect.width,
+        rect.height);
+      return;
+    }
     case VAL_OBJ:
       printObject(value);
       return;
@@ -320,6 +339,7 @@ const char *getValueTypeName(ValueType type) {
     case VAL_FAST_LIST_ITERATOR: return "VAL_FAST_LIST_ITERATOR";
     case VAL_COLOR: return "VAL_COLOR";
     case VAL_VECTOR: return "VAL_VECTOR";
+    case VAL_RECT: return "VAL_RECT";
     case VAL_OBJ: return "VAL_OBJ";
   }
   return "<unrecognized>";
@@ -342,6 +362,7 @@ const char *getKindName(Value value) {
     case VAL_FAST_LIST_ITERATOR: return "fastListIterator";
     case VAL_COLOR: return "Color";
     case VAL_VECTOR: return "Vector";
+    case VAL_RECT: return "Rect";
     case VAL_OBJ: switch (value.as.obj->type) {
       case OBJ_CLASS: return "class";
       case OBJ_CLOSURE: return "closure";
@@ -390,6 +411,12 @@ ubool typePatternMatch(TypePattern pattern, Value value) {
       }
       /* fallthrough*/
     case TYPE_PATTERN_VECTOR: return IS_VECTOR(value);
+    case TYPE_PATTERN_RECT_OR_NIL:
+      if (IS_NIL(value)) {
+        return UTRUE;
+      }
+      /* fallthrough*/
+    case TYPE_PATTERN_RECT: return IS_RECT(value);
     case TYPE_PATTERN_LIST_OR_NIL:
       if (IS_NIL(value)) {
         return UTRUE;
@@ -486,6 +513,8 @@ const char *getTypePatternName(TypePattern pattern) {
     case TYPE_PATTERN_COLOR: return "Color";
     case TYPE_PATTERN_VECTOR_OR_NIL: return "(Vector|nil)";
     case TYPE_PATTERN_VECTOR: return "Vector";
+    case TYPE_PATTERN_RECT_OR_NIL: return "(Rect|nil)";
+    case TYPE_PATTERN_RECT: return "Rect";
     case TYPE_PATTERN_LIST_OR_NIL: return "(list|nil)";
     case TYPE_PATTERN_LIST: return "list";
     case TYPE_PATTERN_LIST_NUMBER_OR_NIL: return "(list[number]|nil)";

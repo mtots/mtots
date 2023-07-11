@@ -1245,8 +1245,10 @@ static CFunction funcTextureGetattr = {
 
 static ubool implTextureBlit(i16 argc, Value *args, Value *out) {
   ObjTexture *texture = AS_TEXTURE(args[-1]);
-  ObjRect *srcRect = !IS_NIL(args[0]) ? AS_RECT(args[0]) : NULL;
-  ObjRect *dstRect = !IS_NIL(args[1]) ? AS_RECT(args[1]) : NULL;
+  ubool hasSrcRect = !IS_NIL(args[0]);
+  Rect srcRect = hasSrcRect ? AS_RECT(args[0]) : newRect(0, 0, 0, 0);
+  ubool hasDstRect = !IS_NIL(args[1]);
+  Rect dstRect = hasDstRect ? AS_RECT(args[1]) : newRect(0, 0, 0, 0);
   double rotateAngleRadians = argc > 2 && !IS_NIL(args[2]) ? AS_NUMBER(args[2]) : 0;
   double rotateAngleDegrees = rotateAngleRadians * 180 / PI;
   ubool centerProvided = argc > 3 && !IS_NIL(args[3]);
@@ -1255,17 +1257,17 @@ static ubool implTextureBlit(i16 argc, Value *args, Value *out) {
   SDL_Rect srcSDLRect;
   SDL_Rect dstSDLRect;
   SDL_Point centerPoint;
-  if (srcRect) {
-    srcSDLRect.x = srcRect->handle.minX;
-    srcSDLRect.y = srcRect->handle.minY;
-    srcSDLRect.w = srcRect->handle.width;
-    srcSDLRect.h = srcRect->handle.height;
+  if (hasSrcRect) {
+    srcSDLRect.x = srcRect.minX;
+    srcSDLRect.y = srcRect.minY;
+    srcSDLRect.w = srcRect.width;
+    srcSDLRect.h = srcRect.height;
   }
-  if (dstRect) {
-    dstSDLRect.x = dstRect->handle.minX;
-    dstSDLRect.y = dstRect->handle.minY;
-    dstSDLRect.w = dstRect->handle.width;
-    dstSDLRect.h = dstRect->handle.height;
+  if (hasDstRect) {
+    dstSDLRect.x = dstRect.minX;
+    dstSDLRect.y = dstRect.minY;
+    dstSDLRect.w = dstRect.width;
+    dstSDLRect.h = dstRect.height;
   }
   if (centerProvided) {
     Vector center = AS_VECTOR(args[3]);
@@ -1275,8 +1277,8 @@ static ubool implTextureBlit(i16 argc, Value *args, Value *out) {
   if (SDL_RenderCopyEx(
       texture->window->renderer,
       texture->handle,
-      srcRect ? &srcSDLRect : NULL,
-      dstRect ? &dstSDLRect : NULL,
+      hasSrcRect ? &srcSDLRect : NULL,
+      hasDstRect ? &dstSDLRect : NULL,
       rotateAngleDegrees,
       centerProvided ? &centerPoint : NULL,
       (flipX ? SDL_FLIP_HORIZONTAL : 0) |
@@ -1287,8 +1289,8 @@ static ubool implTextureBlit(i16 argc, Value *args, Value *out) {
 }
 
 static TypePattern argsTextureBlit[] = {
-  { TYPE_PATTERN_NATIVE_OR_NIL, &descriptorRect },
-  { TYPE_PATTERN_NATIVE_OR_NIL, &descriptorRect },
+  { TYPE_PATTERN_RECT_OR_NIL },
+  { TYPE_PATTERN_RECT_OR_NIL },
   { TYPE_PATTERN_NUMBER },
   { TYPE_PATTERN_VECTOR_OR_NIL },
   { TYPE_PATTERN_BOOL },

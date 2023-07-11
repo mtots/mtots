@@ -27,4 +27,7 @@ double dabs(double a);
  * Based on https://peps.python.org/pep-0485/ */
 ubool doubleIsCloseEx(double a, double b, double relTol, double absTol);
 
+float partsToF24(i8 exponent, i16 significand);
+void f24ToParts(float value, i8 *exponent, i16 *significand);
+
 #endif/*mtots_util_number_h*/

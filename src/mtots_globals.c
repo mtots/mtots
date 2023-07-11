@@ -655,7 +655,6 @@ void defineDefaultGlobals(void) {
   NativeObjectDescriptor *descriptors[] = {
     &descriptorStringBuilder,
     &descriptorMatrix,
-    &descriptorRect,
     NULL,
   }, **descriptor;
   CFunction *functions[] = {
@@ -713,6 +712,7 @@ void defineDefaultGlobals(void) {
     &vm.classClass,
     &vm.colorClass,
     &vm.vectorClass,
+    &vm.rectClass,
     NULL,
   }, ***builtinClass;
 

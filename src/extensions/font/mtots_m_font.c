@@ -33,7 +33,7 @@ struct ObjPen {
   ObjImage *image;
   float lineStartX, x, y;
   Color color;
-  ObjRect *boundingBox;
+  Rect boundingBox;
 };
 
 static void blackenFont(ObjNative *n) {
@@ -50,7 +50,6 @@ static void blackenPen(ObjNative *n) {
   ObjPen *pen = (ObjPen*)n;
   markObject((Obj*)pen->font);
   markObject((Obj*)pen->image);
-  markObject((Obj*)pen->boundingBox);
 }
 
 NativeObjectDescriptor descriptorFont = {
@@ -176,7 +175,7 @@ ObjPen *newPen(ObjFont *font, ObjImage *image, double x, double y, Color color) 
   pen->lineStartX = pen->x = x;
   pen->y = y;
   pen->color = color;
-  pen->boundingBox = allocRect(newRect(0, 0, 0, 0));
+  pen->boundingBox = newRect(0, 0, 0, 0);
   LOCAL_GC_UNPAUSE(gcPause);
   return pen;
 }
@@ -260,12 +259,10 @@ static ubool penWrite(ObjPen *pen, String *string) {
   }
   maxX = dmax(maxX, pen->x);
   maxY = dmax(maxY, pen->y - (font->face->size->metrics.descender >> 6));
-  if (pen->boundingBox) {
-    pen->boundingBox->handle.minX = minX;
-    pen->boundingBox->handle.minY = minY;
-    pen->boundingBox->handle.width = maxX - minX;
-    pen->boundingBox->handle.height = maxY - minY;
-  }
+  pen->boundingBox.minX = minX;
+  pen->boundingBox.minY = minY;
+  pen->boundingBox.width = maxX - minX;
+  pen->boundingBox.height = maxY - minY;
   return UTRUE;
 }
 

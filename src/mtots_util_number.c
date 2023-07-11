@@ -42,3 +42,26 @@ double dabs(double a) {
 ubool doubleIsCloseEx(double a, double b, double relTol, double absTol) {
   return dabs(a - b) <= dmax(relTol * dmax(dabs(a), dabs(b)), absTol);
 }
+
+/*
+ * TODO: Consider using higher precision with an implicit high bit
+ * for partsToF24 and f24ToParts.
+ *
+ * I am pretty sure we can store more precision in the same number of
+ * bits, but I don't want to spend too much time on this right now.
+ *
+ * Also, I think ~14-bits of precision is good enough for now especially
+ * given that this is primarily used with Rect to specify screen coordinates.
+ */
+
+float partsToF24(i8 exponent, i16 significand) {
+  /* 16384 = 2 ** 14 */
+  return (((float)significand) / 16384) * pow(2, exponent);
+}
+
+void f24ToParts(float value, i8 *exponent, i16 *significand) {
+  /* 16384 = 2 ** 14 */
+  int exp;
+  *significand = (i16)(frexp(value, &exp) * 16384);
+  *exponent = (i8)exp;
+}
