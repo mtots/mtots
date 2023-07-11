@@ -159,10 +159,10 @@ def loadDataFromClipboard():
   clipboardData.clear()
   final clipboard = p.clipboard()
   if clipboard.startsWith('[gfx]') and clipboard.endsWith('[/gfx]'):
-    clipboardWidth = int(clipboard[5:7], 16)
-    clipboardHeight = int(clipboard[7:9], 16)
+    clipboardWidth = int(clipboard[5:7], 32)
+    clipboardHeight = int(clipboard[7:9], 32)
     for ch in clipboard[9:-6]:
-      clipboardData.append(int(ch, 16))
+      clipboardData.append(int(ch, 32))
 
 
 def setSelectedTool(toolIndex Int) nil:
