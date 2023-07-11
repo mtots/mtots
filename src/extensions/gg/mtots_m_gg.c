@@ -136,9 +136,8 @@ static String *repeatString;
 static String *dxString;
 static String *dyString;
 static String *transformString;
-static String *scancodeKeys[SCANCODE_KEY_COUNT];
 static const u8 *keyboardState;
-static size_t keyboardStateLen;
+static u8 previousKeyboardState[SCANCODE_KEY_COUNT];
 static Vector mousePos;
 static u32 previousMouseButtonState;
 static u32 currentMouseButtonState;
@@ -442,6 +441,7 @@ static ubool newWindow(
 
 static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
   SDL_Event event;
+  memcpy(previousKeyboardState, keyboardState, SCANCODE_KEY_COUNT);
   while (SDL_PollEvent(&event)) {
     switch (event.type) {
       case SDL_QUIT:
@@ -477,17 +477,14 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
         if (!IS_NIL(mainWindow->onKeyDown)) {
           u32 scancode = event.key.keysym.scancode;
           if (scancode < SCANCODE_KEY_COUNT) {
-            String *key = scancodeKeys[scancode];
-            if (key) {
-              theKeyEvent->key = scancode;
-              theKeyEvent->repeat = !!event.key.repeat;
-              push(mainWindow->onKeyDown);
-              push(KEY_EVENT_VAL(theKeyEvent));
-              if (!callFunction(1)) {
-                return UFALSE;
-              }
-              pop();
+            theKeyEvent->key = scancode;
+            theKeyEvent->repeat = !!event.key.repeat;
+            push(mainWindow->onKeyDown);
+            push(KEY_EVENT_VAL(theKeyEvent));
+            if (!callFunction(1)) {
+              return UFALSE;
             }
+            pop();
           }
         }
         break;
@@ -495,17 +492,14 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
         if (!IS_NIL(mainWindow->onKeyUp)) {
           i32 scancode = event.key.keysym.scancode;
           if (scancode < SCANCODE_KEY_COUNT) {
-            String *key = scancodeKeys[scancode];
-            if (key) {
-              theKeyEvent->key = scancode;
-              theKeyEvent->repeat = !!event.key.repeat;
-              push(mainWindow->onKeyUp);
-              push(KEY_EVENT_VAL(theKeyEvent));
-              if (!callFunction(1)) {
-                return UFALSE;
-              }
-              pop();
+            theKeyEvent->key = scancode;
+            theKeyEvent->repeat = !!event.key.repeat;
+            push(mainWindow->onKeyUp);
+            push(KEY_EVENT_VAL(theKeyEvent));
+            if (!callFunction(1)) {
+              return UFALSE;
             }
+            pop();
           }
         }
         break;
@@ -1525,12 +1519,24 @@ static CFunction funcMotionEventGetattr = {
 };
 
 static ubool implKey(i16 argc, Value *args, Value *out) {
-  size_t scancode = AS_INDEX(args[0], keyboardStateLen);
-  *out = BOOL_VAL(!!keyboardState[scancode]);
+  size_t scancode = AS_INDEX(args[0], SCANCODE_KEY_COUNT);
+  u32 query = argc > 1 ? AS_U32(args[1]) : 0;
+  ubool previous = !!previousKeyboardState[scancode];
+  ubool current = !!keyboardState[scancode];
+  ubool result;
+  switch (query) {
+    case 0: result = !previous &&  current; break; /* PRESSED */
+    case 1: result =  previous && !current; break; /* RELEASED */
+    case 2: result =               current; break; /* HELD */
+    default:
+      runtimeError("Invalid keyboard key query: %d", (int)query);
+      return UFALSE;
+  }
+  *out = BOOL_VAL(result);
   return UTRUE;
 }
 
-static CFunction funcKey = { implKey, "key", 1, 0, argsNumbers };
+static CFunction funcKey = { implKey, "key", 1, 2, argsNumbers };
 
 static ubool implMousePosition(i16 argc, Value *args, Value *out) {
   *out = VECTOR_VAL(mousePos);
@@ -1736,19 +1742,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
   moduleRetain(module, STRING_VAL(dyString = internCString("dy")));
   moduleRetain(module, STRING_VAL(transformString = internCString("transform")));
 
-  {
-    ScancodeEntry *entry = scancodeEntries;
-    for (; entry->name; entry++) {
-      String *name = internCString(entry->name);
-      i32 scancode = entry->scancode;
-      if (scancode < 0 || scancode >= SCANCODE_KEY_COUNT) {
-        panic("Scancode out of bounds: %d", scancode);
-      }
-      moduleRetain(module, STRING_VAL(name));
-      scancodeKeys[scancode] = name;
-    }
-  }
-
   moduleRetain(module, CLICK_EVENT_VAL(
     theClickEvent = NEW_NATIVE(ObjClickEvent, &descriptorClickEvent)));
   moduleRetain(module, KEY_EVENT_VAL(
@@ -1830,7 +1823,13 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
   {
     int numkeys;
     keyboardState = SDL_GetKeyboardState(&numkeys);
-    keyboardStateLen = (size_t)numkeys;
+    /* numkeys is expected to be 512 */
+    if (numkeys < ((int)SCANCODE_KEY_COUNT)) {
+      panic(
+        "numKeys(%d) < SCANCODE_KEY_COUNT(%d)",
+        (int)numkeys,
+        (int)SCANCODE_KEY_COUNT);
+    }
   }
 
   audioMutex = SDL_CreateMutex();

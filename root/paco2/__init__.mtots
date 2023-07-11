@@ -219,7 +219,7 @@ def click(mouseButtonID Int=0, query Int=0) Bool:
   return gg.mouseButton(mouseButtonID, query)
 
 
-def key(scancode Int=-1, query Int=2) Int:
+def key(scancode Int=-1, query Int=0) Int:
   """
   Checks the state of a key on the keyboard.
 
@@ -233,13 +233,11 @@ def key(scancode Int=-1, query Int=2) Int:
     remain, this function will return -1.
 
   * query - Determines the kind of query to make about a key on the keyboard.
-    Defaults to 2.
+    Defaults to 0.
 
     The three valid values for query are:
     * 0 (PRESSED) - to see if the key was just recently pressed,
     * 1 (RELEASED) - to see if the key was just recently released, or
     * 2 (HELD) - to see if a key is currently being held down.
   """
-  if query != 2:
-    raise "paco2.key() does not yet support any queries besides 'HELD' (2)"
-  return gg.key(scancode)
+  return gg.key(scancode, query)

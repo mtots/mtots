@@ -595,9 +595,29 @@ class MotionEvent:
   final dy Int "relative motion in the y direction"
 
 
-def key(scancode Int) Bool:
+def key(scancode Int, query Int=0) Bool:
   """
-  Tests whether the key corresponding to the given scancode is currently pressed.
+  Queries the state of a key on the keyboard
+
+  Parameters:
+  * scancode - a non-negative integer that specifies the key on the keyboard.
+    You can get these by name from the `gg.KEY` dictionary.
+
+    These values come from the USB HID Keyboard scan codes as per USB spec.
+
+    For more information, see:
+      * https://stackoverflow.com/q/27075328
+      * https://source.android.com/docs/core/interaction/input/keyboard-devices
+
+  * query - an integer between 0-2 inclusive indicating the kind of
+    event to query for.
+    Defaults to 0.
+    * 0 (PRESSED) - tests for whether the given key was just pressed
+      within the past frame.
+    * 1 (RELEASED) - tests whether the given key was just released within
+      the past frame.
+    * 2 (HELD) - test whether the key is currently being held down by
+      the player.
   """
 
 
