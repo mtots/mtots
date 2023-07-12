@@ -66,6 +66,7 @@ var angleZ = 0
 final audio = Audio.fromSampleCount(44100)
 for i in range(44100):
   audio.set(i, 0, sin(i / 44100 * 440 * TAU) * ((2 ** 15) - 1))
+  audio.set(i, 1, sin(i / 44100 * 440 * TAU) * ((2 ** 15) - 1))
 
 final chan0 = gg.PlaybackChannel.get(0)
 chan0.load(audio)
@@ -94,6 +95,7 @@ def():
       chan0.pause(false)
     else:
       chan0.start(-1)
+      started = true
     # gg.synth(0, 0, 300, 1)
 
   if gg.key(gg.KEY.F, 1):

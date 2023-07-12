@@ -23,7 +23,7 @@
 #define SCANCODE_KEY_COUNT 256
 
 #define VOLUME_MAX                  128
-#define DEFAULT_VOLUME            (0.1)
+#define DEFAULT_VOLUME           (0.25)
 #define PLAYBACK_CHANNEL_COUNT        8
 
 #define SYNTH_CHANNEL_COUNT   8
@@ -302,7 +302,7 @@ static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
     size_t i;
     for (i = 0; i < PLAYBACK_CHANNEL_COUNT; i++) {
       if (rewind[i]) {
-        playbackData.array[i].currentSample = 0;
+        mixerConfig.playback[i].rewind = UFALSE;
       }
     }
   }
@@ -313,7 +313,7 @@ static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
      * it should be ok in this case, as we always assume 16-bit stereo */
 
     for (i = 0; i < sampleCount; i++, tick++) {
-      i32 left = 0, right = 0;
+      double left = 0, right = 0;
       double synthTotal = 0;
       size_t j;
       for (j = 0; j < SYNTH_CHANNEL_COUNT; j++) {
@@ -347,8 +347,8 @@ static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
           chdat->currentSample++;
         }
       }
-      dat[2 * i + 0] = clamp(left  / (double)VOLUME_MAX + I16_MAX * synthTotal);
-      dat[2 * i + 1] = clamp(right / (double)VOLUME_MAX + I16_MAX * synthTotal);
+      dat[2 * i + 0] = clamp(  left + I16_MAX * synthTotal );
+      dat[2 * i + 1] = clamp( right + I16_MAX * synthTotal );
     }
   }
   unlockPlaybackDataMutex();
@@ -422,7 +422,7 @@ static void prepareAudio() {
   }
 }
 
-static void playAudio(size_t channelIndex, size_t repeats) {
+static void startAudio(size_t channelIndex, u32 repeats) {
   checkChannel(channelIndex);
   prepareAudio();
   lockMixerConfigMutex();
@@ -1585,7 +1585,7 @@ static ubool implPlaybackChannelStart(i16 argc, Value *args, Value *out) {
   if (repeats < 0) {
     repeats = I32_MAX;
   }
-  playAudio(ch->channelID, repeats);
+  startAudio(ch->channelID, (u32)repeats);
   return UTRUE;
 }
 

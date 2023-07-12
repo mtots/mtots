@@ -634,6 +634,33 @@ class PlaybackChannel:
 
   There are 8 playback channels. You can get a channel with the
   `PlaybackChannel.get()` static method.
+
+  Sample usage:
+
+  ```
+  final channel = gg.PlaybackChannel.get(0)
+
+  # Loads some audio to the channel, but does not
+  # start playing yet.
+  channel.load(someAudio)
+
+  # ...
+
+  # Start playing audio.
+  # The `-1` parameter means run forever.
+  channel.start(-1)
+
+  # ...
+
+  # Pauses the audio. The current playback
+  # position is remembered.
+  channel.pause(true)
+
+  # ...
+
+  # Resumes the audio from previous playback location
+  channel.pause(false)
+  ```
   """
 
   static def get(channelID Int) PlaybackChannel:
