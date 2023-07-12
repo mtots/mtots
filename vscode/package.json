@@ -2,7 +2,7 @@
     "name": "mtots",
     "displayName": "mtots",
     "description": "Intellisense support for Mtots",
-    "version": "0.0.43",
+    "version": "0.0.44",
     "publisher": "mtots",
     "license": "Apache-2.0",
     "repository": {
