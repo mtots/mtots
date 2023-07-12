@@ -1593,20 +1593,30 @@ static CFunction funcMouseButton = { implMouseButton, "mouseButton", 1, 2, argsN
 
 static ubool implSynth(i16 argc, Value *args, Value *out) {
   size_t channelID = AS_INDEX(args[0], SYNTH_CHANNEL_COUNT);
-  u32 waveType = AS_U32(args[1]);
-  double frequency = AS_NUMBER(args[2]);
-  double volume = argc > 3 ? AS_NUMBER(args[3]) : 0.1;
   lockMixerConfigMutex();
-  mixerConfig.synth[channelID].waveType = waveType;
-  mixerConfig.synth[channelID].frequency = frequency;
-  mixerConfig.synth[channelID].volume = volume;
+  if (argc > 1 && !IS_NIL(args[1])) {
+    mixerConfig.synth[channelID].frequency = AS_NUMBER(args[1]);
+  }
+  if (argc > 2 && !IS_NIL(args[2])) {
+    mixerConfig.synth[channelID].volume = AS_NUMBER(args[2]);
+  }
+  if (argc > 3 && !IS_NIL(args[3])) {
+    mixerConfig.synth[channelID].waveType = AS_INDEX(args[3], 1);
+  }
   unlockMixerConfigMutex();
   prepareAudio();
   return UTRUE;
 }
 
+static TypePattern argsSynth[] = {
+  { TYPE_PATTERN_NUMBER },
+  { TYPE_PATTERN_NUMBER_OR_NIL },
+  { TYPE_PATTERN_NUMBER_OR_NIL },
+  { TYPE_PATTERN_NUMBER_OR_NIL },
+};
+
 static CFunction funcSynth = {
-  implSynth, "synth", 3, 4, argsNumbers
+  implSynth, "synth", 1, 4, argsSynth
 };
 
 static ubool implMusic(i16 argc, Value *args, Value *out) {

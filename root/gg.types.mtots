@@ -598,7 +598,7 @@ def mouseButton(buttonID Int, query Int=0) Bool:
   """
 
 
-def synth(channelID Int, waveType Int, frequency Float, volume Float=0.1) nil:
+def synth(channelID Int, frequency Float?=nil, volume Float?=nil, waveType Int?=nil) nil:
   """
   Play a synthetic sound on a synth channel.
 
@@ -618,18 +618,28 @@ def synth(channelID Int, waveType Int, frequency Float, volume Float=0.1) nil:
   Parameters:
   * channelID - An integer between and 0 and 7 inclusive indicating the
     synth channel to modify.
-  * waveType - An integer indicating the type of waveform to generate.
-    The following are supported:
-    * 0 - pure sine wave
   * frequency - the frequency of the wave to control the pitch of the
     generated sound.
     If you have no idea what to use here and you just want to make
     a sound, 440 (also known as 'modern concert pitch') might be a
     good start.
+
+    Frequency is unchanged if parameter is omitted or nil.
+
   * volume - a number from 0 to 1 inclusive that indicates how loud
     the sound will be. Values below 0 or above 1 will be clamped to [0, 1].
+    If nil or omitted, the volume is left unchanged.
+
+    Volume is unchanged if parameter is omitted or nil.
+
     NOTE: This is a linear scale controlling the amplitude of the
     generated wave, so take this into account in your application.
+
+  * waveType - An integer indicating the type of waveform to generate.
+    The following are supported:
+    * 0 - pure sine wave
+
+    Wave type is unchanged if parameter is omitted or nil.
   """
 
 

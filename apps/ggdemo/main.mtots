@@ -191,10 +191,10 @@ def():
       ball.angle = TAU * (tick / 60)
 
   if gg.mouseButton(0, 0):
-    gg.synth(0, 0, 440, 1)
+    gg.synth(0, 440, 1)
 
   if gg.mouseButton(0, 1):
-    gg.synth(0, 0, 0, 0)
+    gg.synth(0, 0)
 
   if gg.key(gg.KEY.G, 0, false):
     gg.music(1, notes)
@@ -213,11 +213,8 @@ def():
     else:
       chan0.start(-1)
       started = true
-    # gg.synth(0, 0, 300, 1)
 
   if gg.key(gg.KEY.F, 1):
-    # gg.synth(0, 0, 0, 0)
-    # gg.setAudioVolume(0, 0)
     chan0.pause(true)
 
   sys.enableMallocFreeLogs(true)
