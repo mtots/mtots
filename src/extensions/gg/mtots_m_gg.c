@@ -128,9 +128,10 @@ static Vector mousePos;
 static Vector mouseMotion;
 static u32 previousMouseButtonState;
 static u32 currentMouseButtonState;
-static u64 synthTickCount;
+static u64 audioTick;
 static SynthChannels synthChannels;
 static AudioChannel audioChannels[CHANNEL_COUNT];
+static SDL_mutex *audioTickMutex;
 static SDL_mutex *synthMutex;
 static SDL_mutex *audioMutex;
 static SDL_AudioDeviceID audioDevice;
@@ -202,6 +203,18 @@ static NativeObjectDescriptor descriptorGeometry = {
   blackenGeometry, freeGeometry, sizeof(ObjGeometry), "Geometry"
 };
 
+static void lockAudioTickMutex(void) {
+  if (SDL_LockMutex(audioTickMutex) != 0) {
+    panic("SDL_LockMutex(audioTickMutex) failed");
+  }
+}
+
+static void unlockAudioTickMutex(void) {
+  if (SDL_UnlockMutex(audioTickMutex) != 0) {
+    panic("SDL_UnlockMutex(audioTickMutex) failed");
+  }
+}
+
 static void lockSynthMutex(void) {
   if (SDL_LockMutex(synthMutex) != 0) {
     panic("SDL_LockMutex(synthMutex) failed");
@@ -241,16 +254,18 @@ static i16 clamp(double value) {
 }
 
 static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
-  SynthChannels schans;
   u64 tick;
+  SynthChannels schans;
+  lockAudioTickMutex();
+  tick = audioTick;
+  unlockAudioTickMutex();
   lockSynthMutex();
-  tick = synthTickCount;
   schans = synthChannels;
   unlockSynthMutex();
-  lockAudioMutex();
 
+  lockAudioMutex();
   /*
-   * synthTickCount basically counts up 44100 per second starting from
+   * audioTick basically counts up 44100 per second starting from
    * when the audio is first processed.
    *
    * We also convert this tick count to a double when we perform
@@ -289,7 +304,6 @@ static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
           default: break;
         }
       }
-      /* oprintln("synthTotal = %f", synthTotal); */
       for (j = 0; j < CHANNEL_COUNT; j++) {
         AudioChannel *ch = audioChannels + j;
         if (ch->pause) {
@@ -305,14 +319,14 @@ static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
           ch->currentSample++;
         }
       }
-      dat[2 * i + 0] = clamp(left  / VOLUME_MAX + (i32)(I16_MAX * synthTotal));
-      dat[2 * i + 1] = clamp(right / VOLUME_MAX + (i32)(I16_MAX * synthTotal));
+      dat[2 * i + 0] = clamp(left  / (double)VOLUME_MAX + I16_MAX * synthTotal);
+      dat[2 * i + 1] = clamp(right / (double)VOLUME_MAX + I16_MAX * synthTotal);
     }
   }
   unlockAudioMutex();
-  lockSynthMutex();
-  synthTickCount = tick;
-  unlockSynthMutex();
+  lockAudioTickMutex();
+  audioTick = tick;
+  unlockAudioTickMutex();
 }
 
 static void loadAudio(ObjAudio *audio, size_t channelIndex) {
@@ -1691,6 +1705,11 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
         (int)numkeys,
         (int)SCANCODE_KEY_COUNT);
     }
+  }
+
+  audioTickMutex = SDL_CreateMutex();
+  if (!audioTickMutex) {
+    return sdlError("SDL_CreateMutex");
   }
 
   synthMutex = SDL_CreateMutex();
