@@ -1052,7 +1052,7 @@ function _solve(
     if (importModule) {
       const moduleType = new ir.ModuleType(importModule);
       const moduleVariable = new Variable(
-        true, imp.module.identifier, moduleType, module.file.documentation);
+        true, imp.module.identifier, moduleType, importModule.file.documentation);
       declareUsage(imp.module.identifier, moduleVariable);
       if (imp.member) {
         const memberVariable = importModule.scope.get(imp.member.name);
