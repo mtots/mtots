@@ -19,6 +19,10 @@ Future work:
 
 ## Release Notes
 
+### 0.0.44
+
+Fix member completion when in middle of using a decorator
+
 ### 0.0.43
 
 Hovering function calls will now show the actual value of default parameters

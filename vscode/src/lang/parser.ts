@@ -895,9 +895,23 @@ function _parse(filePath: string | Uri, s: string): ast.File {
 
   function parseDecoratorApplication(): ast.Statement {
     const atLocation = expect('@').location;
-    const decoratorIdentifier = new ast.Identifier(atLocation, '<decorator>');
-    const decorator = parsePrec(PREC_PRIMARY);
-    const methodName = consume('.') ? parseIdentifier() : null;
+    let decorator = parsePrec(PREC_PRIMARY);
+    let methodName: ast.Identifier|null = null;
+    const dotLocation = peek.location;
+    if (consume('.')) {
+      if (at('IDENTIFIER')) {
+        methodName = parseIdentifier();
+      } else {
+        // This is technically an error, but we don't want parse to fail completely
+        // because a failed parse means no completions
+        const followLocation = peek.location;
+        decorator = new ast.Dot(
+          dotLocation.merge(followLocation),
+          decorator,
+          dotLocation,
+          followLocation);
+      }
+    }
     expectStatementDelimiter();
     const func = parseFunctionDeclaration(false);
     const getfunc = new ast.GetVariable(func.identifier.location, func.identifier);
