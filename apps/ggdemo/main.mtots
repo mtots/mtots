@@ -67,8 +67,9 @@ final audio = Audio.fromSampleCount(44100)
 for i in range(44100):
   audio.set(i, 0, sin(i / 44100 * 440 * TAU) * ((2 ** 15) - 1))
 
-gg.loadAudio(audio, 0)
-gg.setAudioVolume(0, 128)
+final chan0 = gg.PlaybackChannel.get(0)
+chan0.load(audio)
+chan0.setVolume(1)
 
 var started = false
 
@@ -90,15 +91,15 @@ def():
 
   if gg.key(gg.KEY.F, 0, false):
     if started:
-      gg.pauseAudio(0, false)
+      chan0.pause(false)
     else:
-      gg.playAudio(0, -1)
+      chan0.start(-1)
     # gg.synth(0, 0, 300, 1)
 
   if gg.key(gg.KEY.F, 1):
     # gg.synth(0, 0, 0, 0)
     # gg.setAudioVolume(0, 0)
-    gg.pauseAudio(0, true)
+    chan0.pause(true)
 
   sys.enableMallocFreeLogs(true)
   for ball in balls:

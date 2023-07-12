@@ -22,9 +22,9 @@
 #define DEFAULT_FRAMES_PER_SECOND 30
 #define SCANCODE_KEY_COUNT 256
 
-#define VOLUME_MAX         128
-#define DEFAULT_VOLUME      50
-#define CHANNEL_COUNT        8
+#define VOLUME_MAX                  128
+#define DEFAULT_VOLUME            (0.1)
+#define PLAYBACK_CHANNEL_COUNT        8
 
 #define SYNTH_CHANNEL_COUNT   8
 
@@ -50,9 +50,11 @@
 #define AS_WINDOW(v) ((ObjWindow*)AS_OBJ((v)))
 #define AS_TEXTURE(v) ((ObjTexture*)AS_OBJ((v)))
 #define AS_GEOMETRY(v) ((ObjGeometry*)AS_OBJ((v)))
+#define AS_PLAYBACK_CHANNEL(v) ((ObjPlaybackChannel*)AS_OBJ((v)))
 #define IS_WINDOW(v) ((getNativeObjectDescriptor((v)) == &descriptorWindow))
 #define IS_TEXTURE(v) ((getNativeObjectDescriptor((v)) == &descriptorTexture))
 #define IS_GEOMETRY(v) ((getNativeObjectDescriptor((v)) == &descriptorGeometry))
+#define IS_PLAYBACK_CHANNEL(v) ((getNativeObjectDescriptor((v)) == &descriptorPlaybackChannel))
 
 typedef struct ObjTexture ObjTexture;
 
@@ -95,22 +97,37 @@ typedef struct ObjGeometry {
   ObjMatrix *transform;         /* transform on vectors to determine vertices */
 } ObjGeometry;
 
-typedef struct AudioChannel {
-  size_t sampleCount, currentSample, repeats;
-  u16 volume;
-  i16 *data;
-  ubool pause;
-} AudioChannel;
+typedef struct ObjPlaybackChannel {
+  ObjNative obj;
+  u8 channelID;
+} ObjPlaybackChannel;
 
-typedef struct SynthChannel {
+typedef struct SynthConfig {
   SynthWaveType waveType;
   float frequency;
   float volume;
-} SynthChannel;
+} SynthConfig;
 
-typedef struct SynthChannels {
-  SynthChannel array[SYNTH_CHANNEL_COUNT];
-} SynthChannels;
+typedef struct PlaybackConfig {
+  u32 repeats;
+  float volume;
+  ubool pause;
+  ubool rewind;
+} PlaybackConfig;
+
+typedef struct PlaybackChannelData {
+  u64 sampleCount, currentSample;
+  i16 *pcm;
+} PlaybackChannelData;
+
+typedef struct PlaybackData {
+  PlaybackChannelData array[PLAYBACK_CHANNEL_COUNT];
+} PlaybackData;
+
+typedef struct MixerConfig {
+  SynthConfig synth[SYNTH_CHANNEL_COUNT];
+  PlaybackConfig playback[PLAYBACK_CHANNEL_COUNT];
+} MixerConfig;
 
 static String *tickString;
 static String *buttonString;
@@ -129,11 +146,10 @@ static Vector mouseMotion;
 static u32 previousMouseButtonState;
 static u32 currentMouseButtonState;
 static u64 audioTick;
-static SynthChannels synthChannels;
-static AudioChannel audioChannels[CHANNEL_COUNT];
-static SDL_mutex *audioTickMutex;
-static SDL_mutex *synthMutex;
-static SDL_mutex *audioMutex;
+static MixerConfig mixerConfig;
+static PlaybackData playbackData;
+static SDL_mutex *mixerConfigMutex; /* for audioTick and MixerConfig */
+static SDL_mutex *playbackDataMutex;   /* for audioData */
 static SDL_AudioDeviceID audioDevice;
 static ObjWindow *activeWindow;
 static ObjModule *ggModule;
@@ -148,6 +164,10 @@ static Value TEXTURE_VAL(ObjTexture *texture) {
 
 static Value GEOMETRY_VAL(ObjGeometry *geometry) {
   return OBJ_VAL_EXPLICIT((Obj*)geometry);
+}
+
+static Value PLAYBACK_CHANNEL_VAL(ObjPlaybackChannel *ch) {
+  return OBJ_VAL_EXPLICIT((Obj*)ch);
 }
 
 static void blackenWindow(ObjNative *n) {
@@ -203,48 +223,40 @@ static NativeObjectDescriptor descriptorGeometry = {
   blackenGeometry, freeGeometry, sizeof(ObjGeometry), "Geometry"
 };
 
-static void lockAudioTickMutex(void) {
-  if (SDL_LockMutex(audioTickMutex) != 0) {
-    panic("SDL_LockMutex(audioTickMutex) failed");
+static NativeObjectDescriptor descriptorPlaybackChannel = {
+  nopBlacken, nopFree, sizeof(ObjPlaybackChannel), "PlaybackChannel"
+};
+
+static void lockMixerConfigMutex(void) {
+  if (SDL_LockMutex(mixerConfigMutex) != 0) {
+    panic("SDL_LockMutex(mixerConfigMutex) failed");
   }
 }
 
-static void unlockAudioTickMutex(void) {
-  if (SDL_UnlockMutex(audioTickMutex) != 0) {
-    panic("SDL_UnlockMutex(audioTickMutex) failed");
+static void unlockMixerConfigMutex(void) {
+  if (SDL_UnlockMutex(mixerConfigMutex) != 0) {
+    panic("SDL_UnlockMutex(mixerConfigMutex) failed");
   }
 }
 
-static void lockSynthMutex(void) {
-  if (SDL_LockMutex(synthMutex) != 0) {
-    panic("SDL_LockMutex(synthMutex) failed");
+static void lockPlaybackDataMutex(void) {
+  if (SDL_LockMutex(playbackDataMutex) != 0) {
+    panic("SDL_LockMutex(playbackDataMutex) failed");
   }
 }
 
-static void unlockSynthMutex(void) {
-  if (SDL_UnlockMutex(synthMutex) != 0) {
-    panic("SDL_UnlockMutex(synthMutex) failed");
-  }
-}
-
-static void lockAudioMutex(void) {
-  if (SDL_LockMutex(audioMutex) != 0) {
-    panic("SDL_LockMutex(audioMutex) failed");
-  }
-}
-
-static void unlockAudioMutex(void) {
-  if (SDL_UnlockMutex(audioMutex) != 0) {
-    panic("SDL_UnlockMutex(audioMutex) failed");
+static void unlockPlaybackDataMutex(void) {
+  if (SDL_UnlockMutex(playbackDataMutex) != 0) {
+    panic("SDL_UnlockMutex(playbackDataMutex) failed");
   }
 }
 
 static void checkChannel(size_t channelIndex) {
-  if (channelIndex > CHANNEL_COUNT) {
+  if (channelIndex > PLAYBACK_CHANNEL_COUNT) {
     panic(
-      "Invalid audio channel %lu (CHANNEL_COUNT=%d)",
+      "Invalid audio channel %lu (PLAYBACK_CHANNEL_COUNT=%d)",
       (unsigned long)channelIndex,
-      CHANNEL_COUNT);
+      PLAYBACK_CHANNEL_COUNT);
   }
 }
 
@@ -255,15 +267,21 @@ static i16 clamp(double value) {
 
 static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
   u64 tick;
-  SynthChannels schans;
-  lockAudioTickMutex();
+  MixerConfig config;
+  u8 rewind[PLAYBACK_CHANNEL_COUNT];
+  lockMixerConfigMutex();
   tick = audioTick;
-  unlockAudioTickMutex();
-  lockSynthMutex();
-  schans = synthChannels;
-  unlockSynthMutex();
+  config = mixerConfig;
+  {
+    size_t i;
+    for (i = 0; i < PLAYBACK_CHANNEL_COUNT; i++) {
+      rewind[i] = config.playback[i].rewind;
+      config.playback[i].rewind = UFALSE;
+    }
+  }
+  unlockMixerConfigMutex();
 
-  lockAudioMutex();
+  lockPlaybackDataMutex();
   /*
    * audioTick basically counts up 44100 per second starting from
    * when the audio is first processed.
@@ -278,7 +296,16 @@ static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
    * With at least 50 bits, at 44100 ticks per second, we can
    * count up to over 800 years precisely.
    */
-
+  {
+    /* If the config says to rewind the channel, we rewind
+     * to the beginning of the sample */
+    size_t i;
+    for (i = 0; i < PLAYBACK_CHANNEL_COUNT; i++) {
+      if (rewind[i]) {
+        playbackData.array[i].currentSample = 0;
+      }
+    }
+  }
   {
     size_t sampleCount = ((size_t)byteLength) / 4, i;
     i16 *dat = (i16*)(void*)stream;
@@ -290,7 +317,7 @@ static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
       double synthTotal = 0;
       size_t j;
       for (j = 0; j < SYNTH_CHANNEL_COUNT; j++) {
-        SynthChannel *ch = schans.array + j;
+        SynthConfig *ch = mixerConfig.synth + j;
         double volume = dmin(1, dmax(0, ch->volume));
         if (!volume) {
           continue;
@@ -304,45 +331,78 @@ static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
           default: break;
         }
       }
-      for (j = 0; j < CHANNEL_COUNT; j++) {
-        AudioChannel *ch = audioChannels + j;
+      for (j = 0; j < PLAYBACK_CHANNEL_COUNT; j++) {
+        PlaybackConfig *ch = config.playback + j;
+        PlaybackChannelData *chdat = playbackData.array + j;
         if (ch->pause) {
           continue;
         }
-        if (ch->currentSample >= ch->sampleCount && ch->repeats) {
-          ch->currentSample = 0;
+        if (chdat->currentSample >= chdat->sampleCount && ch->repeats) {
+          chdat->currentSample = 0;
           ch->repeats--;
         }
-        if (ch->currentSample < ch->sampleCount) {
-          left   += ch->volume * ch->data[ch->currentSample * 2 + 0];
-          right  += ch->volume * ch->data[ch->currentSample * 2 + 1];
-          ch->currentSample++;
+        if (chdat->currentSample < chdat->sampleCount) {
+          left   += ch->volume * chdat->pcm[chdat->currentSample * 2 + 0];
+          right  += ch->volume * chdat->pcm[chdat->currentSample * 2 + 1];
+          chdat->currentSample++;
         }
       }
       dat[2 * i + 0] = clamp(left  / (double)VOLUME_MAX + I16_MAX * synthTotal);
       dat[2 * i + 1] = clamp(right / (double)VOLUME_MAX + I16_MAX * synthTotal);
     }
   }
-  unlockAudioMutex();
-  lockAudioTickMutex();
+  unlockPlaybackDataMutex();
+  lockMixerConfigMutex();
   audioTick = tick;
-  unlockAudioTickMutex();
+  unlockMixerConfigMutex();
+}
+
+static ObjPlaybackChannel *getPlaybackChannel(size_t channelIndex) {
+  static ObjPlaybackChannel *channels[PLAYBACK_CHANNEL_COUNT];
+  ObjPlaybackChannel *ch;
+  checkChannel(channelIndex);
+  ch = channels[channelIndex];
+  if (!ch) {
+    ch = channels[channelIndex] = NEW_NATIVE(ObjPlaybackChannel, &descriptorPlaybackChannel);
+    moduleRetain(ggModule, PLAYBACK_CHANNEL_VAL(ch));
+    ch->channelID = channelIndex;
+    lockMixerConfigMutex();
+    mixerConfig.playback[channelIndex].pause = 0;
+    mixerConfig.playback[channelIndex].repeats = 0;
+    mixerConfig.playback[channelIndex].rewind = 0;
+    mixerConfig.playback[channelIndex].volume = DEFAULT_VOLUME;
+    unlockMixerConfigMutex();
+  }
+  return ch;
 }
 
 static void loadAudio(ObjAudio *audio, size_t channelIndex) {
   checkChannel(channelIndex);
-  lockAudioMutex();
+
+  /* Set some sane defaults for the channel's config */
+  lockMixerConfigMutex();
   {
-    AudioChannel *ch = audioChannels + channelIndex;
-    ch->data = realloc(ch->data, audio->buffer.length);
-    ch->sampleCount = audio->buffer.length / 4;
-    ch->currentSample = ch->sampleCount;
+    PlaybackConfig *ch = mixerConfig.playback + channelIndex;
     ch->volume = DEFAULT_VOLUME;
     ch->repeats = 0;
     ch->pause = 0;
-    memcpy(ch->data, audio->buffer.data, audio->buffer.length);
   }
-  unlockAudioMutex();
+  unlockMixerConfigMutex();
+
+  lockPlaybackDataMutex();
+  {
+    PlaybackChannelData *dat = playbackData.array + channelIndex;
+
+    /* 16-bit stereo -> 4 bytes per sample */
+    dat->sampleCount = audio->buffer.length / 4;
+
+    /* set current sample to the end, so that it does not play right away */
+    dat->currentSample = dat->sampleCount;
+
+    dat->pcm = realloc(dat->pcm, audio->buffer.length);
+    memcpy(dat->pcm, audio->buffer.data, audio->buffer.length);
+  }
+  unlockPlaybackDataMutex();
 }
 
 static void prepareAudio() {
@@ -365,38 +425,34 @@ static void prepareAudio() {
 static void playAudio(size_t channelIndex, size_t repeats) {
   checkChannel(channelIndex);
   prepareAudio();
-  lockAudioMutex();
+  lockMixerConfigMutex();
   {
-    AudioChannel *ch = audioChannels + channelIndex;
-    ch->currentSample = 0;
+    PlaybackConfig *ch = mixerConfig.playback + channelIndex;
     ch->repeats = repeats;
     ch->pause = UFALSE;
+    ch->rewind = UTRUE;
   }
-  unlockAudioMutex();
+  unlockMixerConfigMutex();
 }
 
 static void pauseAudio(size_t channelIndex, ubool pause) {
   checkChannel(channelIndex);
-  lockAudioMutex();
+  lockMixerConfigMutex();
   {
-    AudioChannel *ch = audioChannels + channelIndex;
-    ch->repeats = 0;
+    PlaybackConfig *ch = mixerConfig.playback + channelIndex;
     ch->pause = pause;
   }
-  unlockAudioMutex();
+  unlockMixerConfigMutex();
 }
 
-static void setAudioVolume(size_t channelIndex, u16 volume) {
+static void setAudioVolume(size_t channelIndex, float volume) {
   checkChannel(channelIndex);
-  lockAudioMutex();
-  if (volume > VOLUME_MAX) {
-    volume = VOLUME_MAX;
-  }
+  lockMixerConfigMutex();
   {
-    AudioChannel *ch = audioChannels + channelIndex;
+    PlaybackConfig *ch = mixerConfig.playback + channelIndex;
     ch->volume = volume;
   }
-  unlockAudioMutex();
+  unlockMixerConfigMutex();
 }
 
 static void setDrawColor(ObjWindow *window, Color color) {
@@ -1485,11 +1541,11 @@ static ubool implSynth(i16 argc, Value *args, Value *out) {
   u32 waveType = AS_U32(args[1]);
   double frequency = AS_NUMBER(args[2]);
   double volume = argc > 3 ? AS_NUMBER(args[3]) : 0.1;
-  lockSynthMutex();
-  synthChannels.array[channelID].waveType = waveType;
-  synthChannels.array[channelID].frequency = frequency;
-  synthChannels.array[channelID].volume = volume;
-  unlockSynthMutex();
+  lockMixerConfigMutex();
+  mixerConfig.synth[channelID].waveType = waveType;
+  mixerConfig.synth[channelID].frequency = frequency;
+  mixerConfig.synth[channelID].volume = volume;
+  unlockMixerConfigMutex();
   prepareAudio();
   return UTRUE;
 }
@@ -1498,57 +1554,69 @@ static CFunction funcSynth = {
   implSynth, "synth", 3, 4, argsNumbers
 };
 
-static ubool implLoadAudio(i16 argc, Value *args, Value *out) {
-  ObjAudio *audio = AS_AUDIO(args[0]);
-  size_t channel = argc > 1 ? AS_INDEX(args[1], CHANNEL_COUNT) : 0;
-  loadAudio(audio, channel);
+static ubool implPlaybackChannelStaticGet(i16 argc, Value *args, Value *out) {
+  size_t channelID = AS_INDEX(args[0], PLAYBACK_CHANNEL_COUNT);
+  *out = PLAYBACK_CHANNEL_VAL(getPlaybackChannel(channelID));
   return UTRUE;
 }
 
-static TypePattern argsLoadAudio[] = {
+static CFunction funcPlaybackChannelStaticGet = {
+  implPlaybackChannelStaticGet, "get", 1, 0, argsNumbers
+};
+
+static ubool implPlaybackChannelLoad(i16 argc, Value *args, Value *out) {
+  ObjPlaybackChannel *ch = AS_PLAYBACK_CHANNEL(args[-1]);
+  ObjAudio *audio = AS_AUDIO(args[0]);
+  loadAudio(audio, ch->channelID);
+  return UTRUE;
+}
+
+static TypePattern argsPlaybackChannelLoad[] = {
   { TYPE_PATTERN_NATIVE, &descriptorAudio },
-  { TYPE_PATTERN_NUMBER },
 };
 
-static CFunction funcLoadAudio = {
-  implLoadAudio, "loadAudio", 1, 2, argsLoadAudio
+static CFunction funcPlaybackChannelLoad = {
+  implPlaybackChannelLoad, "load", 1, 0, argsPlaybackChannelLoad
 };
 
-static ubool implPlayAudio(i16 argc, Value *args, Value *out) {
-  size_t channel = argc > 0 ? AS_INDEX(args[0], CHANNEL_COUNT) : 0;
-  i32 repeats = argc > 1 ? AS_I32(args[1]) : 0;
+static ubool implPlaybackChannelStart(i16 argc, Value *args, Value *out) {
+  ObjPlaybackChannel *ch = AS_PLAYBACK_CHANNEL(args[-1]);
+  i32 repeats = argc > 0 ? AS_I32(args[0]) : 0;
   if (repeats < 0) {
     repeats = I32_MAX;
   }
-  playAudio(channel, repeats);
+  playAudio(ch->channelID, repeats);
   return UTRUE;
 }
 
-static CFunction funcPlayAudio = { implPlayAudio, "playAudio", 0, 2, argsNumbers };
+static CFunction funcPlaybackChannelStart = {
+  implPlaybackChannelStart, "start", 0, 1, argsNumbers
+};
 
-static ubool implPauseAudio(i16 argc, Value *args, Value *out) {
-  size_t channel = argc > 0 ? AS_INDEX(args[0], CHANNEL_COUNT) : 0;
-  ubool pause = argc > 1 ? AS_BOOL(args[1]) : UTRUE;
-  pauseAudio(channel, pause);
+static ubool implPlaybackChannelPause(i16 argc, Value *args, Value *out) {
+  ObjPlaybackChannel *ch = AS_PLAYBACK_CHANNEL(args[-1]);
+  ubool pause = argc > 0 ? AS_BOOL(args[0]) : UTRUE;
+  pauseAudio(ch->channelID, pause);
   return UTRUE;
 }
 
-static TypePattern argsPauseAudio[] = {
-  { TYPE_PATTERN_NUMBER },
+static TypePattern argsPlaybackChannelPause[] = {
   { TYPE_PATTERN_BOOL },
 };
 
-static CFunction funcPauseAudio = { implPauseAudio, "pauseAudio", 0, 2, argsPauseAudio };
+static CFunction funcPlaybackChannelPause = {
+  implPlaybackChannelPause, "pause", 0, 1, argsPlaybackChannelPause
+};
 
-static ubool implSetAudioVolume(i16 argc, Value *args, Value *out) {
-  size_t channel = AS_INDEX(args[0], CHANNEL_COUNT);
-  u16 volume = AS_U16(args[1]);
-  setAudioVolume(channel, volume);
+static ubool implPlaybackChannelSetVolume(i16 argc, Value *args, Value *out) {
+  ObjPlaybackChannel *ch = AS_PLAYBACK_CHANNEL(args[-1]);
+  double volume = AS_NUMBER(args[0]);
+  setAudioVolume(ch->channelID, volume);
   return UTRUE;
 }
 
-static CFunction funcSetAudioVolume = {
-  implSetAudioVolume, "setAudioVolume", 2, 0, argsNumbers
+static CFunction funcPlaybackChannelSetVolume = {
+  implPlaybackChannelSetVolume, "setVolume", 1, 0, argsNumbers
 };
 
 static ubool impl(i16 argCount, Value *args, Value *out) {
@@ -1601,6 +1669,17 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &funcGeometrySetIndex,
     NULL,
   };
+  CFunction *playbackChannelStaticMethods[] = {
+    &funcPlaybackChannelStaticGet,
+    NULL,
+  };
+  CFunction *playbackChannelMethods[] = {
+    &funcPlaybackChannelLoad,
+    &funcPlaybackChannelStart,
+    &funcPlaybackChannelPause,
+    &funcPlaybackChannelSetVolume,
+    NULL,
+  };
   CFunction *functions[] = {
     &funcKey,
     &funcGetKey,
@@ -1608,10 +1687,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &funcMouseMotion,
     &funcMouseButton,
     &funcSynth,
-    &funcLoadAudio,
-    &funcPlayAudio,
-    &funcPauseAudio,
-    &funcSetAudioVolume,
     NULL,
   };
   ubool gcPause;
@@ -1662,6 +1737,12 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     geometryMethods,
     geometryStaticMethods);
 
+  newNativeClass(
+    module,
+    &descriptorPlaybackChannel,
+    playbackChannelMethods,
+    playbackChannelStaticMethods);
+
   {
     size_t i;
     Map map;
@@ -1707,18 +1788,13 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     }
   }
 
-  audioTickMutex = SDL_CreateMutex();
-  if (!audioTickMutex) {
+  mixerConfigMutex = SDL_CreateMutex();
+  if (!mixerConfigMutex) {
     return sdlError("SDL_CreateMutex");
   }
 
-  synthMutex = SDL_CreateMutex();
-  if (!synthMutex) {
-    return sdlError("SDL_CreateMutex");
-  }
-
-  audioMutex = SDL_CreateMutex();
-  if (!audioMutex) {
+  playbackDataMutex = SDL_CreateMutex();
+  if (!playbackDataMutex) {
     return sdlError("SDL_CreateMutex");
   }
 

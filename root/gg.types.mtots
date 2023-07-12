@@ -602,8 +602,8 @@ def synth(channelID Int, waveType Int, frequency Float, volume Float=0.1) nil:
   """
   Play a synthetic sound on a synth channel.
 
-  There are 8 synthetic channels, and theses are separate from the regular
-  audio channels where you can load custom audio.
+  There are 8 synthetic channels, and theses are separate from the playback
+  channels where you can load and play pre-recorded audio.
 
   This is the only function that controls the generation of synthetic
   audio.
@@ -628,32 +628,49 @@ def synth(channelID Int, waveType Int, frequency Float, volume Float=0.1) nil:
   """
 
 
-def loadAudio(audio Audio, channel Int=0) nil:
+class PlaybackChannel:
   """
-  Load audio to play.
+  API for playing pre-generated/recorded audio.
 
-  There are 8 channels, and the audio will be loaded to the given channel
-  """
-
-
-def playAudio(channel Int=0, repeats Int=0) nil:
-  """
-  Play audio in the given channel
-
-  `repeats` argument may be set to have the audio play an extra `repeat` times.
-  Negative value will cause audio to loop I32_MAX times.
+  There are 8 playback channels. You can get a channel with the
+  `PlaybackChannel.get()` static method.
   """
 
+  static def get(channelID Int) PlaybackChannel:
+    """
+    Get a playback channel instance.
 
-def pauseAudio(channel Int=0, pause Bool=true) nil:
-  """
-  Pauses the audio
-  """
+    Parameters:
+    * channelID - An integer between 0 and 7 inclusive indicating
+      the channel to get.
+    """
 
+  def load(audio Audio) nil:
+    """
+    Load an audio to this channel for later playback.
+    """
 
-def setAudioVolume(channel Int, volume Int) nil:
-  """
-  Sets the volume for a given audio channel.
+  def start(repeats Int=0) nil:
+    """
+    Starts playing the audio for this channel.
 
-  The volume must be between 0 and 128 inclusive.
-  """
+    `repeats` argument may be set to have the audio play an extra `repeat` times.
+    Negative value will cause audio to loop I32_MAX times.
+    """
+
+  def pause(flag Bool=true) nil:
+    """
+    Pause or unpause the current channel.
+
+    When unpaused playback will resume where it last left off.
+    """
+
+  def setVolume(volume Float) nil:
+    """
+    Parameters:
+    * volume - a number from 0 to 1 inclusive that indicates how loud
+      the playback will be. Values below 0 or above 1 will be clamped
+      to [0, 1].
+      NOTE: This is a linear scale of the PCM, so if you need a logarithmic
+      scale, adjust accordingly.
+    """
