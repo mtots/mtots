@@ -598,9 +598,11 @@ def mouseButton(buttonID Int, query Int=0) Bool:
   """
 
 
-def setSynth(channelID Int, synthType Int, frequency Float, volume Float) nil:
+def synth(channelID Int, synthType Int, frequency Float, volume Float) nil:
   """
-  Plays an audio
+  Plays a synthetic sound on a synth channel.
+
+  There are
   """
 
 

@@ -1423,7 +1423,7 @@ static ubool implMouseButton(i16 argc, Value *args, Value *out) {
 
 static CFunction funcMouseButton = { implMouseButton, "mouseButton", 1, 2, argsNumbers };
 
-static ubool implSetSynth(i16 argc, Value *args, Value *out) {
+static ubool implSynth(i16 argc, Value *args, Value *out) {
   size_t channelID = AS_INDEX(args[0], SYNTH_CHANNEL_COUNT);
   u32 synthType = AS_U32(args[1]);
   double frequency = AS_NUMBER(args[2]);
@@ -1438,8 +1438,8 @@ static ubool implSetSynth(i16 argc, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcSetSynth = {
-  implSetSynth, "setSynth", 4, 0, argsNumbers
+static CFunction funcSynth = {
+  implSynth, "synth", 4, 0, argsNumbers
 };
 
 static ubool implLoadAudio(i16 argc, Value *args, Value *out) {
@@ -1551,7 +1551,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &funcMousePosition,
     &funcMouseMotion,
     &funcMouseButton,
-    &funcSetSynth,
+    &funcSynth,
     &funcLoadAudio,
     &funcPlayAudio,
     &funcPauseAudio,
