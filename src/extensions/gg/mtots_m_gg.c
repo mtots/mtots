@@ -24,6 +24,7 @@
 
 #define VOLUME_MAX                  128
 #define DEFAULT_VOLUME           (0.25)
+#define DEFAULT_FREQUENCY           440
 #define PLAYBACK_CHANNEL_COUNT        8
 
 #define SYNTH_CHANNEL_COUNT   8
@@ -104,8 +105,12 @@ typedef struct ObjPlaybackChannel {
 
 typedef struct SynthConfig {
   SynthWaveType waveType;
-  float frequency;
-  float volume;
+  float userFrequency;         /* the frequency specified by the user */
+  float lastNonzeroFrequency;  /* last nonzero userFrequency */
+  float userVolume;            /* the volume specified by the user */
+  float targetVolume;          /* usually userVolume, but always 0 if targetFrequency is 0 */
+  float currentVolume;         /* the actual current volume */
+  float volumeVelocity;        /* amount that volume should be changing per second */
 } SynthConfig;
 
 typedef struct PlaybackConfig {
@@ -286,12 +291,60 @@ static double synthPCM(
   return 0;
 }
 
+static void incrSynthVolume(SynthConfig *c) {
+  if (c->volumeVelocity > 0) {
+    if (c->currentVolume + c->volumeVelocity < c->targetVolume) {
+      c->currentVolume += c->volumeVelocity;
+    } else {
+      c->currentVolume = c->targetVolume;
+    }
+  } else if (c->volumeVelocity < 0) {
+    if (c->currentVolume + c->volumeVelocity > c->targetVolume) {
+      c->currentVolume += c->volumeVelocity;
+    } else {
+      c->currentVolume = c->targetVolume;
+    }
+  }
+}
+
 static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
   u64 tick;
   MixerConfig config;
   u8 rewind[PLAYBACK_CHANNEL_COUNT];
   lockMixerConfigMutex();
   tick = audioTick;
+  {
+    /*
+     * For better or for worse, we add 'volumeVelocity' logic to
+     * reduce the clicking sound we can get when we abruptly change
+     * the volume of a channel on and off.
+     *
+     * This effective adds 'release' and 'attack' times.
+     *
+     * For more info, see:
+     * https://support.apple.com/en-gb/guide/logicpro/lgsife419620/mac
+     * https://www.reddit.com/r/ableton/comments/1yig7j/
+     */
+    size_t i;
+    for (i = 0; i < SYNTH_CHANNEL_COUNT; i++) {
+      SynthConfig *c = mixerConfig.synth + i;
+      float newTargetVolume;
+
+      if (c->userFrequency) {
+        c->lastNonzeroFrequency = c->userFrequency;
+      }
+
+      c->userVolume = dmin(1, dmax(0, c->userVolume));
+      newTargetVolume = c->userFrequency ? c->userVolume : 0;
+      if (newTargetVolume != c->targetVolume) {
+        /* userVolume has been updated */
+        c->targetVolume = newTargetVolume;
+
+        /* Pick the veolocity to allow 1/25 = 0.04 seconds to switch between two volumes */
+        c->volumeVelocity = (c->targetVolume - c->currentVolume) / (SAMPLES_PER_SECOND / 25);
+      }
+    }
+  }
   config = mixerConfig;
   {
     size_t i;
@@ -301,14 +354,6 @@ static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
     }
   }
   unlockMixerConfigMutex();
-
-  {
-    /* normalize volume */
-    size_t i;
-    for (i = 0; i < SYNTH_CHANNEL_COUNT; i++) {
-      config.synth[i].volume = dmin(1, dmax(0, config.synth[i].volume));
-    }
-  }
 
   lockPlaybackDataMutex();
   /*
@@ -347,10 +392,11 @@ static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
       size_t j;
       for (j = 0; j < SYNTH_CHANNEL_COUNT; j++) {
         SynthConfig *ch = mixerConfig.synth + j;
-        if (ch->volume == 0 || ch->frequency == 0) {
+        incrSynthVolume(ch);
+        if (ch->currentVolume == 0) {
           continue;
         }
-        synthTotal = synthPCM(ch->waveType, tick, ch->frequency, ch->volume);
+        synthTotal = synthPCM(ch->waveType, tick, ch->lastNonzeroFrequency, ch->currentVolume);
       }
       for (j = 0; j < PLAYBACK_CHANNEL_COUNT; j++) {
         PlaybackConfig *ch = config.playback + j;
@@ -404,7 +450,7 @@ static ubool setMusic(size_t synthChannelID, ObjList *music) {
     musicList->buffer[synthChannelID] = LIST_VAL(music);
   } else {
     musicList->buffer[synthChannelID] = NIL_VAL();
-    mixerConfig.synth[synthChannelID].frequency = 0;
+    mixerConfig.synth[synthChannelID].userFrequency = 0;
   }
   return UTRUE;
 }
@@ -657,7 +703,7 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
       music = AS_LIST(musicList->buffer[i]);
       if (musicStates[i].nextItemIndex >= music->length) {
         lockMixerConfigMutex();
-        mixerConfig.synth[i].frequency = 0;
+        mixerConfig.synth[i].userFrequency = 0;
         unlockMixerConfigMutex();
         musicList->buffer[i] = NIL_VAL();
         continue;
@@ -670,7 +716,7 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
       entry = AS_VECTOR(music->buffer[musicStates[i].nextItemIndex++]);
       musicStates[i].timeout = (u32)(((float)mainWindow->framesPerSecond) * entry.x);
       lockMixerConfigMutex();
-      mixerConfig.synth[i].frequency = entry.y;
+      mixerConfig.synth[i].userFrequency = entry.y;
       unlockMixerConfigMutex();
     }
   }
@@ -1609,10 +1655,10 @@ static ubool implSynth(i16 argc, Value *args, Value *out) {
   size_t channelID = AS_INDEX(args[0], SYNTH_CHANNEL_COUNT);
   lockMixerConfigMutex();
   if (argc > 1 && !IS_NIL(args[1])) {
-    mixerConfig.synth[channelID].frequency = AS_NUMBER(args[1]);
+    mixerConfig.synth[channelID].userFrequency = AS_NUMBER(args[1]);
   }
   if (argc > 2 && !IS_NIL(args[2])) {
-    mixerConfig.synth[channelID].volume = AS_NUMBER(args[2]);
+    mixerConfig.synth[channelID].userVolume = AS_NUMBER(args[2]);
   }
   if (argc > 3 && !IS_NIL(args[3])) {
     mixerConfig.synth[channelID].waveType = AS_INDEX(args[3], 1);
@@ -1843,7 +1889,8 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
   {
     size_t i;
     for (i = 0; i < SYNTH_CHANNEL_COUNT; i++) {
-      mixerConfig.synth[i].volume = DEFAULT_VOLUME;
+      mixerConfig.synth[i].userVolume = DEFAULT_VOLUME;
+      mixerConfig.synth[i].lastNonzeroFrequency = DEFAULT_FREQUENCY;
     }
   }
 

@@ -74,6 +74,8 @@ final chan0 = gg.PlaybackChannel.get(0)
 chan0.load(audio)
 chan0.setVolume(1)
 
+gg.synth(0, nil, 1)
+
 var started = false
 
 final BEAT = 60 / 120 # 120 beats per minute (allegro)
