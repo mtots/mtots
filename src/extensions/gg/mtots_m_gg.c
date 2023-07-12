@@ -272,6 +272,20 @@ static i16 clamp(double value) {
          value >= I16_MAX ? I16_MAX : ((i16)value);
 }
 
+static double synthPCM(
+    SynthWaveType waveType,
+    u64 tick,
+    float frequency,
+    float volume) {
+  switch (waveType) {
+    case SYNTH_SINE:
+      return sin(
+        tick / (double)SAMPLES_PER_SECOND * frequency * TAU) *
+        volume;
+  }
+  return 0;
+}
+
 static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
   u64 tick;
   MixerConfig config;
@@ -287,6 +301,14 @@ static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
     }
   }
   unlockMixerConfigMutex();
+
+  {
+    /* normalize volume */
+    size_t i;
+    for (i = 0; i < SYNTH_CHANNEL_COUNT; i++) {
+      config.synth[i].volume = dmin(1, dmax(0, config.synth[i].volume));
+    }
+  }
 
   lockPlaybackDataMutex();
   /*
@@ -325,18 +347,10 @@ static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
       size_t j;
       for (j = 0; j < SYNTH_CHANNEL_COUNT; j++) {
         SynthConfig *ch = mixerConfig.synth + j;
-        double volume = dmin(1, dmax(0, ch->volume));
-        if (volume == 0 || ch->frequency == 0) {
+        if (ch->volume == 0 || ch->frequency == 0) {
           continue;
         }
-        switch (ch->waveType) {
-          case SYNTH_SINE:
-            synthTotal +=
-              sin(tick / (double)SAMPLES_PER_SECOND * ch->frequency * TAU) *
-              volume;
-            break;
-          default: break;
-        }
+        synthTotal = synthPCM(ch->waveType, tick, ch->frequency, ch->volume);
       }
       for (j = 0; j < PLAYBACK_CHANNEL_COUNT; j++) {
         PlaybackConfig *ch = config.playback + j;
