@@ -10,8 +10,9 @@ print("__file__ = %s" % [__file__])
 final rand = Random()
 final WIDTH = 800
 final HEIGHT = 800
+final FPS = 60
 
-final window = gg.Window("Hello", WIDTH, HEIGHT, 60)
+final window = gg.Window("Hello", WIDTH, HEIGHT, FPS)
 
 var tick = 0
 
@@ -86,6 +87,98 @@ final notes = [
   V(1 * BEAT, 261),
 ]
 
+final P = (1 / 30) * 1.5 # pause between notes - 1.5 * fps
+final B = 60 / 180  # 180 beats per minute
+final song1 = [
+  V(1 * B - P, gg.NOTE.A4),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.A4),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.E5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.E5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.Fs5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.Fs5),
+  V(P,                  0),
+  V(2 * B - P, gg.NOTE.E5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.D5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.D5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.Cs5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.Cs5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.B4),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.B4),
+  V(P,                  0),
+  V(2 * B - P, gg.NOTE.A4),
+  V(P,                  0),
+
+  V(1 * B - P, gg.NOTE.E5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.E5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.D5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.D5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.Cs5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.Cs5),
+  V(P,                  0),
+  V(2 * B - P, gg.NOTE.B4),
+  V(P,                  0),
+
+  V(1 * B - P, gg.NOTE.E5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.E5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.D5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.D5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.Cs5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.Cs5),
+  V(P,                  0),
+  V(2 * B - P, gg.NOTE.B4),
+  V(P,                  0),
+
+  V(1 * B - P, gg.NOTE.A4),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.A4),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.E5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.E5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.Fs5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.Fs5),
+  V(P,                  0),
+  V(2 * B - P, gg.NOTE.E5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.D5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.D5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.Cs5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.Cs5),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.B4),
+  V(P,                  0),
+  V(1 * B - P, gg.NOTE.B4),
+  V(P,                  0),
+  V(2 * B - P, gg.NOTE.A4),
+  V(P,                  0),
+]
+
 @window.onUpdate
 def():
   tick = tick + 1
@@ -107,6 +200,11 @@ def():
 
   if gg.key(gg.KEY.G, 1):
     gg.music(1, nil)
+
+  if gg.key(gg.KEY.R):
+    print("R pressed")
+    gg.music(0, nil)
+    gg.music(0, song1)
 
   if gg.key(gg.KEY.F, 0, false):
     if started:
