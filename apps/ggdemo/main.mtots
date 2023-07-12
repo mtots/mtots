@@ -74,6 +74,18 @@ chan0.setVolume(1)
 
 var started = false
 
+final BEAT = 60 / 120 # 120 beats per minute (allegro)
+final notes = [
+  V(1 * BEAT, 440),
+  V(1 * BEAT, 261),
+  V(1 * BEAT, 440),
+  V(1 * BEAT, 261),
+  V(1 * BEAT, 440),
+  V(1 * BEAT, 261),
+  V(1 * BEAT, 440),
+  V(1 * BEAT, 261),
+]
+
 @window.onUpdate
 def():
   tick = tick + 1
@@ -89,6 +101,12 @@ def():
 
   if gg.mouseButton(0, 1):
     gg.synth(0, 0, 0, 0)
+
+  if gg.key(gg.KEY.G, 0, false):
+    gg.music(1, notes)
+
+  if gg.key(gg.KEY.G, 1):
+    gg.music(1, nil)
 
   if gg.key(gg.KEY.F, 0, false):
     if started:

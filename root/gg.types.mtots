@@ -605,10 +605,15 @@ def synth(channelID Int, waveType Int, frequency Float, volume Float=0.1) nil:
   There are 8 synthetic channels, and theses are separate from the playback
   channels where you can load and play pre-recorded audio.
 
-  This is the only function that controls the generation of synthetic
-  audio.
+  This is the low level primitive for controlling the generation of synthetic
+  audio. The `music` function builds on top of this to play several notes
+  in sequence.
 
-  To stop playing audio on a synthetic channel, set its volume to zero.
+  To stop playing audio on a synthetic channel, set
+  its volume or frequency to zero.
+
+  NOTE: If music is set for the given channel, it will start playing the next
+  note even if you set the frequency to zero.
 
   Parameters:
   * channelID - An integer between and 0 and 7 inclusive indicating the
@@ -625,6 +630,22 @@ def synth(channelID Int, waveType Int, frequency Float, volume Float=0.1) nil:
     the sound will be. Values below 0 or above 1 will be clamped to [0, 1].
     NOTE: This is a linear scale controlling the amplitude of the
     generated wave, so take this into account in your application.
+  """
+
+
+def music(channelID Int, notes List[Vector]?) nil:
+  """
+  Play a sequence of notes on a synthetic channel
+
+  Parameters:
+  * channelID - the synth channel to play the notes on
+  * notes - a sequence of notes to play.
+    Each note is a `Vector` where:
+    * the `x` component is the duration of a note in seconds,
+    * the `y` component is the frequency to play the note at
+    The `z` component is ignored.
+    If `notes` is `nil`, the channel will stop the current
+    sound and stop playing music.
   """
 
 

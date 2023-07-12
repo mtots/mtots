@@ -129,6 +129,11 @@ typedef struct MixerConfig {
   PlaybackConfig playback[PLAYBACK_CHANNEL_COUNT];
 } MixerConfig;
 
+typedef struct MusicState {
+  u32 nextItemIndex;
+  u32 timeout;
+} MusicState;
+
 static String *tickString;
 static String *buttonString;
 static String *dxString;
@@ -151,6 +156,8 @@ static PlaybackData playbackData;
 static SDL_mutex *mixerConfigMutex; /* for audioTick and MixerConfig */
 static SDL_mutex *playbackDataMutex;   /* for audioData */
 static SDL_AudioDeviceID audioDevice;
+static MusicState musicStates[SYNTH_CHANNEL_COUNT];
+static ObjList *musicList;
 static ObjWindow *activeWindow;
 static ObjModule *ggModule;
 
@@ -252,7 +259,7 @@ static void unlockPlaybackDataMutex(void) {
 }
 
 static void checkChannel(size_t channelIndex) {
-  if (channelIndex > PLAYBACK_CHANNEL_COUNT) {
+  if (channelIndex >= PLAYBACK_CHANNEL_COUNT) {
     panic(
       "Invalid audio channel %lu (PLAYBACK_CHANNEL_COUNT=%d)",
       (unsigned long)channelIndex,
@@ -319,7 +326,7 @@ static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
       for (j = 0; j < SYNTH_CHANNEL_COUNT; j++) {
         SynthConfig *ch = mixerConfig.synth + j;
         double volume = dmin(1, dmax(0, ch->volume));
-        if (!volume) {
+        if (volume == 0 || ch->frequency == 0) {
           continue;
         }
         switch (ch->waveType) {
@@ -355,6 +362,37 @@ static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
   lockMixerConfigMutex();
   audioTick = tick;
   unlockMixerConfigMutex();
+}
+
+static void prepareAudio() {
+  if (!audioDevice) {
+    SDL_AudioSpec spec;
+    spec.freq = SAMPLES_PER_SECOND;
+    spec.format = AUDIO_S16LSB;
+    spec.channels = 2;
+    spec.samples = 1024;
+    spec.callback = audioCallback;
+    spec.userdata = NULL;
+    audioDevice = SDL_OpenAudioDevice(NULL, 0, &spec, NULL, 0);
+    if (!audioDevice) {
+      panic("SDL_OpenAudioDevice: %s", SDL_GetError());
+    }
+    SDL_PauseAudioDevice(audioDevice, 0);
+  }
+}
+
+static ubool setMusic(size_t synthChannelID, ObjList *music) {
+  checkChannel(synthChannelID);
+  prepareAudio();
+  musicStates[synthChannelID].nextItemIndex = 0;
+  musicStates[synthChannelID].timeout = 0;
+  if (music) {
+    musicList->buffer[synthChannelID] = LIST_VAL(music);
+  } else {
+    musicList->buffer[synthChannelID] = NIL_VAL();
+    mixerConfig.synth[synthChannelID].frequency = 0;
+  }
+  return UTRUE;
 }
 
 static ObjPlaybackChannel *getPlaybackChannel(size_t channelIndex) {
@@ -403,23 +441,6 @@ static void loadAudio(ObjAudio *audio, size_t channelIndex) {
     memcpy(dat->pcm, audio->buffer.data, audio->buffer.length);
   }
   unlockPlaybackDataMutex();
-}
-
-static void prepareAudio() {
-  if (!audioDevice) {
-    SDL_AudioSpec spec;
-    spec.freq = SAMPLES_PER_SECOND;
-    spec.format = AUDIO_S16LSB;
-    spec.channels = 2;
-    spec.samples = 1024;
-    spec.callback = audioCallback;
-    spec.userdata = NULL;
-    audioDevice = SDL_OpenAudioDevice(NULL, 0, &spec, NULL, 0);
-    if (!audioDevice) {
-      panic("SDL_OpenAudioDevice: %s", SDL_GetError());
-    }
-    SDL_PauseAudioDevice(audioDevice, 0);
-  }
 }
 
 static void startAudio(size_t channelIndex, u32 repeats) {
@@ -606,6 +627,40 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
     }
   }
   SDL_RenderPresent(mainWindow->renderer);
+
+  {
+    size_t i;
+    ObjList *music;
+    for (i = 0; i < SYNTH_CHANNEL_COUNT; i++) {
+      Vector entry;
+      if (musicStates[i].timeout) {
+        musicStates[i].timeout--;
+        continue;
+      }
+      if (IS_NIL(musicList->buffer[i])) {
+        continue;
+      }
+      music = AS_LIST(musicList->buffer[i]);
+      if (musicStates[i].nextItemIndex >= music->length) {
+        lockMixerConfigMutex();
+        mixerConfig.synth[i].frequency = 0;
+        unlockMixerConfigMutex();
+        musicList->buffer[i] = NIL_VAL();
+        continue;
+      }
+      if (!IS_VECTOR(music->buffer[musicStates[i].nextItemIndex])) {
+        panic(
+          "Expected Vector for music entry, but got %s",
+          getKindName(music->buffer[musicStates[i].nextItemIndex]));
+      }
+      entry = AS_VECTOR(music->buffer[musicStates[i].nextItemIndex++]);
+      musicStates[i].timeout = (u32)(((float)mainWindow->framesPerSecond) * entry.x);
+      lockMixerConfigMutex();
+      mixerConfig.synth[i].frequency = entry.y;
+      unlockMixerConfigMutex();
+    }
+  }
+
   mainWindow->tick++;
   return UTRUE;
 }
@@ -1554,6 +1609,22 @@ static CFunction funcSynth = {
   implSynth, "synth", 3, 4, argsNumbers
 };
 
+static ubool implMusic(i16 argc, Value *args, Value *out) {
+  size_t channelID = AS_INDEX(args[0], SYNTH_CHANNEL_COUNT);
+  ObjList *music = IS_NIL(args[1]) ? NULL : AS_LIST(args[1]);
+  return setMusic(channelID, music);
+}
+
+static TypePattern argsMusic[] = {
+  { TYPE_PATTERN_NUMBER },
+  { TYPE_PATTERN_LIST_OR_NIL },
+};
+
+static CFunction funcMusic = {
+  implMusic, "music", 2, 0, argsMusic
+};
+
+
 static ubool implPlaybackChannelStaticGet(i16 argc, Value *args, Value *out) {
   size_t channelID = AS_INDEX(args[0], PLAYBACK_CHANNEL_COUNT);
   *out = PLAYBACK_CHANNEL_VAL(getPlaybackChannel(channelID));
@@ -1687,6 +1758,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &funcMouseMotion,
     &funcMouseButton,
     &funcSynth,
+    &funcMusic,
     NULL,
   };
   ubool gcPause;
@@ -1716,6 +1788,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
   moduleRetain(module, STRING_VAL(dxString = internCString("dx")));
   moduleRetain(module, STRING_VAL(dyString = internCString("dy")));
   moduleRetain(module, STRING_VAL(transformString = internCString("transform")));
+  moduleRetain(module, LIST_VAL(musicList = newList(SYNTH_CHANNEL_COUNT)));
 
   moduleAddFunctions(module, functions);
 
@@ -1742,6 +1815,13 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &descriptorPlaybackChannel,
     playbackChannelMethods,
     playbackChannelStaticMethods);
+
+  {
+    size_t i;
+    for (i = 0; i < SYNTH_CHANNEL_COUNT; i++) {
+      mixerConfig.synth[i].volume = DEFAULT_VOLUME;
+    }
+  }
 
   {
     size_t i;
