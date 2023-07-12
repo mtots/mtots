@@ -1,7 +1,6 @@
 #include "mtots_m_gg.h"
 #include "mtots_m_gg_scancode.h"
 #include "mtots_m_gg_colors.h"
-#include "mtots_m_gg_notes.h"
 #include "mtots_sdl.h"
 
 #include "mtots_vm.h"
@@ -310,7 +309,7 @@ static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
     size_t i;
     for (i = 0; i < PLAYBACK_CHANNEL_COUNT; i++) {
       if (rewind[i]) {
-        mixerConfig.playback[i].rewind = UFALSE;
+        playbackData.array[i].currentSample = 0;
       }
     }
   }
@@ -1832,17 +1831,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
       mapSetN(&map, scancodeEntries[i].name, NUMBER_VAL(scancodeEntries[i].scancode));
     }
     mapSetN(&module->fields, "KEY", FROZEN_DICT_VAL(newFrozenDict(&map)));
-    freeMap(&map);
-  }
-
-  {
-    size_t i;
-    Map map;
-    initMap(&map);
-    for (i = 0; noteEntries[i].name; i++) {
-      mapSetN(&map, noteEntries[i].name, NUMBER_VAL(noteEntries[i].value));
-    }
-    mapSetN(&module->fields, "NOTE", FROZEN_DICT_VAL(newFrozenDict(&map)));
     freeMap(&map);
   }
 
