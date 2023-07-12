@@ -19,6 +19,11 @@ Future work:
 
 ## Release Notes
 
+### 0.0.43
+
+Hovering function calls will now show the actual value of default parameters
+instead of just `*`.
+
 ### 0.0.42
 
 Misc bugfixes

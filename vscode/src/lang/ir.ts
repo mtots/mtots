@@ -971,6 +971,18 @@ export class FrozenDictLiteralType<K extends Type=Type, V extends Type=Type> ext
   }
 }
 
+function stringifyConstValue(value: ConstValue): string {
+  if (value === null) {
+    return "nil";
+  }
+  switch (typeof value) {
+    case "string": return JSON.stringify(value);
+    case "boolean": return value ? "true" : "false";
+    case "number": return '' + value;
+  }
+  return "*";
+}
+
 export class Parameter {
   readonly identifier: ast.Identifier;
   readonly type: Type;
@@ -985,7 +997,9 @@ export class Parameter {
   }
   toString() {
     return `${this.identifier.name}: ${this.type}` + (
-      this.defaultValue === undefined ? '' : '=*');
+      this.defaultValue === undefined ?
+        '' :
+        ('=' + stringifyConstValue(this.defaultValue)));
   }
 }
 
@@ -1115,12 +1129,12 @@ export function formatVariable(variable: Variable): string {
     const tparams = type.typeParameters.length === 0 ? '' :
       `[${type.typeParameters.map(tp => tp.identifier.name).join(',')}]`
     const params = type.parameters.join(', ');
-    return `def ${name}${tparams}(${params}): ${type.returnType}`;
+    return `def ${name}${tparams}(${params}) ${type.returnType}`;
   }
   if (type instanceof LiteralType) {
-    return `${keyword} ${name}: ${type} = ${JSON.stringify(type.value)}`;
+    return `${keyword} ${name} ${type} = ${JSON.stringify(type.value)}`;
   }
-  return `${keyword} ${name}: ${type}`;
+  return `${keyword} ${name} ${type}`;
 }
 
 type ParamSpec = [string, Type] | [string, Type, ConstValue]

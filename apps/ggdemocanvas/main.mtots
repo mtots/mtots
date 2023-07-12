@@ -18,10 +18,12 @@ def nextColor() Color:
   colorIndex = (colorIndex + 1) % len(gg.COLORS)
   return color
 
-@window.onClick
-def(e gg.ClickEvent) nil:
-  print("onClick %s %s (color %s)" % [e.x, e.y, colorIndex])
-  canvas.fillCircle(Vector(e.x, e.y), 30, nextColor())
+@window.onUpdate
+def() nil:
+  if gg.mouseButton(0):
+    final mp = gg.mousePosition()
+    print("onClick %s %s (color %s)" % [mp.x, mp.y, colorIndex])
+    canvas.fillCircle(Vector(mp.x, mp.y), 30, nextColor())
 
 # sys.enableMallocFreeLogs(true)
 # sys.enableGCLogs(true)
