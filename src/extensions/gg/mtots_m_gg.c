@@ -56,9 +56,9 @@
 
 typedef struct ObjTexture ObjTexture;
 
-typedef enum SynthType {
+typedef enum SynthWaveType {
   SYNTH_SINE
-} SynthType;
+} SynthWaveType;
 
 static ubool updateStreamingTexture(SDL_Texture *texture, ObjImage *image);
 
@@ -103,11 +103,14 @@ typedef struct AudioChannel {
 } AudioChannel;
 
 typedef struct SynthChannel {
-  SynthType type;
-  u32 i;
+  SynthWaveType waveType;
   float frequency;
   float volume;
 } SynthChannel;
+
+typedef struct SynthChannels {
+  SynthChannel array[SYNTH_CHANNEL_COUNT];
+} SynthChannels;
 
 static String *tickString;
 static String *buttonString;
@@ -125,8 +128,10 @@ static Vector mousePos;
 static Vector mouseMotion;
 static u32 previousMouseButtonState;
 static u32 currentMouseButtonState;
-static SynthChannel synthChannels[SYNTH_CHANNEL_COUNT];
+static u64 synthTickCount;
+static SynthChannels synthChannels;
 static AudioChannel audioChannels[CHANNEL_COUNT];
+static SDL_mutex *synthMutex;
 static SDL_mutex *audioMutex;
 static SDL_AudioDeviceID audioDevice;
 static ObjWindow *activeWindow;
@@ -197,6 +202,18 @@ static NativeObjectDescriptor descriptorGeometry = {
   blackenGeometry, freeGeometry, sizeof(ObjGeometry), "Geometry"
 };
 
+static void lockSynthMutex(void) {
+  if (SDL_LockMutex(synthMutex) != 0) {
+    panic("SDL_LockMutex(synthMutex) failed");
+  }
+}
+
+static void unlockSynthMutex(void) {
+  if (SDL_UnlockMutex(synthMutex) != 0) {
+    panic("SDL_UnlockMutex(synthMutex) failed");
+  }
+}
+
 static void lockAudioMutex(void) {
   if (SDL_LockMutex(audioMutex) != 0) {
     panic("SDL_LockMutex(audioMutex) failed");
@@ -224,27 +241,50 @@ static i16 clamp(double value) {
 }
 
 static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
+  SynthChannels schans;
+  u64 tick;
+  lockSynthMutex();
+  tick = synthTickCount;
+  schans = synthChannels;
+  unlockSynthMutex();
   lockAudioMutex();
+
+  /*
+   * synthTickCount basically counts up 44100 per second starting from
+   * when the audio is first processed.
+   *
+   * We also convert this tick count to a double when we perform
+   * computations on it.
+   *
+   * This means we may start seeing some weirdness once
+   * the tick count is so large that it no longer fits precisely
+   * in the mantissa of the double precision floating point.
+   *
+   * With at least 50 bits, at 44100 ticks per second, we can
+   * count up to over 800 years precisely.
+   */
+
   {
     size_t sampleCount = ((size_t)byteLength) / 4, i;
     i16 *dat = (i16*)(void*)stream;
     /* NOTE: this (void*) trick is to avoid '-Wcast-align' warnigns
      * it should be ok in this case, as we always assume 16-bit stereo */
 
-    for (i = 0; i < sampleCount; i++) {
+    for (i = 0; i < sampleCount; i++, tick++) {
       i32 left = 0, right = 0;
       double synthTotal = 0;
       size_t j;
       for (j = 0; j < SYNTH_CHANNEL_COUNT; j++) {
-        SynthChannel *ch = synthChannels + j;
-        if (!ch->volume) {
+        SynthChannel *ch = schans.array + j;
+        double volume = dmin(1, dmax(0, ch->volume));
+        if (!volume) {
           continue;
         }
-        switch (ch->type) {
+        switch (ch->waveType) {
           case SYNTH_SINE:
             synthTotal +=
-              sin((ch->i++) / (double)SAMPLES_PER_SECOND * ch->frequency * TAU) *
-              ch->volume;
+              sin(tick / (double)SAMPLES_PER_SECOND * ch->frequency * TAU) *
+              volume;
             break;
           default: break;
         }
@@ -270,6 +310,9 @@ static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
     }
   }
   unlockAudioMutex();
+  lockSynthMutex();
+  synthTickCount = tick;
+  unlockSynthMutex();
 }
 
 static void loadAudio(ObjAudio *audio, size_t channelIndex) {
@@ -1425,21 +1468,20 @@ static CFunction funcMouseButton = { implMouseButton, "mouseButton", 1, 2, argsN
 
 static ubool implSynth(i16 argc, Value *args, Value *out) {
   size_t channelID = AS_INDEX(args[0], SYNTH_CHANNEL_COUNT);
-  u32 synthType = AS_U32(args[1]);
+  u32 waveType = AS_U32(args[1]);
   double frequency = AS_NUMBER(args[2]);
-  double volume = AS_NUMBER(args[3]);
-  lockAudioMutex();
-  synthChannels[channelID].type = synthType;
-  synthChannels[channelID].frequency = frequency;
-  synthChannels[channelID].volume = volume;
-  synthChannels[channelID].i = 0;
-  unlockAudioMutex();
+  double volume = argc > 3 ? AS_NUMBER(args[3]) : 0.1;
+  lockSynthMutex();
+  synthChannels.array[channelID].waveType = waveType;
+  synthChannels.array[channelID].frequency = frequency;
+  synthChannels.array[channelID].volume = volume;
+  unlockSynthMutex();
   prepareAudio();
   return UTRUE;
 }
 
 static CFunction funcSynth = {
-  implSynth, "synth", 4, 0, argsNumbers
+  implSynth, "synth", 3, 4, argsNumbers
 };
 
 static ubool implLoadAudio(i16 argc, Value *args, Value *out) {
@@ -1649,6 +1691,11 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
         (int)numkeys,
         (int)SCANCODE_KEY_COUNT);
     }
+  }
+
+  synthMutex = SDL_CreateMutex();
+  if (!synthMutex) {
+    return sdlError("SDL_CreateMutex");
   }
 
   audioMutex = SDL_CreateMutex();

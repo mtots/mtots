@@ -598,11 +598,33 @@ def mouseButton(buttonID Int, query Int=0) Bool:
   """
 
 
-def synth(channelID Int, synthType Int, frequency Float, volume Float) nil:
+def synth(channelID Int, waveType Int, frequency Float, volume Float=0.1) nil:
   """
-  Plays a synthetic sound on a synth channel.
+  Play a synthetic sound on a synth channel.
 
-  There are
+  There are 8 synthetic channels, and theses are separate from the regular
+  audio channels where you can load custom audio.
+
+  This is the only function that controls the generation of synthetic
+  audio.
+
+  To stop playing audio on a synthetic channel, set its volume to zero.
+
+  Parameters:
+  * channelID - An integer between and 0 and 7 inclusive indicating the
+    synth channel to modify.
+  * waveType - An integer indicating the type of waveform to generate.
+    The following are supported:
+    * 0 - pure sine wave
+  * frequency - the frequency of the wave to control the pitch of the
+    generated sound.
+    If you have no idea what to use here and you just want to make
+    a sound, 440 (also known as 'modern concert pitch') might be a
+    good start.
+  * volume - a number from 0 to 1 inclusive that indicates how loud
+    the sound will be. Values below 0 or above 1 will be clamped to [0, 1].
+    NOTE: This is a linear scale controlling the amplitude of the
+    generated wave, so take this into account in your application.
   """
 
 
