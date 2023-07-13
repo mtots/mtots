@@ -384,8 +384,19 @@ static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
         /* userVolume has been updated */
         c->targetVolume = newTargetVolume;
 
-        /* Pick the veolocity to allow 1/25 = 0.04 seconds to switch between two volumes */
-        c->volumeVelocity = (c->targetVolume - c->currentVolume) / (SAMPLES_PER_SECOND / 25);
+        /*
+         * If the current volume is zero,
+         *   set an attack of 0.01 seconds (i.e. reach the target volume in 0.01s)
+         * otherwise,
+         *   set the release to be 1/25 = 0.04 seconds
+         *
+         * We pick a shorter time for the attack, because if a sound takes
+         * too long to start up, it can feel 'laggy'
+         */
+        c->volumeVelocity =
+          c->currentVolume == 0 ?
+            (c->targetVolume - c->currentVolume) / (SAMPLES_PER_SECOND / 100) :
+            (c->targetVolume - c->currentVolume) / (SAMPLES_PER_SECOND /  25);
       }
     }
   }
