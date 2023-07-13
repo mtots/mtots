@@ -220,16 +220,41 @@ def():
   if gg.key(gg.KEY.F, 1):
     chan0.pause(true)
 
-  sys.enableMallocFreeLogs(true)
+  # sys.enableMallocFreeLogs(true)
   for ball in balls:
     ball.blit()
 
-  if gg.controllerButton(0, gg.CONTROLLER_BUTTON.A):
+  # if gg.controllerButton(0, gg.CONTROLLER_BUTTON.A):
+  #   gg.synth(2, 440)
+
+  # if gg.controllerButton(0, gg.CONTROLLER_BUTTON.A, 1):
+  #   gg.synth(2, 0)
+
+  # print("gg.button(0, gg.BUTTON.O) = %s" % [gg.button(0, gg.BUTTON.O)])
+  # print("gg.button(0, gg.BUTTON.X) = %s" % [gg.button(0, gg.BUTTON.X)])
+  if gg.button(0, gg.BUTTON.O):
+    print("BUTTON O PRESSED")
     gg.synth(2, 440)
 
-  if gg.controllerButton(0, gg.CONTROLLER_BUTTON.A, 1):
+  if gg.button(0, gg.BUTTON.O, 1):
     gg.synth(2, 0)
 
+  if gg.button(0, gg.BUTTON.UP):
+    print("BUTTON UP")
+
+  if gg.button(0, gg.BUTTON.DOWN):
+    print("BUTTON DOWN")
+
+  if gg.button(0, gg.BUTTON.LEFT):
+    print("BUTTON LEFT")
+
+  if gg.button(0, gg.BUTTON.RIGHT):
+    print("BUTTON RIGHT")
+
+  if gg.button(0, gg.BUTTON.START):
+    print("BUTTON START")
+
+  # if gg.button(0, gg.BUTTON.X):
   if gg.controllerButton(0, gg.CONTROLLER_BUTTON.B):
     print("activeControllerCount = %s" % [gg.getActiveControllerCount()])
 
@@ -248,4 +273,4 @@ def():
   angleZ = angleZ + 0.014
   angleY = angleY + 0.06
 
-  sys.enableMallocFreeLogs(false)
+  # sys.enableMallocFreeLogs(false)

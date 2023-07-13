@@ -84,6 +84,13 @@ final COLORS """
 ]
 
 
+# Some constants for use when querying the state of input
+# (e.g. with functions like `key()`, `mouseButton()`, or `button()`)
+final PRESSED   = 0
+final RELEASED  = 1
+final HELD      = 2
+
+
 final KEY """
 Maps the name of each key to the scancode of the key for use with function `key()`
 """ = final{
@@ -224,13 +231,27 @@ final CONTROLLER_BUTTON """
 # From https://wiki.libsdl.org/SDL2/SDL_GameControllerAxis
 final CONTROLLER_AXIS """
   Maps the name of each controller axis to its id.
-"""= final{
+""" = final{
   "LEFTX": 0,
   "LEFTY": 1,
   "RIGHTX": 2,
   "RIGHTY": 3,
   "TRIGGERLEFT": 4,
   "TRIGGERRIGHT": 5,
+}
+
+final BUTTON """
+  Maps the name of each (virtual) button to its id.
+
+  These button IDs are more or less taken from PICO-8's design.
+""" = final {
+  "LEFT": 0,
+  "RIGHT": 1,
+  "UP": 2,
+  "DOWN": 3,
+  "O": 4,
+  "X": 5,
+  "START": 6,
 }
 
 
@@ -830,6 +851,10 @@ def controllerAxis(playerIndex Int, axisID Int) Float:
   """
   Gets the current value of an axis on the controller.
 
+  Returns a number between -1 and 1 inclusive.
+
+  Trigger axes will return a number between 0 and 1.
+
   Parameters:
   * playerIndex - an integer between 0-`getActiveControllerCount()`
     inclusive indicating the controller.
@@ -837,4 +862,63 @@ def controllerAxis(playerIndex Int, axisID Int) Float:
     this function will always return 0.
   * axisID - an integer value from `CONTROLLER_AXIS` specifying the axis
     on the controller to get the value for.
+  """
+
+
+def button(playerIndex Int, buttonID Int, query Int=0) Bool:
+  """
+  Queries the state of a virtual button.
+
+  Also see PICO-8's `btn()` function.
+
+  While the other input functions (`controllerButton`, `controllerAxis`,
+  `key` etc) give you more fine grained control when processing user input,
+  this function simplifies input into just a handful of buttons useful
+  for games that wish to support both keyboard and controller input.
+
+  Parameters:
+  * playerIndex - an integer between 0-`getActiveControllerCount()`
+    inclusive indicating the player.
+    If the player index is greater than or equal to
+    `getActiveControllerCount()` this function will always return 0.
+
+    NOTE: playerIndex `0` is special in that, it will cause this
+    function to check the current state of the keyboard for whether
+    the given button is pressed or not. All other playerIndex values
+    will only check the corresponding controller input.
+
+  * buttonID - an integer value from `BUTTON` specifying the virtual
+    button to query for.
+
+    Each button type corresponds to one or more controller or keyboard
+    inputs:
+
+    * LEFT (0) - triggered by:
+      * left stick tilted left on the controller
+      * (for player 0) - 'A' key on the keyboard,
+      * (for player 0) - 'LEFT' key on the keyboard,
+    * RIGHT (1) - triggered by:
+      * left stick tilted right on the controller
+      * (for player 0) - 'D' key on the keyboard,
+      * (for player 0) - 'RIGHT' key on the keyboard,
+    * UP (2) - triggered by:
+      * left stick tilted up on the controller
+      * (for palyer 0) - 'W' key on the keyboard,
+      * (for player 0) - 'UP' key on the keyboard,
+    * DOWN (3) - triggered by:
+      * left stick tilted down on the controller
+      * (for palyer 0) - 'S' key on the keyboard,
+      * (for player 0) - 'DOWN' key on the keyboard,
+    * O (4) - triggered by:
+      * 'A' key on an xinput controller
+        (may be a different label on different controllers)
+      * (for player 0) - 'Z' key on the keyboard,
+    * X (5) - triggered by:
+      * 'B' key on an xinput controller
+        (may be a different label on different controllers)
+      * (for player 0) - 'X' key on the keyboard,
+    * START (6) - triggered by:
+      * 'START' key on an xinput controller
+        (may be a different label on different controllers)
+      * (for player 0) - 'ENTER/RETURN' or 'ESC' key on the keyboard,
   """

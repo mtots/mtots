@@ -32,6 +32,7 @@
 #define SAMPLES_PER_SECOND 44100
 
 #define MAX_CONTROLLER_COUNT     8
+#define AXIS_THRESHOLD          (0.4)
 
 #define WINDOW_FLAGS_MASK ( \
   SDL_WINDOW_FULLSCREEN|\
@@ -62,6 +63,22 @@ typedef struct ObjTexture ObjTexture;
 typedef enum SynthWaveType {
   SYNTH_SINE
 } SynthWaveType;
+
+typedef enum Button {
+  BUTTON_LEFT = 0,
+  BUTTON_RIGHT = 1,
+  BUTTON_UP = 2,
+  BUTTON_DOWN = 3,
+  BUTTON_O = 4,
+  BUTTON_X = 5,
+  BUTTON_START = 6
+} Button;
+
+typedef enum Query {
+  QUERY_PRESSED = 0,
+  QUERY_RELEASED = 1,
+  QUERY_HELD = 2
+} Query;
 
 static ubool updateStreamingTexture(SDL_Texture *texture, ObjImage *image);
 
@@ -683,6 +700,97 @@ static Controller *activateAndGetController(SDL_JoystickID id) {
 
 static double normalizeAxisValue(i16 value) {
   return (((double)value) + 0.5) / 32767.5;
+}
+
+static ubool testButtonController(Button btn, ControllerButtons *btns, ControllerAxes *axes) {
+  switch (btn) {
+    case BUTTON_LEFT:
+      return btns->state[SDL_CONTROLLER_BUTTON_DPAD_LEFT] ||
+        normalizeAxisValue(axes->state[SDL_CONTROLLER_AXIS_LEFTX]) <= -AXIS_THRESHOLD;
+    case BUTTON_RIGHT:
+      return btns->state[SDL_CONTROLLER_BUTTON_DPAD_RIGHT] ||
+        normalizeAxisValue(axes->state[SDL_CONTROLLER_AXIS_LEFTX]) >= AXIS_THRESHOLD;
+    case BUTTON_UP:
+      return btns->state[SDL_CONTROLLER_BUTTON_DPAD_UP] ||
+        normalizeAxisValue(axes->state[SDL_CONTROLLER_AXIS_LEFTY]) <= -AXIS_THRESHOLD;
+    case BUTTON_DOWN:
+      return btns->state[SDL_CONTROLLER_BUTTON_DPAD_DOWN] ||
+        normalizeAxisValue(axes->state[SDL_CONTROLLER_AXIS_LEFTY]) >= AXIS_THRESHOLD;
+    case BUTTON_O:
+      return btns->state[SDL_CONTROLLER_BUTTON_A] ||
+        btns->state[SDL_CONTROLLER_BUTTON_Y];
+    case BUTTON_X:
+      return btns->state[SDL_CONTROLLER_BUTTON_B] ||
+        btns->state[SDL_CONTROLLER_BUTTON_X];
+    case BUTTON_START:
+      return btns->state[SDL_CONTROLLER_BUTTON_START];
+    default:
+      panic("Invalid button ID %d", btn);
+      return UFALSE;
+  }
+}
+
+static ubool testButtonKeyboard(Button btn, const u8 *keyState) {
+  switch (btn) {
+    case BUTTON_LEFT:
+      return !!(keyState[SDL_SCANCODE_A] || keyState[SDL_SCANCODE_LEFT]);
+    case BUTTON_RIGHT:
+      return !!(keyState[SDL_SCANCODE_D] || keyState[SDL_SCANCODE_RIGHT]);
+    case BUTTON_UP:
+      return !!(keyState[SDL_SCANCODE_W] || keyState[SDL_SCANCODE_UP]);
+    case BUTTON_DOWN:
+      return !!(keyState[SDL_SCANCODE_S] || keyState[SDL_SCANCODE_DOWN]);
+    case BUTTON_O:
+      return !!keyState[SDL_SCANCODE_Z];
+    case BUTTON_X:
+      return !!keyState[SDL_SCANCODE_X];
+    case BUTTON_START:
+      return !!(keyState[SDL_SCANCODE_ESCAPE] || keyState[SDL_SCANCODE_RETURN]);
+    default:
+      panic("Invalid button ID %d", btn);
+      return UFALSE;
+  }
+}
+
+static ubool testButtonKeyboardQuery(Button btn, u8 query) {
+  switch (query) {
+    case QUERY_PRESSED:   return testButtonKeyboard(btn, keydownState);
+    case QUERY_RELEASED:  return testButtonKeyboard(btn, keyupState);
+    case QUERY_HELD:      return testButtonKeyboard(btn, keyboardState);
+    default:
+      panic("Invalid query value: %d", query);
+      return UFALSE;
+  }
+}
+
+static ubool resolveQuery(u8 query, ubool previous, ubool current) {
+  switch (query) {
+    case QUERY_PRESSED:   return !(previous) &&  (current);
+    case QUERY_RELEASED:  return  (previous) && !(current);
+    case QUERY_HELD:      return                 (current);
+    default: break;
+  }
+  panic("Invalid query value: %d", (int)query);
+  return UFALSE;
+}
+
+static ubool queryButton(u8 playerID, Button btn, u8 query) {
+  ubool previous, current;
+  if (playerID == 0 && testButtonKeyboardQuery(btn, query)) {
+    return UTRUE;
+  }
+  if (playerID >= activeControllerCount) {
+    return UFALSE;
+  }
+  previous = testButtonController(
+    btn,
+    &controllers[playerID].previousButtons,
+    &controllers[playerID].previousAxes);
+  current = testButtonController(
+    btn,
+    &controllers[playerID].currentButtons,
+    &controllers[playerID].currentAxes);
+  return resolveQuery(query, previous, current);
 }
 
 static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
@@ -1824,9 +1932,9 @@ static ubool implKey(i16 argc, Value *args, Value *out) {
   ubool allowRepeat = argc > 2 ? AS_BOOL(args[2]) : UTRUE;
   u8 result;
   switch (query) {
-    case 0: result =   keydownState[scancode]; break; /* PRESSED */
-    case 1: result =     keyupState[scancode]; break; /* RELEASED */
-    case 2: result =  keyboardState[scancode]; break; /* HELD */
+    case QUERY_PRESSED:   result =   keydownState[scancode]; break;
+    case QUERY_RELEASED:  result =     keyupState[scancode]; break;
+    case QUERY_HELD:      result =  keyboardState[scancode]; break;
     default:
       runtimeError("Invalid keyboard key query: %d", (int)query);
       return UFALSE;
@@ -1881,7 +1989,6 @@ static ubool implMouseButton(i16 argc, Value *args, Value *out) {
   u32 query = argc > 1 ? AS_U32(args[1]) : 0;
   u32 bit;
   u32 previous = previousMouseButtonState, current = currentMouseButtonState;
-  ubool result;
   switch (buttonID) {
     case 0: bit = SDL_BUTTON(1); break;
     case 1: bit = SDL_BUTTON(2); break;
@@ -1890,15 +1997,7 @@ static ubool implMouseButton(i16 argc, Value *args, Value *out) {
       runtimeError("Invalid mouse button ID: %d", (int)buttonID);
       return UFALSE;
   }
-  switch (query) {
-    case 0: result = !(previous&bit) &&  (current&bit); break; /* PRESSED */
-    case 1: result =  (previous&bit) && !(current&bit); break; /* RELEASED */
-    case 2: result =                     (current&bit); break; /* HELD */
-    default:
-      runtimeError("Invalid mouse button query: %d", (int)query);
-      return UFALSE;
-  }
-  *out = BOOL_VAL(result);
+  *out = BOOL_VAL(resolveQuery(query, previous&bit, current&bit));
   return UTRUE;
 }
 
@@ -1938,7 +2037,6 @@ static ubool implControllerButton(i16 argc, Value *args, Value *out) {
   u32 buttonID = AS_U32(args[1]);
   u32 query = argc > 2 ? AS_U32(args[2]) : 0;
   u8 previous, current;
-  ubool result;
   if (controllerIndex >= activeControllerCount) {
     *out = BOOL_VAL(UFALSE);
     return UTRUE;
@@ -1949,15 +2047,7 @@ static ubool implControllerButton(i16 argc, Value *args, Value *out) {
   }
   previous = controllers[controllerIndex].previousButtons.state[buttonID];
   current = controllers[controllerIndex].currentButtons.state[buttonID];
-  switch (query) {
-    case 0: result = !(previous) &&  (current); break; /* PRESSED */
-    case 1: result =  (previous) && !(current); break; /* RELEASED */
-    case 2: result =                 (current); break; /* HELD */
-    default:
-      runtimeError("Invalid controller button query: %d", (int)query);
-      return UFALSE;
-  }
-  *out = BOOL_VAL(result);
+  *out = BOOL_VAL(resolveQuery(query, previous, current));
   return UTRUE;
 }
 
@@ -1983,6 +2073,18 @@ static ubool implControllerAxis(i16 argc, Value *args, Value *out) {
 
 static CFunction funcControllerAxis = {
   implControllerAxis, "controllerAxis", 2, 0, argsNumbers
+};
+
+static ubool implButton(i16 argc, Value *args, Value *out) {
+  u32 playerIndex = AS_U32(args[0]);
+  u32 buttonID = AS_U32(args[1]);
+  u32 query = argc > 2 ? AS_U32(args[2]) : 0;
+  *out = BOOL_VAL(queryButton(playerIndex, buttonID, query));
+  return UTRUE;
+}
+
+static CFunction funcButton = {
+  implButton, "button", 2, 3, argsNumbers
 };
 
 static ubool impl(i16 argCount, Value *args, Value *out) {
@@ -2059,6 +2161,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &funcResetActiveControllers,
     &funcControllerButton,
     &funcControllerAxis,
+    &funcButton,
     NULL,
   };
   ubool gcPause;
@@ -2178,6 +2281,20 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
 
   {
     Map map;
+    initMap(&map);
+    mapSetN(&map, "LEFT", NUMBER_VAL(BUTTON_LEFT));
+    mapSetN(&map, "RIGHT", NUMBER_VAL(BUTTON_RIGHT));
+    mapSetN(&map, "UP", NUMBER_VAL(BUTTON_UP));
+    mapSetN(&map, "DOWN", NUMBER_VAL(BUTTON_DOWN));
+    mapSetN(&map, "O", NUMBER_VAL(BUTTON_O));
+    mapSetN(&map, "X", NUMBER_VAL(BUTTON_X));
+    mapSetN(&map, "START", NUMBER_VAL(BUTTON_START));
+    mapSetN(&module->fields, "BUTTON", FROZEN_DICT_VAL(newFrozenDict(&map)));
+    freeMap(&map);
+  }
+
+  {
+    Map map;
     ColorEntry *entry;
     Value *colors;
     size_t colorCount = 0, i;
@@ -2195,6 +2312,10 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     mapSetN(&module->fields, "COLORS", FROZEN_LIST_VAL(copyFrozenList(colors, colorCount)));
     free(colors);
   }
+
+  mapSetN(&module->fields, "PRESSED",   NUMBER_VAL(QUERY_PRESSED));
+  mapSetN(&module->fields, "RELEASED",  NUMBER_VAL(QUERY_RELEASED));
+  mapSetN(&module->fields, "HELD",      NUMBER_VAL(QUERY_HELD));
 
   LOCAL_GC_UNPAUSE(gcPause);
 
