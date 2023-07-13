@@ -223,6 +223,15 @@ def():
   for ball in balls:
     ball.blit()
 
+  if gg.controllerButton(0, gg.CONTROLLER_BUTTON.A):
+    gg.synth(2, 440)
+
+  if gg.controllerButton(0, gg.CONTROLLER_BUTTON.A, 1):
+    gg.synth(2, 0)
+
+  if gg.controllerButton(0, gg.CONTROLLER_BUTTON.B):
+    print("activeControllerCount = %s" % [gg.getActiveControllerCount()])
+
   ballGeometry.setVertexColor(0, gg.RED)
   ballGeometry.setVertexColor(1, gg.GREEN)
   ballGeometry.setVertexColor(2, gg.BLUE)

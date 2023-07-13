@@ -31,7 +31,7 @@
 
 #define SAMPLES_PER_SECOND 44100
 
-#define DEFAULT_PEN_FONT_SIZE 32
+#define MAX_CONTROLLER_COUNT     8
 
 #define WINDOW_FLAGS_MASK ( \
   SDL_WINDOW_FULLSCREEN|\
@@ -98,6 +98,28 @@ typedef struct ObjGeometry {
   ObjMatrix *transform;         /* transform on vectors to determine vertices */
 } ObjGeometry;
 
+typedef struct ControllerButtons {
+  u8 state[SDL_CONTROLLER_BUTTON_MAX];
+} ControllerButtons;
+
+typedef struct ControllerAxes {
+  i16 state[SDL_CONTROLLER_AXIS_MAX];
+} ControllerAxes;
+
+typedef struct Controller {
+  SDL_GameController *handle;
+  SDL_JoystickID id;
+
+  /* -1 when opened but not active, index into 'controllers' when active */
+  int playerIndex;
+
+  /* State of the controller */
+  ControllerButtons previousButtons;
+  ControllerButtons currentButtons;
+  ControllerAxes previousAxes;
+  ControllerAxes currentAxes;
+} Controller;
+
 typedef struct ObjPlaybackChannel {
   ObjNative obj;
   u8 channelID;
@@ -155,6 +177,11 @@ static Vector mousePos;
 static Vector mouseMotion;
 static u32 previousMouseButtonState;
 static u32 currentMouseButtonState;
+static u32 openControllerCount;
+static u32 activeControllerCount;
+static Controller controllers[MAX_CONTROLLER_COUNT];
+static const ControllerButtons zeroedOutControllerButtons;
+static const ControllerAxes zeroedOutControllerAxes;
 static u64 audioTick;
 static MixerConfig mixerConfig;
 static PlaybackData playbackData;
@@ -602,6 +629,62 @@ static ubool newWindow(
   return UTRUE;
 }
 
+static void resetActiveControllers() {
+  size_t i;
+  for (i = 0; i < activeControllerCount; i++) {
+    controllers[i].playerIndex = -1;
+    controllers[i].previousButtons = zeroedOutControllerButtons;
+    controllers[i].currentButtons = zeroedOutControllerButtons;
+    controllers[i].previousAxes = zeroedOutControllerAxes;
+    controllers[i].currentAxes = zeroedOutControllerAxes;
+    SDL_GameControllerSetPlayerIndex(controllers[i].handle, -1);
+  }
+  activeControllerCount = 0;
+}
+
+static Controller *activateAndGetController(SDL_JoystickID id) {
+  size_t i;
+  Controller tmp;
+  for (i = 0; i < openControllerCount; i++) {
+    if (controllers[i].id == id) {
+      break;
+    }
+  }
+
+  /* If no matching controller is found, it's not found */
+  if (i >= openControllerCount) {
+    return NULL;
+  }
+
+  /* If controller is already active, just return it */
+  if (i < activeControllerCount) {
+    return controllers + i;
+  }
+
+  /* controllers are reordered so that active ones come first */
+  tmp = controllers[activeControllerCount];
+  controllers[activeControllerCount] = controllers[i];
+  controllers[i] = tmp;
+
+  /* Set the player index for the controller */
+  controllers[activeControllerCount].playerIndex = (int)activeControllerCount;
+  SDL_GameControllerSetPlayerIndex(
+    controllers[activeControllerCount].handle,
+    (int)activeControllerCount);
+
+  /* zero out button state */
+  controllers[activeControllerCount].previousButtons = zeroedOutControllerButtons;
+  controllers[activeControllerCount].currentButtons = zeroedOutControllerButtons;
+  controllers[activeControllerCount].previousAxes = zeroedOutControllerAxes;
+  controllers[activeControllerCount].currentAxes = zeroedOutControllerAxes;
+
+  return controllers + activeControllerCount++;
+}
+
+static double normalizeAxisValue(i16 value) {
+  return (((double)value) + 0.5) / 32767.5;
+}
+
 static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
   SDL_Event event;
   memset(keydownState, 0, sizeof(keydownState));
@@ -609,6 +692,13 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
   keydownStackLen = 0;
   keyupStackLen = 0;
   mouseMotion = newVector(0, 0, 0);
+  {
+    size_t i;
+    for (i = 0; i < MAX_CONTROLLER_COUNT; i++) {
+      controllers[i].previousButtons = controllers[i].currentButtons;
+      controllers[i].previousAxes = controllers[i].currentAxes;
+    }
+  }
   while (SDL_PollEvent(&event)) {
     switch (event.type) {
       case SDL_QUIT:
@@ -654,6 +744,61 @@ static ubool mainLoopIteration(ObjWindow *mainWindow, ubool *quit) {
           default: break;
         }
         break;
+      case SDL_CONTROLLERBUTTONDOWN: {
+        Controller *c = activateAndGetController(event.cbutton.which);
+        c->currentButtons.state[event.cbutton.button] = UTRUE;
+        break;
+      }
+      case SDL_CONTROLLERBUTTONUP: {
+        Controller *c = activateAndGetController(event.cbutton.which);
+        c->currentButtons.state[event.cbutton.button] = UFALSE;
+        break;
+      }
+      case SDL_CONTROLLERAXISMOTION: {
+        Controller *c = activateAndGetController(event.cbutton.which);
+        c->currentAxes.state[event.caxis.axis] = event.caxis.value;
+        break;
+      }
+      case SDL_CONTROLLERDEVICEADDED:
+        if (openControllerCount < MAX_CONTROLLER_COUNT) {
+          Controller *c = controllers + openControllerCount++;
+          SDL_Joystick *joy;
+          c->handle = SDL_GameControllerOpen(event.cdevice.which);
+          if (!c->handle) {
+            return sdlError("SDL_GameControllerOpen");
+          }
+          joy = SDL_GameControllerGetJoystick(c->handle);
+          if (!joy) {
+            return sdlError("SDL_GameControllerGetJoystick");
+          }
+          c->id = SDL_JoystickInstanceID(joy);
+          if (c->id < 0) {
+            return sdlError("SDL_JoystickInstanceID");
+          }
+          c->playerIndex = -1;
+        }
+        break;
+      case SDL_CONTROLLERDEVICEREMOVED: {
+        Controller *c = NULL;
+        size_t i;
+        for (i = 0; i < openControllerCount; i++) {
+          if (controllers[i].id == event.cdevice.which) {
+            c = controllers + i;
+            break;
+          }
+        }
+        if (c) {
+          SDL_GameControllerClose(c->handle);
+          if (i < activeControllerCount) {
+            activeControllerCount--;
+          }
+          for (; i < openControllerCount - 1; i++) {
+            controllers[i] = controllers[i + 1];
+          }
+          openControllerCount--;
+        }
+        break;
+      }
     }
   }
   {
@@ -1759,6 +1904,87 @@ static ubool implMouseButton(i16 argc, Value *args, Value *out) {
 
 static CFunction funcMouseButton = { implMouseButton, "mouseButton", 1, 2, argsNumbers };
 
+static ubool implGetActiveControllerCount(i16 argc, Value *args, Value *out) {
+  *out = NUMBER_VAL(activeControllerCount);
+  return UTRUE;
+}
+
+static CFunction funcGetActiveControllerCount = {
+  implGetActiveControllerCount,
+  "getActiveControllerCount"
+};
+
+static ubool implGetConnectedControllerCount(i16 argc, Value *args, Value *out) {
+  *out = NUMBER_VAL(openControllerCount);
+  return UTRUE;
+}
+
+static CFunction funcGetConnectedControllerCount = {
+  implGetConnectedControllerCount,
+  "getConnectedControllerCount"
+};
+
+static ubool implResetActiveControllers(i16 argc, Value *args, Value *out) {
+  resetActiveControllers();
+  return UTRUE;
+}
+
+static CFunction funcResetActiveControllers = {
+  implResetActiveControllers, "resetActiveControllers",
+};
+
+static ubool implControllerButton(i16 argc, Value *args, Value *out) {
+  u32 controllerIndex = AS_U32(args[0]);
+  u32 buttonID = AS_U32(args[1]);
+  u32 query = argc > 2 ? AS_U32(args[2]) : 0;
+  u8 previous, current;
+  ubool result;
+  if (controllerIndex >= activeControllerCount) {
+    *out = BOOL_VAL(UFALSE);
+    return UTRUE;
+  }
+  if (buttonID >= SDL_CONTROLLER_BUTTON_MAX) {
+    runtimeError("gg.controllerButton(): invalid buttonID %d", (int)buttonID);
+    return UFALSE;
+  }
+  previous = controllers[controllerIndex].previousButtons.state[buttonID];
+  current = controllers[controllerIndex].currentButtons.state[buttonID];
+  switch (query) {
+    case 0: result = !(previous) &&  (current); break; /* PRESSED */
+    case 1: result =  (previous) && !(current); break; /* RELEASED */
+    case 2: result =                 (current); break; /* HELD */
+    default:
+      runtimeError("Invalid controller button query: %d", (int)query);
+      return UFALSE;
+  }
+  *out = BOOL_VAL(result);
+  return UTRUE;
+}
+
+static CFunction funcControllerButton = {
+  implControllerButton, "controllerButton", 2, 3, argsNumbers
+};
+
+static ubool implControllerAxis(i16 argc, Value *args, Value *out) {
+  u32 controllerIndex = AS_U32(args[0]);
+  u32 axisID = AS_U32(args[1]);
+  if (controllerIndex >= activeControllerCount) {
+    *out = NUMBER_VAL(0);
+    return UTRUE;
+  }
+  if (axisID >= SDL_CONTROLLER_AXIS_MAX) {
+    runtimeError("gg.controllerAxis(): invalid axsiID %d", (int)axisID);
+    return UFALSE;
+  }
+  *out = NUMBER_VAL(normalizeAxisValue(
+    controllers[controllerIndex].currentAxes.state[axisID]));
+  return UTRUE;
+}
+
+static CFunction funcControllerAxis = {
+  implControllerAxis, "controllerAxis", 2, 0, argsNumbers
+};
+
 static ubool impl(i16 argCount, Value *args, Value *out) {
   ObjModule *module = AS_MODULE(args[0]);
   CFunction *windowStaticMethods[] = {
@@ -1828,6 +2054,11 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &funcMousePosition,
     &funcMouseMotion,
     &funcMouseButton,
+    &funcGetActiveControllerCount,
+    &funcGetConnectedControllerCount,
+    &funcResetActiveControllers,
+    &funcControllerButton,
+    &funcControllerAxis,
     NULL,
   };
   ubool gcPause;
@@ -1901,6 +2132,47 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
       mapSetN(&map, scancodeEntries[i].name, NUMBER_VAL(scancodeEntries[i].scancode));
     }
     mapSetN(&module->fields, "KEY", FROZEN_DICT_VAL(newFrozenDict(&map)));
+    freeMap(&map);
+  }
+
+  {
+    Map map;
+    initMap(&map);
+    mapSetN(&map, "A", NUMBER_VAL(0));
+    mapSetN(&map, "B", NUMBER_VAL(1));
+    mapSetN(&map, "X", NUMBER_VAL(2));
+    mapSetN(&map, "Y", NUMBER_VAL(3));
+    mapSetN(&map, "BACK", NUMBER_VAL(4));
+    mapSetN(&map, "GUIDE", NUMBER_VAL(5));
+    mapSetN(&map, "START", NUMBER_VAL(6));
+    mapSetN(&map, "LEFTSTICK", NUMBER_VAL(7));
+    mapSetN(&map, "RIGHTSTICK", NUMBER_VAL(8));
+    mapSetN(&map, "LEFTSHOULDER", NUMBER_VAL(9));
+    mapSetN(&map, "RIGHTSHOULDER", NUMBER_VAL(10));
+    mapSetN(&map, "DPAD_UP", NUMBER_VAL(11));
+    mapSetN(&map, "DPAD_DOWN", NUMBER_VAL(12));
+    mapSetN(&map, "DPAD_LEFT", NUMBER_VAL(13));
+    mapSetN(&map, "DPAD_RIGHT", NUMBER_VAL(14));
+    mapSetN(&map, "MISC1", NUMBER_VAL(15));
+    mapSetN(&map, "PADDLE1", NUMBER_VAL(16));
+    mapSetN(&map, "PADDLE2", NUMBER_VAL(17));
+    mapSetN(&map, "PADDLE3", NUMBER_VAL(18));
+    mapSetN(&map, "PADDLE4", NUMBER_VAL(19));
+    mapSetN(&map, "TOUCHPAD", NUMBER_VAL(20));
+    mapSetN(&module->fields, "CONTROLLER_BUTTON", FROZEN_DICT_VAL(newFrozenDict(&map)));
+    freeMap(&map);
+  }
+
+  {
+    Map map;
+    initMap(&map);
+    mapSetN(&map, "LEFTX", NUMBER_VAL(0));
+    mapSetN(&map, "LEFTY", NUMBER_VAL(1));
+    mapSetN(&map, "RIGHTX", NUMBER_VAL(2));
+    mapSetN(&map, "RIGHTY", NUMBER_VAL(3));
+    mapSetN(&map, "TRIGGERLEFT", NUMBER_VAL(4));
+    mapSetN(&map, "TRIGGERRIGHT", NUMBER_VAL(5));
+    mapSetN(&module->fields, "CONTROLLER_AXIS", FROZEN_DICT_VAL(newFrozenDict(&map)));
     freeMap(&map);
   }
 

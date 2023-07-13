@@ -189,6 +189,46 @@ Maps the name of each key to the scancode of the key for use with function `key(
 }
 
 
+# From https://wiki.libsdl.org/SDL2/SDL_GameControllerButton
+final CONTROLLER_BUTTON """
+  Maps the name of each controller button to its id.
+""" = final{
+  "A": 0,
+  "B": 1,
+  "X": 2,
+  "Y": 3,
+  "BACK": 4,
+  "GUIDE": 5,
+  "START": 6,
+  "LEFTSTICK": 7,
+  "RIGHTSTICK": 8,
+  "LEFTSHOULDER": 9,
+  "RIGHTSHOULDER": 10,
+  "DPAD_UP": 11,
+  "DPAD_DOWN": 12,
+  "DPAD_LEFT": 13,
+  "DPAD_RIGHT": 14,
+  "MISC1": 15,
+  "PADDLE1": 16,
+  "PADDLE2": 17,
+  "PADDLE3": 18,
+  "PADDLE4": 19,
+  "TOUCHPAD": 20,
+}
+
+# From https://wiki.libsdl.org/SDL2/SDL_GameControllerAxis
+final CONTROLLER_AXIS """
+  Maps the name of each controller axis to its id.
+"""= final{
+  "LEFTX": 0,
+  "LEFTY": 1,
+  "RIGHTX": 2,
+  "RIGHTY": 3,
+  "TRIGGERLEFT": 4,
+  "TRIGGERRIGHT": 5,
+}
+
+
 class Window:
   """
   A window for viewing the game.
@@ -731,4 +771,65 @@ def mouseButton(buttonID Int, query Int=0) Bool:
       the past frame.
     * 2 (HELD) - test whether the button is currently being held down by
       the player.
+  """
+
+
+def getActiveControllerCount() Int:
+  """
+  Returns the number of active controllers.
+
+  An active controller is a connected controller that has processed at least
+  one input event since being connected or a controller reset event.
+  """
+
+
+def getConnectedControllerCount() Int:
+  """
+  Returns the number of connected controllers that gg knows about.
+
+  In general, `getActiveControllerCount` should be preferred over this function,
+  but this function can be useful for detecting issues.
+  """
+
+
+def resetActiveControllers() nil:
+  """
+  Remove all player indices and sets the active controller count to zero.
+  """
+
+
+def controllerButton(playerIndex Int, buttonID Int, query Int=0) Bool:
+  """
+  Queries the state of the given controller button
+
+  Parameters:
+  * playerIndex - an integer between 0-`getActiveControllerCount()`
+    inclusive indicating the controller.
+    If the controller ID is greater than or equal to `getActiveControllerCount()`
+    this function will always return false.
+  * buttonID - an integer value from `CONTROLLER_BUTTON` specifying the
+    button on the controller to query.
+  * query - an integer between 0-2 inclusive indicating the kind of button
+    event to query for.
+    Defaults to 0.
+    * 0 (PRESSED) - tests for whether the given button was just pressed
+      within the past frame.
+    * 1 (RELEASED) - tests whether the given button was just released within
+      the past frame.
+    * 2 (HELD) - test whether the button is currently being held down by
+      the player.
+  """
+
+
+def controllerAxis(playerIndex Int, axisID Int) Float:
+  """
+  Gets the current value of an axis on the controller.
+
+  Parameters:
+  * playerIndex - an integer between 0-`getActiveControllerCount()`
+    inclusive indicating the controller.
+    If the controller ID is greater than or equal to `getActiveControllerCount()`
+    this function will always return 0.
+  * axisID - an integer value from `CONTROLLER_AXIS` specifying the axis
+    on the controller to get the value for.
   """
