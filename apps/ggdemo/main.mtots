@@ -1,5 +1,6 @@
 import sys
 import gg
+from gg import COLOR
 from media import Image
 from media import Audio
 from media.music import NOTE
@@ -232,10 +233,10 @@ def():
   if gg.controllerButton(0, gg.CONTROLLER_BUTTON.B):
     print("activeControllerCount = %s" % [gg.getActiveControllerCount()])
 
-  ballGeometry.setVertexColor(0, gg.RED)
-  ballGeometry.setVertexColor(1, gg.GREEN)
-  ballGeometry.setVertexColor(2, gg.BLUE)
-  ballGeometry.setVertexColor(3, gg.LIGHT_YELLOW)
+  ballGeometry.setVertexColor(0, COLOR.RED)
+  ballGeometry.setVertexColor(1, COLOR.GREEN)
+  ballGeometry.setVertexColor(2, COLOR.BLUE)
+  ballGeometry.setVertexColor(3, COLOR.LIGHT_YELLOW)
   ballGeometry.transform.reset()
   ballGeometry.transform.scaleX(80)
   ballGeometry.transform.scaleY(80)

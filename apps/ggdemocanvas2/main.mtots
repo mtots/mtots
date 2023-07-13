@@ -1,5 +1,6 @@
 import gg
 import sys
+from gg import COLOR
 from random import Random
 
 
@@ -7,7 +8,7 @@ final rand = Random()
 final WIDTH = 400
 final HEIGHT = 300
 final SCALE = 2
-final BGCOLOR = gg.BROWN
+final BGCOLOR = COLOR.BROWN
 final RADIUS = 30
 
 final window = gg.Window('demo', WIDTH * SCALE, HEIGHT * SCALE)
@@ -22,7 +23,7 @@ var vel = Vector(rand.int(-30, 30), rand.int(-30, 30))
 @window.onUpdate
 def() nil:
   canvas.fill(BGCOLOR)
-  canvas.fillCircle(pos, RADIUS, gg.BLUE)
+  canvas.fillCircle(pos, RADIUS, COLOR.BLUE)
   pos = pos + vel
 
   if pos.x - RADIUS < 0 or pos.x + RADIUS >= WIDTH:

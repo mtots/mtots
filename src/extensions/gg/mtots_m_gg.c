@@ -2177,13 +2177,17 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
   }
 
   {
+    Map map;
     ColorEntry *entry;
     Value *colors;
     size_t colorCount = 0, i;
+    initMap(&map);
     for (entry = colorEntries; entry->name; entry++) {
-      mapSetN(&module->fields, entry->name, COLOR_VAL(entry->color));
+      mapSetN(&map, entry->name, COLOR_VAL(entry->color));
       colorCount++;
     }
+    mapSetN(&module->fields, "COLOR", FROZEN_DICT_VAL(newFrozenDict(&map)));
+    freeMap(&map);
     colors = malloc(sizeof(Value) * colorCount);
     for ((void)(entry = colorEntries), i = 0; entry->name; entry++, i++) {
       colors[i] = COLOR_VAL(entry->color);

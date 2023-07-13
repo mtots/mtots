@@ -5,77 +5,82 @@ from media import Image
 from media import Audio
 from media import Canvas
 
-# A collection of curated colors taken from PICO-8's palette.
-# 16 offical colors + 16 unofficial colors for a total of 32.
-final BLACK           = Color(   0,   0,   0, 255)
-final DARK_BLUE       = Color(  29,  43,  83, 255)
-final DARK_PURPLE     = Color( 126,  37,  83, 255)
-final DARK_GREEN      = Color(   0, 135,  81, 255)
-final BROWN           = Color( 171,  82,  54, 255)
-final DARK_GREY       = Color(  95,  87,  79, 255)
-final LIGHT_GREY      = Color( 194, 195, 199, 255)
-final WHITE           = Color( 255, 241, 232, 255)
-final RED             = Color( 255,   0,  77, 255)
-final ORANGE          = Color( 255, 163,   0, 255)
-final YELLOW          = Color( 255, 236,  39, 255)
-final GREEN           = Color(   0, 228,  54, 255)
-final BLUE            = Color(  41, 173, 255, 255)
-final LAVENDER        = Color( 131, 118, 156, 255)
-final PINK            = Color( 255, 119, 168, 255)
-final LIGHT_PEACH     = Color( 255, 204, 170, 255)
-final BROWNISH_BLACK  = Color(  41,  24,  20, 255)
-final DARKER_BLUE     = Color(  17,  29,  53, 255)
-final DARKER_PURPLE   = Color(  66,  33,  54, 255)
-final BLUE_GREEN      = Color(  18,  83,  89, 255)
-final DARK_BROWN      = Color( 116,  47,  41, 255)
-final DARKER_GREY     = Color(  73,  51,  59, 255)
-final MEDIUM_GREY     = Color( 162, 136, 121, 255)
-final LIGHT_YELLOW    = Color( 243, 239, 125, 255)
-final DARK_RED        = Color( 190,  18,  80, 255)
-final DARK_ORANGE     = Color( 255, 108,  36, 255)
-final LIME_GREEN      = Color( 168, 231,  46, 255)
-final MEDIUM_GREEN    = Color(   0, 181,  67, 255)
-final TRUE_BLUE       = Color(   6,  90, 181, 255)
-final MAUVE           = Color( 117,  70, 101, 255)
-final DARK_PEACH      = Color( 255, 110,  89, 255)
-final PEACH           = Color( 255, 157, 129, 255)
+final COLOR """
+  Maps each color name to its `Color` value.
+
+  The names are taken from PICO-8's palette.
+  16 offical colors + 16 unofficial colors for a total of 32.
+"""= final{
+  "BLACK"           : Color(   0,   0,   0, 255),
+  "DARK_BLUE"       : Color(  29,  43,  83, 255),
+  "DARK_PURPLE"     : Color( 126,  37,  83, 255),
+  "DARK_GREEN"      : Color(   0, 135,  81, 255),
+  "BROWN"           : Color( 171,  82,  54, 255),
+  "DARK_GREY"       : Color(  95,  87,  79, 255),
+  "LIGHT_GREY"      : Color( 194, 195, 199, 255),
+  "WHITE"           : Color( 255, 241, 232, 255),
+  "RED"             : Color( 255,   0,  77, 255),
+  "ORANGE"          : Color( 255, 163,   0, 255),
+  "YELLOW"          : Color( 255, 236,  39, 255),
+  "GREEN"           : Color(   0, 228,  54, 255),
+  "BLUE"            : Color(  41, 173, 255, 255),
+  "LAVENDER"        : Color( 131, 118, 156, 255),
+  "PINK"            : Color( 255, 119, 168, 255),
+  "LIGHT_PEACH"     : Color( 255, 204, 170, 255),
+  "BROWNISH_BLACK"  : Color(  41,  24,  20, 255),
+  "DARKER_BLUE"     : Color(  17,  29,  53, 255),
+  "DARKER_PURPLE"   : Color(  66,  33,  54, 255),
+  "BLUE_GREEN"      : Color(  18,  83,  89, 255),
+  "DARK_BROWN"      : Color( 116,  47,  41, 255),
+  "DARKER_GREY"     : Color(  73,  51,  59, 255),
+  "MEDIUM_GREY"     : Color( 162, 136, 121, 255),
+  "LIGHT_YELLOW"    : Color( 243, 239, 125, 255),
+  "DARK_RED"        : Color( 190,  18,  80, 255),
+  "DARK_ORANGE"     : Color( 255, 108,  36, 255),
+  "LIME_GREEN"      : Color( 168, 231,  46, 255),
+  "MEDIUM_GREEN"    : Color(   0, 181,  67, 255),
+  "TRUE_BLUE"       : Color(   6,  90, 181, 255),
+  "MAUVE"           : Color( 117,  70, 101, 255),
+  "DARK_PEACH"      : Color( 255, 110,  89, 255),
+  "PEACH"           : Color( 255, 157, 129, 255),
+}
 
 
 final COLORS """
   List of PICO-8 colors in order PICO-8's palette order
 """ = final[
-  BLACK,
-  DARK_BLUE,
-  DARK_PURPLE,
-  DARK_GREEN,
-  BROWN,
-  DARK_GREY,
-  LIGHT_GREY,
-  WHITE,
-  RED,
-  ORANGE,
-  YELLOW,
-  GREEN,
-  BLUE,
-  LAVENDER,
-  PINK,
-  LIGHT_PEACH,
-  BROWNISH_BLACK,
-  DARKER_BLUE,
-  DARKER_PURPLE,
-  BLUE_GREEN,
-  DARK_BROWN,
-  DARKER_GREY,
-  MEDIUM_GREY,
-  LIGHT_YELLOW,
-  DARK_RED,
-  DARK_ORANGE,
-  LIME_GREEN,
-  MEDIUM_GREEN,
-  TRUE_BLUE,
-  MAUVE,
-  DARK_PEACH,
-  PEACH,
+  COLOR.BLACK,
+  COLOR.DARK_BLUE,
+  COLOR.DARK_PURPLE,
+  COLOR.DARK_GREEN,
+  COLOR.BROWN,
+  COLOR.DARK_GREY,
+  COLOR.LIGHT_GREY,
+  COLOR.WHITE,
+  COLOR.RED,
+  COLOR.ORANGE,
+  COLOR.YELLOW,
+  COLOR.GREEN,
+  COLOR.BLUE,
+  COLOR.LAVENDER,
+  COLOR.PINK,
+  COLOR.LIGHT_PEACH,
+  COLOR.BROWNISH_BLACK,
+  COLOR.DARKER_BLUE,
+  COLOR.DARKER_PURPLE,
+  COLOR.BLUE_GREEN,
+  COLOR.DARK_BROWN,
+  COLOR.DARKER_GREY,
+  COLOR.MEDIUM_GREY,
+  COLOR.LIGHT_YELLOW,
+  COLOR.DARK_RED,
+  COLOR.DARK_ORANGE,
+  COLOR.LIME_GREEN,
+  COLOR.MEDIUM_GREEN,
+  COLOR.TRUE_BLUE,
+  COLOR.MAUVE,
+  COLOR.DARK_PEACH,
+  COLOR.PEACH,
 ]
 
 

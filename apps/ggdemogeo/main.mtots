@@ -1,4 +1,5 @@
 import gg
+from gg import COLOR
 
 
 final W = 300
@@ -15,10 +16,10 @@ final rect = window.newPolygon([
   Vector(100, 100),
   Vector(0,   100),
 ])
-rect.setVertexColor(0, gg.BLUE)
-rect.setVertexColor(1, gg.GREEN)
-rect.setVertexColor(2, gg.ORANGE)
-rect.setVertexColor(3, gg.BROWN)
+rect.setVertexColor(0, COLOR.BLUE)
+rect.setVertexColor(1, COLOR.GREEN)
+rect.setVertexColor(2, COLOR.ORANGE)
+rect.setVertexColor(3, COLOR.BROWN)
 rect.transform.translate(Vector(-50, -50))
 
 final pentagon = window.newPolygon([
@@ -28,7 +29,7 @@ final pentagon = window.newPolygon([
   Vector(  0,  15),
   Vector(-15,  10),
 ])
-pentagon.setColor(gg.DARK_PEACH)
+pentagon.setColor(COLOR.DARK_PEACH)
 
 var angle = 0
 
