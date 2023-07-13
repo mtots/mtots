@@ -116,7 +116,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY=1;MTOTS_ENABLE_SDL=1;MTOTS_ENABLE_PACO=1;MTOTS_ENABLE_AUDIO=1;MTOTS_ENABLE_GG=1;MTOTS_ENABLE_IMAGE=1;MTOTS_ENABLE_CANVAS=1;MTOTS_ENABLE_FONT=1;MTOTS_ENABLE_FONT_ROBOTO_MONO=1;MTOTS_ENABLE_ZIP=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY=1;MTOTS_RELEASE=1;MTOTS_ENABLE_SDL=1;MTOTS_ENABLE_PACO=1;MTOTS_ENABLE_AUDIO=1;MTOTS_ENABLE_GG=1;MTOTS_ENABLE_IMAGE=1;MTOTS_ENABLE_CANVAS=1;MTOTS_ENABLE_FONT=1;MTOTS_ENABLE_FONT_ROBOTO_MONO=1;MTOTS_ENABLE_ZIP=1</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..\..\..\lib\stbimage\include;..\..\..\lib\miniz\src;..\..\..\lib\lodepng\src;..\..\..\lib\freetype\include;..\..\..\lib\sdl2\include;..\..\..\src\extensions\audio;..\..\..\src\extensions\fontrm;..\..\..\src\extensions\font;..\..\..\src\extensions\canvas;..\..\..\src\extensions\image;..\..\..\src\extensions\gg;..\..\..\src\extensions\zip;..\..\..\src\extensions\paco;..\..\..\src\extensions\sdl;..\..\..\src;</AdditionalIncludeDirectories>
     </ClCompile>
@@ -148,7 +148,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY=1;MTOTS_ENABLE_SDL=1;MTOTS_ENABLE_PACO=1;MTOTS_ENABLE_AUDIO=1;MTOTS_ENABLE_GG=1;MTOTS_ENABLE_IMAGE=1;MTOTS_ENABLE_CANVAS=1;MTOTS_ENABLE_FONT=1;MTOTS_ENABLE_FONT_ROBOTO_MONO=1;MTOTS_ENABLE_ZIP=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY=1;MTOTS_RELEASE=1;MTOTS_ENABLE_SDL=1;MTOTS_ENABLE_PACO=1;MTOTS_ENABLE_AUDIO=1;MTOTS_ENABLE_GG=1;MTOTS_ENABLE_IMAGE=1;MTOTS_ENABLE_CANVAS=1;MTOTS_ENABLE_FONT=1;MTOTS_ENABLE_FONT_ROBOTO_MONO=1;MTOTS_ENABLE_ZIP=1</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..\..\..\lib\stbimage\include;..\..\..\lib\miniz\src;..\..\..\lib\lodepng\src;..\..\..\lib\freetype\include;..\..\..\lib\sdl2\include;..\..\..\src\extensions\audio;..\..\..\src\extensions\fontrm;..\..\..\src\extensions\font;..\..\..\src\extensions\canvas;..\..\..\src\extensions\image;..\..\..\src\extensions\gg;..\..\..\src\extensions\zip;..\..\..\src\extensions\paco;..\..\..\src\extensions\sdl;..\..\..\src;</AdditionalIncludeDirectories>
     </ClCompile>
@@ -169,7 +169,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|arm64'">
     <ClCompile>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY=1;MTOTS_ENABLE_SDL=1;MTOTS_ENABLE_PACO=1;MTOTS_ENABLE_AUDIO=1;MTOTS_ENABLE_GG=1;MTOTS_ENABLE_IMAGE=1;MTOTS_ENABLE_CANVAS=1;MTOTS_ENABLE_FONT=1;MTOTS_ENABLE_FONT_ROBOTO_MONO=1;MTOTS_ENABLE_ZIP=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY=1;MTOTS_RELEASE=1;MTOTS_ENABLE_SDL=1;MTOTS_ENABLE_PACO=1;MTOTS_ENABLE_AUDIO=1;MTOTS_ENABLE_GG=1;MTOTS_ENABLE_IMAGE=1;MTOTS_ENABLE_CANVAS=1;MTOTS_ENABLE_FONT=1;MTOTS_ENABLE_FONT_ROBOTO_MONO=1;MTOTS_ENABLE_ZIP=1</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\lib\stbimage\include;..\..\..\lib\miniz\src;..\..\..\lib\lodepng\src;..\..\..\lib\freetype\include;..\..\..\lib\sdl2\include;..\..\..\src\extensions\audio;..\..\..\src\extensions\fontrm;..\..\..\src\extensions\font;..\..\..\src\extensions\canvas;..\..\..\src\extensions\image;..\..\..\src\extensions\gg;..\..\..\src\extensions\zip;..\..\..\src\extensions\paco;..\..\..\src\extensions\sdl;..\..\..\src;</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
