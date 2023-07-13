@@ -44,6 +44,7 @@ compiler = Compiler(
     flags=WARNING_FLAGS+OPT_FLAGS,
     oDir=oDir,
     logger=logger,
+    release=release,
 )
 
 

@@ -152,10 +152,12 @@ class Compiler:
                 self,
                 cc: str,
                 *,
+                release: bool,
                 flags: Iterable[str],
                 oDir: str,
                 logger: Logger) -> None:
         self.cc = cc
+        self.release = release
         self.flags = tuple(flags)
         self.oDir = oDir
         self.logger = logger
@@ -205,6 +207,9 @@ class Compiler:
             "-Isrc",
 
             "-o", exePath,
+
+            # Turn off DEBUG_TRACE_GC on release builds
+            *(["-DMTOTS_RELEASE=1"] if self.release else []),
 
             # Include the stb_image library
             "-Ilib/stbimage/include",

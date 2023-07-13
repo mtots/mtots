@@ -41,6 +41,7 @@ compiler = Compiler(
         (('-O3', '-flto') if release else ('-O0', '-g')),
     oDir=oDir,
     logger=logger,
+    release=release,
 )
 
 

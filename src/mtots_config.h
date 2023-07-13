@@ -2,8 +2,13 @@
 #define mtots_config_h
 
 
+#if defined(MTOTS_RELEASE) && MTOTS_RELEASE
+#define DEBUG_TRACE_EXECUTION  0
+#define DEBUG_STRESS_GC        0
+#else
 #define DEBUG_TRACE_EXECUTION  0
 #define DEBUG_STRESS_GC        1
+#endif
 
 
 #define MAX_PATH_LENGTH        4096
