@@ -468,7 +468,7 @@ static void audioCallback(void *userData, Uint8 *stream, int byteLength) {
   unlockMixerConfigMutex();
 }
 
-static void prepareAudio() {
+static void prepareAudio(void) {
   if (!audioDevice) {
     SDL_AudioSpec spec;
     spec.freq = SAMPLES_PER_SECOND;
@@ -646,7 +646,7 @@ static ubool newWindow(
   return UTRUE;
 }
 
-static void resetActiveControllers() {
+static void resetActiveControllers(void) {
   size_t i;
   for (i = 0; i < activeControllerCount; i++) {
     controllers[i].playerIndex = -1;

@@ -56,6 +56,18 @@ def build() -> None:
     objectFiles: List[str] = []
     os.makedirs(oDir, exist_ok=True)
 
+    # Build stb_image library
+    compiler.buildLibrary(
+        "stbimage",
+        sources=[os.path.join(mtotsDir, "lib", "stbimage", "src", "mtotsa_stbimage.c")],
+        flags=[
+            "-std=c99",
+            "-Ilib/stbimage/include",
+            "-Wno-comment",
+            "-Wno-unused-function",
+        ],
+        objectFiles=objectFiles)
+
     # Build miniz library
     compiler.buildLibrary(
         "miniz",
@@ -99,6 +111,9 @@ def build() -> None:
         flags=(
             # not available in emscripten
             "-DMTOTS_USE_PRINTFLIKE=0",
+
+            # Required for FreeType
+            "-Wno-long-long",
 
             # Start script
             f'-DMTOTS_WEB_START_SCRIPT=' +
