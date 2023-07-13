@@ -1565,6 +1565,114 @@ static CFunction funcGeometrySetIndex = {
   implGeometrySetIndex, "setIndex", 2, 0, argsNumbers
 };
 
+static ubool implPlaybackChannelStaticGet(i16 argc, Value *args, Value *out) {
+  size_t channelID = AS_INDEX(args[0], PLAYBACK_CHANNEL_COUNT);
+  *out = PLAYBACK_CHANNEL_VAL(getPlaybackChannel(channelID));
+  return UTRUE;
+}
+
+static CFunction funcPlaybackChannelStaticGet = {
+  implPlaybackChannelStaticGet, "get", 1, 0, argsNumbers
+};
+
+static ubool implPlaybackChannelLoad(i16 argc, Value *args, Value *out) {
+  ObjPlaybackChannel *ch = AS_PLAYBACK_CHANNEL(args[-1]);
+  ObjAudio *audio = AS_AUDIO(args[0]);
+  loadAudio(audio, ch->channelID);
+  return UTRUE;
+}
+
+static TypePattern argsPlaybackChannelLoad[] = {
+  { TYPE_PATTERN_NATIVE, &descriptorAudio },
+};
+
+static CFunction funcPlaybackChannelLoad = {
+  implPlaybackChannelLoad, "load", 1, 0, argsPlaybackChannelLoad
+};
+
+static ubool implPlaybackChannelStart(i16 argc, Value *args, Value *out) {
+  ObjPlaybackChannel *ch = AS_PLAYBACK_CHANNEL(args[-1]);
+  i32 repeats = argc > 0 ? AS_I32(args[0]) : 0;
+  if (repeats < 0) {
+    repeats = I32_MAX;
+  }
+  startAudio(ch->channelID, (u32)repeats);
+  return UTRUE;
+}
+
+static CFunction funcPlaybackChannelStart = {
+  implPlaybackChannelStart, "start", 0, 1, argsNumbers
+};
+
+static ubool implPlaybackChannelPause(i16 argc, Value *args, Value *out) {
+  ObjPlaybackChannel *ch = AS_PLAYBACK_CHANNEL(args[-1]);
+  ubool pause = argc > 0 ? AS_BOOL(args[0]) : UTRUE;
+  pauseAudio(ch->channelID, pause);
+  return UTRUE;
+}
+
+static TypePattern argsPlaybackChannelPause[] = {
+  { TYPE_PATTERN_BOOL },
+};
+
+static CFunction funcPlaybackChannelPause = {
+  implPlaybackChannelPause, "pause", 0, 1, argsPlaybackChannelPause
+};
+
+static ubool implPlaybackChannelSetVolume(i16 argc, Value *args, Value *out) {
+  ObjPlaybackChannel *ch = AS_PLAYBACK_CHANNEL(args[-1]);
+  double volume = AS_NUMBER(args[0]);
+  setAudioVolume(ch->channelID, volume);
+  return UTRUE;
+}
+
+static CFunction funcPlaybackChannelSetVolume = {
+  implPlaybackChannelSetVolume, "setVolume", 1, 0, argsNumbers
+};
+
+static ubool implSynth(i16 argc, Value *args, Value *out) {
+  size_t channelID = AS_INDEX(args[0], SYNTH_CHANNEL_COUNT);
+  lockMixerConfigMutex();
+  if (argc > 1 && !IS_NIL(args[1])) {
+    mixerConfig.synth[channelID].userFrequency = AS_NUMBER(args[1]);
+  }
+  if (argc > 2 && !IS_NIL(args[2])) {
+    mixerConfig.synth[channelID].userVolume = AS_NUMBER(args[2]);
+  }
+  if (argc > 3 && !IS_NIL(args[3])) {
+    mixerConfig.synth[channelID].waveType = AS_INDEX(args[3], 1);
+  }
+  unlockMixerConfigMutex();
+  prepareAudio();
+  return UTRUE;
+}
+
+static TypePattern argsSynth[] = {
+  { TYPE_PATTERN_NUMBER },
+  { TYPE_PATTERN_NUMBER_OR_NIL },
+  { TYPE_PATTERN_NUMBER_OR_NIL },
+  { TYPE_PATTERN_NUMBER_OR_NIL },
+};
+
+static CFunction funcSynth = {
+  implSynth, "synth", 1, 4, argsSynth
+};
+
+static ubool implMusic(i16 argc, Value *args, Value *out) {
+  size_t channelID = AS_INDEX(args[0], SYNTH_CHANNEL_COUNT);
+  ObjList *music = IS_NIL(args[1]) ? NULL : AS_LIST(args[1]);
+  return setMusic(channelID, music);
+}
+
+static TypePattern argsMusic[] = {
+  { TYPE_PATTERN_NUMBER },
+  { TYPE_PATTERN_LIST_OR_NIL },
+};
+
+static CFunction funcMusic = {
+  implMusic, "music", 2, 0, argsMusic
+};
+
 static ubool implKey(i16 argc, Value *args, Value *out) {
   size_t scancode = AS_INDEX(args[0], SCANCODE_KEY_COUNT);
   u32 query = argc > 1 ? AS_U32(args[1]) : 0;
@@ -1651,115 +1759,6 @@ static ubool implMouseButton(i16 argc, Value *args, Value *out) {
 
 static CFunction funcMouseButton = { implMouseButton, "mouseButton", 1, 2, argsNumbers };
 
-static ubool implSynth(i16 argc, Value *args, Value *out) {
-  size_t channelID = AS_INDEX(args[0], SYNTH_CHANNEL_COUNT);
-  lockMixerConfigMutex();
-  if (argc > 1 && !IS_NIL(args[1])) {
-    mixerConfig.synth[channelID].userFrequency = AS_NUMBER(args[1]);
-  }
-  if (argc > 2 && !IS_NIL(args[2])) {
-    mixerConfig.synth[channelID].userVolume = AS_NUMBER(args[2]);
-  }
-  if (argc > 3 && !IS_NIL(args[3])) {
-    mixerConfig.synth[channelID].waveType = AS_INDEX(args[3], 1);
-  }
-  unlockMixerConfigMutex();
-  prepareAudio();
-  return UTRUE;
-}
-
-static TypePattern argsSynth[] = {
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER_OR_NIL },
-  { TYPE_PATTERN_NUMBER_OR_NIL },
-  { TYPE_PATTERN_NUMBER_OR_NIL },
-};
-
-static CFunction funcSynth = {
-  implSynth, "synth", 1, 4, argsSynth
-};
-
-static ubool implMusic(i16 argc, Value *args, Value *out) {
-  size_t channelID = AS_INDEX(args[0], SYNTH_CHANNEL_COUNT);
-  ObjList *music = IS_NIL(args[1]) ? NULL : AS_LIST(args[1]);
-  return setMusic(channelID, music);
-}
-
-static TypePattern argsMusic[] = {
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_LIST_OR_NIL },
-};
-
-static CFunction funcMusic = {
-  implMusic, "music", 2, 0, argsMusic
-};
-
-
-static ubool implPlaybackChannelStaticGet(i16 argc, Value *args, Value *out) {
-  size_t channelID = AS_INDEX(args[0], PLAYBACK_CHANNEL_COUNT);
-  *out = PLAYBACK_CHANNEL_VAL(getPlaybackChannel(channelID));
-  return UTRUE;
-}
-
-static CFunction funcPlaybackChannelStaticGet = {
-  implPlaybackChannelStaticGet, "get", 1, 0, argsNumbers
-};
-
-static ubool implPlaybackChannelLoad(i16 argc, Value *args, Value *out) {
-  ObjPlaybackChannel *ch = AS_PLAYBACK_CHANNEL(args[-1]);
-  ObjAudio *audio = AS_AUDIO(args[0]);
-  loadAudio(audio, ch->channelID);
-  return UTRUE;
-}
-
-static TypePattern argsPlaybackChannelLoad[] = {
-  { TYPE_PATTERN_NATIVE, &descriptorAudio },
-};
-
-static CFunction funcPlaybackChannelLoad = {
-  implPlaybackChannelLoad, "load", 1, 0, argsPlaybackChannelLoad
-};
-
-static ubool implPlaybackChannelStart(i16 argc, Value *args, Value *out) {
-  ObjPlaybackChannel *ch = AS_PLAYBACK_CHANNEL(args[-1]);
-  i32 repeats = argc > 0 ? AS_I32(args[0]) : 0;
-  if (repeats < 0) {
-    repeats = I32_MAX;
-  }
-  startAudio(ch->channelID, (u32)repeats);
-  return UTRUE;
-}
-
-static CFunction funcPlaybackChannelStart = {
-  implPlaybackChannelStart, "start", 0, 1, argsNumbers
-};
-
-static ubool implPlaybackChannelPause(i16 argc, Value *args, Value *out) {
-  ObjPlaybackChannel *ch = AS_PLAYBACK_CHANNEL(args[-1]);
-  ubool pause = argc > 0 ? AS_BOOL(args[0]) : UTRUE;
-  pauseAudio(ch->channelID, pause);
-  return UTRUE;
-}
-
-static TypePattern argsPlaybackChannelPause[] = {
-  { TYPE_PATTERN_BOOL },
-};
-
-static CFunction funcPlaybackChannelPause = {
-  implPlaybackChannelPause, "pause", 0, 1, argsPlaybackChannelPause
-};
-
-static ubool implPlaybackChannelSetVolume(i16 argc, Value *args, Value *out) {
-  ObjPlaybackChannel *ch = AS_PLAYBACK_CHANNEL(args[-1]);
-  double volume = AS_NUMBER(args[0]);
-  setAudioVolume(ch->channelID, volume);
-  return UTRUE;
-}
-
-static CFunction funcPlaybackChannelSetVolume = {
-  implPlaybackChannelSetVolume, "setVolume", 1, 0, argsNumbers
-};
-
 static ubool impl(i16 argCount, Value *args, Value *out) {
   ObjModule *module = AS_MODULE(args[0]);
   CFunction *windowStaticMethods[] = {
@@ -1822,13 +1821,13 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     NULL,
   };
   CFunction *functions[] = {
+    &funcSynth,
+    &funcMusic,
     &funcKey,
     &funcGetKey,
     &funcMousePosition,
     &funcMouseMotion,
     &funcMouseButton,
-    &funcSynth,
-    &funcMusic,
     NULL,
   };
   ubool gcPause;

@@ -72,9 +72,9 @@ for i in range(44100):
 
 final chan0 = gg.PlaybackChannel.get(0)
 chan0.load(audio)
-chan0.setVolume(1)
+# chan0.setVolume(1)
 
-gg.synth(0, nil, 1)
+# gg.synth(0, nil,)
 
 var started = false
 
@@ -193,7 +193,7 @@ def():
       ball.angle = TAU * (tick / 60)
 
   if gg.mouseButton(0, 0):
-    gg.synth(0, 440, 1)
+    gg.synth(0, 440)
 
   if gg.mouseButton(0, 1):
     gg.synth(0, 0)
