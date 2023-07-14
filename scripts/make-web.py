@@ -119,6 +119,9 @@ def build() -> None:
             f'-DMTOTS_WEB_START_SCRIPT=' +
             f'"/home/web_user/git/mtots/apps/{packageFileName}"',
 
+            # Use a barebones shell file ideal for hosting on itch.io
+            "--shell-file", f"{mtotsDir}/projects/web/minimal-modified.html",
+
             # Preloaded files
             '--preload-file',
                 f'{packagePath}@/home/web_user/git/mtots/apps/{packageFileName}',
@@ -134,6 +137,11 @@ def build() -> None:
         ),
         objectFiles=objectFiles,
     )
+    shutil.make_archive(
+        base_name=os.path.join(outDir, 'webgame'),
+        format='zip',
+        root_dir=os.path.join(outDir, 'web'))
+
 
 
 if __name__ == "__main__":

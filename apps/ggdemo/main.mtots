@@ -10,8 +10,8 @@ print("isArchiveScript = %s" % [sys.isArchiveScript()])
 print("__file__ = %s" % [__file__])
 
 final rand = Random()
-final WIDTH = 800
-final HEIGHT = 800
+final WIDTH = 1920 / 2
+final HEIGHT = 1080 / 2
 final FPS = 60
 
 final window = gg.Window("Hello", WIDTH, HEIGHT, FPS)
