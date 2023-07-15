@@ -17,7 +17,7 @@ final argv List[String] = []
 
 def isArchiveScript() Bool:
   """
-  Returns true if this the initial script was started with a 'zip' or 'mtzip' archive.
+  Returns true if the initial script was started with a 'zip' or 'mtar' archive.
   """
 
 

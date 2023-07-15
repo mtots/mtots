@@ -32,8 +32,6 @@ release: bool = args.release
 clean: bool = args.clean
 
 packageFileName = os.path.basename(packagePath)
-packageBaseName = (
-    packageFileName.removesuffix('.zip').removesuffix('.mtzip'))
 logger = Logger(verbose)
 
 CC = 'emcc'
@@ -41,7 +39,7 @@ WARNING_FLAGS = ("-Wall", "-Werror", "-Wpedantic")
 OPT_FLAGS = ('-O3', '-flto') if release else ('-O0', '-g')
 compiler = Compiler(
     CC,
-    flags=WARNING_FLAGS+OPT_FLAGS,
+    flags=WARNING_FLAGS,
     oDir=oDir,
     logger=logger,
     release=release,
@@ -49,7 +47,7 @@ compiler = Compiler(
 
 
 def build() -> None:
-    if clean or release:
+    if clean:
         shutil.rmtree(outDir, ignore_errors=True)
     os.makedirs(outDir, exist_ok=True)
 
@@ -65,6 +63,9 @@ def build() -> None:
             "-Ilib/stbimage/include",
             "-Wno-comment",
             "-Wno-unused-function",
+
+            # Always optimize library builds
+             *('-O0', '-g'),
         ],
         objectFiles=objectFiles)
 
@@ -77,6 +78,9 @@ def build() -> None:
             *WARNING_FLAGS,
             *OPT_FLAGS,
             "-Ilib/miniz/src",
+
+            # Always optimize library builds
+             *('-O0', '-g'),
         ],
         objectFiles=objectFiles)
 
@@ -86,10 +90,11 @@ def build() -> None:
         sources=getFreeTypeSources(),
         flags=[
             "-std=c99",
-            *WARNING_FLAGS,
-            *OPT_FLAGS,
             "-DFT2_BUILD_LIBRARY",
             "-Ilib/freetype/include",
+
+            # Always optimize library builds
+             *('-O0', '-g'),
         ],
         objectFiles=objectFiles)
 
@@ -101,6 +106,9 @@ def build() -> None:
             *WARNING_FLAGS,
             *OPT_FLAGS,
             "-Ilib/lodepng/src",
+
+            # Always optimize library builds
+             *('-O0', '-g'),
         ],
         objectFiles=objectFiles)
 

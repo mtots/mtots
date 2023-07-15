@@ -35,7 +35,7 @@ void registerMtotsExecutablePath(const char *exePath);
 void registerMtotsMainScriptPath(const char *scriptPath);
 
 /*
- * Opens and loads an mtots archive (mtzip) file
+ * Opens and loads an mtots archive (mtar) file
  */
 ubool openMtotsArchive(const char *filePath);
 

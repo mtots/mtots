@@ -45,7 +45,7 @@ static ubool runMainModule(int argc, const char **argv) {
   mainModuleName = internCString("__main__");
   push(STRING_VAL(mainModuleName));
 
-  if (endsWith(argv[1], ".zip") || endsWith(argv[1], ".mtzip")) {
+  if (endsWith(argv[1], ".zip") || endsWith(argv[1], ".mtar")) {
     /* We want to execute an mtots zip archive */
     char *data, *dataPath, *moduleNameCString;
 

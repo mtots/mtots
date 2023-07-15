@@ -34,11 +34,7 @@ useDitto: bool = args.ditto
 logger = Logger(verbose)
 compiler = Compiler(
     cc="clang",
-    flags=
-        # warning flags
-        ("-Wall", "-Werror", "-Wpedantic", "-Wextra") +
-        # opt flags
-        (('-O3', '-flto') if release else ('-O0', '-g')),
+    flags=("-Wall", "-Werror", "-Wpedantic", "-Wextra"),
     oDir=oDir,
     logger=logger,
     release=release,
@@ -46,7 +42,7 @@ compiler = Compiler(
 
 
 def build() -> None:
-    if clean or release:
+    if clean:
         shutil.rmtree(outDir, ignore_errors=True)
     os.makedirs(outDir, exist_ok=True)
 
@@ -67,6 +63,9 @@ def build() -> None:
             "-Ilib/stbimage/include",
             "-Wno-comment",
             "-Wno-unused-function",
+
+            # Always optimize library builds
+             *('-O0', '-g'),
         ],
         objectFiles=objectFiles)
 
@@ -74,20 +73,35 @@ def build() -> None:
     compiler.buildLibrary(
         "miniz",
         sources=[os.path.join(mtotsDir, "lib", "miniz", "src", "miniz.c")],
-        flags=["-std=c89", "-Ilib/miniz/src"],
+        flags=[
+            "-std=c89", "-Ilib/miniz/src",
+
+            # Always optimize library builds
+            *('-O0', '-g'),
+        ],
         objectFiles=objectFiles)
 
     # Build FreeType library
     compiler.buildLibrary(
         "freetype",
         sources=getFreeTypeSources(),
-        flags=["-std=c99", "-DFT2_BUILD_LIBRARY", "-Ilib/freetype/include"],
+        flags=[
+            "-std=c99", "-DFT2_BUILD_LIBRARY", "-Ilib/freetype/include",
+
+            # Always optimize library builds
+            *('-O0', '-g')
+        ],
         objectFiles=objectFiles)
 
     compiler.buildLibrary(
         "lodepng",
         sources=[os.path.join(mtotsDir, "lib", "lodepng", "src", "lodepng.c")],
-        flags=["-std=c89", "-Ilib/lodepng/src",],
+        flags=[
+            "-std=c89", "-Ilib/lodepng/src",
+
+            # Always optimize library builds
+            *('-O0', '-g'),
+        ],
         objectFiles=objectFiles)
 
     compiler.buildMtots(
@@ -95,8 +109,11 @@ def build() -> None:
         flags=(
             "-DMTOTS_USE_PRINTFLIKE=1",
 
-            *(() if release else (
+            *((
+                '-O3', '-flto',
+            ) if release else (
                 "-fsanitize=address",
+                '-O0', '-g'
             )),
 
             # Try to keep this on if possible, but it should be ok to
