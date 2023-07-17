@@ -96,7 +96,7 @@ or seek help on a search engine
 ### Requirements
 * `gcc` (On Debian/Ubuntu distros: `apt install gcc`)
 * `python3` (On Debian/Ubutnu distros: should come preinstalled)
-* SDL2-dev (On Debian/Ubuntu distros: `apt install libsdl2`)
+* SDL2-dev (On Debian/Ubuntu distros: `apt install libsdl2-dev`)
   * SDL2 version must be at least `2.0.18` - version `2.26.5` and above is recommended
     since the Windows and MacOS builds are fixed at version `2.26.5`.
 
