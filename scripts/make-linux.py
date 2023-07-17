@@ -86,7 +86,7 @@ def build() -> None:
             "-DFT2_BUILD_LIBRARY",
             "-Ilib/freetype/include",
             "-Wno-dangling-pointer",
-            "-Wno-stringop-overflow",
+            "-Wno-error",
         ],
         objectFiles=objectFiles)
 
