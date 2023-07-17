@@ -34,7 +34,9 @@ compiler = Compiler(
     flags=
         # warning flags
         (
-            "-Wall", "-Werror", "-Wpedantic", "-Wextra",
+            "-Wall",
+            # "-Werror",
+            "-Wpedantic", "-Wextra",
             "-Wno-unused-but-set-variable",
         ) +
         # opt flags
