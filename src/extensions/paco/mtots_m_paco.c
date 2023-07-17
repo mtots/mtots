@@ -431,6 +431,7 @@ static MainLoopVars mainLoopVars;
 static ubool mainLoopIteration(void) {
 #ifdef __EMSCRIPTEN__
   if (SDL_GetPerformanceCounter() < mainLoopVars.targetCount) {
+    return UTRUE;
   }
 #endif
 
