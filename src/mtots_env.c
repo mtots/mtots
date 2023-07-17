@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 #if MTOTS_ASSUME_WINDOWS
-#include <libloaderapi.h>
+#include <Windows.h>
 #elif __APPLE__
 #include <mach-o/dyld.h>
 #elif __linux__
