@@ -109,7 +109,7 @@ def build() -> None:
             # # below so that they stay enabled even if the everything
             # # flag is omitted
             # "-Weverything",
-            "-std=c99",
+            "-std=gnu99",
 
             # These are useful for
             #  * catching functions that were meant to be static
