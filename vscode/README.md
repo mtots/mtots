@@ -23,6 +23,8 @@ Future work:
 
 "Mtots: Run Mtots File" command to run an open file
 
+F5 shortcut to run active Mtots file
+
 ### 0.0.44
 
 Fix member completion when in middle of using a decorator

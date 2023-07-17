@@ -69,15 +69,22 @@
         "commands": [
             {
                 "command": "mtots.tokenize",
-                "title": "Tokenize mtots code"
+                "title": "Mtots: Tokenize Mtots Code"
             },
             {
                 "command": "mtots.parse",
-                "title": "Parse mtots code"
+                "title": "Mtots: Parse Mtots Code"
             },
             {
                 "command": "mtots.runfile",
                 "title": "Mtots: Run Mtots File"
+            }
+        ],
+        "keybindings": [
+            {
+                "command": "mtots.runfile",
+                "key": "f5",
+                "when": "editorLangId == mtots"
             }
         ],
         "menus": {
@@ -98,7 +105,6 @@
         }
     },
     "activationEvents": [
-        "onDebug",
         "onLanguage:mtots",
         "onCommand:mtots.tokenize",
         "onCommand:mtots.parse"
