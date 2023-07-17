@@ -134,6 +134,8 @@ Now you should be able to use the `mtots` command to run Mtots scripts from the 
 * Emscripten (`emcc` needs to be on the path when `make-webgame.py` is called)
 * Python 3
 
+### Build and Installation Steps
+
 If you have made a game with Mtots and would like to share with your friends on itch.io,
 you can run the the `make-webgame.py` script to easily create a zip file you can upload
 that will let your friends play the game directly from the browser.
