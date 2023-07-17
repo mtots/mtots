@@ -26,6 +26,7 @@ searchDirs: List[str] = [os.path.dirname(appDir)]
 
 errStack: List[str] = []
 
+
 def getAppDepNames(appDir: str) -> Set[str]:
     appJSONPath = os.path.join(appDir, 'app.json')
     if os.path.isfile(appJSONPath):
@@ -33,7 +34,7 @@ def getAppDepNames(appDir: str) -> Set[str]:
             jsonData = json.load(f)
             if isinstance(jsonData, dict) and isinstance(jsonData['deps'], list):
                 deps: List[Any] = jsonData['deps']
-                ret: Set[str] = set([appDir])
+                ret: Set[str] = set()
                 for dep in deps:
                     if isinstance(dep, str):
                         ret.add(dep)
