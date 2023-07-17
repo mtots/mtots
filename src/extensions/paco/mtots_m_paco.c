@@ -408,127 +408,175 @@ static ubool implInit(i16 argCount, Value *args, Value *out) {
 
 static CFunction funcInit = { implInit, "init" };
 
-static ubool implMainLoop(i16 argCount, Value *args, Value *out) {
+typedef struct MainLoopVars {
   SDL_Event event;
-  Value update = args[0];
-  Value draw = argCount > 1 ? args[1] : NIL_VAL();
-  Uint64 countPerSecond = SDL_GetPerformanceFrequency();
-  double millisecondsPerCount = 1000 / (double)countPerSecond;
-  Uint64 countPerFrame = fps > 0 ? countPerSecond / fps : 0;
-  Uint64 lastCount = SDL_GetPerformanceCounter();
+  Value update;
+  Value draw;
+  Uint64 countPerSecond;
+  double millisecondsPerCount;
+  Uint64 countPerFrame;
+  Uint64 lastCount;
 
-  for (;;) {
-    Uint64 newCount;
-    tickButtons();
-    tickClicks();
-    wheelX = wheelY = 0;
-    pressedKeysLength = releasedKeysLength = 0;
-    pressedKeysNext = releasedKeysNext = 0;
-    while (SDL_PollEvent(&event)) {
-      switch (event.type) {
-        case SDL_QUIT:
-          return UTRUE;
-        case SDL_KEYDOWN:
-          switch (event.key.keysym.scancode) {
-            case SDL_SCANCODE_LEFT: pressButton(BUTTON_LEFT, 0); break;
-            case SDL_SCANCODE_RIGHT: pressButton(BUTTON_RIGHT, 0); break;
-            case SDL_SCANCODE_UP: pressButton(BUTTON_UP, 0); break;
-            case SDL_SCANCODE_DOWN: pressButton(BUTTON_DOWN, 0); break;
-            case SDL_SCANCODE_Z: pressButton(BUTTON_O, 0); break;
-            case SDL_SCANCODE_X: pressButton(BUTTON_X, 0); break;
-            default: break;
-          }
-          if (pressedKeysLength < KEY_QUEUE_MAX) {
-            pressedKeys[pressedKeysLength++] = event.key.keysym.scancode;
-          }
-          break;
-        case SDL_KEYUP:
-          switch (event.key.keysym.scancode) {
-            case SDL_SCANCODE_LEFT: releaseButton(BUTTON_LEFT, 0); break;
-            case SDL_SCANCODE_RIGHT: releaseButton(BUTTON_RIGHT, 0); break;
-            case SDL_SCANCODE_UP: releaseButton(BUTTON_UP, 0); break;
-            case SDL_SCANCODE_DOWN: releaseButton(BUTTON_DOWN, 0); break;
-            case SDL_SCANCODE_Z: releaseButton(BUTTON_O, 0); break;
-            case SDL_SCANCODE_X: releaseButton(BUTTON_X, 0); break;
-            default: break;
-          }
-          if (releasedKeysLength < KEY_QUEUE_MAX) {
-            releasedKeys[releasedKeysLength++] = event.key.keysym.scancode;
-          }
-          break;
-        case SDL_MOUSEBUTTONDOWN:
-          switch (event.button.button) {
-            case SDL_BUTTON_LEFT: pressClick(MOUSE_BUTTON_LEFT); break;
-            case SDL_BUTTON_MIDDLE: pressClick(MOUSE_BUTTON_MIDDLE); break;
-            case SDL_BUTTON_RIGHT: pressClick(MOUSE_BUTTON_RIGHT); break;
-            default: break;
-          }
-          break;
-        case SDL_MOUSEBUTTONUP:
-          switch (event.button.button) {
-            case SDL_BUTTON_LEFT: releaseClick(MOUSE_BUTTON_LEFT); break;
-            case SDL_BUTTON_MIDDLE: releaseClick(MOUSE_BUTTON_MIDDLE); break;
-            case SDL_BUTTON_RIGHT: releaseClick(MOUSE_BUTTON_RIGHT); break;
-            default: break;
-          }
-          break;
-        case SDL_MOUSEWHEEL:
-          wheelX = event.wheel.preciseX;
-          wheelY = event.wheel.preciseY;
-          if (event.wheel.direction == SDL_MOUSEWHEEL_FLIPPED) {
-            wheelX *= -1;
-            wheelY *= -1;
-          }
-          break;
-        case SDL_MOUSEMOTION:
-          mouseX = event.motion.x / scalingFactor;
-          mouseY = event.motion.y / scalingFactor;
-          break;
-      }
+  Uint64 newCount;
+
+  ubool quit;
+
+#ifdef __EMSCRIPTEN__
+  Uint64 targetCount;
+#endif
+} MainLoopVars;
+
+static MainLoopVars mainLoopVars;
+
+static ubool mainLoopIteration(void) {
+#ifdef __EMSCRIPTEN__
+  if (SDL_GetPerformanceCounter() < mainLoopVars.targetCount) {
+  }
+#endif
+
+  tickButtons();
+  tickClicks();
+  wheelX = wheelY = 0;
+  pressedKeysLength = releasedKeysLength = 0;
+  pressedKeysNext = releasedKeysNext = 0;
+  while (SDL_PollEvent(&mainLoopVars.event)) {
+    switch (mainLoopVars.event.type) {
+      case SDL_QUIT:
+        mainLoopVars.quit = UTRUE;
+        return UTRUE;
+      case SDL_KEYDOWN:
+        switch (mainLoopVars.event.key.keysym.scancode) {
+          case SDL_SCANCODE_LEFT: pressButton(BUTTON_LEFT, 0); break;
+          case SDL_SCANCODE_RIGHT: pressButton(BUTTON_RIGHT, 0); break;
+          case SDL_SCANCODE_UP: pressButton(BUTTON_UP, 0); break;
+          case SDL_SCANCODE_DOWN: pressButton(BUTTON_DOWN, 0); break;
+          case SDL_SCANCODE_Z: pressButton(BUTTON_O, 0); break;
+          case SDL_SCANCODE_X: pressButton(BUTTON_X, 0); break;
+          default: break;
+        }
+        if (pressedKeysLength < KEY_QUEUE_MAX) {
+          pressedKeys[pressedKeysLength++] = mainLoopVars.event.key.keysym.scancode;
+        }
+        break;
+      case SDL_KEYUP:
+        switch (mainLoopVars.event.key.keysym.scancode) {
+          case SDL_SCANCODE_LEFT: releaseButton(BUTTON_LEFT, 0); break;
+          case SDL_SCANCODE_RIGHT: releaseButton(BUTTON_RIGHT, 0); break;
+          case SDL_SCANCODE_UP: releaseButton(BUTTON_UP, 0); break;
+          case SDL_SCANCODE_DOWN: releaseButton(BUTTON_DOWN, 0); break;
+          case SDL_SCANCODE_Z: releaseButton(BUTTON_O, 0); break;
+          case SDL_SCANCODE_X: releaseButton(BUTTON_X, 0); break;
+          default: break;
+        }
+        if (releasedKeysLength < KEY_QUEUE_MAX) {
+          releasedKeys[releasedKeysLength++] = mainLoopVars.event.key.keysym.scancode;
+        }
+        break;
+      case SDL_MOUSEBUTTONDOWN:
+        switch (mainLoopVars.event.button.button) {
+          case SDL_BUTTON_LEFT: pressClick(MOUSE_BUTTON_LEFT); break;
+          case SDL_BUTTON_MIDDLE: pressClick(MOUSE_BUTTON_MIDDLE); break;
+          case SDL_BUTTON_RIGHT: pressClick(MOUSE_BUTTON_RIGHT); break;
+          default: break;
+        }
+        break;
+      case SDL_MOUSEBUTTONUP:
+        switch (mainLoopVars.event.button.button) {
+          case SDL_BUTTON_LEFT: releaseClick(MOUSE_BUTTON_LEFT); break;
+          case SDL_BUTTON_MIDDLE: releaseClick(MOUSE_BUTTON_MIDDLE); break;
+          case SDL_BUTTON_RIGHT: releaseClick(MOUSE_BUTTON_RIGHT); break;
+          default: break;
+        }
+        break;
+      case SDL_MOUSEWHEEL:
+        wheelX = mainLoopVars.event.wheel.preciseX;
+        wheelY = mainLoopVars.event.wheel.preciseY;
+        if (mainLoopVars.event.wheel.direction == SDL_MOUSEWHEEL_FLIPPED) {
+          wheelX *= -1;
+          wheelY *= -1;
+        }
+        break;
+      case SDL_MOUSEMOTION:
+        mouseX = mainLoopVars.event.motion.x / scalingFactor;
+        mouseY = mainLoopVars.event.motion.y / scalingFactor;
+        break;
     }
+  }
 
-    push(update);
-    if (!callFunction(0)) {
+  push(mainLoopVars.update);
+  if (!callFunction(0)) {
+    return UFALSE;
+  }
+  pop(); /* update return value */
+
+  mainLoopVars.newCount = SDL_GetPerformanceCounter();
+  if (mainLoopVars.newCount - mainLoopVars.lastCount < mainLoopVars.countPerFrame) {
+    if (!IS_NIL(mainLoopVars.draw)) {
+      push(mainLoopVars.draw);
+      if (!callFunction(0)) {
+        return UFALSE;
+      }
+      pop(); /* draw return value */
+    }
+    if (SDL_BlitSurface(surface, NULL, convertedSurface, NULL) != 0) {
+      runtimeError("paco.mainLoop(): SDL_BlitSurface failed: %s", SDL_GetError());
       return UFALSE;
     }
-    pop(); /* update return value */
-
-    newCount = SDL_GetPerformanceCounter();
-    if (newCount - lastCount < countPerFrame) {
-      if (!IS_NIL(draw)) {
-        push(draw);
-        if (!callFunction(0)) {
-          return UFALSE;
-        }
-        pop(); /* draw return value */
-      }
-      if (SDL_BlitSurface(surface, NULL, convertedSurface, NULL) != 0) {
-        runtimeError("paco.mainLoop(): SDL_BlitSurface failed: %s", SDL_GetError());
-        return UFALSE;
-      }
-      SDL_FillRect(windowSurface, NULL, 0);
-      if (SDL_BlitScaled(
-          convertedSurface,
-          NULL,
-          windowSurface,
-          NULL) != 0) {
-        runtimeError("paco.mainLoop(): SDL_BlitScaled failed: %s", SDL_GetError());
-        return UFALSE;
-      }
-      SDL_UpdateWindowSurface(window);
-      newCount = SDL_GetPerformanceCounter();
+    SDL_FillRect(windowSurface, NULL, 0);
+    if (SDL_BlitScaled(
+        convertedSurface,
+        NULL,
+        windowSurface,
+        NULL) != 0) {
+      runtimeError("paco.mainLoop(): SDL_BlitScaled failed: %s", SDL_GetError());
+      return UFALSE;
     }
-
-    if (newCount - lastCount < countPerFrame) {
-      Uint32 ms = millisecondsPerCount * (countPerFrame - (newCount - lastCount));
-#ifdef __EMSCRIPTEN__
-      emscripten_sleep(ms);
-#else
-      SDL_Delay(ms);
-#endif
-    }
-    lastCount = newCount;
+    SDL_UpdateWindowSurface(window);
+    mainLoopVars.newCount = SDL_GetPerformanceCounter();
   }
+
+  if (mainLoopVars.newCount - mainLoopVars.lastCount < mainLoopVars.countPerFrame) {
+#ifdef __EMSCRIPTEN__
+    mainLoopVars.targetCount = mainLoopVars.lastCount + mainLoopVars.countPerFrame;
+    /* emscripten_sleep(ms); */
+#else
+    Uint32 ms = mainLoopVars.millisecondsPerCount *
+      (mainLoopVars.countPerFrame - (mainLoopVars.newCount - mainLoopVars.lastCount));
+    SDL_Delay(ms);
+#endif
+  }
+  mainLoopVars.lastCount = mainLoopVars.newCount;
+  return UTRUE;
+}
+
+#ifdef __EMSCRIPTEN__
+void mainLoopIterationForEmscripten(void) {
+  if (!mainLoopIteration()) {
+    panic("%s", getErrorString());
+  }
+}
+#endif
+
+static ubool implMainLoop(i16 argCount, Value *args, Value *out) {
+  mainLoopVars.update = args[0];
+  mainLoopVars.draw = argCount > 1 ? args[1] : NIL_VAL();
+  mainLoopVars.countPerSecond = SDL_GetPerformanceFrequency();
+  mainLoopVars.millisecondsPerCount = 1000 / (double)mainLoopVars.countPerSecond;
+  mainLoopVars.countPerFrame = fps > 0 ? mainLoopVars.countPerSecond / fps : 0;
+  mainLoopVars.lastCount = SDL_GetPerformanceCounter();
+  mainLoopVars.quit = UFALSE;
+
+#ifdef __EMSCRIPTEN__
+  mainLoopVars.targetCount = 0;
+  emscripten_set_main_loop(mainLoopIterationForEmscripten, 0, 1);
+#else
+  while (!mainLoopVars.quit) {
+    if (!mainLoopIteration()) {
+      return UFALSE;
+    }
+  }
+#endif
+
   return UTRUE;
 }
 
