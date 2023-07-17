@@ -46,7 +46,7 @@ compiler = Compiler(
 
 
 def build() -> None:
-    if clean or release:
+    if clean:
         shutil.rmtree(outDir, ignore_errors=True)
     os.makedirs(outDir, exist_ok=True)
 
@@ -86,6 +86,7 @@ def build() -> None:
             "-DFT2_BUILD_LIBRARY",
             "-Ilib/freetype/include",
             "-Wno-dangling-pointer",
+            "-Wno-stringop-overflow",
         ],
         objectFiles=objectFiles)
 
