@@ -6,6 +6,7 @@ import { newDefinitionProvider } from './extension/definitionprovider';
 import { newHoverProvider } from './extension/hoverprovider';
 import { newSignatureHelpProvider } from './extension/shprovider';
 import { newCompletionProvider } from './extension/completionprovider';
+import { runFileCommand } from './commands/runfile';
 
 
 
@@ -20,6 +21,9 @@ export function activate(context: vscode.ExtensionContext) {
   sub(vscode.commands.registerCommand(
     'mtots.parse',
     parseCommand));
+  sub(vscode.commands.registerCommand(
+    'mtots.runfile',
+    runFileCommand));
 
   if (vscode.window.activeTextEditor &&
       vscode.window.activeTextEditor.document.languageId === 'mtots') {

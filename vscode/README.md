@@ -19,6 +19,10 @@ Future work:
 
 ## Release Notes
 
+### 0.0.45
+
+"Mtots: Run Mtots File" command to run an open file
+
 ### 0.0.44
 
 Fix member completion when in middle of using a decorator

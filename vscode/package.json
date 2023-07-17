@@ -74,6 +74,10 @@
             {
                 "command": "mtots.parse",
                 "title": "Parse mtots code"
+            },
+            {
+                "command": "mtots.runfile",
+                "title": "Mtots: Run Mtots File"
             }
         ],
         "menus": {
@@ -81,11 +85,20 @@
                 {
                     "command": "mtots.tokenize",
                     "when": "editorLangId == mtots"
+                },
+                {
+                    "command": "mtots.parse",
+                    "when": "editorLangId == mtots"
+                },
+                {
+                    "command": "mtots.runfile",
+                    "when": "editorLangId == mtots"
                 }
             ]
         }
     },
     "activationEvents": [
+        "onDebug",
         "onLanguage:mtots",
         "onCommand:mtots.tokenize",
         "onCommand:mtots.parse"
