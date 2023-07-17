@@ -25,12 +25,17 @@ u32 hashval(Value value) {
     case VAL_BOOL: return AS_BOOL(value) ? 1231 : 1237;
     case VAL_NUMBER: {
       double x = AS_NUMBER(value);
+      union {
+        double number;
+        u32 parts[2];
+      } pun;
       i32 ix = (i32) x;
       if (x == (double)ix) {
         return (u32) ix;
       }
+      pun.number = x;
       /* TODO: smarter hashing */
-      return ((u32*)(&x))[0] ^ ((u32*)(&x))[1];
+      return pun.parts[0] ^ pun.parts[1];
     }
     case VAL_STRING: return AS_STRING(value)->hash;
     case VAL_CFUNCTION: break;
