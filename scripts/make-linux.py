@@ -153,6 +153,8 @@ def build() -> None:
             "-Wno-unused-parameter",
             "-Wno-missing-field-initializers",
 
+            "-Wno-maybe-uninitialized",
+
             # Enabling this might actually mask some logic errors -
             # '-Wuninitialized' may be able to catch many situations in which
             # a logic error happens, but the forced assignment may hide it.
