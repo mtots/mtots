@@ -18,7 +18,7 @@ const char *findMtotsModulePath(const char *moduleName);
  * This path is expected to be the mtots executable - the root path
  * will be the `root` directory under the directory containing the executable.
  */
-void registerMtotsExecutablePath(const char *exePath);
+void registerMtotsExecutablePath(const char *argv0);
 
 /*
  * Let the Mtots environment know the path to the main executable script.

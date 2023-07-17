@@ -7,6 +7,14 @@
 #include <string.h>
 #include <stdio.h>
 
+#if MTOTS_ASSUME_WINDOWS
+#include <libloaderapi.h>
+#elif __APPLE__
+#include <mach-o/dyld.h>
+#elif __linux__
+#include <unistd.h>
+#endif
+
 #if MTOTS_ENABLE_ZIP
 #include "miniz.h"
 #endif
@@ -18,6 +26,7 @@
 static char scriptBuf[PATH_LIMIT];
 static char exeRootBuf[PATH_LIMIT];
 static char pathBuffer[PATH_LIMIT];
+static char exePathBuf[PATH_LIMIT];
 
 #if MTOTS_ENABLE_ZIP
 static char *archivePath;
@@ -169,8 +178,41 @@ const char *findMtotsModulePath(const char *moduleName) {
   return NULL;
 }
 
-void registerMtotsExecutablePath(const char *exePath) {
-  size_t exePathLen = strlen(exePath), rootLen;
+/* Basically https://stackoverflow.com/questions/933850 */
+static const char *getMtotsExecutablePath(const char *argv0) {
+#if MTOTS_ASSUME_WINDOWS
+  /* TODO: handle cases where buffer is too small */
+  GetModuleFileName(NULL, exePathBuf, PATH_LIMIT);
+  exePathBuf[PATH_LIMIT - 1] = '\0';
+  return exePathBuf;
+#elif __APPLE__
+  uint32_t bufsize;
+  if (_NSGetExecutablePath(exePathBuf, &bufsize) != 0) {
+    /* buffer is too small */
+    return NULL;
+  }
+  return exePathBuf;
+#elif __linux__
+  if (readlink("/proc/self/exe", exePathBuf, PATH_LIMIT - 1) == -1) {
+    /* Failed to read, maybe buffer too small */
+    return NULL;
+  }
+  exePathBuf[PATH_LIMIT - 1] = '\0';
+  return exePathBuf;
+#else
+  /* TODO: Try other ways to figure this out */
+  (void)exePathBuf;
+  return NULL;
+#endif
+}
+
+void registerMtotsExecutablePath(const char *argv0) {
+  const char *exePath = getMtotsExecutablePath(argv0);
+  size_t exePathLen, rootLen;
+  if (!exePath) {
+    return;
+  }
+  exePathLen = strlen(exePath);
   if (exePathLen + strlen("/root") >= PATH_LIMIT) {
     return; /* too long */
   }
