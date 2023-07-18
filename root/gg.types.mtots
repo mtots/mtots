@@ -451,6 +451,16 @@ class Window:
     zero and one.
     """
 
+  def newRect(
+      rect Rect,
+      colors List[Color]?=nil,
+      texture Texture?=nil,
+      textureCoordinates List[Vector]?=nil) Geometry:
+    """
+    Like the `newPolygon` method, but uses a `Rect` to specify the polygon instead
+    of a list of points.
+    """
+
   def newGeometry(vertexCount Int, indexCount Int) Geometry:
     """
     Create a new `Geometry` with the given number of vertices and indices.

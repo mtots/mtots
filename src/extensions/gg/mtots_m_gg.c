@@ -1569,6 +1569,43 @@ static CFunction funcWindowNewPolygon = {
   implWindowNewPolygon, "newPolygon", 1, 4, argsWindowNewPolygon
 };
 
+static ubool implWindowNewRect(i16 argc, Value *args, Value *out) {
+  ObjWindow *window = AS_WINDOW(args[-1]);
+  Rect rect = AS_RECT(args[0]);
+  ObjList *colors = argc > 1 && !IS_NIL(args[1]) ? AS_LIST(args[1]) : NULL;
+  ObjTexture *texture = argc > 2 && !IS_NIL(args[2]) ? AS_TEXTURE(args[2]) : NULL;
+  ObjList *textureCoordinates = argc > 3 && !IS_NIL(args[3]) ? AS_LIST(args[3]) : NULL;
+  ObjGeometry *geo;
+  ObjList *points = newList(4);
+  ubool gcPause;
+  float w = rect.width, h = rect.height;
+
+  points->buffer[0] = VECTOR_VAL(newVector(rect.minX,     rect.minY,     0));
+  points->buffer[1] = VECTOR_VAL(newVector(rect.minX + w, rect.minY,     0));
+  points->buffer[2] = VECTOR_VAL(newVector(rect.minX + w, rect.minY + h, 0));
+  points->buffer[3] = VECTOR_VAL(newVector(rect.minX,     rect.minY + h, 0));
+
+  LOCAL_GC_PAUSE(gcPause);
+  if (!newPolygonGeometry(window, points, colors, texture, textureCoordinates, &geo)) {
+    LOCAL_GC_UNPAUSE(gcPause);
+    return UFALSE;
+  }
+  LOCAL_GC_UNPAUSE(gcPause);
+  *out = GEOMETRY_VAL(geo);
+  return UTRUE;
+}
+
+static TypePattern argsWindowNewRect[] = {
+  { TYPE_PATTERN_RECT },
+  { TYPE_PATTERN_LIST_OR_NIL },
+  { TYPE_PATTERN_NATIVE_OR_NIL, &descriptorTexture },
+  { TYPE_PATTERN_LIST_OR_NIL },
+};
+
+static CFunction funcWindowNewRect = {
+  implWindowNewRect, "newRect", 1, 4, argsWindowNewRect
+};
+
 static ubool implWindowNewGeometry(i16 argc, Value *args, Value *out) {
   ObjWindow *window = AS_WINDOW(args[-1]);
   u32 vertexCount = AS_U32(args[0]);
@@ -2120,6 +2157,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &funcWindowNewTexture,
     &funcWindowSetCamera,
     &funcWindowNewPolygon,
+    &funcWindowNewRect,
     &funcWindowNewGeometry,
     NULL,
   };
