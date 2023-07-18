@@ -170,7 +170,7 @@ You may have a bespoke environment not listed in any of the platforms above.
 Compiling all C files directly under `src` should produce a binary that runs
 the interpreter without any extensions.
 
-To include the extensions, you will want to look at each fo the directories
+To include the extensions, you will want to look at each of the directories
 in `src/extensions` and add them one by one and enabling certain macro flags.
 Many of them will also require that you build 3rd party C libraries available
 in the `lib` directory.
