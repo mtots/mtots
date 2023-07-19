@@ -960,6 +960,9 @@ export class FrozenDictLiteralType<K extends Type=Type, V extends Type=Type> ext
   toString(): string {
     return this.type.toString();
   }
+  getFieldNames(): string[] {
+    return Array.from(this.map.keys()).concat(this.type.getFieldNames());
+  }
   getField(fieldName: string): Variable | null {
     return this.map.get(fieldName) || this.type.getField(fieldName);
   }
