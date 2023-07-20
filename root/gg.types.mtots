@@ -354,6 +354,17 @@ class Window:
     Sets the window's title
     """
 
+  def setLogicalSize(width Int, height Int) nil:
+    """
+    Sets the window's logical size.
+
+    This will 'override' the actual window size when processing inputs
+    and drawing to the screen.
+
+    Essentially makes it easier to 'scale up' the graphcs without
+    necessarily having to update the logic
+    """
+
   def setBackgroundColor(color Color) nil:
     """
     Sets the window's background color.

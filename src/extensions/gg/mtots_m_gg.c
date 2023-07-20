@@ -1453,6 +1453,20 @@ static CFunction funcWindowSetTitle = {
   implWindowSetTitle, "setTitle", 1, 0, argsStrings
 };
 
+static ubool implWindowSetLogicalSize(i16 argc, Value *args, Value *out) {
+  ObjWindow *window = AS_WINDOW(args[-1]);
+  u32 width = AS_U32(args[0]);
+  u32 height = AS_U32(args[1]);
+  if (SDL_RenderSetLogicalSize(window->renderer, (int)width, (int)height) != 0) {
+    return sdlError("SDL_RenderSetLogicalSize");
+  }
+  return UTRUE;
+}
+
+static CFunction funcWindowSetLogicalSize = {
+  implWindowSetLogicalSize, "setLogicalSize", 2, 0, argsNumbers
+};
+
 static ubool implWindowSetBackgroundColor(i16 argc, Value *args, Value *out) {
   ObjWindow *window = AS_WINDOW(args[-1]);
   Color color = AS_COLOR(args[0]);
@@ -2229,6 +2243,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
   CFunction *windowMethods[] = {
     &funcWindowGetattr,
     &funcWindowSetTitle,
+    &funcWindowSetLogicalSize,
     &funcWindowSetBackgroundColor,
     &funcWindowOnUpdate,
     &funcWindowGetCanvas,
