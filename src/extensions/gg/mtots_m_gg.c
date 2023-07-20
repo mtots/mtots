@@ -52,14 +52,17 @@
 
 #define AS_WINDOW(v) ((ObjWindow*)AS_OBJ((v)))
 #define AS_TEXTURE(v) ((ObjTexture*)AS_OBJ((v)))
+#define AS_SPRITE_SHEET(v) ((ObjSpriteSheet*)AS_OBJ((v)))
 #define AS_GEOMETRY(v) ((ObjGeometry*)AS_OBJ((v)))
 #define AS_PLAYBACK_CHANNEL(v) ((ObjPlaybackChannel*)AS_OBJ((v)))
 #define IS_WINDOW(v) ((getNativeObjectDescriptor((v)) == &descriptorWindow))
 #define IS_TEXTURE(v) ((getNativeObjectDescriptor((v)) == &descriptorTexture))
+#define IS_SPRITE_SHEET(v) ((getNativeObjectDescriptor((v)) == &descriptorSpriteSheet))
 #define IS_GEOMETRY(v) ((getNativeObjectDescriptor((v)) == &descriptorGeometry))
 #define IS_PLAYBACK_CHANNEL(v) ((getNativeObjectDescriptor((v)) == &descriptorPlaybackChannel))
 
 typedef struct ObjTexture ObjTexture;
+typedef struct ObjSpriteSheet ObjSpriteSheet;
 
 typedef enum SynthWaveType {
   SYNTH_SINE
@@ -103,6 +106,14 @@ struct ObjTexture {
   ObjWindow *window;
   u32 width, height;
   ObjImage *image;       /* for streaming textures */
+};
+
+struct ObjSpriteSheet {
+  ObjNative obj;
+  ObjTexture *texture;
+  u32 spriteWidth, spriteHeight;
+  u32 spriteWidthCount, spriteHeightCount;
+  u32 spriteCount;
 };
 
 typedef struct ObjGeometry {
@@ -219,6 +230,10 @@ static Value TEXTURE_VAL(ObjTexture *texture) {
   return OBJ_VAL_EXPLICIT((Obj*)texture);
 }
 
+static Value SPRITE_SHEET_VAL(ObjSpriteSheet *spriteSheet) {
+  return OBJ_VAL_EXPLICIT((Obj*)spriteSheet);
+}
+
 static Value GEOMETRY_VAL(ObjGeometry *geometry) {
   return OBJ_VAL_EXPLICIT((Obj*)geometry);
 }
@@ -254,6 +269,11 @@ static void freeTexture(ObjNative *n) {
   }
 }
 
+static void blackenSpriteSheet(ObjNative *n) {
+  ObjSpriteSheet *ss = (ObjSpriteSheet*)n;
+  markObject((Obj*)ss->texture);
+}
+
 static void blackenGeometry(ObjNative *n) {
   ObjGeometry *geo = (ObjGeometry*)n;
   markObject((Obj*)geo->window);
@@ -274,6 +294,10 @@ static NativeObjectDescriptor descriptorWindow = {
 
 static NativeObjectDescriptor descriptorTexture = {
   blackenTexture, freeTexture, sizeof(ObjTexture), "Texture"
+};
+
+static NativeObjectDescriptor descriptorSpriteSheet = {
+  blackenSpriteSheet, nopFree, sizeof(ObjSpriteSheet), "SpriteSheet"
 };
 
 static NativeObjectDescriptor descriptorGeometry = {
@@ -1113,6 +1137,17 @@ static ubool updateStreamingTexture(SDL_Texture *texture, ObjImage *image) {
   return UTRUE;
 }
 
+static ObjSpriteSheet *newSpriteSheet(ObjTexture *texture, u32 spriteWidth, u32 spriteHeight) {
+  ObjSpriteSheet *ss = NEW_NATIVE(ObjSpriteSheet, &descriptorSpriteSheet);
+  ss->texture = texture;
+  ss->spriteWidth = spriteWidth;
+  ss->spriteHeight = spriteHeight;
+  ss->spriteWidthCount = texture->width / spriteWidth;
+  ss->spriteHeightCount = texture->height / spriteHeight;
+  ss->spriteCount = ss->spriteWidthCount * ss->spriteHeightCount;
+  return ss;
+}
+
 static ubool windowSetCamera(ObjWindow *window, Vector upperLeft, Vector lowerRight) {
   float w = (float)window->width;
   float h = (float)window->height;
@@ -1728,6 +1763,51 @@ static ubool implTextureUpdate(i16 argc, Value *args, Value *out) {
 
 static CFunction funcTextureUpdate = { implTextureUpdate, "update" };
 
+static ubool implTextureNewSpriteSheet(i16 argc, Value *args, Value *out) {
+  ObjTexture *texture = AS_TEXTURE(args[-1]);
+  u32 spriteWidth = AS_U32(args[0]);
+  u32 spriteHeight = AS_U32(args[1]);
+  *out = SPRITE_SHEET_VAL(newSpriteSheet(texture, spriteWidth, spriteHeight));
+  return UTRUE;
+}
+
+static CFunction funcTextureNewSpriteSheet = {
+  implTextureNewSpriteSheet, "newSpriteSheet", 2, 0, argsNumbers };
+
+static ubool implSpriteSheetBlit(i16 argc, Value *args, Value *out) {
+  ObjSpriteSheet *ss = AS_SPRITE_SHEET(args[-1]);
+  u32 spriteIndex = (u32)AS_INDEX(args[0], ss->spriteCount);
+  Vector pos = AS_VECTOR(args[1]);
+  Vector scale = argc > 2 && !IS_NIL(args[2]) ? AS_VECTOR(args[2]) : newVector(1, 1, 0);
+  Vector flip = argc > 3 && !IS_NIL(args[3]) ? AS_VECTOR(args[3]) : newVector(0, 0, 0);
+  SDL_Rect src, dst;
+  src.x = (spriteIndex % ss->spriteWidthCount) * ss->spriteWidth;
+  src.y = (spriteIndex / ss->spriteWidthCount) * ss->spriteHeight;
+  src.w = (int)(ss->spriteWidth * scale.x);
+  src.h = (int)(ss->spriteHeight * scale.y);
+  dst.x = pos.x;
+  dst.y = pos.y;
+  dst.w = (int)(ss->spriteWidth * scale.x);
+  dst.h = (int)(ss->spriteHeight * scale.y);
+  if (SDL_RenderCopyEx(
+      ss->texture->window->renderer, ss->texture->handle, &src, &dst, 0, NULL,
+      SDL_FLIP_NONE |
+      (flip.x ? SDL_FLIP_HORIZONTAL : 0) |
+      (flip.y ? SDL_FLIP_VERTICAL : 0)) != 0) {
+    return sdlError("SDL_RenderCopyEx");
+  }
+  return UTRUE;
+}
+
+static TypePattern argsSpriteSheetBlit[] = {
+  { TYPE_PATTERN_NUMBER },
+  { TYPE_PATTERN_VECTOR },
+};
+
+static CFunction funcSpriteSheetBlit = {
+  implSpriteSheetBlit, "blit", 2, 0, argsSpriteSheetBlit
+};
+
 static ubool implGeometryGetattr(i16 argc, Value *args, Value *out) {
   ObjGeometry *geo = AS_GEOMETRY(args[-1]);
   String *name = AS_STRING(args[0]);
@@ -2169,6 +2249,14 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &funcTextureBlit,
     &funcTextureIsStreaming,
     &funcTextureUpdate,
+    &funcTextureNewSpriteSheet,
+    NULL,
+  };
+  CFunction *spriteSheetStaticMethods[] = {
+    NULL,
+  };
+  CFunction *spriteSheetMethods[] = {
+    &funcSpriteSheetBlit,
     NULL,
   };
   CFunction *geometryStaticMethods[] = {
@@ -2256,6 +2344,12 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &descriptorTexture,
     textureMethods,
     textureStaticMethods);
+
+  newNativeClass(
+    module,
+    &descriptorSpriteSheet,
+    spriteSheetMethods,
+    spriteSheetStaticMethods);
 
   newNativeClass(
     module,

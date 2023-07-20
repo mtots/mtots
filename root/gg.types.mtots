@@ -521,6 +521,33 @@ class Texture:
     Otherwise, this method raises an error.
     """
 
+  def newSpriteSheet(spriteWidth Int, spriteHeight Int) SpriteSheet:
+    """
+    TODO: Reconsider if a SpriteSheet API is worth having
+    """
+
+
+class SpriteSheet:
+  """
+  TODO: Reconsider if a SpriteSheet API is worth having
+  """
+
+  def blit(n Int, position Vector, scale Vector?=nil, ):
+    """
+    TODO: Reconsider if a SpriteSheet API is worth having
+
+    Compare with PICO-8's `spr()`
+
+    Parameters:
+    n - index of the sprite to blit; sprites are indexed from zero starting from
+        top left, going left to right, top down
+    position - the position on the screen to render the sprite
+    scale - defaults to `V(1, 1)`. Width and height of rectangle from the sheet to
+        blit as a factor of sprite dimensions
+    flip - defaults to `V(0, 0)`. Vector indicating whether each axis should be flipped.
+        Nonzero values indicate flipping the image by the given axis.
+    """
+
 
 class Geometry:
   """
