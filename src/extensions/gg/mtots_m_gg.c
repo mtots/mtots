@@ -1816,10 +1816,12 @@ static ubool implSpriteSheetBlit(i16 argc, Value *args, Value *out) {
 static TypePattern argsSpriteSheetBlit[] = {
   { TYPE_PATTERN_NUMBER },
   { TYPE_PATTERN_VECTOR },
+  { TYPE_PATTERN_VECTOR_OR_NIL },
+  { TYPE_PATTERN_VECTOR_OR_NIL },
 };
 
 static CFunction funcSpriteSheetBlit = {
-  implSpriteSheetBlit, "blit", 2, 0, argsSpriteSheetBlit
+  implSpriteSheetBlit, "blit", 2, 4, argsSpriteSheetBlit
 };
 
 static ubool implGeometryGetattr(i16 argc, Value *args, Value *out) {

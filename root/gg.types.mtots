@@ -543,7 +543,7 @@ class SpriteSheet:
   TODO: Reconsider if a SpriteSheet API is worth having
   """
 
-  def blit(n Int, position Vector, scale Vector?=nil, ):
+  def blit(n Int, position Vector, scale Vector?=nil, flip Vector?=nil):
     """
     TODO: Reconsider if a SpriteSheet API is worth having
 
