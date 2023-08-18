@@ -4,7 +4,17 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
+
+static Random defaultInstance;
+
+static ubool implRandom(i16 argc, Value *args, Value *out) {
+  *out = NUMBER_VAL(randomFloat(&defaultInstance));
+  return UTRUE;
+}
+
+static CFunction funcRandom = { implRandom, "random" };
 
 static ubool implInstantiateRandom(i16 argCount, Value *args, Value *out) {
   ObjRandom *random = NEW_NATIVE(ObjRandom, &descriptorRandom);
@@ -103,6 +113,10 @@ static CFunction funcRandomRange = {
 
 static ubool impl(i16 argCount, Value *args, Value *out) {
   ObjModule *module = AS_MODULE(args[0]);
+  CFunction *functions[] = {
+    &funcRandom,
+    NULL,
+  };
   CFunction *methods[] = {
     &funcRandomSeed,
     &funcRandomNext,
@@ -115,6 +129,10 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     &funcInstantiateRandom,
     NULL,
   };
+
+  initRandom(&defaultInstance, ((u32)time(NULL))^(u32)rand());
+
+  moduleAddFunctions(module, functions);
 
   newNativeClass(module, &descriptorRandom, methods, staticMethods);
 
