@@ -548,6 +548,7 @@ ObjClass *getClassOfValue(Value value) {
     case VAL_NIL: return vm.nilClass;
     case VAL_BOOL: return vm.boolClass;
     case VAL_NUMBER: return vm.numberClass;
+    case VAL_SYMBOL: return vm.symbolClass;
     case VAL_STRING: return vm.stringClass;
     case VAL_BUILTIN: return vm.functionClass;
     case VAL_CFUNCTION: return vm.functionClass;

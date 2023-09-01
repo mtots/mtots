@@ -152,11 +152,23 @@ double asNumber(Value value) {
   }
   return value.as.number;
 }
+Symbol *asSymbol(Value value) {
+  if (!IS_BUILTIN(value)) {
+    panic("Expected Symbol but got %s", getKindName(value));
+  }
+  return value.as.symbol;
+}
 String *asString(Value value) {
   if (!IS_STRING(value)) {
     panic("Expected String but got %s", getKindName(value));
   }
   return value.as.string;
+}
+Builtin *asBuiltin(Value value) {
+  if (!IS_BUILTIN(value)) {
+    panic("Expected Builtin but got %s", getKindName(value));
+  }
+  return value.as.builtin;
 }
 CFunction *asCFunction(Value value) {
   if (!IS_CFUNCTION(value)) {
@@ -244,6 +256,9 @@ void printValue(Value value) {
     case VAL_NUMBER:
       printf("%g", AS_NUMBER(value));
       return;
+    case VAL_SYMBOL:
+      printf("<Symbol %s>", getSymbolChars(value.as.symbol));
+      return;
     case VAL_STRING:
       printf("%s", AS_CSTRING(value));
       return;
@@ -269,6 +284,7 @@ const char *getValueTypeName(ValueType type) {
   switch (type) {
     case VAL_NIL: return "VAL_NIL";
     case VAL_BOOL: return "VAL_BOOL";
+    case VAL_SYMBOL: return "VAL_SYMBOL";
     case VAL_NUMBER: return "VAL_NUMBER";
     case VAL_STRING: return "VAL_STRING";
     case VAL_BUILTIN: return "VAL_BUILTIN";
@@ -288,6 +304,7 @@ const char *getKindName(Value value) {
     case VAL_NIL: return "nil";
     case VAL_BOOL: return "bool";
     case VAL_NUMBER: return "number";
+    case VAL_SYMBOL: return "symbol";
     case VAL_STRING: return "string";
     case VAL_BUILTIN: return "builtin";
     case VAL_CFUNCTION: return "cfunction";

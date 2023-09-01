@@ -95,6 +95,7 @@ typedef struct VM {
   ObjClass *nilClass;
   ObjClass *boolClass;
   ObjClass *numberClass;
+  ObjClass *symbolClass;
   ObjClass *stringClass;
   ObjClass *bufferClass;
   ObjClass *listClass;

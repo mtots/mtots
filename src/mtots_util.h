@@ -17,5 +17,6 @@
 #include "mtots_util_number.h"
 #include "mtots_util_printf.h"
 #include "mtots_util_fs.h"
+#include "mtots_util_symbol.h"
 
 #endif/*mtots_util_h*/

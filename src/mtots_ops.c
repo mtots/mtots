@@ -12,6 +12,7 @@ ubool valuesIs(Value a, Value b) {
     case VAL_NIL: return UTRUE;
     case VAL_BOOL: return AS_BOOL(a) == AS_BOOL(b);
     case VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
+    case VAL_SYMBOL: return a.as.symbol == b.as.symbol;
     case VAL_STRING: return AS_STRING(a) == AS_STRING(b);
     case VAL_BUILTIN: return a.as.builtin == b.as.builtin;
     case VAL_CFUNCTION: return AS_CFUNCTION(a) == AS_CFUNCTION(b);
@@ -52,6 +53,7 @@ ubool valuesEqual(Value a, Value b) {
     case VAL_NIL: return UTRUE;
     case VAL_BOOL: return AS_BOOL(a) == AS_BOOL(b);
     case VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
+    case VAL_SYMBOL: return a.as.symbol == b.as.symbol;
     case VAL_STRING: return AS_STRING(a) == AS_STRING(b);
     case VAL_BUILTIN: return a.as.builtin == b.as.builtin;
     case VAL_CFUNCTION: return AS_CFUNCTION(a) == AS_CFUNCTION(b);
@@ -117,6 +119,14 @@ ubool valueLessThan(Value a, Value b) {
     case VAL_NIL: return UFALSE;
     case VAL_BOOL: return AS_BOOL(a) < AS_BOOL(b);
     case VAL_NUMBER: return AS_NUMBER(a) < AS_NUMBER(b);
+    case VAL_SYMBOL: {
+      Symbol *sa = a.as.symbol;
+      Symbol *sb = b.as.symbol;
+      if (sa == sb) {
+        return UFALSE;
+      }
+      return strcmp(getSymbolChars(sa), getSymbolChars(sb)) < 0;
+    }
     case VAL_STRING: {
       /* Use u8 instead of char when comparing to ensure that
        * larger code points compare larger */
@@ -315,6 +325,7 @@ ubool valueRepr(Buffer *out, Value value) {
     case VAL_NIL: bprintf(out, "nil"); return UTRUE;
     case VAL_BOOL: bprintf(out, AS_BOOL(value) ? "true" : "false"); return UTRUE;
     case VAL_NUMBER: bputnumber(out, AS_NUMBER(value)); return UTRUE;
+    case VAL_SYMBOL: bprintf(out, "<Symbol %s>", getSymbolChars(value.as.symbol)); return UTRUE;
     case VAL_STRING: {
       String *str = AS_STRING(value);
       bputchar(out, '"');
