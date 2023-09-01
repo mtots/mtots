@@ -100,4 +100,12 @@
 #define MTOTS_FALLTHROUGH
 #endif /* __GNUC__ */
 
+#if __cplusplus >= 201703L /* C++17 and above */
+#define NODISCARD [[nodiscard]]
+#elif __GNUC__
+#define NODISCARD __attribute__((warn_unused_result))
+#else /* Assume C89 only */
+#define NODISCARD
+#endif /* __cplusplus */
+
 #endif/*mtots_config_h*/

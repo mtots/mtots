@@ -38,6 +38,7 @@ u32 hashval(Value value) {
       return pun.parts[0] ^ pun.parts[1];
     }
     case VAL_STRING: return AS_STRING(value)->hash;
+    case VAL_BUILTIN: break;
     case VAL_CFUNCTION: break;
     case VAL_SENTINEL: return (u32) AS_SENTINEL(value);
     case VAL_OBJ: switch (AS_OBJ(value)->type) {

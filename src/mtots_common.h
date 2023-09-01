@@ -63,4 +63,9 @@ typedef u8 ubool;
 typedef float  f32;
 typedef double f64;
 
+typedef enum Status {
+  STATUS_ERROR,
+  STATUS_OK
+} Status;
+
 #endif/*mtots_common_h*/
