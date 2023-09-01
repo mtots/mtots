@@ -23,7 +23,6 @@ typedef struct ObjRangeIterator {
   double step;
 } ObjRangeIterator;
 
-void initFastRangeClass(void);
 void initRangeClass(void);
 void initRangeIteratorClass(void);
 

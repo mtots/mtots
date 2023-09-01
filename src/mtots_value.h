@@ -15,18 +15,11 @@ typedef enum TypePatternType {
   TYPE_PATTERN_BOOL,
   TYPE_PATTERN_NUMBER_OR_NIL,
   TYPE_PATTERN_NUMBER,
-  TYPE_PATTERN_COLOR_OR_NIL,
-  TYPE_PATTERN_COLOR,
-  TYPE_PATTERN_VECTOR_OR_NIL,
-  TYPE_PATTERN_VECTOR,
-  TYPE_PATTERN_RECT_OR_NIL,
-  TYPE_PATTERN_RECT,
   TYPE_PATTERN_LIST_OR_NIL,
   TYPE_PATTERN_LIST,
   TYPE_PATTERN_LIST_NUMBER_OR_NIL,
   TYPE_PATTERN_LIST_NUMBER,
   TYPE_PATTERN_LIST_LIST_NUMBER, /* List of List of Number */
-  TYPE_PATTERN_LIST_VECTOR,
   TYPE_PATTERN_FROZEN_LIST,
   TYPE_PATTERN_DICT,
   TYPE_PATTERN_FROZEN_DICT,
@@ -45,44 +38,6 @@ typedef enum Sentinel {
   SentinelEmptyKey        /* Used internally in Map */
 } Sentinel;
 
-/*
- * FastRange/VAL_RANGE/VAL_RANGE_ITERATOR is a bit of a hack.
- *
- * This mechanism allows some subsets of the for-in-range loop to
- * run without allocating memory for a Range or RangeIterator object
- * on the heap.
- *
- * TODO: Make the compiler smarter so that it generates
- * smarter opcodes when it sees for-in-range, rather than
- * add complexity to Value.
- */
-typedef struct FastRange {
-  i32 start;
-  i32 stop;
-  i32 step;
-} FastRange;
-
-typedef struct FastRangeIterator {
-  i32 next;
-  i32 stop;
-  i32 step;
-} FastRangeIterator;
-
-typedef struct FastRangePartial {
-  i32 stop;
-  i32 step;
-} FastRangePartial;
-
-typedef struct FastListIterator {
-  u32 index;
-  struct ObjList *list;
-} FastListIterator;
-
-typedef struct VectorPartial {
-  float x;
-  float y;
-} VectorPartial;
-
 typedef enum ValueType {
   VAL_NIL,
   VAL_BOOL,
@@ -90,19 +45,6 @@ typedef enum ValueType {
   VAL_STRING,
   VAL_CFUNCTION,
   VAL_SENTINEL,
-
-  /* for Optimizations */
-  VAL_FAST_RANGE,
-  VAL_FAST_RANGE_ITERATOR,
-  VAL_FAST_LIST_ITERATOR,
-
-  /* Some useful types to have.
-   * Arguably, these do not belong as builtins,
-   * but are quite useful in many applications */
-  VAL_COLOR,
-  VAL_VECTOR,
-  VAL_RECT,
-
   VAL_OBJ
 } ValueType;
 
@@ -112,10 +54,7 @@ typedef struct Value {
   ValueType type; /* 4-bytes */
 
   union {
-    i32 integer;       /* for FastRange and FastRangeIterator */
-    u32 index;         /* for FastListIterator */
-    float number;      /* for Vector */
-    RectExponent rect; /* for Rect */
+    i32 integer;       /* placeholder, for now */
   } extra; /* 4-bytes */
 
   /*
@@ -129,11 +68,7 @@ typedef struct Value {
     String *string;
     CFunction *cfunction;
     Sentinel sentinel;
-    Color color;
-    FastRangePartial fastRange;
-    VectorPartial vector;
     Obj *obj;
-    RectFraction rect;
   } as; /* 8-bytes */
 } Value;
 
@@ -174,11 +109,6 @@ typedef struct ValueArray {
 #define AS_SENTINEL(value) ((value).as.sentinel)
 #define AS_COLOR(value) ((value).as.color)
 
-FastRange AS_FAST_RANGE(Value value);
-FastRangeIterator AS_FAST_RANGE_ITERATOR(Value value);
-Vector AS_VECTOR(Value value);
-Rect AS_RECT(Value value);
-
 size_t AS_SIZE(Value value);
 u32 AS_U32_BITS(Value value);
 u32 AS_U32(Value value);
@@ -194,15 +124,9 @@ size_t AS_INDEX_UPPER(Value value, size_t length);
 Value NIL_VAL(void);
 Value BOOL_VAL(ubool value);
 Value NUMBER_VAL(double value);
-Value COLOR_VAL(Color value);
-Value VECTOR_VAL(Vector value);
-Value RECT_VAL(Rect value);
 Value STRING_VAL(String *string);
 Value CFUNCTION_VAL(CFunction *func);
 Value SENTINEL_VAL(Sentinel sentinel);
-Value FAST_RANGE_VAL(FastRange fastRange);
-Value FAST_RANGE_ITERATOR_VAL(FastRangeIterator fastRange);
-Value FAST_LIST_ITERATOR_VAL(FastListIterator fastListIter);
 Value OBJ_VAL_EXPLICIT(Obj *object);
 
 #define IS_STOP_ITERATION(value) ( \

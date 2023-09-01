@@ -18,10 +18,4 @@
 #include "mtots_util_printf.h"
 #include "mtots_util_fs.h"
 
-/* Other generally useful utilities */
-#include "mtots_util_color.h"
-#include "mtots_util_vector.h"
-#include "mtots_util_matrix.h"
-#include "mtots_util_rect.h"
-
 #endif/*mtots_util_h*/

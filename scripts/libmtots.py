@@ -49,12 +49,12 @@ def getSources() -> List[str]:
 
 
 def getExtensionSources(extensionName: str) -> List[str]:
-    srcs: List[str] = []
-    srcDir = os.path.join(mtotsDir, 'src', 'extensions', extensionName)
-    for filename in os.listdir(srcDir):
-        if filename.endswith('.c'):
-            srcs.append(os.path.join(srcDir, filename))
-    return srcs
+    # srcs: List[str] = []
+    # srcDir = os.path.join(mtotsDir, 'src', 'extensions', extensionName)
+    # for filename in os.listdir(srcDir):
+    #     if filename.endswith('.c'):
+    #         srcs.append(os.path.join(srcDir, filename))
+    return []
 
 
 def getFreeTypeSources() -> List[str]:
@@ -217,7 +217,7 @@ class Compiler:
             # Include the miniz library
             "-Ilib/miniz/src",
             "-Isrc/extensions/zip",
-            "-DMTOTS_ENABLE_ZIP=1",
+            # "-DMTOTS_ENABLE_ZIP=1",
             *getExtensionSources('zip'),
 
             # Include the FreeType library
@@ -225,13 +225,13 @@ class Compiler:
 
             # Font module
             #   - depends on freetype
-            "-DMTOTS_ENABLE_FONT=1",
+            # "-DMTOTS_ENABLE_FONT=1",
             "-Isrc/extensions/font",
             *getExtensionSources('font'),
 
             # font.roboto.mono module
             #   - depends on font module
-            "-DMTOTS_ENABLE_FONT_ROBOTO_MONO=1",
+            # "-DMTOTS_ENABLE_FONT_ROBOTO_MONO=1",
             "-Isrc/extensions/fontrm",
             *getExtensionSources('fontrm'),
 
@@ -240,20 +240,20 @@ class Compiler:
             *getExtensionSources('sdl'),
 
             # Audio module
-            "-DMTOTS_ENABLE_AUDIO=1",
+            # "-DMTOTS_ENABLE_AUDIO=1",
             "-Isrc/extensions/audio",
             *getExtensionSources('audio'),
 
             # Image module
             #   - depends on lodepng
-            "-DMTOTS_ENABLE_IMAGE=1",
+            # "-DMTOTS_ENABLE_IMAGE=1",
             "-Ilib/lodepng/src",
             "-Isrc/extensions/image",
             *getExtensionSources('image'),
 
             # Canvas module
             #   - depends on image module
-            "-DMTOTS_ENABLE_CANVAS=1",
+            # "-DMTOTS_ENABLE_CANVAS=1",
             "-Isrc/extensions/canvas",
             *getExtensionSources('canvas'),
 
@@ -261,13 +261,13 @@ class Compiler:
             #   - depends on SDL
             #   - depends on image module
             #   - depends on font.roboto.mono module
-            "-DMTOTS_ENABLE_GG=1",
+            # "-DMTOTS_ENABLE_GG=1",
             "-Isrc/extensions/gg",
             *getExtensionSources('gg'),
 
             # paco
             #   - depends on SDL
-            "-DMTOTS_ENABLE_PACO=1",
+            # "-DMTOTS_ENABLE_PACO=1",
             "-Isrc/extensions/paco",
             *getExtensionSources('paco'),
 

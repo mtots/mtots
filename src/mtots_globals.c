@@ -357,15 +357,7 @@ static ubool implRange(i16 argCount, Value *args, Value *out) {
       panic("Invalid argc to range() (%d)", argCount);
       return UFALSE;
   }
-  if (doubleIsI32(start) && doubleIsI32(stop) && doubleIsI32(step)) {
-    FastRange fastRange;
-    fastRange.start = (i32)start;
-    fastRange.stop = (i32)stop;
-    fastRange.step = (i32)step;
-    *out = FAST_RANGE_VAL(fastRange);
-  } else {
-    *out = OBJ_VAL_EXPLICIT((Obj*)newRange(start, stop, step));
-  }
+  *out = OBJ_VAL_EXPLICIT((Obj*)newRange(start, stop, step));
   return UTRUE;
 }
 
@@ -495,17 +487,8 @@ static ubool implIsClose(i16 argc, Value *args, Value *out) {
     *out = BOOL_VAL(doubleIsCloseEx(AS_NUMBER(a), AS_NUMBER(b), relTol, absTol));
     return UTRUE;
   }
-  if (IS_VECTOR(args[0]) && IS_VECTOR(args[1])) {
-    *out = BOOL_VAL(vectorIsCloseEx(AS_VECTOR(a), AS_VECTOR(b), relTol, absTol));
-    return UTRUE;
-  }
-  if (IS_MATRIX(args[0]) && IS_MATRIX(args[1])) {
-    *out = BOOL_VAL(matrixIsCloseEx(
-      &AS_MATRIX(a)->handle, &AS_MATRIX(b)->handle, relTol, absTol));
-    return UTRUE;
-  }
   runtimeError(
-    "Expectecd two Numbers, Vectors or Matrices, but got %s and %s",
+    "Expectecd two Numbers, but got %s and %s",
     getKindName(a), getKindName(b));
   return UFALSE;
 }
@@ -610,51 +593,9 @@ static TypePattern argsSort[] = {
 
 static CFunction funcSort = { implSort, "__sort__", 1, 2, argsSort };
 
-static ubool implV(i16 argc, Value *args, Value *out) {
-  double x = AS_NUMBER(args[0]);
-  double y = AS_NUMBER(args[1]);
-  double z = argc > 2 ? AS_NUMBER(args[2]) : 0;
-  *out = VECTOR_VAL(newVector(x, y, z));
-  return UTRUE;
-}
-
-static CFunction funcV = { implV, "V", 2, 3, argsNumbers };
-
-static ubool implM(i16 argc, Value *args, Value *out) {
-  ObjMatrix *matrix = newIdentityMatrix();
-  ObjList *rows[4];
-  size_t i;
-  rows[0] = AS_LIST(args[0]);
-  rows[1] = AS_LIST(args[1]);
-  rows[2] = argc > 2 && !IS_NIL(args[2]) ? AS_LIST(args[2]) : NULL;
-  rows[3] = argc > 3 && !IS_NIL(args[3]) ? AS_LIST(args[3]) : NULL;
-  for (i = 0; i < 4; i++) {
-    size_t j;
-    ObjList *list = rows[i];
-    if (!list) {
-      continue;
-    }
-    for (j = 0; j < 4 && j < list->length; j++) {
-      matrix->handle.row[i][j] = AS_NUMBER(list->buffer[j]);
-    }
-  }
-  *out = MATRIX_VAL(matrix);
-  return UTRUE;
-}
-
-static TypePattern argsM[] = {
-  { TYPE_PATTERN_LIST_NUMBER },
-  { TYPE_PATTERN_LIST_NUMBER },
-  { TYPE_PATTERN_LIST_NUMBER_OR_NIL },
-  { TYPE_PATTERN_LIST_NUMBER_OR_NIL },
-};
-
-static CFunction funcM = { implM, "M", 2, 4, argsM };
-
 void defineDefaultGlobals(void) {
   NativeObjectDescriptor *descriptors[] = {
     &descriptorStringBuilder,
-    &descriptorMatrix,
     NULL,
   }, **descriptor;
   CFunction *functions[] = {
@@ -689,8 +630,6 @@ void defineDefaultGlobals(void) {
     &funcFlog2,
     &funcIsInstance,
     &funcSort,
-    &funcV,
-    &funcM,
     NULL,
   }, **function;
 
@@ -710,9 +649,6 @@ void defineDefaultGlobals(void) {
     &vm.frozenDictClass,
     &vm.functionClass,
     &vm.classClass,
-    &vm.colorClass,
-    &vm.vectorClass,
-    &vm.rectClass,
     NULL,
   }, ***builtinClass;
 

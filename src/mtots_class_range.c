@@ -16,28 +16,6 @@ ObjRangeIterator *newRangeIterator(double next, double stop, double step) {
   return range;
 }
 
-static ubool implFastRangeIter(i16 argCount, Value *args, Value *out) {
-  FastRange range = AS_FAST_RANGE(args[-1]);
-  *out = OBJ_VAL_EXPLICIT((Obj*)newRangeIterator(range.start, range.stop, range.step));
-  return UTRUE;
-}
-
-/* We still need this because the 'iter/next' API cannot support FastRangeIterator */
-static CFunction funcFastRangeIter = { implFastRangeIter, "__iter__" };
-
-void initFastRangeClass(void) {
-  CFunction *methods[] = {
-    &funcFastRangeIter,
-    NULL,
-  };
-  newBuiltinClass(
-    "FastRange",
-    &vm.fastRangeClass,
-    TYPE_PATTERN_ANY,
-    methods,
-    NULL);
-}
-
 static ubool implRangeIter(i16 argCount, Value *args, Value *out) {
   ObjRange *range = AS_RANGE(args[-1]);
   *out = OBJ_VAL_EXPLICIT((Obj*)newRangeIterator(range->start, range->stop, range->step));

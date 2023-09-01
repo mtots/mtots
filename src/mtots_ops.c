@@ -4,12 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-static ubool fastRangesEqual(Value a, Value b) {
-  return a.extra.integer == b.extra.integer &&
-    a.as.fastRange.stop == b.as.fastRange.stop &&
-    a.as.fastRange.step == b.as.fastRange.step;
-}
-
 ubool valuesIs(Value a, Value b) {
   if (a.type != b.type) {
     return UFALSE;
@@ -21,12 +15,6 @@ ubool valuesIs(Value a, Value b) {
     case VAL_STRING: return AS_STRING(a) == AS_STRING(b);
     case VAL_CFUNCTION: return AS_CFUNCTION(a) == AS_CFUNCTION(b);
     case VAL_SENTINEL: return AS_SENTINEL(a) == AS_SENTINEL(b);
-    case VAL_FAST_RANGE: return fastRangesEqual(a, b);
-    case VAL_FAST_RANGE_ITERATOR: return fastRangesEqual(a, b);
-    case VAL_FAST_LIST_ITERATOR: return a.as.obj == b.as.obj && a.extra.index == b.extra.index;
-    case VAL_COLOR: return colorEquals(AS_COLOR(a), AS_COLOR(b));
-    case VAL_VECTOR: return vectorEquals(AS_VECTOR(a), AS_VECTOR(b));
-    case VAL_RECT: return rectEquals(AS_RECT(a), AS_RECT(b));
     case VAL_OBJ: return AS_OBJ(a) == AS_OBJ(b);
   }
   abort();
@@ -66,12 +54,6 @@ ubool valuesEqual(Value a, Value b) {
     case VAL_STRING: return AS_STRING(a) == AS_STRING(b);
     case VAL_CFUNCTION: return AS_CFUNCTION(a) == AS_CFUNCTION(b);
     case VAL_SENTINEL: return AS_SENTINEL(a) == AS_SENTINEL(b);
-    case VAL_FAST_RANGE: return fastRangesEqual(a, b);
-    case VAL_FAST_RANGE_ITERATOR: return fastRangesEqual(a, b);
-    case VAL_FAST_LIST_ITERATOR: return a.as.obj == b.as.obj && a.extra.index == b.extra.index;
-    case VAL_COLOR: return colorEquals(AS_COLOR(a), AS_COLOR(b));
-    case VAL_VECTOR: return vectorEquals(AS_VECTOR(a), AS_VECTOR(b));
-    case VAL_RECT: return rectEquals(AS_RECT(a), AS_RECT(b));
     case VAL_OBJ: {
       Obj *objA = AS_OBJ(a);
       Obj *objB = AS_OBJ(b);
@@ -112,9 +94,6 @@ ubool valuesEqual(Value a, Value b) {
           ObjNative *nb = (ObjNative*)objB;
           if (na->descriptor != nb->descriptor) {
             return UFALSE;
-          }
-          if (na->descriptor == &descriptorMatrix) {
-            return matrixEquals(&((ObjMatrix*)na)->handle, &((ObjMatrix*)nb)->handle);
           }
           return objA == objB;
         }
@@ -159,12 +138,6 @@ ubool valueLessThan(Value a, Value b) {
     }
     case VAL_CFUNCTION: break;
     case VAL_SENTINEL: break;
-    case VAL_FAST_RANGE: break;
-    case VAL_FAST_RANGE_ITERATOR: break;
-    case VAL_FAST_LIST_ITERATOR: break;
-    case VAL_COLOR: break;
-    case VAL_VECTOR: break;
-    case VAL_RECT: break;
     case VAL_OBJ: {
       Obj *objA = AS_OBJ(a);
       Obj *objB = AS_OBJ(b);
@@ -350,45 +323,6 @@ ubool valueRepr(Buffer *out, Value value) {
     }
     case VAL_CFUNCTION: bprintf(out, "<function %s>", AS_CFUNCTION(value)->name); return UTRUE;
     case VAL_SENTINEL: bprintf(out, "<sentinel %d>", AS_SENTINEL(value)); return UTRUE;
-    case VAL_FAST_RANGE:
-      bprintf(out, "FastRange(%d,%d,%d)",
-        value.extra.integer, value.as.fastRange.stop, value.as.fastRange.step);
-      return UTRUE;
-    case VAL_FAST_RANGE_ITERATOR:
-      bprintf(out, "FastRangeIterator(%d,%d,%d)",
-        value.extra.integer, value.as.fastRange.stop, value.as.fastRange.step);
-      return UTRUE;
-    case VAL_FAST_LIST_ITERATOR:
-      bprintf(out, "FastListIterator(%u,%lu)",
-        value.extra.index, (unsigned long)((ObjList*)value.as.obj)->length);
-      return UTRUE;
-    case VAL_COLOR: {
-      Color c = AS_COLOR(value);
-      bprintf(out, "Color(%d,%d,%d,%d)", c.red, c.green, c.blue, c.alpha);
-      return UTRUE;
-    }
-    case VAL_VECTOR:
-      bprintf(out, "Vector(");
-      bputnumber(out, value.as.vector.x);
-      bprintf(out, ", ");
-      bputnumber(out, value.as.vector.y);
-      bprintf(out, ", ");
-      bputnumber(out, value.extra.number);
-      bprintf(out, ")");
-      return UTRUE;
-    case VAL_RECT: {
-      Rect rect = AS_RECT(value);
-      bputstr(out, "Rect(");
-      bputnumber(out, rect.minX);
-      bputstr(out, ", ");
-      bputnumber(out, rect.minY);
-      bputstr(out, ", ");
-      bputnumber(out, rect.width);
-      bputstr(out, ", ");
-      bputnumber(out, rect.height);
-      bputstr(out, ")");
-      return UTRUE;
-    }
     case VAL_OBJ: {
       Obj *obj = AS_OBJ(value);
       switch (obj->type) {
@@ -644,33 +578,10 @@ ubool valueIterNext(Value iterator, Value *out) {
 }
 
 ubool valueFastIter(Value iterable, Value *out) {
-  if (IS_FAST_RANGE(iterable)) {
-    *out = FAST_RANGE_ITERATOR_VAL(AS_FAST_RANGE_ITERATOR(iterable));
-    return UTRUE;
-  }
   return valueIter(iterable, out);
 }
 
 ubool valueFastIterNext(Value *iterator, Value *out) {
-  if (IS_FAST_RANGE_ITERATOR(*iterator)) {
-    i32 step = iterator->as.fastRange.step;
-    if (step > 0) {
-      if (iterator->extra.integer < iterator->as.fastRange.stop) {
-        *out = NUMBER_VAL(iterator->extra.integer);
-        iterator->extra.integer += step;
-      } else {
-        *out = STOP_ITERATION_VAL();
-      }
-    } else {
-      if (iterator->extra.integer > iterator->as.fastRange.stop) {
-        *out = NUMBER_VAL(iterator->extra.integer);
-        iterator->extra.integer += step;
-      } else {
-        *out = STOP_ITERATION_VAL();
-      }
-    }
-    return UTRUE;
-  }
   return valueIterNext(*iterator, out);
 }
 

@@ -88,7 +88,6 @@ void markValue(Value value) {
     case VAL_STRING:
       markString(AS_STRING(value));
       break;
-    case VAL_FAST_LIST_ITERATOR:
     case VAL_OBJ:
       markObject(AS_OBJ(value));
       break;

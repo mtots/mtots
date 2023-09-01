@@ -551,12 +551,6 @@ ObjClass *getClassOfValue(Value value) {
     case VAL_STRING: return vm.stringClass;
     case VAL_CFUNCTION: return vm.functionClass;
     case VAL_SENTINEL: return vm.sentinelClass;
-    case VAL_FAST_RANGE: return vm.fastRangeClass;
-    case VAL_FAST_RANGE_ITERATOR: return vm.fastRangeIteratorClass;
-    case VAL_FAST_LIST_ITERATOR: return vm.fastListIteratorClass;
-    case VAL_COLOR: return vm.colorClass;
-    case VAL_VECTOR: return vm.vectorClass;
-    case VAL_RECT: return vm.rectClass;
     case VAL_OBJ: {
       switch (AS_OBJ(value)->type) {
         case OBJ_CLASS: return vm.classClass;

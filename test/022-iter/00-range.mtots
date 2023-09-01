@@ -6,8 +6,9 @@ final c01 = sys.getMallocCount()
 final r2 = range(5000000000, 5000000000 + 10) # 5 billion - fits in double, but not in i32
 final c02 = sys.getMallocCount()
 
-print("mallocCount (r1) = %r" % [c01 - c00])
-print("mallocCount (r2) = %r" % [c02 - c01])
+# After dropping FastRange, checking mallocCount is kind of pointless
+# print("mallocCount (r1) = %r" % [c01 - c00])
+# print("mallocCount (r2) = %r" % [c02 - c01])
 print(List(r1))
 print(List(r2))
 
@@ -21,8 +22,9 @@ for value in range(5000000000, 5000000000 + 10):
   total2 = total2 + value
 final c12 = sys.getMallocCount()
 
-print("mallocCount (total1) = %r" % [c11 - c10])
-print("mallocCount (total2) = %r" % [c12 - c11])
+# After dropping FastRange, checking mallocCount is kind of pointless
+# print("mallocCount (total1) = %r" % [c11 - c10])
+# print("mallocCount (total2) = %r" % [c12 - c11])
 print("total1 = %r" % [total1])
 print("total2 = %r" % [total2])
 
@@ -32,8 +34,9 @@ final c21 = sys.getMallocCount()
 final sum2 = sum(range(5000000000, 5000000000 + 10))
 final c22 = sys.getMallocCount()
 
-print("mallocCount (sum1) = %r" % [c21 - c20])
-print("mallocCount (sum2) = %r" % [c22 - c21])
+# After dropping FastRange, checking mallocCount is kind of pointless
+# print("mallocCount (sum1) = %r" % [c21 - c20])
+# print("mallocCount (sum2) = %r" % [c22 - c21])
 print("sum1 = %r" % [sum1])
 print("sum2 = %r" % [sum2])
 
@@ -43,8 +46,9 @@ final c31 = sys.getMallocCount()
 final lr2 = range(5000000000 + 10, 5000000000, -2)
 final c32 = sys.getMallocCount()
 
-print("mallocCount (lr1) = %r" % [c31 - c30])
-print("mallocCount (lr2) = %r" % [c32 - c31])
+# After dropping FastRange, checking mallocCount is kind of pointless
+# print("mallocCount (lr1) = %r" % [c31 - c30])
+# print("mallocCount (lr2) = %r" % [c32 - c31])
 print("lr1 = %r" % [List(lr1)])
 print("lr2 = %r" % [List(lr2)])
 
@@ -58,8 +62,9 @@ for value in range(5000000000 + 10, 5000000000, -2):
   t2 = t2 + value
 final c42 = sys.getMallocCount()
 
-print("mallocCount (t1) = %r" % [c41 - c40])
-print("mallocCount (t2) = %r" % [c42 - c41])
+# After dropping FastRange, checking mallocCount is kind of pointless
+# print("mallocCount (t1) = %r" % [c41 - c40])
+# print("mallocCount (t2) = %r" % [c42 - c41])
 print("t1 = %r" % [t1])
 print("t2 = %r" % [t2])
 

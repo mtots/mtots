@@ -9,8 +9,6 @@
 #include "mtots_class_frozendict.h"
 #include "mtots_class_class.h"
 #include "mtots_class_buffer.h"
-#include "mtots_class_color.h"
-#include "mtots_class_vector.h"
 #include "mtots_modules.h"
 #include "mtots_parser.h"
 
@@ -103,13 +101,7 @@ void initVM(void) {
     panic("sizeof(Value) != 16 (got %lu)", (unsigned long)sizeof(Value));
   }
 
-  if (sizeof(Color) != 4) {
-    panic("sizeof(Color) != 4 (got %lu)", (unsigned long)sizeof(Color));
-  }
-
   vm.sentinelClass = NULL;
-  vm.fastRangeClass = NULL;
-  vm.fastRangeIteratorClass = NULL;
   vm.nilClass = NULL;
   vm.boolClass = NULL;
   vm.numberClass = NULL;
@@ -164,11 +156,6 @@ void initVM(void) {
   vm.maxYString = internForeverCString("maxY");
 
   initNoMethodClass(&vm.sentinelClass, "Sentinel");
-  initColorClass();
-  initVectorClass();
-  initFastRangeClass();
-  initNoMethodClass(&vm.fastRangeIteratorClass, "FastRangeIterator");
-  initNoMethodClass(&vm.fastListIteratorClass, "FastListIterator");
 
   initNoMethodClass(&vm.nilClass, "Nil");
   initNoMethodClass(&vm.boolClass, "Bool");
@@ -185,8 +172,6 @@ void initVM(void) {
   initRangeClass();
   initRangeIteratorClass();
   initStringBuilderClass();
-  initMatrixClass();
-  initRectClass();
 
   defineDefaultGlobals();
   addNativeModules();
@@ -819,59 +804,14 @@ loop:
       }
       case OP_GET_ITER: {
         Value iterable = peek(0);
-        if (isIterator(iterable)) {
-          /* nothing to do */
-        } else if (IS_LIST(iterable) && AS_LIST(iterable)->length < U32_MAX) {
-          FastListIterator iter;
-          iter.index = 0;
-          iter.list = AS_LIST(iterable);
-          pop(); /* iterable */
-          push(FAST_LIST_ITERATOR_VAL(iter));
-          /* NOTE: On 64-bit systems, if you have more than U32_MAX, ~4billion
-           * entries in a list, modifying the list during iteration may
-           * potentially lead to strange results. */
-        } else if (IS_FAST_RANGE(iterable)) {
-          pop(); /* iterable */
-          push(FAST_RANGE_ITERATOR_VAL(AS_FAST_RANGE_ITERATOR(iterable)));
-        } else {
+        if (!isIterator(iterable)) {
           INVOKE(vm.iterString, 0);
         }
         break;
       }
       case OP_GET_NEXT: {
-        if (IS_FAST_LIST_ITERATOR(vm.stackTop[-1])) {
-          Value *iterator = vm.stackTop - 1;
-          ObjList *list = (ObjList*)iterator->as.obj;
-          if (list->length >= U32_MAX) {
-            panic("List modification during iteration detected");
-          }
-          if (iterator->extra.index < list->length) {
-            push(list->buffer[iterator->extra.index++]);
-          } else {
-            push(STOP_ITERATION_VAL());
-          }
-        } else if (IS_FAST_RANGE_ITERATOR(vm.stackTop[-1])) {
-          Value *iterator = vm.stackTop - 1;
-          i32 step = iterator->as.fastRange.step;
-          if (step > 0) {
-            if (iterator->extra.integer < iterator->as.fastRange.stop) {
-              push(NUMBER_VAL(iterator->extra.integer));
-              iterator->extra.integer += step;
-            } else {
-              push(STOP_ITERATION_VAL());
-            }
-          } else {
-            if (iterator->extra.integer > iterator->as.fastRange.stop) {
-              push(NUMBER_VAL(iterator->extra.integer));
-              iterator->extra.integer += step;
-            } else {
-              push(STOP_ITERATION_VAL());
-            }
-          }
-        } else {
-          push(peek(0));
-          CALL(0);
-        }
+        push(peek(0));
+        CALL(0);
         break;
       }
       case OP_LOOP: {

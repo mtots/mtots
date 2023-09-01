@@ -5,8 +5,6 @@
 #include "mtots_import.h"
 #include "mtots_class_range.h"
 #include "mtots_class_sb.h"
-#include "mtots_class_matrix.h"
-#include "mtots_class_rect.h"
 #include "mtots_m_sys.h"
 #include "mtots_m_bmon.h"
 
@@ -93,12 +91,6 @@ typedef struct VM {
   String *maxYString;
 
   ObjClass *sentinelClass;
-  ObjClass *fastRangeClass;
-  ObjClass *fastRangeIteratorClass;
-  ObjClass *fastListIteratorClass;
-  ObjClass *colorClass;
-  ObjClass *vectorClass;
-  ObjClass *rectClass;
 
   ObjClass *nilClass;
   ObjClass *boolClass;

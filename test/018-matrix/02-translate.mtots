@@ -1,8 +1,0 @@
-
-
-final transform = Matrix.one()
-
-print(transform)
-transform.translate(Vector(100, 100))
-print(transform)
-print(transform.apply(Vector(0, 0)))

@@ -4,34 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-FastRange AS_FAST_RANGE(Value value) {
-  FastRange range;
-  range.start = value.extra.integer;
-  range.stop = value.as.fastRange.stop;
-  range.step = value.as.fastRange.step;
-  return range;
-}
-
-FastRangeIterator AS_FAST_RANGE_ITERATOR(Value value) {
-  FastRangeIterator iter;
-  iter.next = value.extra.integer;
-  iter.stop = value.as.fastRange.stop;
-  iter.step = value.as.fastRange.step;
-  return iter;
-}
-
-Vector AS_VECTOR(Value value) {
-  Vector v;
-  v.x = value.as.vector.x;
-  v.y = value.as.vector.y;
-  v.z = value.extra.number;
-  return v;
-}
-
-Rect AS_RECT(Value value) {
-  return newRectFromParts(value.extra.rect, value.as.rect);
-}
-
 size_t AS_SIZE(Value value) {
   double x = AS_NUMBER(value);
 
@@ -182,23 +154,6 @@ Value NUMBER_VAL(double value) {
   v.as.number = value;
   return v;
 }
-Value COLOR_VAL(Color value) {
-  Value v = { VAL_COLOR };
-  v.as.color = value;
-  return v;
-}
-Value VECTOR_VAL(Vector value) {
-  Value v = { VAL_VECTOR };
-  v.as.vector.x = value.x;
-  v.as.vector.y = value.y;
-  v.extra.number = value.z;
-  return v;
-}
-Value RECT_VAL(Rect value) {
-  Value v = { VAL_RECT };
-  rectToParts(value, &v.extra.rect, &v.as.rect);
-  return v;
-}
 Value STRING_VAL(String *string) {
   Value v = { VAL_STRING  };
   v.as.string = string;
@@ -212,26 +167,6 @@ Value CFUNCTION_VAL(CFunction *func) {
 Value SENTINEL_VAL(Sentinel sentinel) {
   Value v = { VAL_SENTINEL };
   v.as.sentinel = sentinel;
-  return v;
-}
-Value FAST_RANGE_VAL(FastRange fastRange) {
-  Value v = { VAL_FAST_RANGE };
-  v.extra.integer = fastRange.start;
-  v.as.fastRange.step = fastRange.step;
-  v.as.fastRange.stop = fastRange.stop;
-  return v;
-}
-Value FAST_RANGE_ITERATOR_VAL(FastRangeIterator fastRange) {
-  Value v = { VAL_FAST_RANGE_ITERATOR };
-  v.extra.integer = fastRange.next;
-  v.as.fastRange.step = fastRange.step;
-  v.as.fastRange.stop = fastRange.stop;
-  return v;
-}
-Value FAST_LIST_ITERATOR_VAL(FastListIterator fastListIter) {
-  Value v = { VAL_FAST_LIST_ITERATOR };
-  v.extra.index = fastListIter.index;
-  v.as.obj = (Obj*)fastListIter.list;
   return v;
 }
 Value OBJ_VAL_EXPLICIT(Obj *object) {
@@ -282,43 +217,6 @@ void printValue(Value value) {
       return;
     }
     case VAL_SENTINEL: printf("<sentinel %d>", AS_SENTINEL(value)); return;
-    case VAL_FAST_RANGE:
-      printf("FastRange(%d,%d,%d)",
-        value.extra.integer, value.as.fastRange.stop, value.as.fastRange.step);
-      return;
-    case VAL_FAST_RANGE_ITERATOR:
-      printf("FastRangeIterator(%d,%d,%d)",
-        value.extra.integer, value.as.fastRange.stop, value.as.fastRange.step);
-      return;
-    case VAL_FAST_LIST_ITERATOR:
-      printf("FastListIterator(%u,%lu)",
-        value.extra.index, (unsigned long)((ObjList*)value.as.obj)->length);
-      return;
-    case VAL_COLOR:
-      printf(
-        "Color(%d,%d,%d,%d)",
-        value.as.color.red,
-        value.as.color.green,
-        value.as.color.blue,
-        value.as.color.alpha);
-      return;
-    case VAL_VECTOR:
-      printf(
-        "Vector(%f,%f,%f)",
-        value.as.vector.x,
-        value.as.vector.y,
-        value.extra.number);
-      return;
-    case VAL_RECT: {
-      Rect rect = AS_RECT(value);
-      printf(
-        "Rect(%f,%f,%f,%f)",
-        rect.minX,
-        rect.minY,
-        rect.width,
-        rect.height);
-      return;
-    }
     case VAL_OBJ:
       printObject(value);
       return;
@@ -334,12 +232,6 @@ const char *getValueTypeName(ValueType type) {
     case VAL_STRING: return "VAL_STRING";
     case VAL_CFUNCTION: return "VAL_CFUNCTION";
     case VAL_SENTINEL: return "VAL_SENTINEL";
-    case VAL_FAST_RANGE: return "VAL_FAST_RANGE";
-    case VAL_FAST_RANGE_ITERATOR: return "VAL_FAST_RANGE_ITERATOR";
-    case VAL_FAST_LIST_ITERATOR: return "VAL_FAST_LIST_ITERATOR";
-    case VAL_COLOR: return "VAL_COLOR";
-    case VAL_VECTOR: return "VAL_VECTOR";
-    case VAL_RECT: return "VAL_RECT";
     case VAL_OBJ: return "VAL_OBJ";
   }
   return "<unrecognized>";
@@ -357,12 +249,6 @@ const char *getKindName(Value value) {
     case VAL_STRING: return "string";
     case VAL_CFUNCTION: return "cfunction";
     case VAL_SENTINEL: return "sentinel";
-    case VAL_FAST_RANGE: return "fastRange";
-    case VAL_FAST_RANGE_ITERATOR: return "fastRangeIterator";
-    case VAL_FAST_LIST_ITERATOR: return "fastListIterator";
-    case VAL_COLOR: return "Color";
-    case VAL_VECTOR: return "Vector";
-    case VAL_RECT: return "Rect";
     case VAL_OBJ: switch (value.as.obj->type) {
       case OBJ_CLASS: return "class";
       case OBJ_CLOSURE: return "closure";
@@ -399,24 +285,6 @@ ubool typePatternMatch(TypePattern pattern, Value value) {
       }
       /* fallthrough */
     case TYPE_PATTERN_NUMBER: return IS_NUMBER(value);
-    case TYPE_PATTERN_COLOR_OR_NIL:
-      if (IS_NIL(value)) {
-        return UTRUE;
-      }
-      /* fallthrough*/
-    case TYPE_PATTERN_COLOR: return IS_COLOR(value);
-    case TYPE_PATTERN_VECTOR_OR_NIL:
-      if (IS_NIL(value)) {
-        return UTRUE;
-      }
-      /* fallthrough*/
-    case TYPE_PATTERN_VECTOR: return IS_VECTOR(value);
-    case TYPE_PATTERN_RECT_OR_NIL:
-      if (IS_NIL(value)) {
-        return UTRUE;
-      }
-      /* fallthrough*/
-    case TYPE_PATTERN_RECT: return IS_RECT(value);
     case TYPE_PATTERN_LIST_OR_NIL:
       if (IS_NIL(value)) {
         return UTRUE;
@@ -466,21 +334,6 @@ ubool typePatternMatch(TypePattern pattern, Value value) {
       }
       return UTRUE;
     }
-    case TYPE_PATTERN_LIST_VECTOR: {
-      /* List of Vectors */
-      ObjList *list;
-      size_t i;
-      if (!IS_LIST(value)) {
-        return UFALSE;
-      }
-      list = AS_LIST(value);
-      for (i = 0; i < list->length; i++) {
-        if (!IS_VECTOR(list->buffer[i])) {
-          return UFALSE;
-        }
-      }
-      return UTRUE;
-    }
     case TYPE_PATTERN_FROZEN_LIST: return IS_FROZEN_LIST(value);
     case TYPE_PATTERN_DICT: return IS_DICT(value);
     case TYPE_PATTERN_FROZEN_DICT: return IS_FROZEN_DICT(value);
@@ -509,18 +362,11 @@ const char *getTypePatternName(TypePattern pattern) {
     case TYPE_PATTERN_BOOL: return "bool";
     case TYPE_PATTERN_NUMBER_OR_NIL: return "(number|nil)";
     case TYPE_PATTERN_NUMBER: return "number";
-    case TYPE_PATTERN_COLOR_OR_NIL: return "(Color|nil)";
-    case TYPE_PATTERN_COLOR: return "Color";
-    case TYPE_PATTERN_VECTOR_OR_NIL: return "(Vector|nil)";
-    case TYPE_PATTERN_VECTOR: return "Vector";
-    case TYPE_PATTERN_RECT_OR_NIL: return "(Rect|nil)";
-    case TYPE_PATTERN_RECT: return "Rect";
     case TYPE_PATTERN_LIST_OR_NIL: return "(list|nil)";
     case TYPE_PATTERN_LIST: return "list";
     case TYPE_PATTERN_LIST_NUMBER_OR_NIL: return "(list[number]|nil)";
     case TYPE_PATTERN_LIST_NUMBER: return "list[number]";
     case TYPE_PATTERN_LIST_LIST_NUMBER: return "list[list[number]]";
-    case TYPE_PATTERN_LIST_VECTOR: return "list[vector]";
     case TYPE_PATTERN_FROZEN_LIST: return "frozenList";
     case TYPE_PATTERN_DICT: return "dict";
     case TYPE_PATTERN_FROZEN_DICT: return "frozendict";

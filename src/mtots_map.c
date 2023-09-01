@@ -40,19 +40,6 @@ u32 hashval(Value value) {
     case VAL_STRING: return AS_STRING(value)->hash;
     case VAL_CFUNCTION: break;
     case VAL_SENTINEL: return (u32) AS_SENTINEL(value);
-    case VAL_FAST_RANGE: break;
-    case VAL_FAST_RANGE_ITERATOR: break;
-    case VAL_FAST_LIST_ITERATOR: break;
-    case VAL_COLOR: {
-      Color c = AS_COLOR(value);
-      return (
-        (((u32)c.red)   << 0) |
-        (((u32)c.green) << 8) |
-        (((u32)c.blue)  << 16) |
-        (((u32)c.alpha) << 24));
-    }
-    case VAL_VECTOR: break;
-    case VAL_RECT: break;
     case VAL_OBJ: switch (AS_OBJ(value)->type) {
       case OBJ_FROZEN_LIST: return AS_FROZEN_LIST(value)->hash;
       case OBJ_FROZEN_DICT: return AS_FROZEN_DICT(value)->hash;
