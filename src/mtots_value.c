@@ -5,7 +5,7 @@
 #include <string.h>
 
 size_t AS_SIZE(Value value) {
-  double x = AS_NUMBER(value);
+  double x = asNumber(value);
 
   /* There are actually some size_t values that cannot fit into
    * a double in a 64-bit platform. However, when specifying
@@ -20,7 +20,7 @@ size_t AS_SIZE(Value value) {
 }
 
 u32 AS_U32_BITS(Value value) {
-  double x = AS_NUMBER(value);
+  double x = asNumber(value);
   if (x < 0) {
     /* In this case, we may be generous and allow interpretation
      * to i32 first, and do a bitwise reinterpret */
@@ -36,7 +36,7 @@ u32 AS_U32_BITS(Value value) {
 }
 
 u32 AS_U32(Value value) {
-  double x = AS_NUMBER(value);
+  double x = asNumber(value);
   if (x < 0) {
     panic("Expected u32, but value is less than zero (%f)", x);
   }
@@ -47,7 +47,7 @@ u32 AS_U32(Value value) {
 }
 
 i32 AS_I32(Value value) {
-  double x = AS_NUMBER(value);
+  double x = asNumber(value);
   if (x < (double)I32_MIN) {
     i32 v = I32_MIN;
     double vd = (double)v;
@@ -60,7 +60,7 @@ i32 AS_I32(Value value) {
 }
 
 u16 AS_U16(Value value) {
-  double x = AS_NUMBER(value);
+  double x = asNumber(value);
   if (x < 0) {
     panic("Expected u16, but value is less than zero (%f)", x);
   }
@@ -71,7 +71,7 @@ u16 AS_U16(Value value) {
 }
 
 i16 AS_I16(Value value) {
-  double x = AS_NUMBER(value);
+  double x = asNumber(value);
   if (x < I16_MIN) {
     panic("Expected i16, but value is less than I16_MIN (%f)", x);
   }
@@ -82,7 +82,7 @@ i16 AS_I16(Value value) {
 }
 
 u8 AS_U8(Value value) {
-  double x = AS_NUMBER(value);
+  double x = asNumber(value);
   if (x < 0) {
     panic("Expected u8, but value is less than zero (%f)", x);
   }
@@ -93,7 +93,7 @@ u8 AS_U8(Value value) {
 }
 
 u8 AS_U8_CLAMP(Value value) {
-  double x = AS_NUMBER(value);
+  double x = asNumber(value);
   if (x < 0) {
     return 0;
   }
@@ -104,7 +104,7 @@ u8 AS_U8_CLAMP(Value value) {
 }
 
 size_t AS_INDEX(Value value, size_t length) {
-  double x = AS_NUMBER(value);
+  double x = asNumber(value);
   if (x < 0) {
     x += length;
   }
@@ -115,7 +115,7 @@ size_t AS_INDEX(Value value, size_t length) {
 }
 
 size_t AS_INDEX_LOWER(Value value, size_t length) {
-  double x = AS_NUMBER(value);
+  double x = asNumber(value);
   if (x < 0) {
     x += length;
   }
@@ -128,7 +128,7 @@ size_t AS_INDEX_LOWER(Value value, size_t length) {
 }
 
 size_t AS_INDEX_UPPER(Value value, size_t length) {
-  double x = AS_NUMBER(value);
+  double x = asNumber(value);
   if (x < 0) {
     x += length;
   }
@@ -254,7 +254,7 @@ void printValue(Value value) {
       printf(AS_BOOL(value) ? "true" : "false");
       return;
     case VAL_NUMBER:
-      printf("%g", AS_NUMBER(value));
+      printf("%g", value.as.number);
       return;
     case VAL_SYMBOL:
       printf("<Symbol %s>", getSymbolChars(value.as.symbol));

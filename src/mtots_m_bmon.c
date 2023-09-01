@@ -178,7 +178,7 @@ ubool bmonDump(Value value, Buffer *out) {
         double x;
         u32 arr[2];
       } u;
-      u.x = AS_NUMBER(value);
+      u.x = asNumber(value);
       bufferAddU8(out, TAG_NUMBER);
       bufferAddU32(out, u.arr[0]);
       bufferAddU32(out, u.arr[1]);

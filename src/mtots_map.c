@@ -24,7 +24,7 @@ u32 hashval(Value value) {
     case VAL_NIL: return 17;
     case VAL_BOOL: return AS_BOOL(value) ? 1231 : 1237;
     case VAL_NUMBER: {
-      double x = AS_NUMBER(value);
+      double x = value.as.number;
       union {
         double number;
         u32 parts[2];

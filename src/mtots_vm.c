@@ -451,8 +451,8 @@ static void defineStaticMethod(String *name) {
 
 static ubool isFalsey(Value value) {
   return IS_NIL(value) ||
-    (IS_BOOL(value) && !AS_BOOL(value)) ||
-    (IS_NUMBER(value) && AS_NUMBER(value) == 0);
+    (IS_BOOL(value) && !value.as.boolean) ||
+    (IS_NUMBER(value) && value.as.number == 0);
 }
 
 static void concatenate(void) {
@@ -511,8 +511,8 @@ static ubool run(void) {
 #define BINARY_OP(opexpr, invokeStr) \
   do { \
     if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) { \
-      double b = AS_NUMBER(pop()); \
-      double a = AS_NUMBER(pop()); \
+      double b = pop().as.number; \
+      double a = pop().as.number; \
       /* TODO: Forgive myself for this evil macro */ \
       push(NUMBER_VAL(opexpr)); \
     } else { \
@@ -737,8 +737,8 @@ loop:
         if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
           concatenate();
         } else if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
-          double b = AS_NUMBER(pop());
-          double a = AS_NUMBER(pop());
+          double b = pop().as.number;
+          double a = pop().as.number;
           push(NUMBER_VAL(a + b));
         } else {
           INVOKE(vm.addString, 1);
@@ -784,7 +784,7 @@ loop:
         break;
       case OP_NEGATE:
         if (IS_NUMBER(peek(0))) {
-          push(NUMBER_VAL(-AS_NUMBER(pop())));
+          push(NUMBER_VAL(-pop().as.number));
         } else {
           INVOKE(vm.negString, 0);
         }

@@ -13,7 +13,7 @@ static ubool writeJSON(Value value, size_t *outLen, char *out) {
     return UTRUE;
   }
   if (IS_BOOL(value)) {
-    if (AS_BOOL(value)) {
+    if (value.as.boolean) {
       if (outLen) *outLen = strlen("true");
       if (out) strcpy(out, "true");
     } else {
@@ -23,7 +23,7 @@ static ubool writeJSON(Value value, size_t *outLen, char *out) {
     return UTRUE;
   }
   if (IS_NUMBER(value)) {
-    double x = AS_NUMBER(value);
+    double x = value.as.number;
     char buffer[32];
     size_t i, len = snprintf(buffer, 32, "%f", x);
     ubool hasDot = UFALSE;

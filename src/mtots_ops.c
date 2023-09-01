@@ -11,7 +11,7 @@ ubool valuesIs(Value a, Value b) {
   switch (a.type) {
     case VAL_NIL: return UTRUE;
     case VAL_BOOL: return AS_BOOL(a) == AS_BOOL(b);
-    case VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
+    case VAL_NUMBER: return a.as.number == b.as.number;
     case VAL_SYMBOL: return a.as.symbol == b.as.symbol;
     case VAL_STRING: return AS_STRING(a) == AS_STRING(b);
     case VAL_BUILTIN: return a.as.builtin == b.as.builtin;
@@ -52,7 +52,7 @@ ubool valuesEqual(Value a, Value b) {
   switch (a.type) {
     case VAL_NIL: return UTRUE;
     case VAL_BOOL: return AS_BOOL(a) == AS_BOOL(b);
-    case VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
+    case VAL_NUMBER: return a.as.number == b.as.number;
     case VAL_SYMBOL: return a.as.symbol == b.as.symbol;
     case VAL_STRING: return AS_STRING(a) == AS_STRING(b);
     case VAL_BUILTIN: return a.as.builtin == b.as.builtin;
@@ -118,7 +118,7 @@ ubool valueLessThan(Value a, Value b) {
   switch (a.type) {
     case VAL_NIL: return UFALSE;
     case VAL_BOOL: return AS_BOOL(a) < AS_BOOL(b);
-    case VAL_NUMBER: return AS_NUMBER(a) < AS_NUMBER(b);
+    case VAL_NUMBER: return a.as.number < b.as.number;
     case VAL_SYMBOL: {
       Symbol *sa = a.as.symbol;
       Symbol *sb = b.as.symbol;
@@ -324,7 +324,7 @@ ubool valueRepr(Buffer *out, Value value) {
   switch (value.type) {
     case VAL_NIL: bprintf(out, "nil"); return UTRUE;
     case VAL_BOOL: bprintf(out, AS_BOOL(value) ? "true" : "false"); return UTRUE;
-    case VAL_NUMBER: bputnumber(out, AS_NUMBER(value)); return UTRUE;
+    case VAL_NUMBER: bputnumber(out, value.as.number); return UTRUE;
     case VAL_SYMBOL: bprintf(out, "<Symbol %s>", getSymbolChars(value.as.symbol)); return UTRUE;
     case VAL_STRING: {
       String *str = AS_STRING(value);
@@ -545,7 +545,7 @@ ubool valueLen(Value recv, size_t *out) {
             getKindName(value));
           return UFALSE;
         }
-        *out = AS_NUMBER(value);
+        *out = value.as.number;
         return UTRUE;
       }
     }

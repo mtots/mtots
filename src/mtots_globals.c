@@ -18,7 +18,7 @@ static CFunction cfunctionClock = { implClock, "clock", 0 };
 static ubool implExit(i16 argCount, Value *args, Value *out) {
   int exitCode = 0;
   if (argCount > 0) {
-    exitCode = AS_NUMBER(args[0]);
+    exitCode = asNumber(args[0]);
   }
   exit(exitCode);
   return UTRUE;
@@ -70,7 +70,7 @@ static ubool implSum(i16 argCount, Value *args, Value *out) {
       runtimeError("Expected number but got %s", getKindName(item));
       return UFALSE;
     }
-    total += AS_NUMBER(item);
+    total += asNumber(item);
   }
   pop(); /* iterator */
   *out = NUMBER_VAL(total);
@@ -80,7 +80,7 @@ static ubool implSum(i16 argCount, Value *args, Value *out) {
 static CFunction cfuncSum = { implSum, "sum", 1 };
 
 static ubool implHex(i16 argCount, Value *args, Value *out) {
-  double rawValue = AS_NUMBER(args[0]);
+  double rawValue = asNumber(args[0]);
   size_t start, end, value;
   Buffer buf;
 
@@ -122,7 +122,7 @@ static ubool implHex(i16 argCount, Value *args, Value *out) {
 static CFunction funcHex = { implHex, "hex", 1, 0, argsNumbers };
 
 static ubool implBin(i16 argCount, Value *args, Value *out) {
-  double rawValue = AS_NUMBER(args[0]);
+  double rawValue = asNumber(args[0]);
   size_t start, end, value;
   Buffer buf;
 
@@ -159,7 +159,7 @@ static ubool implBin(i16 argCount, Value *args, Value *out) {
 static CFunction funcBin = { implBin, "bin", 1, 0, argsNumbers };
 
 static ubool implRound(i16 argCount, Value *args, Value *out) {
-  double number = AS_NUMBER(args[0]);
+  double number = asNumber(args[0]);
   *out = NUMBER_VAL((long)(number + 0.5));
   return UTRUE;
 }
@@ -204,7 +204,7 @@ static ubool implChr(i16 argCount, Value *args, Value *out) {
       getKindName(args[0]));
     return UFALSE;
   }
-  c = (char) (i32) AS_NUMBER(args[0]);
+  c = (char) AS_I32(args[0]);
   *out = STRING_VAL(internString(&c, 1));
   return UTRUE;
 }
@@ -342,16 +342,16 @@ static ubool implRange(i16 argCount, Value *args, Value *out) {
   }
   switch (argCount) {
     case 1:
-      stop = AS_NUMBER(args[0]);
+      stop = asNumber(args[0]);
       break;
     case 2:
-      start = AS_NUMBER(args[0]);
-      stop = AS_NUMBER(args[1]);
+      start = asNumber(args[0]);
+      stop = asNumber(args[1]);
       break;
     case 3:
-      start = AS_NUMBER(args[0]);
-      stop = AS_NUMBER(args[1]);
-      step = AS_NUMBER(args[2]);
+      start = asNumber(args[0]);
+      stop = asNumber(args[1]);
+      step = asNumber(args[2]);
       break;
     default:
       panic("Invalid argc to range() (%d)", argCount);
@@ -418,7 +418,7 @@ static CFunction funcFloat = { implFloat, "float", 1 };
 static ubool implInt(i16 argCount, Value *args, Value *out) {
   Value arg = args[0];
   if (IS_NUMBER(arg)) {
-    *out = NUMBER_VAL(floor(AS_NUMBER(arg)));
+    *out = NUMBER_VAL(floor(asNumber(arg)));
     return UTRUE;
   }
   if (IS_STRING(arg)) {
@@ -481,10 +481,10 @@ static CFunction funcInt = { implInt, "int", 1, 2, argsInt };
 static ubool implIsClose(i16 argc, Value *args, Value *out) {
   Value a = args[0];
   Value b = args[1];
-  double relTol = argc > 2 ? AS_NUMBER(args[2]) : DEFAULT_RELATIVE_TOLERANCE;
-  double absTol = argc > 3 ? AS_NUMBER(args[3]) : DEFAULT_ABSOLUTE_TOLERANCE;
+  double relTol = argc > 2 ? asNumber(args[2]) : DEFAULT_RELATIVE_TOLERANCE;
+  double absTol = argc > 3 ? asNumber(args[3]) : DEFAULT_ABSOLUTE_TOLERANCE;
   if (IS_NUMBER(args[0]) && IS_NUMBER(args[1])) {
-    *out = BOOL_VAL(doubleIsCloseEx(AS_NUMBER(a), AS_NUMBER(b), relTol, absTol));
+    *out = BOOL_VAL(doubleIsCloseEx(asNumber(a), asNumber(b), relTol, absTol));
     return UTRUE;
   }
   runtimeError(
@@ -503,28 +503,28 @@ static TypePattern argsIsClose[] = {
 static CFunction funcIsClose = { implIsClose, "isClose", 2, 4, argsIsClose };
 
 static ubool implSin(i16 argCount, Value *args, Value *out) {
-  *out = NUMBER_VAL(sin(AS_NUMBER(args[0])));
+  *out = NUMBER_VAL(sin(asNumber(args[0])));
   return UTRUE;
 }
 
 static CFunction funcSin = { implSin, "sin", 1, 0, argsNumbers };
 
 static ubool implCos(i16 argCount, Value *args, Value *out) {
-  *out = NUMBER_VAL(cos(AS_NUMBER(args[0])));
+  *out = NUMBER_VAL(cos(asNumber(args[0])));
   return UTRUE;
 }
 
 static CFunction funcCos = { implCos, "cos", 1, 0, argsNumbers };
 
 static ubool implTan(i16 argCount, Value *args, Value *out) {
-  *out = NUMBER_VAL(tan(AS_NUMBER(args[0])));
+  *out = NUMBER_VAL(tan(asNumber(args[0])));
   return UTRUE;
 }
 
 static CFunction funcTan = { implTan, "tan", 1, 0, argsNumbers };
 
 static ubool implAbs(i16 argCount, Value *args, Value *out) {
-  double value = AS_NUMBER(args[0]);
+  double value = asNumber(args[0]);
   *out = NUMBER_VAL(value < 0 ? -value : value);
   return UTRUE;
 }
@@ -532,7 +532,7 @@ static ubool implAbs(i16 argCount, Value *args, Value *out) {
 static CFunction funcAbs = { implAbs, "abs", 1, 0, argsNumbers };
 
 static ubool implLog(i16 argCount, Value *args, Value *out) {
-  double value = AS_NUMBER(args[0]);
+  double value = asNumber(args[0]);
   if (!(value > 0)) { /* The '!' is to account for NaN */
     runtimeError("Argument to log() must be positive but got %f", value);
     return UFALSE;
@@ -544,7 +544,7 @@ static ubool implLog(i16 argCount, Value *args, Value *out) {
 static CFunction funcLog = { implLog, "log", 1, 0, argsNumbers };
 
 static ubool implFlog2(i16 argCount, Value *args, Value *out) {
-  double value = AS_NUMBER(args[0]);
+  double value = asNumber(args[0]);
   i32 ret = 0;
   if (!(value > 0)) { /* The '!' is to account for NaN */
     runtimeError("Argument to flog2() must be positive but got %f", value);

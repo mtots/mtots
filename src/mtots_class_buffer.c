@@ -142,7 +142,7 @@ static CFunction funcBufferView = { implBufferView, "view", 1, 2, argsNumbers };
 
 static ubool implBufferAddI8(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  bufferAddI8(&bo->handle, AS_NUMBER(args[0]));
+  bufferAddI8(&bo->handle, asNumber(args[0]));
   return UTRUE;
 }
 
@@ -152,7 +152,7 @@ static CFunction funcBufferAddI8 = {
 
 static ubool implBufferAddU8(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  bufferAddU8(&bo->handle, AS_NUMBER(args[0]));
+  bufferAddU8(&bo->handle, asNumber(args[0]));
   return UTRUE;
 }
 
@@ -162,7 +162,7 @@ static CFunction funcBufferAddU8 = {
 
 static ubool implBufferAddI16(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  bufferAddI16(&bo->handle, AS_NUMBER(args[0]));
+  bufferAddI16(&bo->handle, asNumber(args[0]));
   return UTRUE;
 }
 
@@ -172,7 +172,7 @@ static CFunction funcBufferAddI16 = {
 
 static ubool implBufferAddU16(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  bufferAddU16(&bo->handle, AS_NUMBER(args[0]));
+  bufferAddU16(&bo->handle, asNumber(args[0]));
   return UTRUE;
 }
 
@@ -182,7 +182,7 @@ static CFunction funcBufferAddU16 = {
 
 static ubool implBufferAddI32(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  bufferAddI32(&bo->handle, AS_NUMBER(args[0]));
+  bufferAddI32(&bo->handle, asNumber(args[0]));
   return UTRUE;
 }
 
@@ -192,7 +192,7 @@ static CFunction funcBufferAddI32 = {
 
 static ubool implBufferAddU32(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  bufferAddU32(&bo->handle, AS_NUMBER(args[0]));
+  bufferAddU32(&bo->handle, asNumber(args[0]));
   return UTRUE;
 }
 
@@ -202,7 +202,7 @@ static CFunction funcBufferAddU32 = {
 
 static ubool implBufferAddF32(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  bufferAddF32(&bo->handle, AS_NUMBER(args[0]));
+  bufferAddF32(&bo->handle, asNumber(args[0]));
   return UTRUE;
 }
 
@@ -212,7 +212,7 @@ static CFunction funcBufferAddF32 = {
 
 static ubool implBufferAddF64(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  bufferAddF64(&bo->handle, AS_NUMBER(args[0]));
+  bufferAddF64(&bo->handle, asNumber(args[0]));
   return UTRUE;
 }
 
@@ -235,7 +235,7 @@ static CFunction funcBufferAddBase64 = {
 
 static ubool implBufferGetI8(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  *out = NUMBER_VAL(bufferGetI8(&bo->handle, AS_NUMBER(args[0])));
+  *out = NUMBER_VAL(bufferGetI8(&bo->handle, asNumber(args[0])));
   return UTRUE;
 }
 
@@ -245,7 +245,7 @@ static CFunction funcBufferGetI8 = {
 
 static ubool implBufferGetU8(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  *out = NUMBER_VAL(bufferGetU8(&bo->handle, AS_NUMBER(args[0])));
+  *out = NUMBER_VAL(bufferGetU8(&bo->handle, asNumber(args[0])));
   return UTRUE;
 }
 
@@ -255,7 +255,7 @@ static CFunction funcBufferGetU8 = {
 
 static ubool implBufferGetI16(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  *out = NUMBER_VAL(bufferGetI16(&bo->handle, AS_NUMBER(args[0])));
+  *out = NUMBER_VAL(bufferGetI16(&bo->handle, asNumber(args[0])));
   return UTRUE;
 }
 
@@ -265,7 +265,7 @@ static CFunction funcBufferGetI16 = {
 
 static ubool implBufferGetU16(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  *out = NUMBER_VAL(bufferGetU16(&bo->handle, AS_NUMBER(args[0])));
+  *out = NUMBER_VAL(bufferGetU16(&bo->handle, asNumber(args[0])));
   return UTRUE;
 }
 
@@ -275,7 +275,7 @@ static CFunction funcBufferGetU16 = {
 
 static ubool implBufferGetI32(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  *out = NUMBER_VAL(bufferGetI32(&bo->handle, AS_NUMBER(args[0])));
+  *out = NUMBER_VAL(bufferGetI32(&bo->handle, asNumber(args[0])));
   return UTRUE;
 }
 
@@ -285,7 +285,7 @@ static CFunction funcBufferGetI32 = {
 
 static ubool implBufferGetU32(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  *out = NUMBER_VAL(bufferGetU32(&bo->handle, AS_NUMBER(args[0])));
+  *out = NUMBER_VAL(bufferGetU32(&bo->handle, asNumber(args[0])));
   return UTRUE;
 }
 
@@ -295,7 +295,7 @@ static CFunction funcBufferGetU32 = {
 
 static ubool implBufferGetF32(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  *out = NUMBER_VAL(bufferGetF32(&bo->handle, AS_NUMBER(args[0])));
+  *out = NUMBER_VAL(bufferGetF32(&bo->handle, asNumber(args[0])));
   return UTRUE;
 }
 
@@ -305,7 +305,7 @@ static CFunction funcBufferGetF32 = {
 
 static ubool implBufferGetF64(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  *out = NUMBER_VAL(bufferGetF64(&bo->handle, AS_NUMBER(args[0])));
+  *out = NUMBER_VAL(bufferGetF64(&bo->handle, asNumber(args[0])));
   return UTRUE;
 }
 
@@ -315,7 +315,7 @@ static CFunction funcBufferGetF64 = {
 
 static ubool implBufferSetI8(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  bufferSetI8(&bo->handle, AS_NUMBER(args[0]), AS_NUMBER(args[1]));
+  bufferSetI8(&bo->handle, asNumber(args[0]), asNumber(args[1]));
   return UTRUE;
 }
 
@@ -330,7 +330,7 @@ static CFunction funcBufferSetI8 = {
 
 static ubool implBufferSetU8(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  bufferSetU8(&bo->handle, AS_NUMBER(args[0]), AS_NUMBER(args[1]));
+  bufferSetU8(&bo->handle, asNumber(args[0]), asNumber(args[1]));
   return UTRUE;
 }
 
@@ -345,7 +345,7 @@ static CFunction funcBufferSetU8 = {
 
 static ubool implBufferSetI16(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  bufferSetI16(&bo->handle, AS_NUMBER(args[0]), AS_NUMBER(args[1]));
+  bufferSetI16(&bo->handle, asNumber(args[0]), asNumber(args[1]));
   return UTRUE;
 }
 
@@ -360,7 +360,7 @@ static CFunction funcBufferSetI16 = {
 
 static ubool implBufferSetU16(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  bufferSetU16(&bo->handle, AS_NUMBER(args[0]), AS_NUMBER(args[1]));
+  bufferSetU16(&bo->handle, asNumber(args[0]), asNumber(args[1]));
   return UTRUE;
 }
 
@@ -375,7 +375,7 @@ static CFunction funcBufferSetU16 = {
 
 static ubool implBufferSetI32(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  bufferSetI32(&bo->handle, AS_NUMBER(args[0]), AS_NUMBER(args[1]));
+  bufferSetI32(&bo->handle, asNumber(args[0]), asNumber(args[1]));
   return UTRUE;
 }
 
@@ -390,7 +390,7 @@ static CFunction funcBufferSetI32 = {
 
 static ubool implBufferSetU32(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  bufferSetU32(&bo->handle, AS_NUMBER(args[0]), AS_NUMBER(args[1]));
+  bufferSetU32(&bo->handle, asNumber(args[0]), asNumber(args[1]));
   return UTRUE;
 }
 
@@ -405,7 +405,7 @@ static CFunction funcBufferSetU32 = {
 
 static ubool implBufferSetF32(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  bufferSetF32(&bo->handle, AS_NUMBER(args[0]), AS_NUMBER(args[1]));
+  bufferSetF32(&bo->handle, asNumber(args[0]), asNumber(args[1]));
   return UTRUE;
 }
 
@@ -420,7 +420,7 @@ static CFunction funcBufferSetF32 = {
 
 static ubool implBufferSetF64(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = AS_BUFFER(args[-1]);
-  bufferSetF64(&bo->handle, AS_NUMBER(args[0]), AS_NUMBER(args[1]));
+  bufferSetF64(&bo->handle, asNumber(args[0]), asNumber(args[1]));
   return UTRUE;
 }
 
@@ -498,7 +498,7 @@ static ubool implBufferStaticFromList(i16 argCount, Value *args, Value *out) {
   for (i = 0; i < list->length; i++) {
     Value item = list->buffer[i];
     if (IS_NUMBER(item)) {
-      u8 itemValue = AS_NUMBER(item);
+      u8 itemValue = asNumber(item);
       bufferAddU8(&bo->handle, itemValue);
     } else {
       runtimeError(

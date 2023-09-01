@@ -2,7 +2,7 @@
 #include "mtots_vm.h"
 
 static ubool implNumberToU32(i16 argCount, Value *args, Value *out) {
-  double value = AS_NUMBER(args[-1]);
+  double value = asNumber(args[-1]);
   if (value < 0) {
     *out = NUMBER_VAL(0);
   } else if (value > (double)U32_MAX) {

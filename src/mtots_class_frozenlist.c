@@ -70,7 +70,7 @@ static ubool implFrozenListGetItem(i16 argCount, Value *args, Value *out) {
     runtimeError("Expcted FrozenList index to be a number");
     return UFALSE;
   }
-  index = (i32) AS_NUMBER(args[0]);
+  index = AS_I32(args[0]);
   if (index < 0) {
     index += frozenList->length;
   }
