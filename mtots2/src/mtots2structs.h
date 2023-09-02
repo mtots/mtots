@@ -2,6 +2,7 @@
 #define mtots2structs_h
 
 #include "mtots2list.h"
+#include "mtots2map.h"
 #include "mtots2object.h"
 #include "mtots2string.h"
 
@@ -26,6 +27,27 @@ struct List {
   size_t length;
   size_t capacity;
   Value *buffer;
+  u32 hash;
+  ubool frozen;
+};
+
+typedef struct MapEntry MapEntry;
+
+struct MapEntry {
+  Value key;
+  Value value;
+  MapEntry *prev;
+  MapEntry *next;
+};
+
+struct Map {
+  Object object;
+  size_t occupied; /* size + tombstones */
+  size_t capacity; /* 0 or (8 * <power of 2>) */
+  size_t size;     /* actual number of active elements */
+  MapEntry *entries;
+  MapEntry *first;
+  MapEntry *last;
   u32 hash;
   ubool frozen;
 };

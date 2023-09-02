@@ -11,6 +11,8 @@ const char *getObjectTypeName(ObjectType type) {
       return "String";
     case OBJECT_LIST:
       return "List";
+    case OBJECT_MAP:
+      return "Map";
   }
   return "INVALID_OBJECT_TYPE";
 }
@@ -26,6 +28,11 @@ static void freeObject(Object *object) {
     case OBJECT_LIST: {
       List *list = (List *)object;
       free(list->buffer);
+      break;
+    }
+    case OBJECT_MAP: {
+      Map *map = (Map *)object;
+      free(map->entries);
       break;
     }
   }
@@ -52,6 +59,9 @@ void reprObject(String *out, Object *object) {
     case OBJECT_LIST:
       reprList(out, (List *)object);
       return;
+    case OBJECT_MAP:
+      reprMap(out, (Map *)object);
+      return;
   }
   panic("INVALID OBJECT TYPE %s/%d (reprObject)",
         getObjectTypeName(object->type),
@@ -70,6 +80,8 @@ ubool eqObject(Object *a, Object *b) {
       return eqString((String *)a, (String *)b);
     case OBJECT_LIST:
       return eqList((List *)a, (List *)b);
+    case OBJECT_MAP:
+      return eqMap((Map *)a, (Map *)b);
   }
   panic("INVALID OBJECT TYPE %s/%d (eqObject)",
         getObjectTypeName(a->type),
@@ -82,6 +94,8 @@ u32 hashObject(Object *a) {
       return hashString((String *)a);
     case OBJECT_LIST:
       return hashList((List *)a);
+    case OBJECT_MAP:
+      return hashMap((Map *)a);
   }
   panic("INVALID OBJECT TYPE %s/%d (hashObject)",
         getObjectTypeName(a->type),
