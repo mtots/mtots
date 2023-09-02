@@ -190,4 +190,39 @@ ubool eqValue(Value a, Value b) {
         getValueTypeName(a.type),
         a.type);
 }
-u32 hashValue(Value a);
+
+u32 hashValue(Value a) {
+  /* hash values for bool taken from Java */
+  switch (a.type) {
+    case VALUE_SENTINEL:
+      break;
+    case VALUE_NIL:
+      return 17;
+    case VALUE_BOOL:
+      return a.as.boolean ? 1231 : 1237;
+    case VALUE_NUMBER: {
+      double x = a.as.number;
+      union {
+        double number;
+        u32 parts[2];
+      } pun;
+      i32 ix = (i32)x;
+      if (x == (double)ix) {
+        return (u32)ix;
+      }
+      pun.number = x;
+      /* TODO: smarter hashing */
+      return pun.parts[0] ^ pun.parts[1];
+    }
+    case VALUE_SYMBOL:
+      return symbolHash(a.as.symbol);
+    case VALUE_CFUNCTION: {
+      /* This is basically what Java does for Long */
+      u64 bits = (u64)a.as.cfunction;
+      return (u32)(bits ^ (bits >> 32));
+    }
+    case VALUE_OBJECT:
+      return hashObject(a.as.object);
+  }
+  panic("INVALID VALUE TYPE %s (hashValue)", getValueTypeName(a.type));
+}

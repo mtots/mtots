@@ -4,7 +4,8 @@
 #include "mtots2value.h"
 
 typedef enum ObjectType {
-  OBJECT_STRING
+  OBJECT_STRING,
+  OBJECT_LIST
 } ObjectType;
 
 struct Object {

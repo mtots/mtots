@@ -9,6 +9,8 @@ const char *getObjectTypeName(ObjectType type) {
   switch (type) {
     case OBJECT_STRING:
       return "String";
+    case OBJECT_LIST:
+      return "List";
   }
   return "INVALID_OBJECT_TYPE";
 }
@@ -19,6 +21,11 @@ static void freeObject(Object *object) {
       String *string = (String *)object;
       free(string->utf8);
       free(string->utf32);
+      break;
+    }
+    case OBJECT_LIST: {
+      List *list = (List *)object;
+      free(list->buffer);
       break;
     }
   }
@@ -42,6 +49,9 @@ void reprObject(String *out, Object *object) {
     case OBJECT_STRING:
       reprString(out, (String *)object);
       return;
+    case OBJECT_LIST:
+      reprList(out, (List *)object);
+      return;
   }
   panic("INVALID OBJECT TYPE %s/%d (reprObject)",
         getObjectTypeName(object->type),
@@ -58,6 +68,8 @@ ubool eqObject(Object *a, Object *b) {
   switch (a->type) {
     case OBJECT_STRING:
       return eqString((String *)a, (String *)b);
+    case OBJECT_LIST:
+      return eqList((List *)a, (List *)b);
   }
   panic("INVALID OBJECT TYPE %s/%d (eqObject)",
         getObjectTypeName(a->type),
@@ -68,6 +80,8 @@ u32 hashObject(Object *a) {
   switch (a->type) {
     case OBJECT_STRING:
       return hashString((String *)a);
+    case OBJECT_LIST:
+      return hashList((List *)a);
   }
   panic("INVALID OBJECT TYPE %s/%d (hashObject)",
         getObjectTypeName(a->type),

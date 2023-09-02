@@ -130,8 +130,9 @@ size_t lenString(String *a) {
 NODISCARD String *newStringWithLength(const char *chars, size_t len) {
   String *str = (String *)calloc(1, sizeof(String));
   str->object.type = OBJECT_STRING;
-  str->byteCapacity = 1 + (str->byteLength = len);
-  str->utf8 = (u8 *)malloc(len + 1);
+  str->byteLength = len;
+  str->byteCapacity = str->byteLength + 1;
+  str->utf8 = (u8 *)malloc(str->byteCapacity);
   memcpy(str->utf8, chars, len);
   str->utf8[len] = '\0';
   return str;
@@ -154,13 +155,31 @@ u32 stringCharAt(String *a, size_t index) {
   return a->utf32 ? a->utf32[index] : (u32)a->utf8[index];
 }
 
+static void adjustCapacity(String *str, size_t mincap) {
+  if (str->byteCapacity < mincap) {
+    while (str->byteCapacity < mincap) {
+      str->byteCapacity = GROW_CAPACITY(str->byteCapacity);
+    }
+    str->utf8 = (u8 *)realloc(str->utf8, str->byteCapacity);
+  }
+}
+
+void stringAppend(String *out, const char *chars, size_t length) {
+  if (out->frozen) {
+    panic("Cannot append to a frozen String");
+  }
+  adjustCapacity(out, out->byteLength + length + 1);
+  memcpy(out->utf8 + out->byteLength, chars, length);
+  out->byteLength += length;
+  out->utf8[out->byteLength] = '\0';
+}
+
 void msprintf(String *out, const char *format, ...) {
   va_list args;
   int size;
-  size_t mincap;
 
   if (out->frozen) {
-    panic("Tried to append to a frozen String");
+    panic("Cannot append to a frozen String");
   }
 
   va_start(args, format);
@@ -171,11 +190,7 @@ void msprintf(String *out, const char *format, ...) {
     panic("sbprintf: encoding error");
   }
 
-  mincap = out->byteLength + ((size_t)size) + 1;
-  while (out->byteCapacity < mincap) {
-    out->byteCapacity = GROW_CAPACITY(out->byteCapacity);
-  }
-  out->utf8 = (u8 *)realloc(out->utf8, out->byteCapacity);
+  adjustCapacity(out, out->byteLength + ((size_t)size) + 1);
 
   va_start(args, format);
   vsnprintf((char *)(out->utf8 + out->byteLength), out->byteCapacity, format, args);
@@ -184,11 +199,9 @@ void msprintf(String *out, const char *format, ...) {
 }
 
 void msputc(char ch, String *out) {
-  /* TODO: implement more efficiently */
-  msprintf(out, "%c", ch);
+  stringAppend(out, &ch, 1);
 }
 
 void msputs(const char *cstr, String *out) {
-  /* TODO: implement more efficiently */
-  msprintf(out, "%s", cstr);
+  stringAppend(out, cstr, strlen(cstr));
 }

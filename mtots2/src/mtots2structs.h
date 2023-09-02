@@ -6,7 +6,7 @@
 #include "mtots2string.h"
 
 /* Internal struct definitions for various objects.
- * They usually need to be included in exactly two places:
+ * They need to be included in exactly two places:
  * - the C file where their operations are defined, and
  * - the object.c file where they are freed */
 
@@ -26,6 +26,8 @@ struct List {
   size_t length;
   size_t capacity;
   Value *buffer;
+  u32 hash;
+  ubool frozen;
 };
 
 #endif /*mtots2structs_h*/

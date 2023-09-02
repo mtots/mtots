@@ -32,6 +32,7 @@
         "tuple": "cpp",
         "variant": "cpp",
         "mtots2structs.h": "c",
-        "mtots2object.h": "c"
+        "mtots2object.h": "c",
+        "ios": "c"
     }
 }

@@ -22,6 +22,9 @@ const char *stringChars(String *a);
 size_t stringByteLength(String *a);
 u32 stringCharAt(String *a, size_t index);
 
+/* Append characters to the given string */
+void stringAppend(String *out, const char *chars, size_t length);
+
 /* Like printf, but appends to the given string
  * 'mtots string printf' */
 void msprintf(String *out, const char *fmt, ...) MTOTS_PRINTFLIKE(2, 3);
