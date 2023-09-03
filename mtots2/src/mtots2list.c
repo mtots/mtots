@@ -4,7 +4,31 @@
 
 #include "mtots1err.h"
 #include "mtots2string.h"
-#include "mtots2structs.h"
+
+struct List {
+  Object object;
+  size_t length;
+  size_t capacity;
+  Value *buffer;
+  u32 hash;
+  ubool frozen;
+};
+
+static void freeList(Object *object) {
+  List *list = (List *)object;
+  size_t i;
+  for (i = 0; i < list->length; i++) {
+    releaseValue(list->buffer[i]);
+  }
+  free(list->buffer);
+}
+
+const Class LIST_CLASS = {
+    "List",   /* name */
+    0,        /* size */
+    NULL,     /* constructor */
+    freeList, /* desctructor */
+};
 
 void retainList(List *list) {
   retainObject((Object *)list);
@@ -114,7 +138,7 @@ void listResize(List *list, size_t newSize) {
       list->capacity = newSize < 8                    ? 8
                        : 2 * list->capacity < newSize ? newSize
                                                       : 2 * list->capacity;
-      list->buffer = realloc(list->buffer, list->capacity);
+      list->buffer = (Value *)realloc(list->buffer, list->capacity);
     }
     while (list->length < newSize) {
       list->buffer[list->length++].type = VALUE_NIL;

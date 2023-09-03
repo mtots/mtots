@@ -34,6 +34,8 @@
         "mtots2structs.h": "c",
         "mtots2object.h": "c",
         "ios": "c",
-        "mtots2native.h": "c"
+        "mtots2native.h": "c",
+        "__tree": "c",
+        "mtots2string.h": "c"
     }
 }

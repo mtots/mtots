@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #include "mtots1err.h"
-#include "mtots2structs.h"
+#include "mtots2string.h"
 
 #define MAP_MAX_LOAD 0.75
 
@@ -11,6 +11,44 @@
 
 #define IS_SENTINEL(v) ((v).type == VALUE_SENTINEL)
 #define IS_NIL(v) ((v).type == VALUE_NIL)
+
+typedef struct MapEntry MapEntry;
+
+struct MapEntry {
+  Value key;
+  Value value;
+  MapEntry *prev;
+  MapEntry *next;
+};
+
+struct Map {
+  Object object;
+  size_t occupied; /* size + tombstones */
+  size_t capacity; /* 0 or (8 * <power of 2>) */
+  size_t size;     /* actual number of active elements */
+  MapEntry *entries;
+  MapEntry *first;
+  MapEntry *last;
+  u32 hash;
+  ubool frozen;
+};
+
+static void freeMap(Object *object) {
+  Map *map = (Map *)object;
+  MapEntry *entry;
+  for (entry = map->first; entry; entry = entry->next) {
+    releaseValue(entry->key);
+    releaseValue(entry->value);
+  }
+  free(map->entries);
+}
+
+const Class MAP_CLASS = {
+    "Map",   /* name */
+    0,       /* size */
+    NULL,    /* constructor */
+    freeMap, /* desctructor */
+};
 
 void retainMap(Map *map) {
   retainObject((Object *)map);

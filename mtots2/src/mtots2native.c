@@ -1,7 +1,27 @@
 #include "mtots2native.h"
 
+#include <stdlib.h>
+
 #include "mtots1err.h"
 #include "mtots2string.h"
+
+Native *newNative(Class *cls, size_t size) {
+  Native *n;
+  if (cls->size != size || size < sizeof(Native) || size == 0) {
+    if (size == 0) {
+      panic("%s is not a native class", cls->name);
+    } else {
+      panic("Invalid size argument when constructing %s (%lu, %lu)",
+            cls->name,
+            cls->size,
+            size);
+    }
+  }
+  n = (Native *)calloc(1, size);
+  n->object.type = OBJECT_NATIVE;
+  n->cls = cls;
+  return n;
+}
 
 void retainNative(Native *native) {
   retainObject((Object *)native);
@@ -28,7 +48,7 @@ Native *asNative(Value value) {
 
 void reprNative(String *out, Native *native) {
   /* TOOD: allow customization */
-  msprintf(out, "<%s native instance>", native->descriptor->name);
+  msprintf(out, "<%s native instance>", native->cls->name);
 }
 
 ubool eqNative(Native *a, Native *b) {

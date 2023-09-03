@@ -6,6 +6,7 @@
 typedef struct Object Object;
 typedef struct Value Value;
 typedef struct CFunction CFunction;
+typedef struct Class Class; /** Mtots Class */
 typedef struct String String;
 
 typedef enum ValueType {
@@ -18,6 +19,7 @@ typedef enum ValueType {
   VALUE_NUMBER,
   VALUE_SYMBOL,
   VALUE_CFUNCTION,
+  VALUE_CLASS,
 
   /* Heap allocated value */
   VALUE_OBJECT
@@ -30,6 +32,25 @@ struct CFunction {
   i16 maxArity;
 };
 
+/** Classes are never garbage collected. */
+struct Class {
+  const char *name;
+
+  /** Size of the instance.
+   * Only used for Native instances.
+   * Non-Native values should have this value set to zero. */
+  size_t size;
+
+  /** If the type does not have a normal constructor,
+   * this value will be NULL */
+  CFunction *constructor;
+
+  /** Builtin types will know how to destroy itself in
+   * in `releaseValue`, and will have its descturctor
+   * value set to NULL */
+  void (*destructor)(Object *);
+};
+
 struct Value {
   ValueType type;
   union ValueAs {
@@ -37,9 +58,18 @@ struct Value {
     double number;
     Symbol *symbol;
     CFunction *cfunction;
+    const Class *cls;
     Object *object;
   } as;
 };
+
+extern const Class SENTINEL_CLASS;
+extern const Class NIL_CLASS;
+extern const Class BOOL_CLASS;
+extern const Class NUMBER_CLASS;
+extern const Class SYMBOL_CLASS;
+extern const Class CFUNCTION_CLASS;
+extern const Class CLASS_CLASS;
 
 const char *getValueTypeName(ValueType type);
 const char *getValueKindName(Value value);
@@ -57,6 +87,7 @@ Value boolValue(ubool x);
 Value numberValue(double x);
 Value symbolValue(Symbol *x);
 Value cfunctionValue(CFunction *x);
+Value classValue(const Class *x);
 Value objectValue(Object *x);
 
 /* checked access functions */
@@ -67,16 +98,20 @@ Value objectValue(Object *x);
 #define isNumber(v) ((v).type == VALUE_NUMBER)
 #define isSymbol(v) ((v).type == VALUE_SYMBOL)
 #define isCFunction(v) ((v).type == VALUE_CFUNCTION)
+#define isClass(v) ((v).type == VALUE_CLASS)
 #define isObject(v) ((v).type == VALUE_OBJECT)
 
 ubool asBool(Value value);
 double asNumber(Value value);
 Symbol *asSymbol(Value value);
 CFunction *asCFunction(Value value);
+const Class *asClass(Value value);
 Object *asObject(Value value);
 
 /* operations on values */
 
+const Class *getClass(Value x);
+Status callValue(Value function, i16 argc, Value *argv, Value *out);
 void reprValue(String *out, Value value);
 void printValue(Value value);
 ubool eqValue(Value a, Value b);

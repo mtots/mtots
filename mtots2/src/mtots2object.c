@@ -3,8 +3,10 @@
 #include <stdlib.h>
 
 #include "mtots1err.h"
+#include "mtots2list.h"
+#include "mtots2map.h"
 #include "mtots2native.h"
-#include "mtots2structs.h"
+#include "mtots2string.h"
 
 const char *getObjectTypeName(ObjectType type) {
   switch (type) {
@@ -21,29 +23,7 @@ const char *getObjectTypeName(ObjectType type) {
 }
 
 static void freeObject(Object *object) {
-  switch (object->type) {
-    case OBJECT_STRING: {
-      String *string = (String *)object;
-      free(string->utf8);
-      free(string->utf32);
-      break;
-    }
-    case OBJECT_LIST: {
-      List *list = (List *)object;
-      free(list->buffer);
-      break;
-    }
-    case OBJECT_MAP: {
-      Map *map = (Map *)object;
-      free(map->entries);
-      break;
-    }
-    case OBJECT_NATIVE: {
-      Native *n = (Native *)object;
-      n->descriptor->destructor(n);
-      break;
-    }
-  }
+  getClassOfObject(object)->destructor(object);
   free(object);
 }
 
@@ -57,6 +37,20 @@ void releaseObject(Object *object) {
   } else {
     freeObject(object);
   }
+}
+
+const Class *getClassOfObject(Object *object) {
+  switch (object->type) {
+    case OBJECT_STRING:
+      return &STRING_CLASS;
+    case OBJECT_LIST:
+      return &LIST_CLASS;
+    case OBJECT_MAP:
+      return &MAP_CLASS;
+    case OBJECT_NATIVE:
+      return ((Native *)object)->cls;
+  }
+  panic("INVALID CLASS TYPE %d (getClassOfObject)", object->type);
 }
 
 void reprObject(String *out, Object *object) {

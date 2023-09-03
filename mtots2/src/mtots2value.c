@@ -4,7 +4,56 @@
 
 #include "mtots1err.h"
 #include "mtots2native.h"
-#include "mtots2structs.h"
+#include "mtots2string.h"
+
+const Class SENTINEL_CLASS = {
+    "Sentinel", /* name */
+    0,          /* size */
+    NULL,       /* constructor */
+    NULL,       /* desctructor */
+};
+
+const Class NIL_CLASS = {
+    "Nil", /* name */
+    0,     /* size */
+    NULL,  /* constructor */
+    NULL,  /* desctructor */
+};
+
+const Class BOOL_CLASS = {
+    "Bool", /* name */
+    0,      /* size */
+    NULL,   /* constructor */
+    NULL,   /* destructor */
+};
+
+const Class NUMBER_CLASS = {
+    "Number", /* name */
+    0,        /* size */
+    NULL,     /* constructor */
+    NULL,     /* destructor */
+};
+
+const Class SYMBOL_CLASS = {
+    "Symbol", /* name */
+    0,        /* size */
+    NULL,     /* constructor */
+    NULL,     /* destructor */
+};
+
+const Class CFUNCTION_CLASS = {
+    "CFunction", /* name */
+    0,           /* size */
+    NULL,        /* constructor */
+    NULL,        /* destructor */
+};
+
+const Class CLASS_CLASS = {
+    "Class", /* name */
+    0,       /* size */
+    NULL,    /* constructor */
+    NULL,    /* destructor */
+};
 
 const char *getValueTypeName(ValueType type) {
   switch (type) {
@@ -20,6 +69,8 @@ const char *getValueTypeName(ValueType type) {
       return "Symbol";
     case VALUE_CFUNCTION:
       return "CFunction";
+    case VALUE_CLASS:
+      return "Class";
     case VALUE_OBJECT:
       return "Object";
   }
@@ -29,7 +80,7 @@ const char *getValueTypeName(ValueType type) {
 const char *getValueKindName(Value value) {
   if (value.type == VALUE_OBJECT) {
     if (value.as.object->type == OBJECT_NATIVE) {
-      return ((Native *)value.as.object)->descriptor->name;
+      return ((Native *)value.as.object)->cls->name;
     }
     return getObjectTypeName(value.as.object->type);
   }
@@ -88,6 +139,13 @@ Value cfunctionValue(CFunction *x) {
   return value;
 }
 
+Value classValue(const Class *x) {
+  Value value;
+  value.type = VALUE_CLASS;
+  value.as.cls = x;
+  return value;
+}
+
 Value objectValue(Object *x) {
   Value value;
   value.type = VALUE_OBJECT;
@@ -123,11 +181,78 @@ CFunction *asCFunction(Value value) {
   return value.as.cfunction;
 }
 
+const Class *asClass(Value value) {
+  if (!isClass(value)) {
+    panic("Expected Class but got %s", getValueKindName(value));
+  }
+  return value.as.cls;
+}
+
 Object *asObject(Value value) {
   if (!isObject(value)) {
     panic("Expected Object but got %s", getValueKindName(value));
   }
   return value.as.object;
+}
+
+static Status callCFunction(CFunction *cf, i16 argc, Value *argv, Value *out) {
+  if (cf->maxArity == 0) {
+    if (cf->arity != argc) {
+      panic("Expected %d arguments but got %d", cf->arity, argc);
+    }
+  } else {
+    if (argc < cf->arity || argc > cf->maxArity) {
+      panic("Expected %d to %d arguments but got %d", cf->arity, cf->maxArity, argc);
+    }
+  }
+  return cf->body(argc, argv, out);
+}
+
+static Status callClass(const Class *cls, i16 argc, Value *argv, Value *out) {
+  if (!cls->constructor) {
+    runtimeError("Class %s is not callable", cls->name);
+    return STATUS_ERR;
+  }
+  return callCFunction(cls->constructor, argc, argv, out);
+}
+
+const Class *getClass(Value x) {
+  switch (x.type) {
+    case VALUE_SENTINEL:
+      return &SENTINEL_CLASS;
+    case VALUE_NIL:
+      return &NIL_CLASS;
+    case VALUE_BOOL:
+      return &BOOL_CLASS;
+    case VALUE_NUMBER:
+      return &NUMBER_CLASS;
+    case VALUE_SYMBOL:
+      return &SYMBOL_CLASS;
+    case VALUE_CFUNCTION:
+      return &CFUNCTION_CLASS;
+    case VALUE_CLASS:
+      return &CLASS_CLASS;
+    case VALUE_OBJECT:
+      return getClassOfObject(x.as.object);
+  }
+}
+
+Status callValue(Value function, i16 argc, Value *argv, Value *out) {
+  switch (function.type) {
+    case VALUE_SENTINEL:
+    case VALUE_NIL:
+    case VALUE_BOOL:
+    case VALUE_NUMBER:
+    case VALUE_SYMBOL:
+      break;
+    case VALUE_CFUNCTION:
+      return callCFunction(function.as.cfunction, argc, argv, out);
+    case VALUE_CLASS:
+      return callClass(function.as.cls, argc, argv, out);
+    case VALUE_OBJECT:
+      break;
+  }
+  panic("%s is not callable", getValueKindName(function));
 }
 
 void reprValue(String *out, Value value) {
@@ -154,6 +279,8 @@ void reprValue(String *out, Value value) {
     case VALUE_CFUNCTION:
       msprintf(out, "<cfunction %s>", value.as.cfunction->name);
       return;
+    case VALUE_CLASS:
+      msprintf(out, "<class %s>", value.as.cls->name);
     case VALUE_OBJECT:
       reprObject(out, value.as.object);
       return;
@@ -187,12 +314,20 @@ ubool eqValue(Value a, Value b) {
       return a.as.symbol == b.as.symbol;
     case VALUE_CFUNCTION:
       return a.as.cfunction == b.as.cfunction;
+    case VALUE_CLASS:
+      return a.as.cls == b.as.cls;
     case VALUE_OBJECT:
       return eqObject(a.as.object, b.as.object);
   }
   panic("INVALID VALUE TYPE %s/%d (eqValue)",
         getValueTypeName(a.type),
         a.type);
+}
+
+static u32 hashPointer(const void *ptr) {
+  /* This is basically what Java does for Long */
+  u64 bits = (u64)ptr;
+  return (u32)(bits ^ (bits >> 32));
 }
 
 u32 hashValue(Value a) {
@@ -220,11 +355,10 @@ u32 hashValue(Value a) {
     }
     case VALUE_SYMBOL:
       return symbolHash(a.as.symbol);
-    case VALUE_CFUNCTION: {
-      /* This is basically what Java does for Long */
-      u64 bits = (u64)a.as.cfunction;
-      return (u32)(bits ^ (bits >> 32));
-    }
+    case VALUE_CFUNCTION:
+      return hashPointer(a.as.cfunction);
+    case VALUE_CLASS:
+      return hashPointer(a.as.cls);
     case VALUE_OBJECT:
       return hashObject(a.as.object);
   }

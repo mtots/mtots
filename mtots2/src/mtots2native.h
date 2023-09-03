@@ -1,16 +1,14 @@
 #include "mtots2object.h"
 
-typedef struct Native Native;
+#define NEW_NATIVE(type, cls) \
+  ((type *)newNative(cls, sizeof(type)))
 
-typedef struct NativeObjectDescriptor {
-  const char *name;
-  void (*destructor)(Native *);
-} NativeObjectDescriptor;
-
-struct Native {
+typedef struct Native {
   Object object;
-  NativeObjectDescriptor *descriptor;
-};
+  Class *cls;
+} Native;
+
+Native *newNative(Class *cls, size_t size);
 
 void retainNative(Native *native);
 void releaseNative(Native *native);

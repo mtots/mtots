@@ -7,9 +7,32 @@
 
 #include "mtots1err.h"
 #include "mtots1unicode.h"
-#include "mtots2structs.h"
 
 #define GROW_CAPACITY(capacity) ((capacity) < 8 ? 8 : (capacity)*2)
+
+struct String {
+  Object object;
+  size_t byteCapacity;   /* Number of bytes allocated */
+  size_t byteLength;     /* Number of bytes in the UTF-8 encoding (excluding null) */
+  size_t codePointCount; /* Number of unicode code points in this String */
+  u8 *utf8;              /* UTF-8 encoding of the string */
+  u32 *utf32;            /* NULL if string is ASCII otherwise the UTF-32 encoding */
+  u32 hash;
+  ubool frozen;
+};
+
+static void freeString(Object *object) {
+  String *string = (String *)object;
+  free(string->utf8);
+  free(string->utf32);
+}
+
+const Class STRING_CLASS = {
+    "String",   /* name */
+    0,          /* size */
+    NULL,       /* constructor */
+    freeString, /* desctructor */
+};
 
 void retainString(String *string) {
   retainObject((Object *)string);
