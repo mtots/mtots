@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "mtots1err.h"
+#include "mtots2native.h"
 #include "mtots2structs.h"
 
 const char *getValueTypeName(ValueType type) {
@@ -27,6 +28,9 @@ const char *getValueTypeName(ValueType type) {
 
 const char *getValueKindName(Value value) {
   if (value.type == VALUE_OBJECT) {
+    if (value.as.object->type == OBJECT_NATIVE) {
+      return ((Native *)value.as.object)->descriptor->name;
+    }
     return getObjectTypeName(value.as.object->type);
   }
   return getValueTypeName(value.type);

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "mtots1err.h"
+#include "mtots2native.h"
 #include "mtots2structs.h"
 
 const char *getObjectTypeName(ObjectType type) {
@@ -13,6 +14,8 @@ const char *getObjectTypeName(ObjectType type) {
       return "List";
     case OBJECT_MAP:
       return "Map";
+    case OBJECT_NATIVE:
+      return "Native";
   }
   return "INVALID_OBJECT_TYPE";
 }
@@ -33,6 +36,11 @@ static void freeObject(Object *object) {
     case OBJECT_MAP: {
       Map *map = (Map *)object;
       free(map->entries);
+      break;
+    }
+    case OBJECT_NATIVE: {
+      Native *n = (Native *)object;
+      n->descriptor->destructor(n);
       break;
     }
   }
@@ -62,6 +70,9 @@ void reprObject(String *out, Object *object) {
     case OBJECT_MAP:
       reprMap(out, (Map *)object);
       return;
+    case OBJECT_NATIVE:
+      reprNative(out, (Native *)object);
+      return;
   }
   panic("INVALID OBJECT TYPE %s/%d (reprObject)",
         getObjectTypeName(object->type),
@@ -82,6 +93,8 @@ ubool eqObject(Object *a, Object *b) {
       return eqList((List *)a, (List *)b);
     case OBJECT_MAP:
       return eqMap((Map *)a, (Map *)b);
+    case OBJECT_NATIVE:
+      return eqNative((Native *)a, (Native *)b);
   }
   panic("INVALID OBJECT TYPE %s/%d (eqObject)",
         getObjectTypeName(a->type),
@@ -96,6 +109,8 @@ u32 hashObject(Object *a) {
       return hashList((List *)a);
     case OBJECT_MAP:
       return hashMap((Map *)a);
+    case OBJECT_NATIVE:
+      return hashNative((Native *)a);
   }
   panic("INVALID OBJECT TYPE %s/%d (hashObject)",
         getObjectTypeName(a->type),

@@ -6,7 +6,8 @@
 typedef enum ObjectType {
   OBJECT_STRING,
   OBJECT_LIST,
-  OBJECT_MAP
+  OBJECT_MAP,
+  OBJECT_NATIVE
 } ObjectType;
 
 struct Object {

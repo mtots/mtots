@@ -33,6 +33,7 @@
         "variant": "cpp",
         "mtots2structs.h": "c",
         "mtots2object.h": "c",
-        "ios": "c"
+        "ios": "c",
+        "mtots2native.h": "c"
     }
 }
