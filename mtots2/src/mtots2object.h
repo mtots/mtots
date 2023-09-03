@@ -20,7 +20,7 @@ const char *getObjectTypeName(ObjectType type);
 void retainObject(Object *object);
 void releaseObject(Object *object);
 
-const Class *getClassOfObject(Object *object);
+Class *getClassOfObject(Object *object);
 void reprObject(String *out, Object *object);
 ubool eqObject(Object *a, Object *b);
 u32 hashObject(Object *a);

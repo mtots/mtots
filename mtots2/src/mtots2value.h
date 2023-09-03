@@ -58,18 +58,18 @@ struct Value {
     double number;
     Symbol *symbol;
     CFunction *cfunction;
-    const Class *cls;
+    Class *cls;
     Object *object;
   } as;
 };
 
-extern const Class SENTINEL_CLASS;
-extern const Class NIL_CLASS;
-extern const Class BOOL_CLASS;
-extern const Class NUMBER_CLASS;
-extern const Class SYMBOL_CLASS;
-extern const Class CFUNCTION_CLASS;
-extern const Class CLASS_CLASS;
+extern Class SENTINEL_CLASS;
+extern Class NIL_CLASS;
+extern Class BOOL_CLASS;
+extern Class NUMBER_CLASS;
+extern Class SYMBOL_CLASS;
+extern Class CFUNCTION_CLASS;
+extern Class CLASS_CLASS;
 
 const char *getValueTypeName(ValueType type);
 const char *getValueKindName(Value value);
@@ -87,7 +87,7 @@ Value boolValue(ubool x);
 Value numberValue(double x);
 Value symbolValue(Symbol *x);
 Value cfunctionValue(CFunction *x);
-Value classValue(const Class *x);
+Value classValue(Class *x);
 Value objectValue(Object *x);
 
 /* checked access functions */
@@ -105,12 +105,12 @@ ubool asBool(Value value);
 double asNumber(Value value);
 Symbol *asSymbol(Value value);
 CFunction *asCFunction(Value value);
-const Class *asClass(Value value);
+Class *asClass(Value value);
 Object *asObject(Value value);
 
 /* operations on values */
 
-const Class *getClass(Value x);
+Class *getClass(Value x);
 Status callValue(Value function, i16 argc, Value *argv, Value *out);
 void reprValue(String *out, Value value);
 void printValue(Value value);

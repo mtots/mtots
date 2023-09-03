@@ -39,7 +39,7 @@ void releaseObject(Object *object) {
   }
 }
 
-const Class *getClassOfObject(Object *object) {
+Class *getClassOfObject(Object *object) {
   switch (object->type) {
     case OBJECT_STRING:
       return &STRING_CLASS;

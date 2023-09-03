@@ -43,7 +43,7 @@ static void freeMap(Object *object) {
   free(map->entries);
 }
 
-const Class MAP_CLASS = {
+Class MAP_CLASS = {
     "Map",   /* name */
     0,       /* size */
     NULL,    /* constructor */

@@ -23,7 +23,7 @@ static void freeList(Object *object) {
   free(list->buffer);
 }
 
-const Class LIST_CLASS = {
+Class LIST_CLASS = {
     "List",   /* name */
     0,        /* size */
     NULL,     /* constructor */

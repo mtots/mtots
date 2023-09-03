@@ -6,49 +6,49 @@
 #include "mtots2native.h"
 #include "mtots2string.h"
 
-const Class SENTINEL_CLASS = {
+Class SENTINEL_CLASS = {
     "Sentinel", /* name */
     0,          /* size */
     NULL,       /* constructor */
     NULL,       /* desctructor */
 };
 
-const Class NIL_CLASS = {
+Class NIL_CLASS = {
     "Nil", /* name */
     0,     /* size */
     NULL,  /* constructor */
     NULL,  /* desctructor */
 };
 
-const Class BOOL_CLASS = {
+Class BOOL_CLASS = {
     "Bool", /* name */
     0,      /* size */
     NULL,   /* constructor */
     NULL,   /* destructor */
 };
 
-const Class NUMBER_CLASS = {
+Class NUMBER_CLASS = {
     "Number", /* name */
     0,        /* size */
     NULL,     /* constructor */
     NULL,     /* destructor */
 };
 
-const Class SYMBOL_CLASS = {
+Class SYMBOL_CLASS = {
     "Symbol", /* name */
     0,        /* size */
     NULL,     /* constructor */
     NULL,     /* destructor */
 };
 
-const Class CFUNCTION_CLASS = {
+Class CFUNCTION_CLASS = {
     "CFunction", /* name */
     0,           /* size */
     NULL,        /* constructor */
     NULL,        /* destructor */
 };
 
-const Class CLASS_CLASS = {
+Class CLASS_CLASS = {
     "Class", /* name */
     0,       /* size */
     NULL,    /* constructor */
@@ -139,7 +139,7 @@ Value cfunctionValue(CFunction *x) {
   return value;
 }
 
-Value classValue(const Class *x) {
+Value classValue(Class *x) {
   Value value;
   value.type = VALUE_CLASS;
   value.as.cls = x;
@@ -181,7 +181,7 @@ CFunction *asCFunction(Value value) {
   return value.as.cfunction;
 }
 
-const Class *asClass(Value value) {
+Class *asClass(Value value) {
   if (!isClass(value)) {
     panic("Expected Class but got %s", getValueKindName(value));
   }
@@ -208,7 +208,7 @@ static Status callCFunction(CFunction *cf, i16 argc, Value *argv, Value *out) {
   return cf->body(argc, argv, out);
 }
 
-static Status callClass(const Class *cls, i16 argc, Value *argv, Value *out) {
+static Status callClass(Class *cls, i16 argc, Value *argv, Value *out) {
   if (!cls->constructor) {
     runtimeError("Class %s is not callable", cls->name);
     return STATUS_ERR;
@@ -216,7 +216,7 @@ static Status callClass(const Class *cls, i16 argc, Value *argv, Value *out) {
   return callCFunction(cls->constructor, argc, argv, out);
 }
 
-const Class *getClass(Value x) {
+Class *getClass(Value x) {
   switch (x.type) {
     case VALUE_SENTINEL:
       return &SENTINEL_CLASS;

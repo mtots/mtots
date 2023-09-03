@@ -27,7 +27,7 @@ static void freeString(Object *object) {
   free(string->utf32);
 }
 
-const Class STRING_CLASS = {
+Class STRING_CLASS = {
     "String",   /* name */
     0,          /* size */
     NULL,       /* constructor */

@@ -3,7 +3,7 @@
 
 #include "mtots2object.h"
 
-extern const Class STRING_CLASS;
+extern Class STRING_CLASS;
 
 void retainString(String *string);
 void releaseString(String *string);

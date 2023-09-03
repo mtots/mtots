@@ -5,7 +5,7 @@
 
 typedef struct List List;
 
-extern const Class LIST_CLASS;
+extern Class LIST_CLASS;
 
 void retainList(List *list);
 void releaseList(List *list);

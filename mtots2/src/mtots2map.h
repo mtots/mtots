@@ -5,7 +5,7 @@
 
 typedef struct Map Map;
 
-extern const Class MAP_CLASS;
+extern Class MAP_CLASS;
 
 void retainMap(Map *map);
 void releaseMap(Map *map);
