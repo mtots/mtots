@@ -3,8 +3,6 @@
 
 #include "mtots2object.h"
 
-typedef struct Map Map;
-
 extern Class MAP_CLASS;
 
 void retainMap(Map *map);

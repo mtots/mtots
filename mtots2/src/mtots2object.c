@@ -28,14 +28,18 @@ static void freeObject(Object *object) {
 }
 
 void retainObject(Object *object) {
-  object->refcnt++;
+  if (object) {
+    object->refcnt++;
+  }
 }
 
 void releaseObject(Object *object) {
-  if (object->refcnt) {
-    object->refcnt--;
-  } else {
-    freeObject(object);
+  if (object) {
+    if (object->refcnt) {
+      object->refcnt--;
+    } else {
+      freeObject(object);
+    }
   }
 }
 

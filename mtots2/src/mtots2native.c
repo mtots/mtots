@@ -47,8 +47,19 @@ Native *asNative(Value value) {
 }
 
 void reprNative(String *out, Native *native) {
-  /* TOOD: allow customization */
-  msprintf(out, "<%s native instance>", native->cls->name);
+  if (isSentinel(native->cls->cachedMethods.repr)) {
+    msprintf(out, "<%s native instance>", native->cls->name);
+  } else {
+    Value str, recv = nativeValue(native);
+    if (callValue(native->cls->cachedMethods.repr, 0, &recv + 1, &str) != STATUS_OK) {
+      panic("%s", getErrorString());
+    }
+    if (!isString(str)) {
+      panic("repr should return String but got %s", getValueKindName(str));
+    }
+    msprintf(out, "%s", stringChars(asString(str)));
+    releaseValue(str);
+  }
 }
 
 ubool eqNative(Native *a, Native *b) {

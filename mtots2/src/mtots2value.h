@@ -8,6 +8,7 @@ typedef struct Value Value;
 typedef struct CFunction CFunction;
 typedef struct Class Class; /** Mtots Class */
 typedef struct String String;
+typedef struct Map Map;
 
 typedef enum ValueType {
   /* Sentinel is used for newSymbolal things (e.g. empty dict key) */
@@ -32,6 +33,23 @@ struct CFunction {
   i16 maxArity;
 };
 
+struct Value {
+  ValueType type;
+  union ValueAs {
+    ubool boolean;
+    double number;
+    Symbol *symbol;
+    CFunction *cfunction;
+    Class *cls;
+    Object *object;
+  } as;
+};
+
+typedef struct CachedMethods {
+  Value init;
+  Value repr;
+} CachedMethods;
+
 /** Classes are never garbage collected. */
 struct Class {
   const char *name;
@@ -46,21 +64,15 @@ struct Class {
   CFunction *constructor;
 
   /** Builtin types will know how to destroy itself in
-   * in `releaseValue`, and will have its descturctor
+   * in `releaseValue`, and will have its destructor
    * value set to NULL */
   void (*destructor)(Object *);
-};
 
-struct Value {
-  ValueType type;
-  union ValueAs {
-    ubool boolean;
-    double number;
-    Symbol *symbol;
-    CFunction *cfunction;
-    Class *cls;
-    Object *object;
-  } as;
+  CFunction **nativeStaticMethods;
+  CFunction **nativeInstanceMethods;
+  Map *staticMethods;
+  Map *instanceMethods;
+  CachedMethods cachedMethods;
 };
 
 extern Class SENTINEL_CLASS;
@@ -111,10 +123,35 @@ Object *asObject(Value value);
 /* operations on values */
 
 Class *getClass(Value x);
+
+/** Calls a function with the given arguments.
+ * NOTE: The output value `out` must be manually
+ * released after the call ends.
+ * NOTE: If `function` is a method, `argv[-1]` must be a valid
+ * receiver of the correct type. `argc` should NOT count the
+ * receiver as an argument */
 Status callValue(Value function, i16 argc, Value *argv, Value *out);
+
+/** NOTE: The output value `out` must be released after the call.
+ * NOTE: the owner/receiver should be provided as argv[-1] */
+Status callMethod(Symbol *name, i16 argc, Value *argv, Value *out);
+
 void reprValue(String *out, Value value);
+void strValue(String *out, Value value);
 void printValue(Value value);
 ubool eqValue(Value a, Value b);
 u32 hashValue(Value a);
+
+/** Creates a new class with the given name.
+ * Classes created this way do not need to be 'finalized'.
+ * (finalizing is for classes that are allocated
+ * on static memory) */
+Class *newClass(const char *name);
+
+void classAddStaticMethod(Class *cls, Symbol *name, Value method);
+void classAddInstanceMethod(Class *cls, Symbol *name, Value method);
+
+/** Populates the method `Map`s with the native CFunctions */
+void initStaticClass(Class *cls);
 
 #endif /*mtots2value_h*/

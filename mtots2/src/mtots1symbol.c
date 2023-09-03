@@ -21,6 +21,7 @@ typedef struct SymbolSet {
 } SymbolSet;
 
 static SymbolSet symbolSet;
+static CommonSymbols commonSymbols;
 
 u32 hashStringData(const u8 *key, size_t length) {
   /* FNV-1a as presented in the Crafting Interpreters book */
@@ -110,4 +111,12 @@ size_t symbolByteLength(Symbol *symbol) {
 
 u32 symbolHash(Symbol *symbol) {
   return symbol->hash;
+}
+
+const CommonSymbols *getCommonSymbols(void) {
+  if (!commonSymbols.init) {
+    commonSymbols.init = newSymbol("__init__");
+    commonSymbols.repr = newSymbol("__repr__");
+  }
+  return &commonSymbols;
 }

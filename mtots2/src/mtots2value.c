@@ -1,8 +1,11 @@
 #include "mtots2value.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "mtots1err.h"
+#include "mtots1symbol.h"
+#include "mtots2map.h"
 #include "mtots2native.h"
 #include "mtots2string.h"
 
@@ -255,6 +258,22 @@ Status callValue(Value function, i16 argc, Value *argv, Value *out) {
   panic("%s is not callable", getValueKindName(function));
 }
 
+Status callMethod(Symbol *name, i16 argc, Value *argv, Value *out) {
+  Class *cls = getClass(argv[-1]);
+  Value key = symbolValue(name);
+  Value method =
+      cls == &CLASS_CLASS ? mapGet(cls->staticMethods, key)
+                          : mapGet(cls->instanceMethods, key);
+  if (isSentinel(method)) {
+    if (cls == &CLASS_CLASS) {
+      panic("Static method %s not found on class %s", symbolChars(name), cls->name);
+    } else {
+      panic("Method %s not found on %s instance", symbolChars(name), cls->name);
+    }
+  }
+  return callValue(method, argc, argv, out);
+}
+
 void reprValue(String *out, Value value) {
   switch (value.type) {
     case VALUE_SENTINEL:
@@ -288,6 +307,14 @@ void reprValue(String *out, Value value) {
   panic("INVALID VALUE TYPE %s/%d (reprValue)",
         getValueTypeName(value.type),
         value.type);
+}
+
+void strValue(String *out, Value value) {
+  if (isString(value)) {
+    msprintf(out, "%s", stringChars((String *)value.as.object));
+  } else {
+    reprValue(out, value);
+  }
 }
 
 void printValue(Value value) {
@@ -363,4 +390,53 @@ u32 hashValue(Value a) {
       return hashObject(a.as.object);
   }
   panic("INVALID VALUE TYPE %s (hashValue)", getValueTypeName(a.type));
+}
+
+Class *newClass(const char *name) {
+  Class *cls = (Class *)calloc(1, sizeof(Class));
+  cls->name = name;
+  return cls;
+}
+
+void classAddStaticMethod(Class *cls, Symbol *name, Value method) {
+  retainValue(method);
+  mapSet(cls->staticMethods, symbolValue(name), method);
+}
+
+void classAddInstanceMethod(Class *cls, Symbol *name, Value method) {
+  const CommonSymbols *cs = getCommonSymbols();
+  retainValue(method);
+  if (name == cs->init) {
+    cls->cachedMethods.init = method;
+  }
+  if (name == cs->repr) {
+    cls->cachedMethods.repr = method;
+  }
+  mapSet(cls->instanceMethods, symbolValue(name), method);
+}
+
+void initStaticClass(Class *cls) {
+  CFunction **cf;
+
+  if (cls->nativeStaticMethods) {
+    for (cf = cls->nativeStaticMethods; *cf; cf++) {
+      if (!cls->staticMethods) {
+        cls->staticMethods = newMap();
+      }
+      mapSet(cls->staticMethods,
+             symbolValue(newSymbol((*cf)->name)),
+             cfunctionValue(*cf));
+    }
+  }
+
+  if (cls->nativeInstanceMethods) {
+    for (cf = cls->nativeInstanceMethods; *cf; cf++) {
+      if (!cls->instanceMethods) {
+        cls->instanceMethods = newMap();
+      }
+      mapSet(cls->instanceMethods,
+             symbolValue(newSymbol((*cf)->name)),
+             cfunctionValue(*cf));
+    }
+  }
 }
