@@ -108,6 +108,7 @@ u32 hashMap(Map *map) {
 }
 
 void freezeMap(Map *map) {
+  MapEntry *entry;
   if (map->frozen) {
     return;
   }
@@ -115,6 +116,10 @@ void freezeMap(Map *map) {
 
   /* TODO: better hash */
   map->hash = (u32)map->size;
+
+  for (entry = map->first; entry; entry = entry->next) {
+    freezeValue(entry->value);
+  }
 }
 
 size_t lenMap(Map *map) {

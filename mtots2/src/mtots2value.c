@@ -5,6 +5,7 @@
 
 #include "mtots1err.h"
 #include "mtots1symbol.h"
+#include "mtots2list.h"
 #include "mtots2map.h"
 #include "mtots2native.h"
 #include "mtots2string.h"
@@ -390,6 +391,25 @@ u32 hashValue(Value a) {
       return hashObject(a.as.object);
   }
   panic("INVALID VALUE TYPE %s (hashValue)", getValueTypeName(a.type));
+}
+
+void freezeValue(Value a) {
+  if (a.type == VALUE_OBJECT) {
+    switch (a.as.object->type) {
+      case OBJECT_STRING:
+        freezeString((String *)a.as.object);
+        break;
+      case OBJECT_LIST:
+        freezeList((List *)a.as.object);
+        break;
+      case OBJECT_MAP:
+        freezeMap((Map *)a.as.object);
+        break;
+      case OBJECT_NATIVE:
+        /* TODO: allow freezign */
+        panic("Native objects cannot (yet) be frozen");
+    }
+  }
 }
 
 Class *newClass(const char *name) {

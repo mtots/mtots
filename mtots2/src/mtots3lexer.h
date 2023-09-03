@@ -105,13 +105,13 @@ typedef struct Token {
   TokenType type;
   const char *start;
   size_t length;
-  int line;
+  u32 line;
 } Token;
 
 typedef struct Lexer {
   const char *start;
   const char *current;
-  int line;             /* The current line number, indexed from one */
+  u32 line;             /* The current line number, indexed from one */
   int currentIndent;    /* the depth of the current indentation */
   int indentTokenQueue; /* INDENT (+) and DEDENT (-) tokens that are waiting to be emitted */
   int groupingDepth;    /* how deeply we are currently nested in one of the grouping symbols */
@@ -119,7 +119,7 @@ typedef struct Lexer {
 } Lexer;
 
 void initLexer(Lexer *lexer, const char *source);
-ubool lexerNext(Lexer *lexer, Token *token);
+Status lexerNext(Lexer *lexer, Token *token);
 const char *tokenTypeToName(TokenType type);
 
 #endif /*mtots3lexer_h*/

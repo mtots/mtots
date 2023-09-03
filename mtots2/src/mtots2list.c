@@ -105,6 +105,7 @@ static u32 hashSequence(Value *values, size_t length) {
 }
 
 void freezeList(List *list) {
+  size_t i;
   if (list->frozen) {
     return;
   }
@@ -112,6 +113,9 @@ void freezeList(List *list) {
   list->capacity = list->length;
   list->buffer = (Value *)realloc(list->buffer, sizeof(Value) * list->capacity);
   list->hash = hashSequence(list->buffer, list->length);
+  for (i = 0; i < list->length; i++) {
+    freezeValue(list->buffer[i]);
+  }
 }
 
 size_t lenList(List *list) {

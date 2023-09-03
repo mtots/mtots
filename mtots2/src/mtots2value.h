@@ -141,6 +141,7 @@ void strValue(String *out, Value value);
 void printValue(Value value);
 ubool eqValue(Value a, Value b);
 u32 hashValue(Value a);
+void freezeValue(Value a);
 
 /** Creates a new class with the given name.
  * Classes created this way do not need to be 'finalized'.

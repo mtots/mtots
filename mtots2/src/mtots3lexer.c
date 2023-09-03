@@ -163,7 +163,7 @@ void initLexer(Lexer *lexer, const char *source) {
   lexer->fakeFinalNewlineEmitted = UFALSE;
 }
 
-ubool lexerNext(Lexer *lexer, Token *token) {
+Status lexerNext(Lexer *lexer, Token *token) {
   char first, second;
 
   if (lexer->indentTokenQueue > 0) {
@@ -172,14 +172,14 @@ ubool lexerNext(Lexer *lexer, Token *token) {
     token->line = lexer->line;
     token->type = TOKEN_INDENT;
     token->length = 0;
-    return UTRUE;
+    return STATUS_OK;
   } else if (lexer->indentTokenQueue < 0) {
     lexer->indentTokenQueue++;
     token->start = lexer->current;
     token->line = lexer->line;
     token->type = TOKEN_DEDENT;
     token->length = 0;
-    return UTRUE;
+    return STATUS_OK;
   }
 
   skipSpacesAndComments(lexer);
@@ -199,7 +199,7 @@ ubool lexerNext(Lexer *lexer, Token *token) {
     } else {
       token->type = TOKEN_EOF;
     }
-    return UTRUE;
+    return STATUS_OK;
   }
 
   second = PEEK1;
@@ -222,7 +222,7 @@ ubool lexerNext(Lexer *lexer, Token *token) {
           /* If we hit EOF, we will handle this later anyway.
            * Just jump to the end and don't do anything else for now. */
           lexer->current = p;
-          return UTRUE;
+          return STATUS_OK;
         } else if (*p == '\n') {
           lineStart = lexer->current = ++p;
           lexer->line++;
@@ -236,20 +236,20 @@ ubool lexerNext(Lexer *lexer, Token *token) {
         runtimeError(
             "Indentations must always be an even number of spaces, but got %d",
             newIndent);
-        return UFALSE;
+        return STATUS_ERR;
       }
       newIndent /= 2;
       lexer->indentTokenQueue = newIndent - lexer->currentIndent;
       if (lexer->indentTokenQueue > 1) {
         runtimeError(
-            "One level of indentation must be exactly 2 spaces, but got %d on line %d",
+            "One level of indentation must be exactly 2 spaces, but got %d on line %lu",
             (newIndent - lexer->currentIndent) * 2,
-            lexer->line);
-        return UFALSE;
+            (unsigned long)lexer->line);
+        return STATUS_ERR;
       }
       lexer->currentIndent = newIndent;
     }
-    return UTRUE;
+    return STATUS_OK;
   }
 
   /* raw string literals */
@@ -270,14 +270,16 @@ ubool lexerNext(Lexer *lexer, Token *token) {
     }
 
     if (PEEK == '\0') {
-      runtimeError("Unterminated (raw) string literal starting on line %d", token->line);
-      return UFALSE;
+      runtimeError(
+          "Unterminated (raw) string literal starting on line %lu",
+          (unsigned long)token->line);
+      return STATUS_ERR;
     }
     lexer->current += triple ? 3 : 1;
 
     token->type = TOKEN_RAW_STRING;
     token->length = (size_t)(lexer->current - token->start);
-    return UTRUE;
+    return STATUS_OK;
   }
 
   /* string literals */
@@ -300,14 +302,15 @@ ubool lexerNext(Lexer *lexer, Token *token) {
     }
 
     if (PEEK == '\0') {
-      runtimeError("Unterminated string literal starting on line %d", token->line);
-      return UFALSE;
+      runtimeError("Unterminated string literal starting on line %lu",
+                   (unsigned long)token->line);
+      return STATUS_ERR;
     }
     lexer->current += triple ? 3 : 1;
 
     token->type = TOKEN_STRING;
     token->length = (size_t)(lexer->current - token->start);
-    return UTRUE;
+    return STATUS_OK;
   }
 
   /* hexadecimal numbers */
@@ -318,7 +321,7 @@ ubool lexerNext(Lexer *lexer, Token *token) {
     }
     token->type = TOKEN_NUMBER_HEX;
     token->length = (size_t)(lexer->current - token->start);
-    return UTRUE;
+    return STATUS_OK;
   }
 
   /* binary numbers */
@@ -329,7 +332,7 @@ ubool lexerNext(Lexer *lexer, Token *token) {
     }
     token->type = TOKEN_NUMBER_BIN;
     token->length = (size_t)(lexer->current - token->start);
-    return UTRUE;
+    return STATUS_OK;
   }
 
   /* decimal numbers */
@@ -346,7 +349,7 @@ ubool lexerNext(Lexer *lexer, Token *token) {
     }
     token->type = TOKEN_NUMBER;
     token->length = (size_t)(lexer->current - token->start);
-    return UTRUE;
+    return STATUS_OK;
   }
 
   /* identifiers and keywords */
@@ -368,7 +371,7 @@ ubool lexerNext(Lexer *lexer, Token *token) {
         }
       }
     }
-    return UTRUE;
+    return STATUS_OK;
   }
 
   /* two character symbols */
@@ -379,7 +382,7 @@ ubool lexerNext(Lexer *lexer, Token *token) {
         lexer->current += 2;
         token->type = twoCharSymbols[i].type;
         token->length = 2;
-        return UTRUE;
+        return STATUS_OK;
       }
     }
   }
@@ -404,22 +407,22 @@ ubool lexerNext(Lexer *lexer, Token *token) {
             lexer->groupingDepth--;
             if (lexer->groupingDepth < 0) {
               runtimeError("Unmatched '%c' token", first);
-              return UFALSE;
+              return STATUS_ERR;
             }
             break;
           default:
             break;
         }
-        return UTRUE;
+        return STATUS_OK;
       }
     }
   }
 
-  runtimeError("Unrecognized token (%c) on line %d", first, lexer->line);
-  while (PEEK != '\0') {
-    lexer->current++;
-  }
-  return UFALSE;
+  runtimeError(
+      "Unrecognized token (%c) on line %lu",
+      first,
+      (unsigned long)lexer->line);
+  return STATUS_ERR;
 }
 
 const char *tokenTypeToName(TokenType type) {
