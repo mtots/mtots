@@ -4,22 +4,9 @@
 #include "mtots3parser.h"
 #include "mtots4eval.h"
 
-static Status implPrint(i16 argc, Value *argv, Value *out) {
-  printValue(argv[0]);
-  printf("\n");
-  return STATUS_OK;
-}
-
-static CFunction funcPrint = {"print", 1, 0, implPrint};
-
-static void initGlobals() {
-  setEvalGlobal(newSymbol("print"), cfunctionValue(&funcPrint));
-}
-
 int main() {
   Ast *ast;
-  const char *source = "print('Hello world!')";
-  initGlobals();
+  const char *source = "print(repr('Hello world!'))";
   if (!parse(source, &ast)) {
     panic("%s", getErrorString());
   }

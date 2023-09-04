@@ -12,6 +12,4 @@ typedef enum EvalStatus {
 /** Evaluates an AST node and pushes the result on to the stack */
 EvalStatus evalAst(Ast *node);
 
-void setEvalGlobal(Symbol *name, Value value);
-
 #endif /*mtots4eval_h*/

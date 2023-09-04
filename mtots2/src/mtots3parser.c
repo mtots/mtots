@@ -131,6 +131,8 @@ static Status stringTokenToString(Token *token, String **out) {
     return STATUS_ERR;
   }
 
+  freezeString(string);
+
   *out = string;
 
   return STATUS_OK;

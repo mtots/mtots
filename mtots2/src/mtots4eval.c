@@ -4,6 +4,7 @@
 
 #include "mtots1err.h"
 #include "mtots2map.h"
+#include "mtots4globals.h"
 
 #define EVAL_STACK_SIZE 1024
 
@@ -13,13 +14,9 @@ static Map *globals;
 
 static Map *getGlobals(void) {
   if (!globals) {
-    globals = newMap();
+    globals = newGlobals();
   }
   return globals;
-}
-
-void setEvalGlobal(Symbol *name, Value value) {
-  mapSet(getGlobals(), symbolValue(name), value);
 }
 
 /** NOTE: Retain/release not done automatically */
