@@ -43,7 +43,7 @@ static Symbol **find(Symbol **entries, size_t capacity, const u8 *chars, size_t 
     if (!entry ||
         (entry->hash == hash &&
          entry->byteLength == length &&
-         (entry->utf8 == chars || strcmp((const char *)entry->utf8, (const char *)chars) == 0))) {
+         (entry->utf8 == chars || memcmp((const char *)entry->utf8, (const char *)chars, length) == 0))) {
       return entries + index;
     }
     /* OPTIMIZED hash % capacity (requires capacity is a power of 2) */
@@ -99,6 +99,12 @@ static Symbol *intern(const u8 *chars, size_t length, u32 hash) {
 Symbol *newSymbol(const char *s) {
   size_t len = strlen(s);
   return intern((const u8 *)s, len, hashStringData((const u8 *)s, len));
+}
+
+Symbol *newSymbolWithLength(const char *s, size_t byteLength) {
+  return intern((const u8 *)s,
+                byteLength,
+                hashStringData((const u8 *)s, byteLength));
 }
 
 const char *symbolChars(Symbol *symbol) {

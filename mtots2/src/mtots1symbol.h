@@ -15,6 +15,7 @@ typedef struct CommonSymbols {
 u32 hashStringData(const u8 *key, size_t length);
 
 Symbol *newSymbol(const char *s);
+Symbol *newSymbolWithLength(const char *s, size_t byteLength);
 const char *symbolChars(Symbol *symbol);
 size_t symbolByteLength(Symbol *symbol);
 u32 symbolHash(Symbol *symbol);

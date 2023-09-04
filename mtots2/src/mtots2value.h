@@ -28,9 +28,9 @@ typedef enum ValueType {
 
 struct CFunction {
   const char *name;
-  Status (*body)(i16 argc, Value *argv, Value *out);
   i16 arity;
   i16 maxArity;
+  Status (*body)(i16 argc, Value *argv, Value *out);
 };
 
 struct Value {

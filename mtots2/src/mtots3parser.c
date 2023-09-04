@@ -1,19 +1,23 @@
 #include "mtots3parser.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "mtots1err.h"
+#include "mtots3escape.h"
 #include "mtots3lexer.h"
 
 #define PEEK (parser->peek)
 #define AT(tokenType) (PEEK.type == (tokenType))
-#define EXPECT(tokenType)                          \
-  if (!expectToken(parser, tokenType)) {           \
-    return STATUS_ERR;                             \
-  }                                                \
+#define NEXT()                                     \
   if (!lexerNext(&parser->lexer, &parser->peek)) { \
     return STATUS_ERR;                             \
   }
+#define EXPECT(tokenType)                \
+  if (!expectToken(parser, tokenType)) { \
+    return STATUS_ERR;                   \
+  }                                      \
+  NEXT();
 
 typedef enum Precedence {
   PREC_NONE,
@@ -88,6 +92,9 @@ static Status parseStatement(Parser *parser, Ast **out) {
 
 static Status parseStatementList(Parser *parser, Ast **out) {
   Ast *first = NULL, **next = &first;
+  while (AT(TOKEN_NEWLINE) || AT(TOKEN_SEMICOLON)) {
+    NEXT();
+  }
   while (!AT(TOKEN_EOF) && !AT(TOKEN_RIGHT_BRACE)) {
     Ast *stmt;
     if (!parseStatement(parser, &stmt)) {
@@ -95,8 +102,37 @@ static Status parseStatementList(Parser *parser, Ast **out) {
     }
     *next = stmt;
     next = &stmt->next;
+    while (AT(TOKEN_NEWLINE) || AT(TOKEN_SEMICOLON)) {
+      NEXT();
+    }
   }
   *out = first;
+  return STATUS_OK;
+}
+
+static Status stringTokenToString(Token *token, String **out) {
+  size_t quoteLen;
+  char quoteChar = token->start[0];
+  char quoteStr[4];
+  String *string = newString("");
+
+  if (quoteChar == token->start[1] &&
+      quoteChar == token->start[2]) {
+    quoteStr[0] = quoteStr[1] = quoteStr[2] = quoteChar;
+    quoteStr[3] = '\0';
+    quoteLen = 3;
+  } else {
+    quoteStr[0] = quoteChar;
+    quoteStr[1] = '\0';
+    quoteLen = 1;
+  }
+
+  if (!unescapeString(string, token->start + quoteLen, quoteStr, quoteLen)) {
+    return STATUS_ERR;
+  }
+
+  *out = string;
+
   return STATUS_OK;
 }
 
@@ -105,6 +141,23 @@ static Status parsePrefix(Parser *parser, Ast **out) {
   switch (parser->peek.type) {
     case TOKEN_NUMBER:
       *out = (Ast *)newAstLiteral(line, numberValue(strtod(parser->peek.start, 0)));
+      NEXT();
+      return STATUS_OK;
+    case TOKEN_STRING: {
+      String *string;
+      if (!stringTokenToString(&parser->peek, &string)) {
+        return STATUS_ERR;
+      }
+      *out = (Ast *)newAstLiteral(line, stringValue(string));
+      releaseString(string); /* *out automatically holds a retain on string */
+      NEXT();
+      return STATUS_OK;
+    }
+    case TOKEN_IDENTIFIER:
+      *out = (Ast *)newAstName(
+          line,
+          newSymbolWithLength(parser->peek.start, parser->peek.length));
+      NEXT();
       return STATUS_OK;
     default:
       break;
@@ -127,6 +180,7 @@ static Status parsePrec(Parser *parser, Precedence prec, Ast **out) {
     }
     lhs = expr;
   }
+  *out = lhs;
   return STATUS_OK;
 }
 
@@ -158,6 +212,7 @@ static Status parseFunctionCall(Parser *parser, Ast *lhs, Ast **out) {
   if (!parseArgumentList(parser, &args)) {
     return STATUS_ERR;
   }
+  EXPECT(TOKEN_RIGHT_PAREN);
   *out = (Ast *)newAstCall(line, lhs, NULL, args);
   return STATUS_OK;
 }

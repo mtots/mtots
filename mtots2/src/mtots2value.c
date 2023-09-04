@@ -320,7 +320,7 @@ void strValue(String *out, Value value) {
 
 void printValue(Value value) {
   String *out = newString("");
-  reprValue(out, value);
+  strValue(out, value);
   printf("%s", stringChars(out));
   releaseString(out);
 }

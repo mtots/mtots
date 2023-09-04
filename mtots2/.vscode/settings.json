@@ -36,6 +36,7 @@
         "ios": "c",
         "mtots2native.h": "c",
         "__tree": "c",
-        "mtots2string.h": "c"
+        "mtots2string.h": "c",
+        "mtots4eval.h": "c"
     }
 }
