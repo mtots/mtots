@@ -9,8 +9,18 @@ typedef enum AstType {
   AST_LITERAL,
   AST_NAME,
   AST_BLOCK,
+  AST_BINOP,
   AST_CALL
 } AstType;
+
+typedef enum BinopType {
+  BINOP_ADD,
+  BINOP_SUBTRACT,
+  BINOP_MULTIPLY,
+  BINOP_MODULO,
+  BINOP_DIVIDE,
+  BINOP_FLOOR_DIVIDE
+} BinopType;
 
 struct Ast {
   AstType type;
@@ -35,6 +45,12 @@ typedef struct AstBlock {
   Ast *first;
 } AstBlock;
 
+typedef struct AstBinop {
+  Ast ast;
+  BinopType type;
+  Ast *args;
+} AstBinop;
+
 /** Function or method call */
 typedef struct AstCall {
   Ast ast;
@@ -43,10 +59,11 @@ typedef struct AstCall {
   Ast *firstArg;
 } AstCall;
 
-AstLiteral *newAstLiteral(size_t line, Value value);
-AstName *newAstName(size_t line, Symbol *name);
-AstBlock *newAstBlock(size_t line, Ast *first);
-AstCall *newAstCall(size_t line, Ast *function, Symbol *name, Ast *firstArg);
+Ast *newAstLiteral(size_t line, Value value);
+Ast *newAstName(size_t line, Symbol *name);
+Ast *newAstBlock(size_t line, Ast *first);
+Ast *newAstBinop(size_t line, BinopType type, Ast *args);
+Ast *newAstCall(size_t line, Ast *function, Symbol *name, Ast *firstArg);
 void freeAst(Ast *ast);
 
 #endif /*mtots3ast_h*/

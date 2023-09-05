@@ -1,5 +1,6 @@
 #include "mtots2value.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -410,6 +411,93 @@ void freezeValue(Value a) {
         panic("Native objects cannot (yet) be frozen");
     }
   }
+}
+
+Value addValues(Value a, Value b) {
+  switch (a.type) {
+    case VALUE_NUMBER:
+      return numberValue(a.as.number + asNumber(b));
+    case VALUE_OBJECT:
+      switch (a.as.object->type) {
+        case OBJECT_STRING:
+          return stringValue(addStrings((String *)a.as.object, asString(b)));
+        default:
+          break;
+      }
+    default:
+      break;
+  }
+  panic("Unsupported operand %s (addValues)", getValueKindName(a));
+}
+
+Value subtractValues(Value a, Value b) {
+  switch (a.type) {
+    case VALUE_NUMBER:
+      return numberValue(a.as.number - asNumber(b));
+    default:
+      break;
+  }
+  panic("Unsupported operand %s (subtractValues)", getValueKindName(a));
+}
+
+Value multiplyValues(Value a, Value b) {
+  switch (a.type) {
+    case VALUE_NUMBER:
+      return numberValue(a.as.number + asNumber(b));
+    default:
+      break;
+  }
+  panic("Unsupported operand %s (multiplyValues)", getValueKindName(a));
+}
+
+static double modulo(double a, double b) {
+  double r = fmod(a, b);
+  return (r != 0 && ((r > 0) != (b > 0))) ? (r + b) : r;
+}
+
+Value moduloValues(Value a, Value b) {
+  switch (a.type) {
+    case VALUE_NUMBER: {
+      double rhs = asNumber(b);
+      if (rhs == 0) {
+        panic("Division by zero (moduloValues)");
+      }
+      return numberValue(modulo(a.as.number, rhs));
+    }
+    default:
+      break;
+  }
+  panic("Unsupported operand %s (moduloValues)", getValueKindName(a));
+}
+
+Value divideValues(Value a, Value b) {
+  switch (a.type) {
+    case VALUE_NUMBER: {
+      double rhs = asNumber(b);
+      if (rhs == 0) {
+        panic("Division by zero (divideValues)");
+      }
+      return numberValue(a.as.number / rhs);
+    }
+    default:
+      break;
+  }
+  panic("Unsupported operand %s (divideValues)", getValueKindName(a));
+}
+
+Value floorDivideValues(Value a, Value b) {
+  switch (a.type) {
+    case VALUE_NUMBER: {
+      double rhs = asNumber(b);
+      if (rhs == 0) {
+        panic("Division by zero (floorDivideValues)");
+      }
+      return numberValue(floor(a.as.number / rhs));
+    }
+    default:
+      break;
+  }
+  panic("Unsupported operand %s (floorDivideValues)", getValueKindName(a));
 }
 
 Class *newClass(const char *name) {

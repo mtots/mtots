@@ -187,6 +187,12 @@ static void adjustCapacity(String *str, size_t mincap) {
   }
 }
 
+NODISCARD String *addStrings(String *a, String *b) {
+  String *ret = newStringWithLength((const char *)a->utf8, a->byteLength);
+  stringAppend(ret, (const char *)b->utf8, b->byteLength);
+  return ret;
+}
+
 void stringAppend(String *out, const char *chars, size_t length) {
   if (out->frozen) {
     panic("Cannot append to a frozen String");

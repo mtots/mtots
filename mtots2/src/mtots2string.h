@@ -24,6 +24,10 @@ const char *stringChars(String *a);
 size_t stringByteLength(String *a);
 u32 stringCharAt(String *a, size_t index);
 
+/** Creates a new string by appending two strings.
+ * The returned string must be released by the caller */
+NODISCARD String *addStrings(String *a, String *b);
+
 /* Append characters to the given string */
 void stringAppend(String *out, const char *chars, size_t length);
 

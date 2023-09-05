@@ -41,11 +41,11 @@ static Value evalStackPop(ubool release) {
   return evalStack[--evalStackSize];
 }
 
-EvalStatus evalAst(Ast *node) {
+Status evalAst(Ast *node) {
   switch (node->type) {
     case AST_LITERAL:
       evalStackPush(((AstLiteral *)node)->value, UTRUE);
-      return EVAL_STATUS_OK;
+      return STATUS_OK;
     case AST_NAME: {
       Symbol *symbol = ((AstName *)node)->symbol;
       Value value = mapGet(getGlobals(), symbolValue(symbol));
@@ -53,45 +53,86 @@ EvalStatus evalAst(Ast *node) {
         printValue(mapValue(getGlobals()));
         runtimeError("Variable '%s' not found",
                      symbolChars(symbol));
-        return EVAL_STATUS_ERR;
+        return STATUS_ERR;
       }
       evalStackPush(value, UTRUE);
-      return EVAL_STATUS_OK;
+      return STATUS_OK;
     }
     case AST_BLOCK: {
       AstBlock *block = (AstBlock *)node;
       Ast *child;
       for (child = block->first; child; child = child->next) {
-        EvalStatus es = evalAst(child);
-        if (es != EVAL_STATUS_OK) {
-          return es;
+        if (!evalAst(child)) {
+          return STATUS_ERR;
         }
         evalStackPop(UTRUE);
       }
       evalStackPush(nilValue(), UFALSE);
-      return EVAL_STATUS_OK;
+      return STATUS_OK;
+    }
+    case AST_BINOP: {
+      AstBinop *op = (AstBinop *)node;
+      Value lhs, rhs, *ret;
+      if (!evalAst(op->args)) {
+        return STATUS_ERR;
+      }
+      if (!evalAst(op->args->next)) {
+        return STATUS_ERR;
+      }
+      lhs = evalStack[evalStackSize - 2];
+      rhs = evalStack[evalStackSize - 1];
+      ret = &evalStack[evalStackSize - 2];
+      evalStackSize--;
+      switch (op->type) {
+        case BINOP_ADD:
+          *ret = addValues(lhs, rhs);
+          break;
+        case BINOP_SUBTRACT:
+          *ret = subtractValues(lhs, rhs);
+          break;
+        case BINOP_MULTIPLY:
+          *ret = multiplyValues(lhs, rhs);
+          break;
+        case BINOP_MODULO:
+          *ret = moduloValues(lhs, rhs);
+          break;
+        case BINOP_DIVIDE:
+          *ret = divideValues(lhs, rhs);
+          break;
+        case BINOP_FLOOR_DIVIDE:
+          *ret = floorDivideValues(lhs, rhs);
+          break;
+      }
+      releaseValue(rhs);
+      releaseValue(lhs);
+      return STATUS_OK;
     }
     case AST_CALL: {
-      EvalStatus es;
       AstCall *call = (AstCall *)node;
       Value *argv, func, *out;
       i16 argc = 0, i;
       Ast *argAst;
       out = evalStack + evalStackSize;
-      if ((es = evalAst(call->function)) != EVAL_STATUS_OK) {
-        return es;
+      if (!evalAst(call->function)) {
+        return STATUS_ERR;
       }
       /* NOTE: We are taking the 'retain' that's on the stack here */
       func = *out;
       argv = evalStack + evalStackSize;
       for (argAst = call->firstArg; argAst; argAst = argAst->next) {
         argc++;
-        if ((es = evalAst(argAst)) != EVAL_STATUS_OK) {
-          return es;
+        if (!evalAst(argAst)) {
+          return STATUS_ERR;
         }
       }
-      if (!callValue(func, argc, argv, out)) {
-        return EVAL_STATUS_ERR;
+      if (call->name) {
+        if (!callMethod(call->name, argc, argv, out)) {
+          return STATUS_ERR;
+        }
+      } else {
+        if (!callValue(func, argc, argv, out)) {
+          return STATUS_ERR;
+        }
       }
       /* NOTE: callValue should have overwritten `func` on the stack
        * by writing on the stack. The release here is to account for
@@ -100,7 +141,7 @@ EvalStatus evalAst(Ast *node) {
       for (i = 0; i < argc; i++) {
         evalStackPop(UTRUE);
       }
-      return EVAL_STATUS_OK;
+      return STATUS_OK;
     }
   }
   panic("Unrecognized AST type %d", node->type);

@@ -142,7 +142,7 @@ static Status parsePrefix(Parser *parser, Ast **out) {
   size_t line = parser->peek.line;
   switch (parser->peek.type) {
     case TOKEN_NUMBER:
-      *out = (Ast *)newAstLiteral(line, numberValue(strtod(parser->peek.start, 0)));
+      *out = newAstLiteral(line, numberValue(strtod(parser->peek.start, 0)));
       NEXT();
       return STATUS_OK;
     case TOKEN_STRING: {
@@ -150,13 +150,13 @@ static Status parsePrefix(Parser *parser, Ast **out) {
       if (!stringTokenToString(&parser->peek, &string)) {
         return STATUS_ERR;
       }
-      *out = (Ast *)newAstLiteral(line, stringValue(string));
+      *out = newAstLiteral(line, stringValue(string));
       releaseString(string); /* *out automatically holds a retain on string */
       NEXT();
       return STATUS_OK;
     }
     case TOKEN_IDENTIFIER:
-      *out = (Ast *)newAstName(
+      *out = newAstName(
           line,
           newSymbolWithLength(parser->peek.start, parser->peek.length));
       NEXT();
@@ -215,7 +215,42 @@ static Status parseFunctionCall(Parser *parser, Ast *lhs, Ast **out) {
     return STATUS_ERR;
   }
   EXPECT(TOKEN_RIGHT_PAREN);
-  *out = (Ast *)newAstCall(line, lhs, NULL, args);
+  *out = newAstCall(line, lhs, NULL, args);
+  return STATUS_OK;
+}
+
+static Status parseBinop(Parser *parser, Ast *lhs, Ast **out) {
+  BinopType op;
+  size_t line = parser->peek.line;
+  ParseRule *rule = &rules[parser->peek.type];
+  switch (parser->peek.type) {
+    case TOKEN_PLUS:
+      op = BINOP_ADD;
+      break;
+    case TOKEN_MINUS:
+      op = BINOP_SUBTRACT;
+      break;
+    case TOKEN_STAR:
+      op = BINOP_MULTIPLY;
+      break;
+    case TOKEN_PERCENT:
+      op = BINOP_MODULO;
+      break;
+    case TOKEN_SLASH:
+      op = BINOP_DIVIDE;
+      break;
+    case TOKEN_SLASH_SLASH:
+      op = BINOP_FLOOR_DIVIDE;
+      break;
+    default:
+      /* NOTE: this is an internal error, not an error with the input program */
+      panic("parseBinop called without a binary operator");
+  }
+  NEXT();
+  if (!parsePrec(parser, (Precedence)(rule->precedence + 1), &lhs->next)) {
+    return STATUS_ERR;
+  }
+  *out = newAstBinop(line, op, lhs);
   return STATUS_OK;
 }
 
@@ -232,4 +267,10 @@ static void initParserRules(void) {
   }
   parserRulesInitialized = UTRUE;
   rules[TOKEN_LEFT_PAREN] = newRule(parseFunctionCall, PREC_CALL);
+  rules[TOKEN_PLUS] = newRule(parseBinop, PREC_TERM);
+  rules[TOKEN_MINUS] = newRule(parseBinop, PREC_TERM);
+  rules[TOKEN_STAR] = newRule(parseBinop, PREC_FACTOR);
+  rules[TOKEN_PERCENT] = newRule(parseBinop, PREC_FACTOR);
+  rules[TOKEN_SLASH] = newRule(parseBinop, PREC_FACTOR);
+  rules[TOKEN_SLASH_SLASH] = newRule(parseBinop, PREC_FACTOR);
 }

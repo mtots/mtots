@@ -2,35 +2,43 @@
 
 #include <stdlib.h>
 
-AstLiteral *newAstLiteral(size_t line, Value value) {
+Ast *newAstLiteral(size_t line, Value value) {
   AstLiteral *ast = (AstLiteral *)calloc(1, sizeof(AstLiteral));
   ast->ast.type = AST_LITERAL;
   ast->value = value;
   retainValue(value);
-  return ast;
+  return (Ast *)ast;
 }
 
-AstName *newAstName(size_t line, Symbol *name) {
+Ast *newAstName(size_t line, Symbol *name) {
   AstName *ast = (AstName *)calloc(1, sizeof(AstName));
   ast->ast.type = AST_NAME;
   ast->symbol = name;
-  return ast;
+  return (Ast *)ast;
 }
 
-AstBlock *newAstBlock(size_t line, Ast *first) {
+Ast *newAstBlock(size_t line, Ast *first) {
   AstBlock *ast = (AstBlock *)calloc(1, sizeof(AstBlock));
   ast->ast.type = AST_BLOCK;
   ast->first = first;
-  return ast;
+  return (Ast *)ast;
 }
 
-AstCall *newAstCall(size_t line, Ast *function, Symbol *name, Ast *firstArg) {
+Ast *newAstBinop(size_t line, BinopType type, Ast *args) {
+  AstBinop *ast = (AstBinop *)calloc(1, sizeof(AstBinop));
+  ast->ast.type = AST_BINOP;
+  ast->type = type;
+  ast->args = args;
+  return (Ast *)ast;
+}
+
+Ast *newAstCall(size_t line, Ast *function, Symbol *name, Ast *firstArg) {
   AstCall *ast = (AstCall *)calloc(1, sizeof(AstCall));
   ast->ast.type = AST_CALL;
   ast->function = function;
   ast->name = name;
   ast->firstArg = firstArg;
-  return ast;
+  return (Ast *)ast;
 }
 
 void freeAst(Ast *ast) {
@@ -44,6 +52,9 @@ void freeAst(Ast *ast) {
       break;
     case AST_BLOCK:
       freeAst(((AstBlock *)ast)->first);
+      break;
+    case AST_BINOP:
+      freeAst(((AstBinop *)ast)->args);
       break;
     case AST_CALL:
       freeAst(((AstCall *)ast)->function);

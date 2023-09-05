@@ -143,6 +143,13 @@ ubool eqValue(Value a, Value b);
 u32 hashValue(Value a);
 void freezeValue(Value a);
 
+Value addValues(Value a, Value b);
+Value subtractValues(Value a, Value b);
+Value multiplyValues(Value a, Value b);
+Value moduloValues(Value a, Value b);
+Value divideValues(Value a, Value b);
+Value floorDivideValues(Value a, Value b);
+
 /** Creates a new class with the given name.
  * Classes created this way do not need to be 'finalized'.
  * (finalizing is for classes that are allocated
