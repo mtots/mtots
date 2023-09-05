@@ -12,6 +12,13 @@ static Value evalStack[EVAL_STACK_SIZE];
 static u16 evalStackSize;
 static Map *globals;
 
+void freeGlobals(void) {
+  if (globals) {
+    releaseMap(globals);
+    globals = NULL;
+  }
+}
+
 static Map *getGlobals(void) {
   if (!globals) {
     globals = newGlobals();

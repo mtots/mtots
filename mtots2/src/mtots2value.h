@@ -139,6 +139,7 @@ Status callMethod(Symbol *name, i16 argc, Value *argv, Value *out);
 void reprValue(String *out, Value value);
 void strValue(String *out, Value value);
 void printValue(Value value);
+void printReprValue(Value value);
 ubool eqValue(Value a, Value b);
 u32 hashValue(Value a);
 void freezeValue(Value a);

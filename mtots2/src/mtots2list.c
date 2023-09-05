@@ -123,7 +123,7 @@ size_t lenList(List *list) {
 }
 
 NODISCARD List *newList(size_t length) {
-  List *list = (List *)calloc(1, sizeof(List));
+  List *list = NEW_OBJECT(List, OBJECT_LIST);
   list->object.type = OBJECT_LIST;
   if (length > 0) {
     size_t i;

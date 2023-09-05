@@ -1,5 +1,6 @@
 #include "mtots2object.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "mtots1err.h"
@@ -7,6 +8,10 @@
 #include "mtots2map.h"
 #include "mtots2native.h"
 #include "mtots2string.h"
+
+#if MTOTS_DEBUG_MEMORY_LEAK
+static Object *allObjects;
+#endif
 
 const char *getObjectTypeName(ObjectType type) {
   switch (type) {
@@ -24,6 +29,16 @@ const char *getObjectTypeName(ObjectType type) {
 
 static void freeObject(Object *object) {
   getClassOfObject(object)->destructor(object);
+#if MTOTS_DEBUG_MEMORY_LEAK
+  if (object->prev) {
+    object->prev->next = object->next;
+  } else {
+    allObjects = object->next;
+  }
+  if (object->next) {
+    object->next->prev = object->prev;
+  }
+#endif
   free(object);
 }
 
@@ -41,6 +56,19 @@ void releaseObject(Object *object) {
       freeObject(object);
     }
   }
+}
+
+Object *newObject(ObjectType type, size_t size) {
+  Object *object = (Object *)calloc(1, size);
+  object->type = type;
+#if MTOTS_DEBUG_MEMORY_LEAK
+  object->next = allObjects;
+  if (allObjects) {
+    allObjects->prev = object;
+  }
+  allObjects = object;
+#endif
+  return object;
 }
 
 Class *getClassOfObject(Object *object) {
@@ -130,3 +158,16 @@ u32 hashObject(Object *a) {
         getObjectTypeName(a->type),
         a->type);
 }
+
+#if MTOTS_DEBUG_MEMORY_LEAK
+void printLeakedObjects(void) {
+  Object *object;
+  for (object = allObjects; object; object = object->next) {
+    printf("[DEBUGDEBUG] LEAKED OBJECT %s at %p (",
+           getObjectTypeName(object->type),
+           (void *)object);
+    printReprValue(objectValue(object));
+    printf(")\n");
+  }
+}
+#endif

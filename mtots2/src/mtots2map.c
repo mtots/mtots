@@ -127,7 +127,7 @@ size_t lenMap(Map *map) {
 }
 
 NODISCARD Map *newMap(void) {
-  Map *map = (Map *)calloc(1, sizeof(Map));
+  Map *map = NEW_OBJECT(Map, OBJECT_MAP);
   map->object.type = OBJECT_MAP;
   return map;
 }

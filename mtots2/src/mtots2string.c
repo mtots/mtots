@@ -151,8 +151,7 @@ size_t lenString(String *a) {
 }
 
 NODISCARD String *newStringWithLength(const char *chars, size_t len) {
-  String *str = (String *)calloc(1, sizeof(String));
-  str->object.type = OBJECT_STRING;
+  String *str = NEW_OBJECT(String, OBJECT_STRING);
   str->byteLength = len;
   str->byteCapacity = str->byteLength + 1;
   str->utf8 = (u8 *)malloc(str->byteCapacity);

@@ -3,6 +3,8 @@
 
 #include "mtots3ast.h"
 
+void freeGlobals(void);
+
 /** Evaluates an AST node and pushes the result on to the stack */
 Status evalAst(Ast *node);
 

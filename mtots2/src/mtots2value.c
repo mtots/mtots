@@ -326,6 +326,13 @@ void printValue(Value value) {
   releaseString(out);
 }
 
+void printReprValue(Value value) {
+  String *out = newString("");
+  reprValue(out, value);
+  printf("%s", stringChars(out));
+  releaseString(out);
+}
+
 ubool eqValue(Value a, Value b) {
   if (a.type != b.type) {
     return UFALSE;

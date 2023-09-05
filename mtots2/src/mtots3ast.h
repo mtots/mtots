@@ -42,6 +42,11 @@ struct Ast {
 
   /** Used for nodes that are part of a sequence */
   Ast *next;
+
+#if MTOTS_DEBUG_MEMORY_LEAK
+  Ast *suf; /* next */
+  Ast *pre; /* prev */
+#endif
 };
 
 typedef struct AstLiteral {
@@ -93,5 +98,9 @@ Ast *newAstBinop(size_t line, BinopType type, Ast *args);
 Ast *newAstLogical(size_t line, LogicalType type, Ast *args);
 Ast *newAstCall(size_t line, Ast *function, Symbol *name, Ast *firstArg);
 void freeAst(Ast *ast);
+
+#if MTOTS_DEBUG_MEMORY_LEAK
+void printLeakedAsts(void);
+#endif
 
 #endif /*mtots3ast_h*/

@@ -17,8 +17,7 @@ Native *newNative(Class *cls, size_t size) {
             size);
     }
   }
-  n = (Native *)calloc(1, size);
-  n->object.type = OBJECT_NATIVE;
+  n = (Native *)newObject(OBJECT_NATIVE, size);
   n->cls = cls;
   return n;
 }

@@ -24,6 +24,11 @@ int main(int argc, const char *argv[]) {
       panic("%s", getErrorString());
     }
     freeAst(ast);
+    freeGlobals();
   }
+#if MTOTS_DEBUG_MEMORY_LEAK
+  printLeakedObjects();
+  printLeakedAsts();
+#endif
   return 0;
 }
