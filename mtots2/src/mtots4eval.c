@@ -46,8 +46,8 @@ Status evalAst(Ast *node) {
     case AST_LITERAL:
       evalStackPush(((AstLiteral *)node)->value, UTRUE);
       return STATUS_OK;
-    case AST_NAME: {
-      Symbol *symbol = ((AstName *)node)->symbol;
+    case AST_GET_GLOBAL: {
+      Symbol *symbol = ((AstGetGlobal *)node)->symbol;
       Value value = mapGet(getGlobals(), symbolValue(symbol));
       if (isSentinel(value)) {
         printValue(mapValue(getGlobals()));

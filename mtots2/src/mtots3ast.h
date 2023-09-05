@@ -7,7 +7,7 @@ typedef struct Ast Ast;
 
 typedef enum AstType {
   AST_LITERAL,
-  AST_NAME,
+  AST_GET_GLOBAL,
   AST_BLOCK,
   AST_BINOP,
   AST_CALL
@@ -35,10 +35,10 @@ typedef struct AstLiteral {
   Value value;
 } AstLiteral;
 
-typedef struct AstName {
+typedef struct AstGetGlobal {
   Ast ast;
   Symbol *symbol;
-} AstName;
+} AstGetGlobal;
 
 typedef struct AstBlock {
   Ast ast;
@@ -60,7 +60,7 @@ typedef struct AstCall {
 } AstCall;
 
 Ast *newAstLiteral(size_t line, Value value);
-Ast *newAstName(size_t line, Symbol *name);
+Ast *newAstGetGlobal(size_t line, Symbol *name);
 Ast *newAstBlock(size_t line, Ast *first);
 Ast *newAstBinop(size_t line, BinopType type, Ast *args);
 Ast *newAstCall(size_t line, Ast *function, Symbol *name, Ast *firstArg);

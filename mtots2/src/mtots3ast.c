@@ -10,9 +10,9 @@ Ast *newAstLiteral(size_t line, Value value) {
   return (Ast *)ast;
 }
 
-Ast *newAstName(size_t line, Symbol *name) {
-  AstName *ast = (AstName *)calloc(1, sizeof(AstName));
-  ast->ast.type = AST_NAME;
+Ast *newAstGetGlobal(size_t line, Symbol *name) {
+  AstGetGlobal *ast = (AstGetGlobal *)calloc(1, sizeof(AstGetGlobal));
+  ast->ast.type = AST_GET_GLOBAL;
   ast->symbol = name;
   return (Ast *)ast;
 }
@@ -48,7 +48,7 @@ void freeAst(Ast *ast) {
   freeAst(ast->next);
   switch (ast->type) {
     case AST_LITERAL:
-    case AST_NAME:
+    case AST_GET_GLOBAL:
       break;
     case AST_BLOCK:
       freeAst(((AstBlock *)ast)->first);

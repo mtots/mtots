@@ -1,17 +1,27 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "mtots1err.h"
 #include "mtots3parser.h"
 #include "mtots4eval.h"
+#include "mtots4readfile.h"
 
-int main() {
-  Ast *ast;
-  const char *source = "print(repr('Hello world!' + \"extra\"))";
-  if (!parse(source, &ast)) {
-    panic("%s", getErrorString());
+int main(int argc, const char *argv[]) {
+  if (argc != 2) {
+    panic("Usage mtots <file-path>");
   }
-  if (!evalAst(ast)) {
-    panic("%s", getErrorString());
+  {
+    const char *path = argv[1];
+    Ast *ast;
+    char *source = readFileAsString(path);
+    if (!parse(source, &ast)) {
+      free(source);
+      panic("%s", getErrorString());
+    }
+    free(source);
+    if (!evalAst(ast)) {
+      panic("%s", getErrorString());
+    }
   }
   return 0;
 }

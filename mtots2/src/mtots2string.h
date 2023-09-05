@@ -22,6 +22,7 @@ NODISCARD String *newString(const char *cstring);
 
 const char *stringChars(String *a);
 size_t stringByteLength(String *a);
+void stringSetByteLength(String *a, size_t len);
 u32 stringCharAt(String *a, size_t index);
 
 /** Creates a new string by appending two strings.

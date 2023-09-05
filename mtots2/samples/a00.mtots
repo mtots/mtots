@@ -1,0 +1,4 @@
+print("Hello world")
+print("aaa " + "bbb")
+print(55 * 77)
+print(1.2 + 4.44)

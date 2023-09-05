@@ -83,11 +83,27 @@ static Status expectToken(Parser *parser, TokenType tokenType) {
   return STATUS_OK;
 }
 
+static Status parseStatementDelimiter(Parser *parser) {
+  if (!AT(TOKEN_NEWLINE) && !AT(TOKEN_SEMICOLON) && !AT(TOKEN_EOF)) {
+    runtimeError("Expected statement delimiter but got %s",
+                 tokenTypeToName(parser->peek.type));
+    return STATUS_ERR;
+  }
+  while (AT(TOKEN_NEWLINE) || AT(TOKEN_SEMICOLON)) {
+    NEXT();
+  }
+  return STATUS_OK;
+}
+
 static Status parseStatement(Parser *parser, Ast **out) {
+  switch (parser->peek.type) {
+    default:
+      break;
+  }
   if (!parseExpression(parser, out)) {
     return STATUS_ERR;
   }
-  return STATUS_OK;
+  return parseStatementDelimiter(parser);
 }
 
 static Status parseStatementList(Parser *parser, Ast **out) {
@@ -156,7 +172,7 @@ static Status parsePrefix(Parser *parser, Ast **out) {
       return STATUS_OK;
     }
     case TOKEN_IDENTIFIER:
-      *out = newAstName(
+      *out = newAstGetGlobal(
           line,
           newSymbolWithLength(parser->peek.start, parser->peek.length));
       NEXT();
