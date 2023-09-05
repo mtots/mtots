@@ -20,8 +20,10 @@ int main(int argc, const char *argv[]) {
     }
     free(source);
     if (!evalAst(ast)) {
+      freeAst(ast);
       panic("%s", getErrorString());
     }
+    freeAst(ast);
   }
   return 0;
 }

@@ -21,6 +21,7 @@ void retainObject(Object *object);
 void releaseObject(Object *object);
 
 Class *getClassOfObject(Object *object);
+ubool testObject(Object *a);
 void reprObject(String *out, Object *object);
 ubool eqObject(Object *a, Object *b);
 u32 hashObject(Object *a);

@@ -143,6 +143,9 @@ ubool eqValue(Value a, Value b);
 u32 hashValue(Value a);
 void freezeValue(Value a);
 
+/** Tests whether the given value is 'truthy' or not */
+ubool testValue(Value a);
+Value negateValue(Value a);
 Value addValues(Value a, Value b);
 Value subtractValues(Value a, Value b);
 Value multiplyValues(Value a, Value b);

@@ -9,9 +9,16 @@ typedef enum AstType {
   AST_LITERAL,
   AST_GET_GLOBAL,
   AST_BLOCK,
+  AST_UNOP,
   AST_BINOP,
+  AST_LOGICAL,
   AST_CALL
 } AstType;
+
+typedef enum UnopType {
+  UNOP_POSITIVE,
+  UNOP_NEGATIVE
+} UnopType;
 
 typedef enum BinopType {
   BINOP_ADD,
@@ -21,6 +28,13 @@ typedef enum BinopType {
   BINOP_DIVIDE,
   BINOP_FLOOR_DIVIDE
 } BinopType;
+
+typedef enum LogicalType {
+  LOGICAL_NOT,
+  LOGICAL_OR,
+  LOGICAL_AND,
+  LOGICAL_IF
+} LogicalType;
 
 struct Ast {
   AstType type;
@@ -45,11 +59,23 @@ typedef struct AstBlock {
   Ast *first;
 } AstBlock;
 
+typedef struct AstUnop {
+  Ast ast;
+  UnopType type;
+  Ast *arg;
+} AstUnop;
+
 typedef struct AstBinop {
   Ast ast;
   BinopType type;
   Ast *args;
 } AstBinop;
+
+typedef struct AstLogical {
+  Ast ast;
+  LogicalType type;
+  Ast *args;
+} AstLogical;
 
 /** Function or method call */
 typedef struct AstCall {
@@ -62,7 +88,9 @@ typedef struct AstCall {
 Ast *newAstLiteral(size_t line, Value value);
 Ast *newAstGetGlobal(size_t line, Symbol *name);
 Ast *newAstBlock(size_t line, Ast *first);
+Ast *newAstUnop(size_t line, UnopType type, Ast *arg);
 Ast *newAstBinop(size_t line, BinopType type, Ast *args);
+Ast *newAstLogical(size_t line, LogicalType type, Ast *args);
 Ast *newAstCall(size_t line, Ast *function, Symbol *name, Ast *firstArg);
 void freeAst(Ast *ast);
 

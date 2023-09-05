@@ -55,6 +55,7 @@ static ParseRule rules[TOKEN_EOF + 1];
 static void initParserRules(void);
 static Status parseStatement(Parser *parser, Ast **out);
 static Status parseStatementList(Parser *parser, Ast **out);
+static Status parsePrec(Parser *parser, Precedence prec, Ast **out);
 static Status parseExpression(Parser *parser, Ast **out);
 static Status parseArgumentList(Parser *parser, Ast **out);
 
@@ -157,6 +158,64 @@ static Status stringTokenToString(Token *token, String **out) {
 static Status parsePrefix(Parser *parser, Ast **out) {
   size_t line = parser->peek.line;
   switch (parser->peek.type) {
+    case TOKEN_MINUS: {
+      Ast *arg;
+      NEXT();
+      if (!parsePrec(parser, PREC_UNARY, &arg)) {
+        return STATUS_ERR;
+      }
+      *out = newAstUnop(line, UNOP_NEGATIVE, arg);
+      return STATUS_OK;
+    }
+    case TOKEN_PLUS: {
+      Ast *arg;
+      NEXT();
+      if (!parsePrec(parser, PREC_UNARY, &arg)) {
+        return STATUS_ERR;
+      }
+      *out = newAstUnop(line, UNOP_POSITIVE, arg);
+      return STATUS_OK;
+    }
+    case TOKEN_NOT: {
+      Ast *arg;
+      NEXT();
+      if (!parsePrec(parser, PREC_NOT, &arg)) {
+        return STATUS_ERR;
+      }
+      *out = newAstLogical(line, LOGICAL_NOT, arg);
+      return STATUS_OK;
+    }
+    case TOKEN_NIL:
+      *out = newAstLiteral(line, nilValue());
+      NEXT();
+      return STATUS_OK;
+    case TOKEN_TRUE:
+      *out = newAstLiteral(line, boolValue(UTRUE));
+      NEXT();
+      return STATUS_OK;
+    case TOKEN_FALSE:
+      *out = newAstLiteral(line, boolValue(UFALSE));
+      NEXT();
+      return STATUS_OK;
+    case TOKEN_IF: {
+      Ast *args;
+      NEXT();
+      if (!parseExpression(parser, &args)) {
+        return STATUS_ERR;
+      }
+      EXPECT(TOKEN_THEN); /* TODO: handle `args` leaking */
+      if (!parseExpression(parser, &args->next)) {
+        freeAst(args);
+        return STATUS_ERR;
+      }
+      EXPECT(TOKEN_ELSE); /* TODO: handle `args` leaking */
+      if (!parseExpression(parser, &args->next->next)) {
+        freeAst(args);
+        return STATUS_ERR;
+      }
+      *out = newAstLogical(line, LOGICAL_IF, args);
+      return STATUS_OK;
+    }
     case TOKEN_NUMBER:
       *out = newAstLiteral(line, numberValue(strtod(parser->peek.start, 0)));
       NEXT();
@@ -270,6 +329,29 @@ static Status parseBinop(Parser *parser, Ast *lhs, Ast **out) {
   return STATUS_OK;
 }
 
+static Status parseLogicalBinop(Parser *parser, Ast *lhs, Ast **out) {
+  LogicalType op;
+  size_t line = parser->peek.line;
+  ParseRule *rule = &rules[parser->peek.type];
+  switch (parser->peek.type) {
+    case TOKEN_OR:
+      op = LOGICAL_OR;
+      break;
+    case TOKEN_AND:
+      op = LOGICAL_AND;
+      break;
+    default:
+      /* NOTE: this is an internal error, not an error with the input program */
+      panic("parseLogicalBinop called without a logical binary operator");
+  }
+  NEXT();
+  if (!parsePrec(parser, rule->precedence, &lhs->next)) {
+    return STATUS_ERR;
+  }
+  *out = newAstLogical(line, op, lhs);
+  return STATUS_OK;
+}
+
 static ParseRule newRule(ParseFn fn, Precedence precedence) {
   ParseRule rule;
   rule.fn = fn;
@@ -289,4 +371,6 @@ static void initParserRules(void) {
   rules[TOKEN_PERCENT] = newRule(parseBinop, PREC_FACTOR);
   rules[TOKEN_SLASH] = newRule(parseBinop, PREC_FACTOR);
   rules[TOKEN_SLASH_SLASH] = newRule(parseBinop, PREC_FACTOR);
+  rules[TOKEN_OR] = newRule(parseLogicalBinop, PREC_OR);
+  rules[TOKEN_AND] = newRule(parseLogicalBinop, PREC_AND);
 }

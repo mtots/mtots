@@ -22,10 +22,6 @@ static Status implRepr(i16 argc, Value *argv, Value *out) {
 
 static CFunction funcRepr = {"repr", 1, 0, implRepr};
 
-static void addCF(Map *map, CFunction *cf) {
-  mapSet(map, symbolValue(newSymbol(cf->name)), cfunctionValue(cf));
-}
-
 Map *newGlobals(void) {
   CFunction *functions[] = {
       &funcPrint,
@@ -35,7 +31,9 @@ Map *newGlobals(void) {
   CFunction **func;
   Map *map = newMap();
   for (func = functions; *func; func++) {
-    addCF(map, *func);
+    mapSet(map,
+           symbolValue(newSymbol((*func)->name)),
+           cfunctionValue(*func));
   }
   return map;
 }

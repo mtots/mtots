@@ -24,9 +24,25 @@ Ast *newAstBlock(size_t line, Ast *first) {
   return (Ast *)ast;
 }
 
+Ast *newAstUnop(size_t line, UnopType type, Ast *arg) {
+  AstUnop *ast = (AstUnop *)calloc(1, sizeof(AstUnop));
+  ast->ast.type = AST_UNOP;
+  ast->type = type;
+  ast->arg = arg;
+  return (Ast *)ast;
+}
+
 Ast *newAstBinop(size_t line, BinopType type, Ast *args) {
   AstBinop *ast = (AstBinop *)calloc(1, sizeof(AstBinop));
   ast->ast.type = AST_BINOP;
+  ast->type = type;
+  ast->args = args;
+  return (Ast *)ast;
+}
+
+Ast *newAstLogical(size_t line, LogicalType type, Ast *args) {
+  AstLogical *ast = (AstLogical *)calloc(1, sizeof(AstLogical));
+  ast->ast.type = AST_LOGICAL;
   ast->type = type;
   ast->args = args;
   return (Ast *)ast;
@@ -53,8 +69,14 @@ void freeAst(Ast *ast) {
     case AST_BLOCK:
       freeAst(((AstBlock *)ast)->first);
       break;
+    case AST_UNOP:
+      freeAst(((AstUnop *)ast)->arg);
+      break;
     case AST_BINOP:
       freeAst(((AstBinop *)ast)->args);
+      break;
+    case AST_LOGICAL:
+      freeAst(((AstLogical *)ast)->args);
       break;
     case AST_CALL:
       freeAst(((AstCall *)ast)->function);

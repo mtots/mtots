@@ -70,6 +70,24 @@ Status evalAst(Ast *node) {
       evalStackPush(nilValue(), UFALSE);
       return STATUS_OK;
     }
+    case AST_UNOP: {
+      AstUnop *op = (AstUnop *)node;
+      Value arg, *ret;
+      if (!evalAst(op->arg)) {
+        return STATUS_ERR;
+      }
+      arg = evalStack[evalStackSize - 1];
+      ret = &evalStack[evalStackSize - 1];
+      switch (op->type) {
+        case UNOP_POSITIVE:
+          break;
+        case UNOP_NEGATIVE:
+          *ret = negateValue(arg);
+          break;
+      }
+      releaseValue(arg);
+      return STATUS_OK;
+    }
     case AST_BINOP: {
       AstBinop *op = (AstBinop *)node;
       Value lhs, rhs, *ret;
@@ -106,6 +124,49 @@ Status evalAst(Ast *node) {
       releaseValue(rhs);
       releaseValue(lhs);
       return STATUS_OK;
+    }
+    case AST_LOGICAL: {
+      AstLogical *op = (AstLogical *)node;
+      switch (op->type) {
+        case LOGICAL_NOT: {
+          ubool result;
+          if (!evalAst(op->args)) {
+            return STATUS_ERR;
+          }
+          result = !testValue(evalStack[evalStackSize - 1]);
+          releaseValue(evalStack[evalStackSize - 1]);
+          evalStack[evalStackSize - 1] = boolValue(result);
+          return STATUS_OK;
+        }
+        case LOGICAL_OR:
+          if (!evalAst(op->args)) {
+            return STATUS_ERR;
+          }
+          if (!testValue(evalStack[evalStackSize - 1])) {
+            evalStackPop(UTRUE);
+            return evalAst(op->args->next);
+          }
+          return STATUS_OK;
+        case LOGICAL_AND:
+          if (!evalAst(op->args)) {
+            return STATUS_ERR;
+          }
+          if (testValue(evalStack[evalStackSize - 1])) {
+            evalStackPop(UTRUE);
+            return evalAst(op->args->next);
+          }
+          return STATUS_OK;
+        case LOGICAL_IF: {
+          ubool condition;
+          if (!evalAst(op->args)) {
+            return STATUS_ERR;
+          }
+          condition = testValue(evalStack[evalStackSize - 1]);
+          evalStackPop(UTRUE);
+          return evalAst(condition ? op->args->next : op->args->next->next);
+        }
+      }
+      panic("INVALID LOGICAL OPERATOR %d", op->type);
     }
     case AST_CALL: {
       AstCall *call = (AstCall *)node;

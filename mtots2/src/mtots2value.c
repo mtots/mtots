@@ -413,6 +413,38 @@ void freezeValue(Value a) {
   }
 }
 
+ubool testValue(Value a) {
+  switch (a.type) {
+    case VALUE_SENTINEL:
+      return UFALSE;
+    case VALUE_NIL:
+      return UFALSE;
+    case VALUE_BOOL:
+      return a.as.boolean;
+    case VALUE_NUMBER:
+      return a.as.number != 0;
+    case VALUE_SYMBOL:
+      return a.as.symbol != NULL;
+    case VALUE_CFUNCTION:
+      return UTRUE;
+    case VALUE_CLASS:
+      return UTRUE;
+    case VALUE_OBJECT:
+      return testObject(a.as.object);
+  }
+  panic("INVALID VALUE TYPE %d (testValue)", a.type);
+}
+
+Value negateValue(Value a) {
+  switch (a.type) {
+    case VALUE_NUMBER:
+      return numberValue(-a.as.number);
+    default:
+      break;
+  }
+  panic("Unsupported operand %s (negateValue)", getValueKindName(a));
+}
+
 Value addValues(Value a, Value b) {
   switch (a.type) {
     case VALUE_NUMBER:

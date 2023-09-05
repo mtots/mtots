@@ -57,6 +57,22 @@ Class *getClassOfObject(Object *object) {
   panic("INVALID CLASS TYPE %d (getClassOfObject)", object->type);
 }
 
+ubool testObject(Object *a) {
+  switch (a->type) {
+    case OBJECT_STRING:
+      return stringByteLength((String *)a) != 0;
+    case OBJECT_LIST:
+      return lenList((List *)a) != 0;
+    case OBJECT_MAP:
+      return lenMap((Map *)a) != 0;
+    case OBJECT_NATIVE:
+      /* TODO: allow customization */
+      return UTRUE;
+  }
+  panic("INVALID OBJECT TYPE %s/%d (testObject)",
+        getObjectTypeName(a->type), a->type);
+}
+
 void reprObject(String *out, Object *object) {
   switch (object->type) {
     case OBJECT_STRING:
