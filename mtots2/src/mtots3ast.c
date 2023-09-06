@@ -35,6 +35,13 @@ Ast *newAstGetGlobal(size_t line, Symbol *name) {
   return (Ast *)ast;
 }
 
+Ast *newAstSetGlobal(size_t line, Symbol *name, Ast *value) {
+  AstSetGlobal *ast = NEW_AST(AstSetGlobal, AST_SET_GLOBAL);
+  ast->symbol = name;
+  ast->value = value;
+  return (Ast *)ast;
+}
+
 Ast *newAstBlock(size_t line, Ast *first) {
   AstBlock *ast = NEW_AST(AstBlock, AST_BLOCK);
   ast->first = first;
@@ -90,6 +97,9 @@ void freeAst(Ast *ast) {
       break;
     case AST_GET_GLOBAL:
       break;
+    case AST_SET_GLOBAL:
+      freeAst(((AstSetGlobal *)ast)->value);
+      break;
     case AST_BLOCK:
       freeAst(((AstBlock *)ast)->first);
       break;
@@ -110,10 +120,13 @@ void freeAst(Ast *ast) {
 }
 
 #if MTOTS_DEBUG_MEMORY_LEAK
-void printLeakedAsts(void) {
+size_t printLeakedAsts(void) {
+  size_t leakCount = 0;
   Ast *node;
   for (node = allAsts; node; node = node->suf) {
+    leakCount++;
     printf("[DEBUGDEBUG] LEAKED AST %d at %p\n", node->type, (void *)node);
   }
+  return leakCount;
 }
 #endif

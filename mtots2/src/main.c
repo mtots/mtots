@@ -27,8 +27,15 @@ int main(int argc, const char *argv[]) {
     freeGlobals();
   }
 #if MTOTS_DEBUG_MEMORY_LEAK
-  printLeakedObjects();
-  printLeakedAsts();
+  {
+    size_t objectCount = printLeakedObjects();
+    size_t astCount = printLeakedAsts();
+    if (objectCount || astCount) {
+      panic("MEMORY LEAK DETECTED (objects = %lu, ast-nodes = %lu)",
+            (unsigned long)objectCount,
+            (unsigned long)astCount);
+    }
+  }
 #endif
   return 0;
 }

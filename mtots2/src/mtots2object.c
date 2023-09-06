@@ -160,14 +160,17 @@ u32 hashObject(Object *a) {
 }
 
 #if MTOTS_DEBUG_MEMORY_LEAK
-void printLeakedObjects(void) {
+size_t printLeakedObjects(void) {
   Object *object;
+  size_t leakCount = 0;
   for (object = allObjects; object; object = object->next) {
+    leakCount++;
     printf("[DEBUGDEBUG] LEAKED OBJECT %s at %p (",
            getObjectTypeName(object->type),
            (void *)object);
     printReprValue(objectValue(object));
     printf(")\n");
   }
+  return leakCount;
 }
 #endif

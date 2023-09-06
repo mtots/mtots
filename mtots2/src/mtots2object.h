@@ -36,7 +36,7 @@ ubool eqObject(Object *a, Object *b);
 u32 hashObject(Object *a);
 
 #if MTOTS_DEBUG_MEMORY_LEAK
-void printLeakedObjects(void);
+size_t printLeakedObjects(void);
 #endif
 
 #endif /*mtots2object_h*/

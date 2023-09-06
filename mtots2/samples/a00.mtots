@@ -17,3 +17,9 @@ elif 1:
   print("1 block")
 else:
   print("else block")
+
+var x = "x value"
+print(x)
+x = "new x value"
+print(x)
+print(x + " additional stuff")

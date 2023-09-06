@@ -127,6 +127,97 @@ static Status parseBlock(Parser *parser, Ast **out) {
   return STATUS_OK;
 }
 
+static ubool maybeAtTypeExpression(Parser *parser) {
+  return AT(TOKEN_IDENTIFIER) || AT(TOKEN_NIL);
+}
+
+static Status skipTypeExpression(Parser *parser) {
+  if (AT(TOKEN_NIL)) {
+    NEXT();
+  } else {
+    EXPECT(TOKEN_IDENTIFIER);
+  }
+  for (;;) {
+    if (AT(TOKEN_QMARK)) {
+      NEXT();
+      continue;
+    }
+    if (AT(TOKEN_DOT)) {
+      NEXT();
+      EXPECT(TOKEN_IDENTIFIER);
+      continue;
+    }
+    if (AT(TOKEN_PIPE)) {
+      NEXT();
+      if (!skipTypeExpression(parser)) {
+        return STATUS_ERR;
+      }
+      continue;
+    }
+    if (AT(TOKEN_LEFT_BRACKET)) {
+      NEXT();
+      while (maybeAtTypeExpression(parser)) {
+        if (!skipTypeExpression(parser)) {
+          return STATUS_ERR;
+        }
+        if (AT(TOKEN_COMMA)) {
+          NEXT();
+        } else {
+          break;
+        }
+      }
+      EXPECT(TOKEN_RIGHT_BRACKET);
+      continue;
+    }
+    break;
+  }
+  return STATUS_OK;
+}
+
+static Status parseVariableDeclaration(Parser *parser, Ast **out) {
+  Symbol *name;
+  Ast *rhs;
+  size_t line = parser->peek.line;
+  if (AT(TOKEN_FINAL)) {
+    NEXT();
+  } else {
+    EXPECT(TOKEN_VAR);
+  }
+  if (!AT(TOKEN_IDENTIFIER)) {
+    runtimeError("Expected variable name but got %s",
+                 tokenTypeToName(parser->peek.type));
+    return STATUS_ERR;
+  }
+  name = newSymbolWithLength(parser->peek.start, parser->peek.length);
+  NEXT();
+
+  /* Type annotation */
+  if (maybeAtTypeExpression(parser)) {
+    if (!skipTypeExpression(parser)) {
+      return STATUS_ERR;
+    }
+  }
+
+  /* Documentation */
+  if (AT(TOKEN_STRING) || AT(TOKEN_RAW_STRING)) {
+    NEXT();
+  }
+
+  EXPECT(TOKEN_EQUAL);
+
+  if (!parseExpression(parser, &rhs)) {
+    return STATUS_ERR;
+  }
+
+  if (!parseStatementDelimiter(parser)) {
+    freeAst(rhs);
+    return STATUS_ERR;
+  }
+
+  *out = newAstSetGlobal(line, name, rhs);
+  return STATUS_OK;
+}
+
 static Status parseIfRecursive(Parser *parser, Ast **out) {
   Ast *cond;
   size_t line = parser->peek.line;
@@ -168,6 +259,10 @@ static Status parseIfRecursive(Parser *parser, Ast **out) {
 
 static Status parseStatement(Parser *parser, Ast **out) {
   switch (parser->peek.type) {
+    case TOKEN_FINAL:
+      return parseVariableDeclaration(parser, out);
+    case TOKEN_VAR:
+      return parseVariableDeclaration(parser, out);
     case TOKEN_IF:
       NEXT();
       return parseIfRecursive(parser, out);
@@ -309,12 +404,21 @@ static Status parsePrefix(Parser *parser, Ast **out) {
       NEXT();
       return STATUS_OK;
     }
-    case TOKEN_IDENTIFIER:
-      *out = newAstGetGlobal(
-          line,
-          newSymbolWithLength(parser->peek.start, parser->peek.length));
+    case TOKEN_IDENTIFIER: {
+      Symbol *name = newSymbolWithLength(parser->peek.start, parser->peek.length);
       NEXT();
+      if (AT(TOKEN_EQUAL)) {
+        Ast *rhs;
+        NEXT();
+        if (!parseExpression(parser, &rhs)) {
+          return STATUS_ERR;
+        }
+        *out = newAstSetGlobal(line, name, rhs);
+      } else {
+        *out = newAstGetGlobal(line, name);
+      }
       return STATUS_OK;
+    }
     default:
       break;
   }

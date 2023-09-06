@@ -8,6 +8,7 @@ typedef struct Ast Ast;
 typedef enum AstType {
   AST_LITERAL,
   AST_GET_GLOBAL,
+  AST_SET_GLOBAL,
   AST_BLOCK,
   AST_UNOP,
   AST_BINOP,
@@ -59,6 +60,12 @@ typedef struct AstGetGlobal {
   Symbol *symbol;
 } AstGetGlobal;
 
+typedef struct AstSetGlobal {
+  Ast ast;
+  Symbol *symbol;
+  Ast *value;
+} AstSetGlobal;
+
 typedef struct AstBlock {
   Ast ast;
   Ast *first;
@@ -91,6 +98,7 @@ typedef struct AstCall {
 
 Ast *newAstLiteral(size_t line, Value value);
 Ast *newAstGetGlobal(size_t line, Symbol *name);
+Ast *newAstSetGlobal(size_t line, Symbol *name, Ast *value);
 Ast *newAstBlock(size_t line, Ast *first);
 Ast *newAstUnop(size_t line, UnopType type, Ast *arg);
 Ast *newAstBinop(size_t line, BinopType type, Ast *args);
@@ -99,7 +107,7 @@ Ast *newAstCall(size_t line, Symbol *name, Ast *funcAndArgs);
 void freeAst(Ast *ast);
 
 #if MTOTS_DEBUG_MEMORY_LEAK
-void printLeakedAsts(void);
+size_t printLeakedAsts(void);
 #endif
 
 #endif /*mtots3ast_h*/

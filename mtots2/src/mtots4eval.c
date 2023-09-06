@@ -65,6 +65,15 @@ Status evalAst(Ast *node) {
       evalStackPush(value, UTRUE);
       return STATUS_OK;
     }
+    case AST_SET_GLOBAL: {
+      AstSetGlobal *setGlobal = (AstSetGlobal *)node;
+      Symbol *symbol = setGlobal->symbol;
+      if (!evalAst(setGlobal->value)) {
+        return STATUS_ERR;
+      }
+      mapSet(getGlobals(), symbolValue(symbol), evalStack[evalStackSize - 1]);
+      return STATUS_OK;
+    }
     case AST_BLOCK: {
       AstBlock *block = (AstBlock *)node;
       Ast *child;
