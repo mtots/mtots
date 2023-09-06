@@ -34,6 +34,7 @@ ubool testObject(Object *a);
 void reprObject(String *out, Object *object);
 ubool eqObject(Object *a, Object *b);
 u32 hashObject(Object *a);
+Status callObject(Object *a, i16 argc, Value *argv, Value *out);
 
 #if MTOTS_DEBUG_MEMORY_LEAK
 size_t printLeakedObjects(void);

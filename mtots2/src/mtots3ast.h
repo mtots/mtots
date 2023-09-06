@@ -4,16 +4,21 @@
 #include "mtots2value.h"
 
 typedef struct Ast Ast;
+typedef struct Parameter Parameter;
 
 typedef enum AstType {
+  AST_MODULE,
   AST_LITERAL,
   AST_GET_GLOBAL,
   AST_SET_GLOBAL,
+  AST_GET_LOCAL,
+  AST_SET_LOCAL,
   AST_BLOCK,
   AST_UNOP,
   AST_BINOP,
   AST_LOGICAL,
-  AST_CALL
+  AST_CALL,
+  AST_FUNCTION
 } AstType;
 
 typedef enum UnopType {
@@ -37,9 +42,15 @@ typedef enum LogicalType {
   LOGICAL_IF
 } LogicalType;
 
+struct Parameter {
+  Symbol *name;
+  Value defaultValue;
+  Parameter *next;
+};
+
 struct Ast {
   AstType type;
-  size_t line;
+  u32 line;
 
   /** Used for nodes that are part of a sequence */
   Ast *next;
@@ -49,6 +60,11 @@ struct Ast {
   Ast *pre; /* prev */
 #endif
 };
+
+typedef struct AstModule {
+  Ast ast;
+  Ast *first;
+} AstModule;
 
 typedef struct AstLiteral {
   Ast ast;
@@ -65,6 +81,19 @@ typedef struct AstSetGlobal {
   Symbol *symbol;
   Ast *value;
 } AstSetGlobal;
+
+typedef struct AstGetLocal {
+  Ast ast;
+  Symbol *symbol;
+  u16 index;
+} AstGetLocal;
+
+typedef struct AstSetLocal {
+  Ast ast;
+  Symbol *symbol;
+  u16 index;
+  Ast *value;
+} AstSetLocal;
 
 typedef struct AstBlock {
   Ast ast;
@@ -96,14 +125,29 @@ typedef struct AstCall {
   Ast *funcAndArgs; /* receiver for method calls */
 } AstCall;
 
-Ast *newAstLiteral(size_t line, Value value);
-Ast *newAstGetGlobal(size_t line, Symbol *name);
-Ast *newAstSetGlobal(size_t line, Symbol *name, Ast *value);
-Ast *newAstBlock(size_t line, Ast *first);
-Ast *newAstUnop(size_t line, UnopType type, Ast *arg);
-Ast *newAstBinop(size_t line, BinopType type, Ast *args);
-Ast *newAstLogical(size_t line, LogicalType type, Ast *args);
-Ast *newAstCall(size_t line, Symbol *name, Ast *funcAndArgs);
+typedef struct AstFunction {
+  Ast ast;
+  Symbol *name;
+  Parameter *parameters;
+  i16 arity;
+  i16 maxArity;
+  Ast *body;
+} AstFunction;
+
+Parameter *newParameter(Symbol *name, Value defaultValue);
+Ast *newAstModule(u32 line, Ast *first);
+Ast *newAstLiteral(u32 line, Value value);
+Ast *newAstGetGlobal(u32 line, Symbol *name);
+Ast *newAstSetGlobal(u32 line, Symbol *name, Ast *value);
+Ast *newAstGetLocal(u32 line, Symbol *name, u16 index);
+Ast *newAstSetLocal(u32 line, Symbol *name, u16 index, Ast *value);
+Ast *newAstBlock(u32 line, Ast *first);
+Ast *newAstUnop(u32 line, UnopType type, Ast *arg);
+Ast *newAstBinop(u32 line, BinopType type, Ast *args);
+Ast *newAstLogical(u32 line, LogicalType type, Ast *args);
+Ast *newAstCall(u32 line, Symbol *name, Ast *funcAndArgs);
+Ast *newAstFunction(u32 line, Symbol *name, Parameter *parameters, Ast *body);
+void freeParameter(Parameter *parameter);
 void freeAst(Ast *ast);
 
 #if MTOTS_DEBUG_MEMORY_LEAK

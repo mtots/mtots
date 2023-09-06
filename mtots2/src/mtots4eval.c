@@ -4,12 +4,28 @@
 
 #include "mtots1err.h"
 #include "mtots2map.h"
+#include "mtots4function.h"
 #include "mtots4globals.h"
 
+#define FRAME_STACK_SIZE 1024
 #define EVAL_STACK_SIZE 1024
+#define VAR_STACKS_SIZE EVAL_STACK_SIZE
+#define FRAME (frameStack[frameStackSize - 1])
+
+typedef struct Variable {
+  Value value;
+} Variable;
+
+typedef struct Frame {
+  u16 varStart;
+} Frame;
 
 static Value evalStack[EVAL_STACK_SIZE];
+static Variable varStack[VAR_STACKS_SIZE];
+static Frame frameStack[FRAME_STACK_SIZE];
 static u16 evalStackSize;
+/* static u16 varStackSize; */
+static u16 frameStackSize;
 static Map *globals;
 
 void freeGlobals(void) {
@@ -50,6 +66,19 @@ static Value evalStackPop(ubool release) {
 
 Status evalAst(Ast *node) {
   switch (node->type) {
+    case AST_MODULE: {
+      AstModule *block = (AstModule *)node;
+      Ast *child;
+      for (child = block->first; child; child = child->next) {
+        if (!evalAst(child)) {
+          return STATUS_ERR;
+        }
+        evalStackPop(UTRUE);
+      }
+      /* TODO: Return a Module object */
+      evalStackPush(nilValue(), UFALSE);
+      return STATUS_OK;
+    }
     case AST_LITERAL:
       evalStackPush(((AstLiteral *)node)->value, UTRUE);
       return STATUS_OK;
@@ -74,7 +103,22 @@ Status evalAst(Ast *node) {
       mapSet(getGlobals(), symbolValue(symbol), evalStack[evalStackSize - 1]);
       return STATUS_OK;
     }
+    case AST_GET_LOCAL: {
+      AstGetLocal *getLocal = (AstGetLocal *)node;
+      Value value = varStack[FRAME.varStart + getLocal->index].value;
+      evalStackPush(value, UTRUE);
+      return STATUS_OK;
+    }
+    case AST_SET_LOCAL: {
+      AstSetLocal *setLocal = (AstSetLocal *)node;
+      Value value = evalStack[evalStackSize - 1];
+      retainValue(value);
+      releaseValue(varStack[FRAME.varStart + setLocal->index].value);
+      varStack[FRAME.varStart + setLocal->index].value = value;
+      return STATUS_OK;
+    }
     case AST_BLOCK: {
+      /* TODO: scoping */
       AstBlock *block = (AstBlock *)node;
       Ast *child;
       for (child = block->first; child; child = child->next) {
@@ -218,6 +262,9 @@ Status evalAst(Ast *node) {
       }
       return STATUS_OK;
     }
+    case AST_FUNCTION:
+      evalStackPush(functionValue(newFunction((AstFunction *)node)), UFALSE);
+      return STATUS_OK;
   }
   panic("Unrecognized AST type %d", node->type);
 }

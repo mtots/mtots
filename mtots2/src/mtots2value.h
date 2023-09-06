@@ -48,6 +48,7 @@ struct Value {
 typedef struct CachedMethods {
   Value init;
   Value repr;
+  Value call;
 } CachedMethods;
 
 /** Classes are never garbage collected. */
@@ -73,6 +74,12 @@ struct Class {
   Map *staticMethods;
   Map *instanceMethods;
   CachedMethods cachedMethods;
+
+  ubool initialized;
+
+#if MTOTS_DEBUG_MEMORY_LEAK
+  Class *next;
+#endif
 };
 
 extern Class SENTINEL_CLASS;
@@ -124,6 +131,8 @@ Object *asObject(Value value);
 
 Class *getClass(Value x);
 
+void checkArity(i16 argc, i16 arity, i16 maxArity);
+
 /** Calls a function with the given arguments.
  * NOTE: The output value `out` must be manually
  * released after the call ends.
@@ -165,5 +174,9 @@ void classAddInstanceMethod(Class *cls, Symbol *name, Value method);
 
 /** Populates the method `Map`s with the native CFunctions */
 void initStaticClass(Class *cls);
+
+#if MTOTS_DEBUG_MEMORY_LEAK
+void freeAllClasses(void);
+#endif
 
 #endif /*mtots2value_h*/

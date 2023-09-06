@@ -51,6 +51,7 @@ typedef struct ParseRule {
 static ubool parserRulesInitialized;
 static ParseRule rules[TOKEN_EOF + 1];
 
+static Status stringTokenToString(Token *token, String **out);
 static void initParserRules(void);
 static Status parseStatement(Parser *parser, Ast **out);
 static Status parseStatementList(Parser *parser, Ast **out);
@@ -87,6 +88,21 @@ static Status expectToken(Parser *parser, TokenType tokenType) {
   return nextToken(parser);
 }
 
+static Status getVariable(Parser *parser, u32 line, Symbol *name, Ast **out) {
+  *out = newAstGetGlobal(line, name);
+  return STATUS_OK;
+}
+
+static Status setVariable(Parser *parser, u32 line, Symbol *name, Ast *value, Ast **out) {
+  *out = newAstSetGlobal(line, name, value);
+  return STATUS_OK;
+}
+
+static Status declareVariable(Parser *parser, u32 line, Symbol *name, Ast *value, Ast **out) {
+  *out = newAstSetGlobal(line, name, value);
+  return STATUS_OK;
+}
+
 static Status consumeStatementDelimiter(Parser *parser) {
   while (AT(TOKEN_NEWLINE) || AT(TOKEN_SEMICOLON)) {
     NEXT();
@@ -108,7 +124,7 @@ static Status parseStatementDelimiter(Parser *parser) {
 
 static Status parseBlock(Parser *parser, Ast **out) {
   Ast *first;
-  size_t line = parser->peek.line;
+  u32 line = parser->peek.line;
   EXPECT(TOKEN_COLON);
   if (!consumeStatementDelimiter(parser)) {
     return STATUS_ERR;
@@ -177,7 +193,7 @@ static Status skipTypeExpression(Parser *parser) {
 static Status parseVariableDeclaration(Parser *parser, Ast **out) {
   Symbol *name;
   Ast *rhs;
-  size_t line = parser->peek.line;
+  u32 line = parser->peek.line;
   if (AT(TOKEN_FINAL)) {
     NEXT();
   } else {
@@ -214,13 +230,12 @@ static Status parseVariableDeclaration(Parser *parser, Ast **out) {
     return STATUS_ERR;
   }
 
-  *out = newAstSetGlobal(line, name, rhs);
-  return STATUS_OK;
+  return declareVariable(parser, line, name, rhs, out);
 }
 
 static Status parseIfRecursive(Parser *parser, Ast **out) {
   Ast *cond;
-  size_t line = parser->peek.line;
+  u32 line = parser->peek.line;
   if (!parseExpression(parser, &cond)) {
     return STATUS_ERR;
   }
@@ -257,12 +272,134 @@ static Status parseIfRecursive(Parser *parser, Ast **out) {
   return STATUS_OK;
 }
 
+static Status parseConstantValue(Parser *parser, Value *defaultValue) {
+  switch (parser->peek.type) {
+    case TOKEN_NIL:
+      *defaultValue = nilValue();
+      NEXT();
+      return STATUS_OK;
+    case TOKEN_TRUE:
+      *defaultValue = boolValue(UTRUE);
+      NEXT();
+      return STATUS_OK;
+    case TOKEN_FALSE:
+      *defaultValue = boolValue(UFALSE);
+      NEXT();
+      return STATUS_OK;
+    case TOKEN_NUMBER:
+      *defaultValue = numberValue(strtod(parser->peek.start, 0));
+      NEXT();
+      return STATUS_OK;
+    case TOKEN_STRING: {
+      String *string;
+      if (!stringTokenToString(&parser->peek, &string)) {
+        return STATUS_ERR;
+      }
+      if (!nextToken(parser)) {
+        releaseString(string);
+        return STATUS_ERR;
+      }
+      *defaultValue = stringValue(string);
+      return STATUS_OK;
+    }
+    default:
+      break;
+  }
+  runtimeError("Expected literal value but got %s",
+               tokenTypeToName(parser->peek.type));
+  return STATUS_ERR;
+}
+
+static Status parseParameters(Parser *parser, Parameter **out) {
+  Parameter *param = NULL, **next = &param;
+  ubool seenDefault = UFALSE;
+  while (!AT(TOKEN_RIGHT_PAREN)) {
+    Symbol *name;
+    Value defaultValue = sentinelValue();
+    u32 line = parser->peek.line;
+    if (!AT(TOKEN_IDENTIFIER)) {
+      runtimeError("[line %lu] Expected parameter name but got %s",
+                   (unsigned long)line,
+                   tokenTypeToName(parser->peek.type));
+      freeParameter(param);
+      return STATUS_ERR;
+    }
+    name = newSymbolWithLength(parser->peek.start, parser->peek.length);
+    if (maybeAtTypeExpression(parser)) {
+      if (!skipTypeExpression(parser)) {
+        freeParameter(param);
+        return STATUS_ERR;
+      }
+    }
+    if (AT(TOKEN_EQUAL)) {
+      seenDefault = UTRUE;
+      if (!parseConstantValue(parser, &defaultValue)) {
+        freeParameter(param);
+        return STATUS_ERR;
+      }
+    } else if (seenDefault) {
+      runtimeError("[line %lu] Required parameters cannot come after required parameters",
+                   (unsigned long)line);
+      freeParameter(param);
+      return STATUS_ERR;
+    }
+    *next = newParameter(name, defaultValue);
+    releaseValue(defaultValue);
+    next = &(*next)->next;
+    if (!AT(TOKEN_COMMA)) {
+      break;
+    }
+    if (!nextToken(parser)) {
+      freeParameter(param);
+      return STATUS_ERR;
+    }
+  }
+  *out = param;
+  return STATUS_OK;
+}
+
+static Status parseFunctionDefinition(Parser *parser, Ast **out) {
+  Symbol *name;
+  Parameter *parameters;
+  Ast *body, *function;
+  u32 line = parser->peek.line;
+  EXPECT(TOKEN_DEF);
+  if (!AT(TOKEN_IDENTIFIER)) {
+    runtimeError("[line %lu] Expected function name but got %s",
+                 (unsigned long)line,
+                 tokenTypeToName(parser->peek.type));
+    return STATUS_ERR;
+  }
+  name = newSymbolWithLength(parser->peek.start, parser->peek.length);
+  NEXT();
+  EXPECT(TOKEN_LEFT_PAREN);
+  if (!parseParameters(parser, &parameters)) {
+    return STATUS_ERR;
+  }
+  if (!expectToken(parser, TOKEN_RIGHT_PAREN)) {
+    freeParameter(parameters);
+    return STATUS_ERR;
+  }
+  if (!parseBlock(parser, &body)) {
+    freeParameter(parameters);
+    return STATUS_ERR;
+  }
+  function = newAstFunction(line, name, parameters, body);
+  if (!declareVariable(parser, line, name, function, out)) {
+    freeAst((Ast *)function);
+    return STATUS_ERR;
+  }
+  return STATUS_OK;
+}
+
 static Status parseStatement(Parser *parser, Ast **out) {
   switch (parser->peek.type) {
     case TOKEN_FINAL:
       return parseVariableDeclaration(parser, out);
     case TOKEN_VAR:
       return parseVariableDeclaration(parser, out);
+    case TOKEN_DEF:
+      return parseFunctionDefinition(parser, out);
     case TOKEN_IF:
       NEXT();
       return parseIfRecursive(parser, out);
@@ -330,7 +467,7 @@ static Status stringTokenToString(Token *token, String **out) {
 }
 
 static Status parsePrefix(Parser *parser, Ast **out) {
-  size_t line = parser->peek.line;
+  u32 line = parser->peek.line;
   switch (parser->peek.type) {
     case TOKEN_MINUS: {
       Ast *arg;
@@ -413,11 +550,9 @@ static Status parsePrefix(Parser *parser, Ast **out) {
         if (!parseExpression(parser, &rhs)) {
           return STATUS_ERR;
         }
-        *out = newAstSetGlobal(line, name, rhs);
-      } else {
-        *out = newAstGetGlobal(line, name);
+        return setVariable(parser, line, name, rhs, out);
       }
-      return STATUS_OK;
+      return getVariable(parser, line, name, out);
     }
     default:
       break;
@@ -466,7 +601,7 @@ static Status parseArgumentList(Parser *parser, Ast **out) {
 }
 
 static Status parseFunctionCall(Parser *parser, Ast *lhs, Ast **out) {
-  size_t line = parser->peek.line;
+  u32 line = parser->peek.line;
   EXPECT(TOKEN_LEFT_PAREN);
   if (!parseArgumentList(parser, &lhs->next)) {
     return STATUS_ERR;
@@ -478,7 +613,7 @@ static Status parseFunctionCall(Parser *parser, Ast *lhs, Ast **out) {
 
 static Status parseBinop(Parser *parser, Ast *lhs, Ast **out) {
   BinopType op;
-  size_t line = parser->peek.line;
+  u32 line = parser->peek.line;
   ParseRule *rule = &rules[parser->peek.type];
   switch (parser->peek.type) {
     case TOKEN_PLUS:
@@ -513,7 +648,7 @@ static Status parseBinop(Parser *parser, Ast *lhs, Ast **out) {
 
 static Status parseLogicalBinop(Parser *parser, Ast *lhs, Ast **out) {
   LogicalType op;
-  size_t line = parser->peek.line;
+  u32 line = parser->peek.line;
   ParseRule *rule = &rules[parser->peek.type];
   switch (parser->peek.type) {
     case TOKEN_OR:

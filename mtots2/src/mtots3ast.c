@@ -9,7 +9,7 @@
 static Ast *allAsts;
 #endif
 
-static Ast *newAst(AstType type, size_t size) {
+static Ast *newAst(AstType type, u32 size) {
   Ast *ast = (Ast *)calloc(1, size);
   ast->type = type;
 #if MTOTS_DEBUG_MEMORY_LEAK
@@ -22,58 +22,112 @@ static Ast *newAst(AstType type, size_t size) {
   return ast;
 }
 
-Ast *newAstLiteral(size_t line, Value value) {
-  AstLiteral *ast = NEW_AST(AstLiteral, AST_LITERAL);
-  ast->value = value;
-  retainValue(value);
+Parameter *newParameter(Symbol *name, Value defaultValue) {
+  Parameter *param = (Parameter *)calloc(1, sizeof(Parameter));
+  param->name = name;
+  param->defaultValue = defaultValue;
+  retainValue(defaultValue);
+  freezeValue(defaultValue);
+  return param;
+}
+
+Ast *newAstModule(u32 line, Ast *first) {
+  AstModule *ast = NEW_AST(AstModule, AST_MODULE);
+  ast->first = first;
   return (Ast *)ast;
 }
 
-Ast *newAstGetGlobal(size_t line, Symbol *name) {
+Ast *newAstLiteral(u32 line, Value value) {
+  AstLiteral *ast = NEW_AST(AstLiteral, AST_LITERAL);
+  ast->value = value;
+  retainValue(value);
+  freezeValue(value);
+  return (Ast *)ast;
+}
+
+Ast *newAstGetGlobal(u32 line, Symbol *name) {
   AstGetGlobal *ast = NEW_AST(AstGetGlobal, AST_GET_GLOBAL);
   ast->symbol = name;
   return (Ast *)ast;
 }
 
-Ast *newAstSetGlobal(size_t line, Symbol *name, Ast *value) {
+Ast *newAstSetGlobal(u32 line, Symbol *name, Ast *value) {
   AstSetGlobal *ast = NEW_AST(AstSetGlobal, AST_SET_GLOBAL);
   ast->symbol = name;
   ast->value = value;
   return (Ast *)ast;
 }
 
-Ast *newAstBlock(size_t line, Ast *first) {
+Ast *newAstGetLocal(u32 line, Symbol *name, u16 index) {
+  AstGetLocal *ast = NEW_AST(AstGetLocal, AST_GET_LOCAL);
+  ast->symbol = name;
+  ast->index = index;
+  return (Ast *)ast;
+}
+
+Ast *newAstSetLocal(u32 line, Symbol *name, u16 index, Ast *value) {
+  AstSetLocal *ast = NEW_AST(AstSetLocal, AST_SET_LOCAL);
+  ast->symbol = name;
+  ast->index = index;
+  ast->value = value;
+  return (Ast *)ast;
+}
+
+Ast *newAstBlock(u32 line, Ast *first) {
   AstBlock *ast = NEW_AST(AstBlock, AST_BLOCK);
   ast->first = first;
   return (Ast *)ast;
 }
 
-Ast *newAstUnop(size_t line, UnopType type, Ast *arg) {
+Ast *newAstUnop(u32 line, UnopType type, Ast *arg) {
   AstUnop *ast = NEW_AST(AstUnop, AST_UNOP);
   ast->type = type;
   ast->arg = arg;
   return (Ast *)ast;
 }
 
-Ast *newAstBinop(size_t line, BinopType type, Ast *args) {
+Ast *newAstBinop(u32 line, BinopType type, Ast *args) {
   AstBinop *ast = NEW_AST(AstBinop, AST_BINOP);
   ast->type = type;
   ast->args = args;
   return (Ast *)ast;
 }
 
-Ast *newAstLogical(size_t line, LogicalType type, Ast *args) {
+Ast *newAstLogical(u32 line, LogicalType type, Ast *args) {
   AstLogical *ast = NEW_AST(AstLogical, AST_LOGICAL);
   ast->type = type;
   ast->args = args;
   return (Ast *)ast;
 }
 
-Ast *newAstCall(size_t line, Symbol *name, Ast *funcAndArgs) {
+Ast *newAstCall(u32 line, Symbol *name, Ast *funcAndArgs) {
   AstCall *ast = NEW_AST(AstCall, AST_CALL);
   ast->name = name;
   ast->funcAndArgs = funcAndArgs;
   return (Ast *)ast;
+}
+
+Ast *newAstFunction(u32 line, Symbol *name, Parameter *parameters, Ast *body) {
+  AstFunction *ast = NEW_AST(AstFunction, AST_FUNCTION);
+  ast->name = name;
+  ast->parameters = parameters;
+  ast->body = body;
+  for (; parameters; parameters = parameters->next) {
+    if (isSentinel(parameters->defaultValue)) {
+      ast->arity++;
+    }
+    ast->maxArity++;
+  }
+  return (Ast *)ast;
+}
+
+void freeParameter(Parameter *parameter) {
+  if (parameter) {
+    if (parameter->next) {
+      freeParameter(parameter->next);
+    }
+    releaseValue(parameter->defaultValue);
+  }
 }
 
 void freeAst(Ast *ast) {
@@ -92,6 +146,9 @@ void freeAst(Ast *ast) {
 #endif
   freeAst(ast->next);
   switch (ast->type) {
+    case AST_MODULE:
+      freeAst(((AstModule *)ast)->first);
+      break;
     case AST_LITERAL:
       releaseValue(((AstLiteral *)ast)->value);
       break;
@@ -99,6 +156,11 @@ void freeAst(Ast *ast) {
       break;
     case AST_SET_GLOBAL:
       freeAst(((AstSetGlobal *)ast)->value);
+      break;
+    case AST_GET_LOCAL:
+      break;
+    case AST_SET_LOCAL:
+      freeAst(((AstSetLocal *)ast)->value);
       break;
     case AST_BLOCK:
       freeAst(((AstBlock *)ast)->first);
@@ -114,6 +176,10 @@ void freeAst(Ast *ast) {
       break;
     case AST_CALL:
       freeAst(((AstCall *)ast)->funcAndArgs);
+      break;
+    case AST_FUNCTION:
+      freeParameter(((AstFunction *)ast)->parameters);
+      freeAst(((AstFunction *)ast)->body);
       break;
   }
   free(ast);

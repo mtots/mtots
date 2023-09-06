@@ -38,7 +38,8 @@
         "__tree": "c",
         "mtots2string.h": "c",
         "mtots4eval.h": "c",
-        "__node_handle": "c"
+        "__node_handle": "c",
+        "mtots1err.h": "c"
     },
     "C_Cpp.default.defines": [
         "MTOTS_DEBUG_MEMORY_LEAK=1"

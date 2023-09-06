@@ -23,3 +23,10 @@ print(x)
 x = "new x value"
 print(x)
 print(x + " additional stuff")
+
+def sampleFunc():
+  print("inside sampleFunc()")
+
+sampleFunc()
+sampleFunc()
+print(sampleFunc)

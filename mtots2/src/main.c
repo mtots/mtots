@@ -27,6 +27,7 @@ int main(int argc, const char *argv[]) {
     freeGlobals();
   }
 #if MTOTS_DEBUG_MEMORY_LEAK
+  freeAllClasses();
   {
     size_t objectCount = printLeakedObjects();
     size_t astCount = printLeakedAsts();

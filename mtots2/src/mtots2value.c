@@ -60,6 +60,10 @@ Class CLASS_CLASS = {
     NULL,    /* destructor */
 };
 
+#if MTOTS_DEBUG_MEMORY_LEAK
+static Class *allClasses;
+#endif
+
 const char *getValueTypeName(ValueType type) {
   switch (type) {
     case VALUE_SENTINEL:
@@ -200,27 +204,6 @@ Object *asObject(Value value) {
   return value.as.object;
 }
 
-static Status callCFunction(CFunction *cf, i16 argc, Value *argv, Value *out) {
-  if (cf->maxArity == 0) {
-    if (cf->arity != argc) {
-      panic("Expected %d arguments but got %d", cf->arity, argc);
-    }
-  } else {
-    if (argc < cf->arity || argc > cf->maxArity) {
-      panic("Expected %d to %d arguments but got %d", cf->arity, cf->maxArity, argc);
-    }
-  }
-  return cf->body(argc, argv, out);
-}
-
-static Status callClass(Class *cls, i16 argc, Value *argv, Value *out) {
-  if (!cls->constructor) {
-    runtimeError("Class %s is not callable", cls->name);
-    return STATUS_ERR;
-  }
-  return callCFunction(cls->constructor, argc, argv, out);
-}
-
 Class *getClass(Value x) {
   switch (x.type) {
     case VALUE_SENTINEL:
@@ -242,6 +225,31 @@ Class *getClass(Value x) {
   }
 }
 
+void checkArity(i16 argc, i16 arity, i16 maxArity) {
+  if (maxArity == 0) {
+    if (arity != argc) {
+      panic("Expected %d arguments but got %d", arity, argc);
+    }
+  } else {
+    if (argc < arity || argc > maxArity) {
+      panic("Expected %d to %d arguments but got %d", arity, maxArity, argc);
+    }
+  }
+}
+
+static Status callCFunction(CFunction *cf, i16 argc, Value *argv, Value *out) {
+  checkArity(argc, cf->arity, cf->maxArity);
+  return cf->body(argc, argv, out);
+}
+
+static Status callClass(Class *cls, i16 argc, Value *argv, Value *out) {
+  if (!cls->constructor) {
+    runtimeError("Class %s is not callable", cls->name);
+    return STATUS_ERR;
+  }
+  return callCFunction(cls->constructor, argc, argv, out);
+}
+
 Status callValue(Value function, i16 argc, Value *argv, Value *out) {
   switch (function.type) {
     case VALUE_SENTINEL:
@@ -255,6 +263,12 @@ Status callValue(Value function, i16 argc, Value *argv, Value *out) {
     case VALUE_CLASS:
       return callClass(function.as.cls, argc, argv, out);
     case VALUE_OBJECT:
+      if (function.as.object->type == OBJECT_NATIVE) {
+        Class *cls = ((Native *)function.as.object)->cls;
+        if (!isSentinel(cls->cachedMethods.call)) {
+          return callValue(cls->cachedMethods.call, argc, argv, out);
+        }
+      }
       break;
   }
   panic("%s is not callable", getValueKindName(function));
@@ -542,6 +556,11 @@ Value floorDivideValues(Value a, Value b) {
 Class *newClass(const char *name) {
   Class *cls = (Class *)calloc(1, sizeof(Class));
   cls->name = name;
+  cls->initialized = UTRUE;
+#if MTOTS_DEBUG_MEMORY_LEAK
+  cls->next = allClasses;
+  allClasses = cls;
+#endif
   return cls;
 }
 
@@ -559,31 +578,54 @@ void classAddInstanceMethod(Class *cls, Symbol *name, Value method) {
   if (name == cs->repr) {
     cls->cachedMethods.repr = method;
   }
+  if (name == cs->call) {
+    cls->cachedMethods.call = method;
+  }
   mapSet(cls->instanceMethods, symbolValue(name), method);
 }
 
 void initStaticClass(Class *cls) {
-  CFunction **cf;
+  if (!cls->initialized) {
+    CFunction **cf;
+    cls->initialized = UTRUE;
 
-  if (cls->nativeStaticMethods) {
-    for (cf = cls->nativeStaticMethods; *cf; cf++) {
-      if (!cls->staticMethods) {
-        cls->staticMethods = newMap();
+#if MTOTS_DEBUG_MEMORY_LEAK
+    cls->next = allClasses;
+    allClasses = cls;
+#endif
+
+    if (cls->nativeStaticMethods) {
+      for (cf = cls->nativeStaticMethods; *cf; cf++) {
+        if (!cls->staticMethods) {
+          cls->staticMethods = newMap();
+        }
+        classAddStaticMethod(cls, newSymbol((*cf)->name), cfunctionValue(*cf));
       }
-      mapSet(cls->staticMethods,
-             symbolValue(newSymbol((*cf)->name)),
-             cfunctionValue(*cf));
     }
-  }
 
-  if (cls->nativeInstanceMethods) {
-    for (cf = cls->nativeInstanceMethods; *cf; cf++) {
-      if (!cls->instanceMethods) {
-        cls->instanceMethods = newMap();
+    if (cls->nativeInstanceMethods) {
+      for (cf = cls->nativeInstanceMethods; *cf; cf++) {
+        if (!cls->instanceMethods) {
+          cls->instanceMethods = newMap();
+        }
+        classAddInstanceMethod(cls, newSymbol((*cf)->name), cfunctionValue(*cf));
       }
-      mapSet(cls->instanceMethods,
-             symbolValue(newSymbol((*cf)->name)),
-             cfunctionValue(*cf));
     }
   }
 }
+
+#if MTOTS_DEBUG_MEMORY_LEAK
+
+static void freeClass(Class *cls) {
+  if (cls) {
+    freeClass(cls->next);
+    releaseMap(cls->staticMethods);
+    releaseMap(cls->instanceMethods);
+  }
+}
+
+void freeAllClasses(void) {
+  freeClass(allClasses);
+}
+
+#endif

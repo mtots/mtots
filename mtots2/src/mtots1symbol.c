@@ -123,6 +123,7 @@ const CommonSymbols *getCommonSymbols(void) {
   if (!commonSymbols.init) {
     commonSymbols.init = newSymbol("__init__");
     commonSymbols.repr = newSymbol("__repr__");
+    commonSymbols.call = newSymbol("__call__");
   }
   return &commonSymbols;
 }
