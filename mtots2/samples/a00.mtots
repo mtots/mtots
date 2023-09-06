@@ -10,3 +10,10 @@ print(true and false)
 print(true or false)
 print(if 1 then '1 is true' else '1 is false')
 print(if 0 then '0 is true' else '0 is false')
+
+if false:
+  print("false block")
+elif 1:
+  print("1 block")
+else:
+  print("else block")

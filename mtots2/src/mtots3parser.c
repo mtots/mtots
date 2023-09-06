@@ -9,15 +9,14 @@
 
 #define PEEK (parser->peek)
 #define AT(tokenType) (PEEK.type == (tokenType))
-#define NEXT()                                     \
-  if (!lexerNext(&parser->lexer, &parser->peek)) { \
-    return STATUS_ERR;                             \
+#define NEXT()              \
+  if (!nextToken(parser)) { \
+    return STATUS_ERR;      \
   }
 #define EXPECT(tokenType)                \
   if (!expectToken(parser, tokenType)) { \
     return STATUS_ERR;                   \
-  }                                      \
-  NEXT();
+  }
 
 typedef enum Precedence {
   PREC_NONE,
@@ -74,12 +73,23 @@ Status parse(const char *source, Ast **out) {
   return STATUS_OK;
 }
 
+static Status nextToken(Parser *parser) {
+  return lexerNext(&parser->lexer, &parser->peek);
+}
+
 static Status expectToken(Parser *parser, TokenType tokenType) {
   if (!AT(tokenType)) {
     runtimeError("Expected %s but got %s",
                  tokenTypeToName(tokenType),
                  tokenTypeToName(PEEK.type));
     return STATUS_ERR;
+  }
+  return nextToken(parser);
+}
+
+static Status consumeStatementDelimiter(Parser *parser) {
+  while (AT(TOKEN_NEWLINE) || AT(TOKEN_SEMICOLON)) {
+    NEXT();
   }
   return STATUS_OK;
 }
@@ -96,31 +106,100 @@ static Status parseStatementDelimiter(Parser *parser) {
   return STATUS_OK;
 }
 
+static Status parseBlock(Parser *parser, Ast **out) {
+  Ast *first;
+  size_t line = parser->peek.line;
+  EXPECT(TOKEN_COLON);
+  if (!consumeStatementDelimiter(parser)) {
+    return STATUS_ERR;
+  }
+  if (!expectToken(parser, TOKEN_INDENT)) {
+    return STATUS_ERR;
+  }
+  if (!parseStatementList(parser, &first)) {
+    return STATUS_ERR;
+  }
+  if (!expectToken(parser, TOKEN_DEDENT)) {
+    freeAst(first);
+    return STATUS_ERR;
+  }
+  *out = newAstBlock(line, first);
+  return STATUS_OK;
+}
+
+static Status parseIfRecursive(Parser *parser, Ast **out) {
+  Ast *cond;
+  size_t line = parser->peek.line;
+  if (!parseExpression(parser, &cond)) {
+    return STATUS_ERR;
+  }
+  if (!parseBlock(parser, &cond->next)) {
+    freeAst(cond);
+    return STATUS_ERR;
+  }
+  if (!consumeStatementDelimiter(parser)) {
+    freeAst(cond);
+    return STATUS_ERR;
+  }
+  if (AT(TOKEN_ELIF)) {
+    if (!nextToken(parser)) {
+      freeAst(cond);
+      return STATUS_ERR;
+    }
+    if (!parseIfRecursive(parser, &cond->next->next)) {
+      freeAst(cond);
+      return STATUS_ERR;
+    }
+  } else if (AT(TOKEN_ELSE)) {
+    if (!nextToken(parser)) {
+      freeAst(cond);
+      return STATUS_ERR;
+    }
+    if (!parseBlock(parser, &cond->next->next)) {
+      freeAst(cond);
+      return STATUS_ERR;
+    }
+  } else {
+    cond->next->next = newAstLiteral(parser->peek.line, nilValue());
+  }
+  *out = newAstLogical(line, LOGICAL_IF, cond);
+  return STATUS_OK;
+}
+
 static Status parseStatement(Parser *parser, Ast **out) {
   switch (parser->peek.type) {
+    case TOKEN_IF:
+      NEXT();
+      return parseIfRecursive(parser, out);
     default:
       break;
   }
   if (!parseExpression(parser, out)) {
     return STATUS_ERR;
   }
-  return parseStatementDelimiter(parser);
+  if (!parseStatementDelimiter(parser)) {
+    freeAst(*out);
+    return STATUS_ERR;
+  }
+  return STATUS_OK;
 }
 
 static Status parseStatementList(Parser *parser, Ast **out) {
   Ast *first = NULL, **next = &first;
-  while (AT(TOKEN_NEWLINE) || AT(TOKEN_SEMICOLON)) {
-    NEXT();
+  if (!consumeStatementDelimiter(parser)) {
+    return STATUS_ERR;
   }
-  while (!AT(TOKEN_EOF) && !AT(TOKEN_RIGHT_BRACE)) {
+  while (!AT(TOKEN_EOF) && !AT(TOKEN_RIGHT_BRACE) && !AT(TOKEN_DEDENT)) {
     Ast *stmt;
     if (!parseStatement(parser, &stmt)) {
+      freeAst(first);
       return STATUS_ERR;
     }
     *next = stmt;
     next = &stmt->next;
-    while (AT(TOKEN_NEWLINE) || AT(TOKEN_SEMICOLON)) {
-      NEXT();
+    if (!consumeStatementDelimiter(parser)) {
+      freeAst(first);
+      return STATUS_ERR;
     }
   }
   *out = first;
@@ -283,14 +362,13 @@ static Status parseArgumentList(Parser *parser, Ast **out) {
 }
 
 static Status parseFunctionCall(Parser *parser, Ast *lhs, Ast **out) {
-  Ast *args;
   size_t line = parser->peek.line;
   EXPECT(TOKEN_LEFT_PAREN);
-  if (!parseArgumentList(parser, &args)) {
+  if (!parseArgumentList(parser, &lhs->next)) {
     return STATUS_ERR;
   }
   EXPECT(TOKEN_RIGHT_PAREN);
-  *out = newAstCall(line, lhs, NULL, args);
+  *out = newAstCall(line, NULL, lhs);
   return STATUS_OK;
 }
 

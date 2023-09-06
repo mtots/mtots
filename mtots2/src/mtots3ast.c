@@ -62,11 +62,10 @@ Ast *newAstLogical(size_t line, LogicalType type, Ast *args) {
   return (Ast *)ast;
 }
 
-Ast *newAstCall(size_t line, Ast *function, Symbol *name, Ast *firstArg) {
+Ast *newAstCall(size_t line, Symbol *name, Ast *funcAndArgs) {
   AstCall *ast = NEW_AST(AstCall, AST_CALL);
-  ast->function = function;
   ast->name = name;
-  ast->firstArg = firstArg;
+  ast->funcAndArgs = funcAndArgs;
   return (Ast *)ast;
 }
 
@@ -104,8 +103,7 @@ void freeAst(Ast *ast) {
       freeAst(((AstLogical *)ast)->args);
       break;
     case AST_CALL:
-      freeAst(((AstCall *)ast)->function);
-      freeAst(((AstCall *)ast)->firstArg);
+      freeAst(((AstCall *)ast)->funcAndArgs);
       break;
   }
   free(ast);

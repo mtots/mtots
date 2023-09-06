@@ -178,21 +178,19 @@ Status evalAst(Ast *node) {
     case AST_CALL: {
       AstCall *call = (AstCall *)node;
       Value *argv, func, *out;
-      i16 argc = 0, i;
+      i16 argc, i;
       Ast *argAst;
       out = evalStack + evalStackSize;
-      if (!evalAst(call->function)) {
-        return STATUS_ERR;
-      }
-      /* NOTE: We are taking the 'retain' that's on the stack here */
-      func = *out;
-      argv = evalStack + evalStackSize;
-      for (argAst = call->firstArg; argAst; argAst = argAst->next) {
+      argv = evalStack + evalStackSize + 1;
+      argc = -1; /* account for the func/receiver */
+      for (argAst = call->funcAndArgs; argAst; argAst = argAst->next) {
         argc++;
         if (!evalAst(argAst)) {
           return STATUS_ERR;
         }
       }
+      /* NOTE: We are taking the 'retain' that's on the stack here */
+      func = *out;
       if (call->name) {
         if (!callMethod(call->name, argc, argv, out)) {
           return STATUS_ERR;

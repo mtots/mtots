@@ -85,9 +85,8 @@ typedef struct AstLogical {
 /** Function or method call */
 typedef struct AstCall {
   Ast ast;
-  Ast *function; /* receiver for method calls */
-  Symbol *name;  /* NULL for functions */
-  Ast *firstArg;
+  Symbol *name;     /* NULL for functions, otherwise method name */
+  Ast *funcAndArgs; /* receiver for method calls */
 } AstCall;
 
 Ast *newAstLiteral(size_t line, Value value);
@@ -96,7 +95,7 @@ Ast *newAstBlock(size_t line, Ast *first);
 Ast *newAstUnop(size_t line, UnopType type, Ast *arg);
 Ast *newAstBinop(size_t line, BinopType type, Ast *args);
 Ast *newAstLogical(size_t line, LogicalType type, Ast *args);
-Ast *newAstCall(size_t line, Ast *function, Symbol *name, Ast *firstArg);
+Ast *newAstCall(size_t line, Symbol *name, Ast *funcAndArgs);
 void freeAst(Ast *ast);
 
 #if MTOTS_DEBUG_MEMORY_LEAK
