@@ -221,42 +221,6 @@ static ubool isIterator(Value value) {
   return UFALSE;
 }
 
-static ubool callBuiltin(Builtin *builtin, i16 argc) {
-  Value result = NIL_VAL(), *argsStart;
-  if (builtin->arity != argc) {
-    /* not an exact match for the arity
-     * We need further checks */
-    if (builtin->maxArity) {
-      /* we have optional args */
-      if (argc < builtin->arity) {
-        runtimeError(
-          "Function %s expects at least %d arguments but got %d",
-          builtin->name, builtin->arity, argc);
-        return UFALSE;
-      } else if (argc > builtin->maxArity) {
-        runtimeError(
-          "Function %s expects at most %d arguments but got %d",
-          builtin->name, builtin->maxArity, argc);
-        return UFALSE;
-      }
-      /* At this point we have argc between
-       * builtin->arity and builtin->maxArity */
-    } else {
-      runtimeError(
-        "Function %s expects %d arguments but got %d",
-        builtin->name, builtin->arity, argc);
-      return UFALSE;
-    }
-  }
-  argsStart = vm.stackTop - argc;
-  if (!builtin->body(argc, argsStart, &result)) {
-    return UFALSE;
-  }
-  vm.stackTop -= argc + 1;
-  push(result);
-  return UTRUE;
-}
-
 static ubool callCFunction(CFunction *cfunc, i16 argCount) {
   Value result = NIL_VAL(), *argsStart;
   ubool status;
@@ -1103,8 +1067,6 @@ static ubool callFunctionOrMethod(Value callable, i16 argCount, ubool consummate
   if (IS_CFUNCTION(callable)) {
     CFunction *cfunc = AS_CFUNCTION(callable);
     return callCFunction(cfunc, argCount);
-  } else if (IS_BUILTIN(callable)) {
-    return callBuiltin(callable.as.builtin, argCount);
   } else if (IS_OBJ(callable)) {
     switch (OBJ_TYPE(callable)) {
       case OBJ_CLASS:

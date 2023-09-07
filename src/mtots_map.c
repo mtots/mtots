@@ -39,7 +39,6 @@ u32 hashval(Value value) {
     }
     case VAL_SYMBOL: return getSymbolHash(value.as.symbol);
     case VAL_STRING: return AS_STRING(value)->hash;
-    case VAL_BUILTIN: break;
     case VAL_CFUNCTION: break;
     case VAL_SENTINEL: return (u32) AS_SENTINEL(value);
     case VAL_OBJ: switch (AS_OBJ(value)->type) {

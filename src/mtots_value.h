@@ -3,7 +3,6 @@
 
 #include "mtots_util.h"
 
-typedef struct Builtin Builtin;
 typedef struct CFunction CFunction;
 typedef struct Obj Obj;
 
@@ -45,7 +44,6 @@ typedef enum ValueType {
   VAL_NUMBER,
   VAL_SYMBOL,
   VAL_STRING,
-  VAL_BUILTIN,
   VAL_CFUNCTION,
   VAL_SENTINEL,
   VAL_OBJ
@@ -70,19 +68,11 @@ typedef struct Value {
     double number;
     Symbol *symbol;
     String *string;
-    Builtin *builtin;
     CFunction *cfunction;
     Sentinel sentinel;
     Obj *obj;
   } as; /* 8-bytes */
 } Value;
-
-struct Builtin {
-  const char *name;
-  i16 arity;
-  i16 maxArity;
-  Status (*body)(i16 argc, Value *argv, Value *out);
-};
 
 struct CFunction {
   ubool (*body)(i16 argCount, Value *args, Value *out);
@@ -104,7 +94,6 @@ typedef struct ValueArray {
 #define IS_NUMBER(value) ((value).type == VAL_NUMBER)
 #define IS_SYMBOL(value) ((value).type == VAL_SYMBOL)
 #define IS_STRING(value) ((value).type == VAL_STRING)
-#define IS_BUILTIN(value) ((value).type == VAL_BUILTIN)
 #define IS_CFUNCTION(value) ((value).type == VAL_CFUNCTION)
 #define IS_SENTINEL(value) ((value).type == VAL_SENTINEL)
 #define IS_FAST_RANGE(value) ((value).type == VAL_FAST_RANGE)
@@ -138,7 +127,6 @@ ubool asBool(Value value);
 double asNumber(Value value);
 Symbol *asSymbol(Value value);
 String *asString(Value value);
-Builtin *asBuiltin(Value value);
 CFunction *asCFunction(Value value);
 Obj *asObj(Value value);
 
@@ -146,7 +134,6 @@ Value NIL_VAL(void);
 Value BOOL_VAL(ubool value);
 Value NUMBER_VAL(double value);
 Value STRING_VAL(String *string);
-Value BUILTIN_VAL(Builtin *builtin);
 Value CFUNCTION_VAL(CFunction *func);
 Value SENTINEL_VAL(Sentinel sentinel);
 Value OBJ_VAL_EXPLICIT(Obj *object);

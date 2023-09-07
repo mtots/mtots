@@ -153,7 +153,7 @@ double asNumber(Value value) {
   return value.as.number;
 }
 Symbol *asSymbol(Value value) {
-  if (!IS_BUILTIN(value)) {
+  if (!IS_SYMBOL(value)) {
     panic("Expected Symbol but got %s", getKindName(value));
   }
   return value.as.symbol;
@@ -163,12 +163,6 @@ String *asString(Value value) {
     panic("Expected String but got %s", getKindName(value));
   }
   return value.as.string;
-}
-Builtin *asBuiltin(Value value) {
-  if (!IS_BUILTIN(value)) {
-    panic("Expected Builtin but got %s", getKindName(value));
-  }
-  return value.as.builtin;
 }
 CFunction *asCFunction(Value value) {
   if (!IS_CFUNCTION(value)) {
@@ -200,11 +194,6 @@ Value NUMBER_VAL(double value) {
 Value STRING_VAL(String *string) {
   Value v = { VAL_STRING  };
   v.as.string = string;
-  return v;
-}
-Value BUILTIN_VAL(Builtin *builtin) {
-  Value v = { VAL_BUILTIN };
-  v.as.builtin = builtin;
   return v;
 }
 Value CFUNCTION_VAL(CFunction *func) {
@@ -262,11 +251,6 @@ void printValue(Value value) {
     case VAL_STRING:
       printf("%s", AS_CSTRING(value));
       return;
-    case VAL_BUILTIN: {
-      Builtin *fn = value.as.builtin;
-      printf("<function %s at %p>", fn->name, (void*)fn);
-      return;
-    }
     case VAL_CFUNCTION: {
       CFunction *fn = AS_CFUNCTION(value);
       printf("<function %s at %p>", fn->name, (void*)fn);
@@ -287,7 +271,6 @@ const char *getValueTypeName(ValueType type) {
     case VAL_SYMBOL: return "VAL_SYMBOL";
     case VAL_NUMBER: return "VAL_NUMBER";
     case VAL_STRING: return "VAL_STRING";
-    case VAL_BUILTIN: return "VAL_BUILTIN";
     case VAL_CFUNCTION: return "VAL_CFUNCTION";
     case VAL_SENTINEL: return "VAL_SENTINEL";
     case VAL_OBJ: return "VAL_OBJ";
@@ -306,7 +289,6 @@ const char *getKindName(Value value) {
     case VAL_NUMBER: return "number";
     case VAL_SYMBOL: return "symbol";
     case VAL_STRING: return "string";
-    case VAL_BUILTIN: return "builtin";
     case VAL_CFUNCTION: return "cfunction";
     case VAL_SENTINEL: return "sentinel";
     case VAL_OBJ: switch (value.as.obj->type) {
