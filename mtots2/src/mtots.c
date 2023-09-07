@@ -6,6 +6,7 @@
 #include "mtots3parser.h"
 #include "mtots4eval.h"
 #include "mtots4globals.h"
+#include "mtots4module.h"
 #include "mtots4readfile.h"
 
 typedef struct ModuleData ModuleData;
@@ -14,7 +15,7 @@ struct ModuleData {
   Symbol *moduleName; /* name of the module (for importing) */
   Symbol *filePath;   /* path to the file, if any */
   Ast *ast;           /* parsed module AST */
-  Map *scope;         /* scope of the Module */
+  Module *module;     /* the module itself */
   ModuleData *next;   /* next ModuleData in the chain of all ModuleData */
 };
 
@@ -52,8 +53,7 @@ void releaseMtots(Mtots *mtots) {
   while (data) {
     ModuleData *next = data->next;
     freeAst(data->ast);
-    mapClear(data->scope);
-    releaseMap(data->scope);
+    releaseModule(data->module);
     free(data);
     data = next;
   }
@@ -75,14 +75,16 @@ static ModuleData *newModuleData(Mtots *mtots, Symbol *moduleName) {
 Status runMtotsFile(Mtots *mtots, const char *filePath) {
   char *source = readFileAsString(filePath);
   ModuleData *data = newModuleData(mtots, NULL);
+  Map *scope = newMapWithParent(mtots->globals);
   data->filePath = newSymbol(filePath);
-  data->scope = newMapWithParent(mtots->globals);
+  data->module = newModule(newSymbol("__main__"), scope);
+  releaseMap(scope);
   if (!parse(source, &data->ast)) {
     free(source);
     return STATUS_ERR;
   }
   free(source);
-  if (!evalAst(data->ast, data->scope)) {
+  if (!evalAst(data->ast, moduleScope(data->module))) {
     freeAst(data->ast);
     return STATUS_ERR;
   }

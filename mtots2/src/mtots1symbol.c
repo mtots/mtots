@@ -124,6 +124,7 @@ const CommonSymbols *getCommonSymbols(void) {
     commonSymbols.init = newSymbol("__init__");
     commonSymbols.repr = newSymbol("__repr__");
     commonSymbols.call = newSymbol("__call__");
+    commonSymbols.main = newSymbol("__main__");
   }
   return &commonSymbols;
 }

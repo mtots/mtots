@@ -11,6 +11,7 @@ typedef struct CommonSymbols {
   Symbol *init; /* __init__ */
   Symbol *repr; /* __repr__ */
   Symbol *call; /* __call__ */
+  Symbol *main; /* __main__ */
 } CommonSymbols;
 
 u32 hashStringData(const u8 *key, size_t length);
