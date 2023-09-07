@@ -89,17 +89,12 @@ static Status expectToken(Parser *parser, TokenType tokenType) {
 }
 
 static Status getVariable(Parser *parser, u32 line, Symbol *name, Ast **out) {
-  *out = newAstGetGlobal(line, name);
+  *out = newAstGetVar(line, name);
   return STATUS_OK;
 }
 
 static Status setVariable(Parser *parser, u32 line, Symbol *name, Ast *value, Ast **out) {
-  *out = newAstSetGlobal(line, name, value);
-  return STATUS_OK;
-}
-
-static Status declareVariable(Parser *parser, u32 line, Symbol *name, Ast *value, Ast **out) {
-  *out = newAstSetGlobal(line, name, value);
+  *out = newAstSetVar(line, name, value);
   return STATUS_OK;
 }
 
@@ -230,7 +225,7 @@ static Status parseVariableDeclaration(Parser *parser, Ast **out) {
     return STATUS_ERR;
   }
 
-  return declareVariable(parser, line, name, rhs, out);
+  return setVariable(parser, line, name, rhs, out);
 }
 
 static Status parseIfRecursive(Parser *parser, Ast **out) {
@@ -385,7 +380,7 @@ static Status parseFunctionDefinition(Parser *parser, Ast **out) {
     return STATUS_ERR;
   }
   function = newAstFunction(line, name, parameters, body);
-  if (!declareVariable(parser, line, name, function, out)) {
+  if (!setVariable(parser, line, name, function, out)) {
     freeAst((Ast *)function);
     return STATUS_ERR;
   }

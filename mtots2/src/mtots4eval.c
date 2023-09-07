@@ -9,23 +9,14 @@
 
 #define FRAME_STACK_SIZE 1024
 #define EVAL_STACK_SIZE 1024
-#define VAR_STACKS_SIZE EVAL_STACK_SIZE
-#define FRAME (frameStack[frameStackSize - 1])
-
-typedef struct Variable {
-  Value value;
-} Variable;
 
 typedef struct Frame {
-  u16 varStart;
   u16 evalStart;
 } Frame;
 
 static Value evalStack[EVAL_STACK_SIZE];
-static Variable varStack[VAR_STACKS_SIZE];
 static Frame frameStack[FRAME_STACK_SIZE];
 static u16 evalStackSize;
-static u16 varStackSize;
 static u16 frameStackSize;
 static Map *globals;
 
@@ -67,7 +58,6 @@ static Value evalStackPop(ubool release) {
 
 static void pushFrame(void) {
   Frame *frame = &frameStack[frameStackSize++];
-  frame->varStart = varStackSize;
   frame->evalStart = evalStackSize;
 }
 
@@ -77,9 +67,6 @@ static void popFrame(void) {
     panic("stackunderflow (popFrame)");
   }
   frame = &frameStack[--frameStackSize];
-  while (varStackSize > frame->varStart) {
-    releaseValue(varStack[--varStackSize].value);
-  }
   while (evalStackSize > frame->evalStart) {
     releaseValue(evalStack[--evalStackSize]);
   }
@@ -105,8 +92,8 @@ Status evalAst(Ast *node) {
     case AST_LITERAL:
       evalStackPush(((AstLiteral *)node)->value, UTRUE);
       return STATUS_OK;
-    case AST_GET_GLOBAL: {
-      Symbol *symbol = ((AstGetGlobal *)node)->symbol;
+    case AST_GET_VAR: {
+      Symbol *symbol = ((AstGetVar *)node)->symbol;
       Value value = mapGet(getGlobals(), symbolValue(symbol));
       if (isSentinel(value)) {
         printValue(mapValue(getGlobals()));
@@ -117,31 +104,13 @@ Status evalAst(Ast *node) {
       evalStackPush(value, UTRUE);
       return STATUS_OK;
     }
-    case AST_SET_GLOBAL: {
-      AstSetGlobal *setGlobal = (AstSetGlobal *)node;
-      Symbol *symbol = setGlobal->symbol;
-      if (!evalAst(setGlobal->value)) {
+    case AST_SET_VAR: {
+      AstSetVar *setVar = (AstSetVar *)node;
+      Symbol *symbol = setVar->symbol;
+      if (!evalAst(setVar->value)) {
         return STATUS_ERR;
       }
       mapSet(getGlobals(), symbolValue(symbol), evalStack[evalStackSize - 1]);
-      return STATUS_OK;
-    }
-    case AST_GET_LOCAL: {
-      AstGetLocal *getLocal = (AstGetLocal *)node;
-      Value value = varStack[FRAME.varStart + getLocal->index].value;
-      evalStackPush(value, UTRUE);
-      return STATUS_OK;
-    }
-    case AST_SET_LOCAL: {
-      AstSetLocal *setLocal = (AstSetLocal *)node;
-      Value value;
-      if (!evalAst(setLocal->value)) {
-        return STATUS_ERR;
-      }
-      value = evalStack[evalStackSize - 1];
-      retainValue(value);
-      releaseValue(varStack[FRAME.varStart + setLocal->index].value);
-      varStack[FRAME.varStart + setLocal->index].value = value;
       return STATUS_OK;
     }
     case AST_BLOCK: {

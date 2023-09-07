@@ -45,30 +45,15 @@ Ast *newAstLiteral(u32 line, Value value) {
   return (Ast *)ast;
 }
 
-Ast *newAstGetGlobal(u32 line, Symbol *name) {
-  AstGetGlobal *ast = NEW_AST(AstGetGlobal, AST_GET_GLOBAL);
+Ast *newAstGetVar(u32 line, Symbol *name) {
+  AstGetVar *ast = NEW_AST(AstGetVar, AST_GET_VAR);
   ast->symbol = name;
   return (Ast *)ast;
 }
 
-Ast *newAstSetGlobal(u32 line, Symbol *name, Ast *value) {
-  AstSetGlobal *ast = NEW_AST(AstSetGlobal, AST_SET_GLOBAL);
+Ast *newAstSetVar(u32 line, Symbol *name, Ast *value) {
+  AstSetVar *ast = NEW_AST(AstSetVar, AST_SET_VAR);
   ast->symbol = name;
-  ast->value = value;
-  return (Ast *)ast;
-}
-
-Ast *newAstGetLocal(u32 line, Symbol *name, u16 index) {
-  AstGetLocal *ast = NEW_AST(AstGetLocal, AST_GET_LOCAL);
-  ast->symbol = name;
-  ast->index = index;
-  return (Ast *)ast;
-}
-
-Ast *newAstSetLocal(u32 line, Symbol *name, u16 index, Ast *value) {
-  AstSetLocal *ast = NEW_AST(AstSetLocal, AST_SET_LOCAL);
-  ast->symbol = name;
-  ast->index = index;
   ast->value = value;
   return (Ast *)ast;
 }
@@ -152,15 +137,10 @@ void freeAst(Ast *ast) {
     case AST_LITERAL:
       releaseValue(((AstLiteral *)ast)->value);
       break;
-    case AST_GET_GLOBAL:
+    case AST_GET_VAR:
       break;
-    case AST_SET_GLOBAL:
-      freeAst(((AstSetGlobal *)ast)->value);
-      break;
-    case AST_GET_LOCAL:
-      break;
-    case AST_SET_LOCAL:
-      freeAst(((AstSetLocal *)ast)->value);
+    case AST_SET_VAR:
+      freeAst(((AstSetVar *)ast)->value);
       break;
     case AST_BLOCK:
       freeAst(((AstBlock *)ast)->first);

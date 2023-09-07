@@ -9,10 +9,8 @@ typedef struct Parameter Parameter;
 typedef enum AstType {
   AST_MODULE,
   AST_LITERAL,
-  AST_GET_GLOBAL,
-  AST_SET_GLOBAL,
-  AST_GET_LOCAL,
-  AST_SET_LOCAL,
+  AST_GET_VAR,
+  AST_SET_VAR,
   AST_BLOCK,
   AST_UNOP,
   AST_BINOP,
@@ -71,29 +69,16 @@ typedef struct AstLiteral {
   Value value;
 } AstLiteral;
 
-typedef struct AstGetGlobal {
+typedef struct AstGetVar {
   Ast ast;
   Symbol *symbol;
-} AstGetGlobal;
+} AstGetVar;
 
-typedef struct AstSetGlobal {
+typedef struct AstSetVar {
   Ast ast;
   Symbol *symbol;
   Ast *value;
-} AstSetGlobal;
-
-typedef struct AstGetLocal {
-  Ast ast;
-  Symbol *symbol;
-  u16 index;
-} AstGetLocal;
-
-typedef struct AstSetLocal {
-  Ast ast;
-  Symbol *symbol;
-  u16 index;
-  Ast *value;
-} AstSetLocal;
+} AstSetVar;
 
 typedef struct AstBlock {
   Ast ast;
@@ -137,10 +122,8 @@ typedef struct AstFunction {
 Parameter *newParameter(Symbol *name, Value defaultValue);
 Ast *newAstModule(u32 line, Ast *first);
 Ast *newAstLiteral(u32 line, Value value);
-Ast *newAstGetGlobal(u32 line, Symbol *name);
-Ast *newAstSetGlobal(u32 line, Symbol *name, Ast *value);
-Ast *newAstGetLocal(u32 line, Symbol *name, u16 index);
-Ast *newAstSetLocal(u32 line, Symbol *name, u16 index, Ast *value);
+Ast *newAstGetVar(u32 line, Symbol *name);
+Ast *newAstSetVar(u32 line, Symbol *name, Ast *value);
 Ast *newAstBlock(u32 line, Ast *first);
 Ast *newAstUnop(u32 line, UnopType type, Ast *arg);
 Ast *newAstBinop(u32 line, BinopType type, Ast *args);
