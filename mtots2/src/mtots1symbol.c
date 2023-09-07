@@ -120,11 +120,11 @@ u32 symbolHash(Symbol *symbol) {
 }
 
 const CommonSymbols *getCommonSymbols(void) {
-  if (!commonSymbols.init) {
-    commonSymbols.init = newSymbol("__init__");
-    commonSymbols.repr = newSymbol("__repr__");
-    commonSymbols.call = newSymbol("__call__");
-    commonSymbols.main = newSymbol("__main__");
+  if (!commonSymbols.dunderInit) {
+    commonSymbols.dunderInit = newSymbol("__init__");
+    commonSymbols.dunderRepr = newSymbol("__repr__");
+    commonSymbols.dunderCall = newSymbol("__call__");
+    commonSymbols.dunderMain = newSymbol("__main__");
   }
   return &commonSymbols;
 }

@@ -9,6 +9,7 @@ typedef struct CFunction CFunction;
 typedef struct Class Class; /** Mtots Class */
 typedef struct String String;
 typedef struct Map Map;
+typedef struct Weak Weak;
 
 typedef enum ValueType {
   /* Sentinel is used for newSymbolal things (e.g. empty dict key) */
@@ -45,6 +46,12 @@ struct Value {
   } as;
 };
 
+typedef struct SpecialOperations {
+  Status (*getField)(Value recv, Symbol *name, Value *out);
+  Status (*setField)(Value recv, Symbol *name, Value value);
+  Status (*invoke)(Symbol *name, i16 argc, Value *argv, Value *out);
+} SpecialOperations;
+
 typedef struct CachedMethods {
   Value init;
   Value repr;
@@ -71,6 +78,8 @@ struct Class {
 
   CFunction **nativeStaticMethods;
   CFunction **nativeInstanceMethods;
+  SpecialOperations *ops;
+
   Map *staticMethods;
   Map *instanceMethods;
   CachedMethods cachedMethods;
@@ -145,6 +154,12 @@ Status callValue(Value function, i16 argc, Value *argv, Value *out);
 /** NOTE: The output value `out` must be released after the call.
  * NOTE: the owner/receiver should be provided as argv[-1] */
 Status callMethod(Symbol *name, i16 argc, Value *argv, Value *out);
+
+/** Retrieve a value's a field.
+ * NOTE: The returned value must be released after the call. */
+Status getField(Value recv, Symbol *name, Value *out);
+
+Status setField(Value recv, Symbol *name, Value value);
 
 void reprValue(String *out, Value value);
 void strValue(String *out, Value value);

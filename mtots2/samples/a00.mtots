@@ -27,6 +27,12 @@ print(x + " additional stuff")
 def sampleFunc():
   print("inside sampleFunc()")
 
+  def nested():
+    print("inside nested")
+
+  nested()
+  print(nested)
+
 sampleFunc()
 sampleFunc()
 print(sampleFunc)

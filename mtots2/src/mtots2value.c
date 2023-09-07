@@ -277,18 +277,38 @@ Status callValue(Value function, i16 argc, Value *argv, Value *out) {
 
 Status callMethod(Symbol *name, i16 argc, Value *argv, Value *out) {
   Class *cls = getClass(argv[-1]);
-  Value key = symbolValue(name);
-  Value method =
-      cls == &CLASS_CLASS ? mapGet(cls->staticMethods, key)
-                          : mapGet(cls->instanceMethods, key);
-  if (isSentinel(method)) {
-    if (cls == &CLASS_CLASS) {
-      panic("Static method %s not found on class %s", symbolChars(name), cls->name);
-    } else {
-      panic("Method %s not found on %s instance", symbolChars(name), cls->name);
+  if (cls->ops && cls->ops->invoke) {
+    return cls->ops->invoke(name, argc, argv, out);
+  } else {
+    Value key = symbolValue(name);
+    Value method =
+        cls == &CLASS_CLASS ? mapGet(cls->staticMethods, key)
+                            : mapGet(cls->instanceMethods, key);
+    if (isSentinel(method)) {
+      if (cls == &CLASS_CLASS) {
+        panic("Static method %s not found on class %s", symbolChars(name), cls->name);
+      } else {
+        panic("Method %s not found on %s instance", symbolChars(name), cls->name);
+      }
     }
+    return callValue(method, argc, argv, out);
   }
-  return callValue(method, argc, argv, out);
+}
+
+Status getField(Value recv, Symbol *name, Value *out) {
+  Class *cls = getClass(recv);
+  if (cls->ops && cls->ops->getField) {
+    return cls->ops->getField(recv, name, out);
+  }
+  panic("%s instances do not have fields (getField)", cls->name);
+}
+
+Status setField(Value recv, Symbol *name, Value value) {
+  Class *cls = getClass(recv);
+  if (cls->ops && cls->ops->setField) {
+    return cls->ops->setField(recv, name, value);
+  }
+  panic("%s instances cannot assign to fields (setField)", cls->name);
 }
 
 void reprValue(String *out, Value value) {
@@ -574,13 +594,13 @@ void classAddStaticMethod(Class *cls, Symbol *name, Value method) {
 void classAddInstanceMethod(Class *cls, Symbol *name, Value method) {
   const CommonSymbols *cs = getCommonSymbols();
   retainValue(method);
-  if (name == cs->init) {
+  if (name == cs->dunderInit) {
     cls->cachedMethods.init = method;
   }
-  if (name == cs->repr) {
+  if (name == cs->dunderRepr) {
     cls->cachedMethods.repr = method;
   }
-  if (name == cs->call) {
+  if (name == cs->dunderCall) {
     cls->cachedMethods.call = method;
   }
   mapSet(cls->instanceMethods, symbolValue(name), method);

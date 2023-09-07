@@ -131,6 +131,14 @@ size_t lenMap(Map *map) {
   return map->size;
 }
 
+size_t mapCountChain(Map *map) {
+  size_t ret = 0;
+  for (; map; map = map->parent) {
+    ret++;
+  }
+  return ret;
+}
+
 NODISCARD Map *newMapWithParent(Map *parent) {
   Map *map = NEW_OBJECT(Map, OBJECT_MAP);
   map->parent = parent;
@@ -327,4 +335,10 @@ void mapClear(Map *map) {
   while (map->first) {
     releaseValue(mapPop(map, map->first->key));
   }
+}
+
+/** The returned value should not be released -
+ * the retain is still held by the owner Map */
+Map *mapParent(Map *map) {
+  return map->parent;
 }

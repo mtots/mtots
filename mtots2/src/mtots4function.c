@@ -79,7 +79,11 @@ static CFunction funcCall = {"__call__", 0, I16_MAX, &implCall};
 static Status implRepr(i16 argc, Value *argv, Value *out) {
   Function *func = asFunction(argv[-1]);
   String *str = newString("");
-  msprintf(str, "<function %s (scope=%p)>", symbolChars(func->name), (void *)func->scope);
+  if (mapCountChain(func->scope) > 2) {
+    msprintf(str, "<function %s (scope=%p)>", symbolChars(func->name), (void *)func->scope);
+  } else {
+    msprintf(str, "<function %s>", symbolChars(func->name));
+  }
   *out = stringValue(str);
   return STATUS_OK;
 }
