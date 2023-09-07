@@ -18,13 +18,14 @@ typedef struct Variable {
 
 typedef struct Frame {
   u16 varStart;
+  u16 evalStart;
 } Frame;
 
 static Value evalStack[EVAL_STACK_SIZE];
 static Variable varStack[VAR_STACKS_SIZE];
 static Frame frameStack[FRAME_STACK_SIZE];
 static u16 evalStackSize;
-/* static u16 varStackSize; */
+static u16 varStackSize;
 static u16 frameStackSize;
 static Map *globals;
 
@@ -64,17 +65,39 @@ static Value evalStackPop(ubool release) {
   return evalStack[--evalStackSize];
 }
 
+static void pushFrame(void) {
+  Frame *frame = &frameStack[frameStackSize++];
+  frame->varStart = varStackSize;
+  frame->evalStart = evalStackSize;
+}
+
+static void popFrame(void) {
+  Frame *frame;
+  if (frameStackSize == 0) {
+    panic("stackunderflow (popFrame)");
+  }
+  frame = &frameStack[--frameStackSize];
+  while (varStackSize > frame->varStart) {
+    releaseValue(varStack[--varStackSize].value);
+  }
+  while (evalStackSize > frame->evalStart) {
+    releaseValue(evalStack[--evalStackSize]);
+  }
+}
+
 Status evalAst(Ast *node) {
   switch (node->type) {
     case AST_MODULE: {
       AstModule *block = (AstModule *)node;
       Ast *child;
+      pushFrame();
       for (child = block->first; child; child = child->next) {
         if (!evalAst(child)) {
           return STATUS_ERR;
         }
         evalStackPop(UTRUE);
       }
+      popFrame();
       /* TODO: Return a Module object */
       evalStackPush(nilValue(), UFALSE);
       return STATUS_OK;
@@ -111,7 +134,11 @@ Status evalAst(Ast *node) {
     }
     case AST_SET_LOCAL: {
       AstSetLocal *setLocal = (AstSetLocal *)node;
-      Value value = evalStack[evalStackSize - 1];
+      Value value;
+      if (!evalAst(setLocal->value)) {
+        return STATUS_ERR;
+      }
+      value = evalStack[evalStackSize - 1];
       retainValue(value);
       releaseValue(varStack[FRAME.varStart + setLocal->index].value);
       varStack[FRAME.varStart + setLocal->index].value = value;
