@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/src"
+            ],
+            "cppStandard": "c++17",
+            "intelliSenseMode": "macos-clang-arm64"
+        },
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/src"
+            ],
+            "cppStandard": "c++17",
+            "intelliSenseMode": "msvc-arm64"
+          }
+    ],
+    "version": 4
+}
