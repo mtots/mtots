@@ -211,60 +211,6 @@ class Compiler:
             # Turn off DEBUG_TRACE_GC on release builds
             *(["-DMTOTS_RELEASE=1"] if self.release else []),
 
-            # Include the stb_image library
-            "-Ilib/stbimage/include",
-
-            # Include the FreeType library
-            "-Ilib/freetype/include",
-
-            # Font module
-            #   - depends on freetype
-            # "-DMTOTS_ENABLE_FONT=1",
-            "-Isrc/extensions/font",
-            *getExtensionSources('font'),
-
-            # font.roboto.mono module
-            #   - depends on font module
-            # "-DMTOTS_ENABLE_FONT_ROBOTO_MONO=1",
-            "-Isrc/extensions/fontrm",
-            *getExtensionSources('fontrm'),
-
-            # SDL
-            "-Isrc/extensions/sdl",
-            *getExtensionSources('sdl'),
-
-            # Audio module
-            # "-DMTOTS_ENABLE_AUDIO=1",
-            "-Isrc/extensions/audio",
-            *getExtensionSources('audio'),
-
-            # Image module
-            #   - depends on lodepng
-            # "-DMTOTS_ENABLE_IMAGE=1",
-            "-Ilib/lodepng/src",
-            "-Isrc/extensions/image",
-            *getExtensionSources('image'),
-
-            # Canvas module
-            #   - depends on image module
-            # "-DMTOTS_ENABLE_CANVAS=1",
-            "-Isrc/extensions/canvas",
-            *getExtensionSources('canvas'),
-
-            # gg module
-            #   - depends on SDL
-            #   - depends on image module
-            #   - depends on font.roboto.mono module
-            # "-DMTOTS_ENABLE_GG=1",
-            "-Isrc/extensions/gg",
-            *getExtensionSources('gg'),
-
-            # paco
-            #   - depends on SDL
-            # "-DMTOTS_ENABLE_PACO=1",
-            "-Isrc/extensions/paco",
-            *getExtensionSources('paco'),
-
             # mtots sources
             *getSources(),
 

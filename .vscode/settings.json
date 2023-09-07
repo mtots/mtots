@@ -47,18 +47,6 @@
         "cstdlib": "cpp",
         "sstream": "c"
     },
-    "C_Cpp.default.defines": [
-        "FT2_BUILD_LIBRARY=1",
-        "MTOTS_ENABLE_GG=1",
-        "MTOTS_ENABLE_AUDIO=1",
-        "MTOTS_ENABLE_IMAGE=1",
-        "MTOTS_ENABLE_CANVAS=1",
-        "MTOTS_ENABLE_FONT=1",
-        "MTOTS_ENABLE_FONT_ROBOTO_MONO=1",
-        "MTOTS_ENABLE_PACO=1",
-        // "MTOTS_ENABLE_OPENGLES3=1",
-        "MTOTS_USE_PRINTFLIKE=1"
-    ],
     "cmake.configureOnOpen": false,
     "C_Cpp.default.mergeConfigurations": false,
     "C_Cpp.default.enableConfigurationSquiggles": true,
