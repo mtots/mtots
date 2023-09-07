@@ -19,10 +19,6 @@
 #include <time.h>
 #include <math.h>
 
-#if DEBUG_TRACE_EXECUTION
-#include <mtots_debug.h>
-#endif
-
 VM vm;
 
 static ubool invoke(String *name, i16 argCount);
@@ -500,24 +496,7 @@ static ubool run(void) {
 
   for(;;) {
     u8 instruction;
-
-#if DEBUG_TRACE_EXECUTION
-    Value *slot;
 loop:
-    printf("          ");
-    for (slot = vm.stack; slot < vm.stackTop; slot++) {
-      printf("[ ");
-      printValue(*slot);
-      printf(" ]");
-    }
-    printf("\n");
-    disassembleInstruction(
-      &frame->closure->thunk->chunk,
-      (int)(frame->ip - frame->closure->thunk->chunk.code));
-#else
-loop:
-#endif
-
     switch (instruction = READ_BYTE()) {
       case OP_CONSTANT: {
         Value constant = READ_CONSTANT();

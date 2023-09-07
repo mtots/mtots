@@ -3,10 +3,8 @@
 
 
 #if defined(MTOTS_RELEASE) && MTOTS_RELEASE
-#define DEBUG_TRACE_EXECUTION  0
 #define DEBUG_STRESS_GC        0
 #else
-#define DEBUG_TRACE_EXECUTION  0
 #define DEBUG_STRESS_GC        1
 #endif
 

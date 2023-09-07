@@ -234,50 +234,6 @@ void freeValueArray(ValueArray *array) {
   initValueArray(array);
 }
 
-void printValue(Value value) {
-  switch (value.type) {
-    case VAL_NIL:
-      printf("nil");
-      return;
-    case VAL_BOOL:
-      printf(AS_BOOL(value) ? "true" : "false");
-      return;
-    case VAL_NUMBER:
-      printf("%g", value.as.number);
-      return;
-    case VAL_SYMBOL:
-      printf("<Symbol %s>", getSymbolChars(value.as.symbol));
-      return;
-    case VAL_STRING:
-      printf("%s", AS_CSTRING(value));
-      return;
-    case VAL_CFUNCTION: {
-      CFunction *fn = AS_CFUNCTION(value);
-      printf("<function %s at %p>", fn->name, (void*)fn);
-      return;
-    }
-    case VAL_SENTINEL: printf("<sentinel %d>", AS_SENTINEL(value)); return;
-    case VAL_OBJ:
-      printObject(value);
-      return;
-  }
-  printf("UNRECOGNIZED(%d)", value.type);
-}
-
-const char *getValueTypeName(ValueType type) {
-  switch (type) {
-    case VAL_NIL: return "VAL_NIL";
-    case VAL_BOOL: return "VAL_BOOL";
-    case VAL_SYMBOL: return "VAL_SYMBOL";
-    case VAL_NUMBER: return "VAL_NUMBER";
-    case VAL_STRING: return "VAL_STRING";
-    case VAL_CFUNCTION: return "VAL_CFUNCTION";
-    case VAL_SENTINEL: return "VAL_SENTINEL";
-    case VAL_OBJ: return "VAL_OBJ";
-  }
-  return "<unrecognized>";
-}
-
 /* Returns a human readable string describing the 'kind' of the given value.
  * For non-object values, a string describing its value type is returned.
  * For object values, a string describing its object type is returned.

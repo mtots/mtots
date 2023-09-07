@@ -2,11 +2,7 @@
 #include "mtots_parser.h"
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
-
-#include <stdio.h>
-#include "mtots_debug.h"
 
 #define GC_HEAP_GROW_FACTOR 2
 

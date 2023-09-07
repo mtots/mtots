@@ -96,12 +96,6 @@ typedef struct ValueArray {
 #define IS_STRING(value) ((value).type == VAL_STRING)
 #define IS_CFUNCTION(value) ((value).type == VAL_CFUNCTION)
 #define IS_SENTINEL(value) ((value).type == VAL_SENTINEL)
-#define IS_FAST_RANGE(value) ((value).type == VAL_FAST_RANGE)
-#define IS_FAST_RANGE_ITERATOR(value) ((value).type == VAL_FAST_RANGE_ITERATOR)
-#define IS_FAST_LIST_ITERATOR(value) ((value).type == VAL_FAST_LIST_ITERATOR)
-#define IS_COLOR(value) ((value).type == VAL_COLOR)
-#define IS_VECTOR(value) ((value).type == VAL_VECTOR)
-#define IS_RECT(value) ((value).type == VAL_RECT)
 #define IS_OBJ(value) ((value).type == VAL_OBJ)
 #define AS_OBJ(value) ((value).as.obj)
 #define AS_BOOL(value) ((value).as.boolean)
@@ -109,7 +103,6 @@ typedef struct ValueArray {
 #define AS_CSTRING(value) ((value).as.string->chars)
 #define AS_CFUNCTION(value) ((value).as.cfunction)
 #define AS_SENTINEL(value) ((value).as.sentinel)
-#define AS_COLOR(value) ((value).as.color)
 
 size_t AS_SIZE(Value value);
 u32 AS_U32_BITS(Value value);
@@ -151,8 +144,6 @@ Value OBJ_VAL_EXPLICIT(Obj *object);
 void initValueArray(ValueArray *array);
 void writeValueArray(ValueArray *array, Value value);
 void freeValueArray(ValueArray *array);
-void printValue(Value value);
-const char *getValueTypeName(ValueType type);
 const char *getKindName(Value value);
 
 ubool typePatternMatch(TypePattern pattern, Value value);
