@@ -61,4 +61,4 @@ ubool readFileFromMtotsArchive(const char *path, char **data, size_t *dataSize);
  */
 ubool readBufferFromMtotsArchive(const char *path, Buffer *out);
 
-#endif/*mtots_env_h*/
+#endif /*mtots_env_h*/

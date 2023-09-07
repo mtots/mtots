@@ -20,4 +20,4 @@ ubool valueFastIterNext(Value *iterator, Value *out);
 ubool valueGetItem(Value owner, Value key, Value *out);
 ubool valueSetItem(Value owner, Value key, Value value);
 
-#endif/*mtots_ops_h*/
+#endif /*mtots_ops_h*/

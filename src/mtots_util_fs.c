@@ -1,20 +1,20 @@
 #include "mtots_common.h"
 
 #if MTOTS_ASSUME_POSIX
-#include <unistd.h>
-#include <sys/stat.h>
 #include <dirent.h>
 #include <errno.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #elif MTOTS_ASSUME_WINDOWS
 #include <Windows.h>
 #endif
 
-#include "mtots_util_fs.h"
-#include "mtots_util_string.h"
-#include "mtots_util_error.h"
-
 #include <stdio.h>
 #include <string.h>
+
+#include "mtots_util_error.h"
+#include "mtots_util_fs.h"
+#include "mtots_util_string.h"
 
 ubool getFileSize(const char *path, size_t *out) {
 #if MTOTS_ASSUME_POSIX
@@ -39,7 +39,6 @@ ubool getFileSize(const char *path, size_t *out) {
   return UTRUE;
 #endif
 }
-
 
 ubool isFile(const char *path) {
 #if MTOTS_ASSUME_POSIX
@@ -69,8 +68,8 @@ ubool isDirectory(const char *path) {
   return attr != INVALID_FILE_ATTRIBUTES && attr & FILE_ATTRIBUTE_DIRECTORY;
 #else
   panic(
-    "isDirectory(): Checking if a path is a directory on "
-    "the current platform is not yet supported");
+      "isDirectory(): Checking if a path is a directory on "
+      "the current platform is not yet supported");
   return UFALSE;
 #endif
 }
@@ -101,7 +100,7 @@ ubool listDirectory(
   Buffer query;
   initBuffer(&query);
   bprintf(&query, "%s\\*", dirpath);
-  hFind = FindFirstFileA((char*)query.data, &entry);
+  hFind = FindFirstFileA((char *)query.data, &entry);
   if (hFind == INVALID_HANDLE_VALUE) {
     freeBuffer(&query);
     runtimeError("Could not open path as a directory: %s", dirpath);
@@ -125,7 +124,7 @@ ubool listDirectory(
   return UTRUE;
 #else
   runtimeError(
-    "Listing directories on the current platform is not yet supported");
+      "Listing directories on the current platform is not yet supported");
   return UFALSE;
 #endif
 }

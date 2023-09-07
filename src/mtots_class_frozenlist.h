@@ -3,4 +3,4 @@
 
 void initFrozenListClass(void);
 
-#endif/*mtots_class_frozenlist_h*/
+#endif /*mtots_class_frozenlist_h*/

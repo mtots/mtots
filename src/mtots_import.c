@@ -1,11 +1,12 @@
 #include "mtots_import.h"
-#include "mtots_vm.h"
-#include "mtots_parser.h"
-#include "mtots_env.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "mtots_env.h"
+#include "mtots_parser.h"
+#include "mtots_vm.h"
 
 /*
  * Runs the module specified by the given path with the given moduleName
@@ -17,7 +18,7 @@ ubool importModuleWithPath(String *moduleName, const char *path) {
   if (!readFile(path, &source, NULL)) {
     return UFALSE;
   }
-  return importModuleWithPathAndSource(moduleName, path, (char*)source, NULL, (char*)source);
+  return importModuleWithPathAndSource(moduleName, path, (char *)source, NULL, (char *)source);
 }
 
 /* NOTE: 'freePath' and 'freeSource' should match 'path' and 'source'.
@@ -38,21 +39,21 @@ ubool importModuleWithPathAndSource(
 
   pathStr = internCString(path);
   if (freePath) {
-    free((void*)freePath);
+    free((void *)freePath);
   }
   push(STRING_VAL(pathStr));
   mapSetN(&module->fields, "__file__", STRING_VAL(pathStr));
   pop(); /* pathStr */
 
-  if (!parse((const char*)source, moduleName, &thunk)) {
+  if (!parse((const char *)source, moduleName, &thunk)) {
     /* runtimeError("Failed to compile %s", path); */
     if (freeSource) {
-      free((void*)freeSource);
+      free((void *)freeSource);
     }
     return UFALSE;
   }
   if (freeSource) {
-    free((void*)freeSource);
+    free((void *)freeSource);
   }
 
   push(THUNK_VAL(thunk));
@@ -99,10 +100,10 @@ static ubool importModuleNoCache(String *moduleName) {
       /* At this point, module should be at the top of the stack */
       if (vm.stackTop != stackStart) {
         panic(
-          "Native module started with %d items on the stack, but "
-          "ended with %d",
-          (int)(stackStart - vm.stack),
-          (int)(vm.stackTop - vm.stack));
+            "Native module started with %d items on the stack, but "
+            "ended with %d",
+            (int)(stackStart - vm.stack),
+            (int)(vm.stackTop - vm.stack));
       }
     } else {
       assertionError("importModuleNoCache (native module)");

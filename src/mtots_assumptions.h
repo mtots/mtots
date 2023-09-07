@@ -34,4 +34,4 @@
  * (e.g. endianness)*/
 void checkAssumptions(void);
 
-#endif/*mtots_assumptions_h*/
+#endif /*mtots_assumptions_h*/

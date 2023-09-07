@@ -3,4 +3,4 @@
 
 void initStringClass(void);
 
-#endif/*mtots_class_str_h*/
+#endif /*mtots_class_str_h*/

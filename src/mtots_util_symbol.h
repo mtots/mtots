@@ -11,4 +11,4 @@ const char *getSymbolChars(Symbol *symbol);
 size_t getSymbolByteLength(Symbol *symbol);
 u32 getSymbolHash(Symbol *symbol);
 
-#endif/*mtots_util_symbol_h*/
+#endif /*mtots_util_symbol_h*/

@@ -27,11 +27,11 @@ ubool escapeString2(
  * outBytes: the buffer to write out the final string
  * */
 ubool escapeString(
-  const char *str,
-  size_t len,
-  StringEscapeOptions *opts,
-  size_t *outLen,
-  char *outBytes);
+    const char *str,
+    size_t len,
+    StringEscapeOptions *opts,
+    size_t *outLen,
+    char *outBytes);
 
 /* Takes in an escaped string (terminated with a '"') and computes its unescaped
  * version
@@ -41,4 +41,4 @@ ubool escapeString(
 ubool unescapeString2(
     Buffer *out, const char *str, const char *quote, size_t quoteLen);
 
-#endif/*mtots_util_escape_h*/
+#endif /*mtots_util_escape_h*/

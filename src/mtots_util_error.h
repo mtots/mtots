@@ -19,7 +19,7 @@ void clearErrorString(void);
 
 /* Adds a context provider that can add additional context to error messages.
  * The provider will be called for both 'panic' and 'runtimeError'. */
-void setErrorContextProvider(void (*contextProvider)(Buffer*));
+void setErrorContextProvider(void (*contextProvider)(Buffer *));
 
 /* Basically a panic with a standandardized error message */
 NORETURN void assertionError(const char *message);
@@ -33,4 +33,4 @@ const char *getSavedErrorString(void);
 /* Clear the error string saved with 'saveCurrentErrorString()' */
 void clearSavedErrorString(void);
 
-#endif/*mtots_util_error_h*/
+#endif /*mtots_util_error_h*/

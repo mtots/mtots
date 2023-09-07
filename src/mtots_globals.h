@@ -3,4 +3,4 @@
 
 void defineDefaultGlobals(void);
 
-#endif/*mtots_globals_h*/
+#endif /*mtots_globals_h*/

@@ -1,8 +1,8 @@
-#include "mtots_object.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "mtots_object.h"
 
 size_t AS_SIZE(Value value) {
   double x = asNumber(value);
@@ -178,36 +178,36 @@ Obj *asObj(Value value) {
 }
 
 Value NIL_VAL(void) {
-  Value v = { VAL_NIL };
+  Value v = {VAL_NIL};
   return v;
 }
 Value BOOL_VAL(ubool value) {
-  Value v = { VAL_BOOL };
+  Value v = {VAL_BOOL};
   v.as.boolean = value != 0;
   return v;
 }
 Value NUMBER_VAL(double value) {
-  Value v = { VAL_NUMBER };
+  Value v = {VAL_NUMBER};
   v.as.number = value;
   return v;
 }
 Value STRING_VAL(String *string) {
-  Value v = { VAL_STRING  };
+  Value v = {VAL_STRING};
   v.as.string = string;
   return v;
 }
 Value CFUNCTION_VAL(CFunction *func) {
-  Value v = { VAL_CFUNCTION };
+  Value v = {VAL_CFUNCTION};
   v.as.cfunction = func;
   return v;
 }
 Value SENTINEL_VAL(Sentinel sentinel) {
-  Value v = { VAL_SENTINEL };
+  Value v = {VAL_SENTINEL};
   v.as.sentinel = sentinel;
   return v;
 }
 Value OBJ_VAL_EXPLICIT(Obj *object) {
-  Value v = { VAL_OBJ };
+  Value v = {VAL_OBJ};
   v.as.obj = object;
   return v;
 }
@@ -223,7 +223,7 @@ void writeValueArray(ValueArray *array, Value value) {
     int oldCapacity = array->capacity;
     array->capacity = GROW_CAPACITY(oldCapacity);
     array->values = GROW_ARRAY(
-      Value, array->values, oldCapacity, array->capacity);
+        Value, array->values, oldCapacity, array->capacity);
   }
 
   array->values[array->count++] = value;
@@ -240,55 +240,82 @@ void freeValueArray(ValueArray *array) {
  */
 const char *getKindName(Value value) {
   switch (value.type) {
-    case VAL_NIL: return "nil";
-    case VAL_BOOL: return "bool";
-    case VAL_NUMBER: return "number";
-    case VAL_SYMBOL: return "symbol";
-    case VAL_STRING: return "string";
-    case VAL_CFUNCTION: return "cfunction";
-    case VAL_SENTINEL: return "sentinel";
-    case VAL_OBJ: switch (value.as.obj->type) {
-      case OBJ_CLASS: return "class";
-      case OBJ_CLOSURE: return "closure";
-      case OBJ_THUNK: return "thunk";
-      case OBJ_INSTANCE: return "instance";
-      case OBJ_BUFFER: return "buffer";
-      case OBJ_LIST: return "list";
-      case OBJ_FROZEN_LIST: return "frozenList";
-      case OBJ_DICT: return "dict";
-      case OBJ_FROZEN_DICT: return "frozendict";
-      case OBJ_NATIVE: return AS_NATIVE(value)->descriptor->name;
-      case OBJ_UPVALUE: return "upvalue";
-      default: return "<unrecognized-object>";
-    }
+    case VAL_NIL:
+      return "nil";
+    case VAL_BOOL:
+      return "bool";
+    case VAL_NUMBER:
+      return "number";
+    case VAL_SYMBOL:
+      return "symbol";
+    case VAL_STRING:
+      return "string";
+    case VAL_CFUNCTION:
+      return "cfunction";
+    case VAL_SENTINEL:
+      return "sentinel";
+    case VAL_OBJ:
+      switch (value.as.obj->type) {
+        case OBJ_CLASS:
+          return "class";
+        case OBJ_CLOSURE:
+          return "closure";
+        case OBJ_THUNK:
+          return "thunk";
+        case OBJ_INSTANCE:
+          return "instance";
+        case OBJ_BUFFER:
+          return "buffer";
+        case OBJ_LIST:
+          return "list";
+        case OBJ_FROZEN_LIST:
+          return "frozenList";
+        case OBJ_DICT:
+          return "dict";
+        case OBJ_FROZEN_DICT:
+          return "frozendict";
+        case OBJ_NATIVE:
+          return AS_NATIVE(value)->descriptor->name;
+        case OBJ_UPVALUE:
+          return "upvalue";
+        default:
+          return "<unrecognized-object>";
+      }
   }
   return "<unrecognized-value>";
 }
 
 ubool typePatternMatch(TypePattern pattern, Value value) {
   switch (pattern.type) {
-    case TYPE_PATTERN_ANY: return UTRUE;
+    case TYPE_PATTERN_ANY:
+      return UTRUE;
     case TYPE_PATTERN_STRING_OR_NIL:
       if (IS_NIL(value)) {
         return UTRUE;
       }
       /* fallthrough */
-    case TYPE_PATTERN_STRING: return IS_STRING(value);
-    case TYPE_PATTERN_BUFFER_OR_NIL: return IS_NIL(value) || IS_BUFFER(value);
-    case TYPE_PATTERN_BUFFER: return IS_BUFFER(value);
-    case TYPE_PATTERN_BOOL: return IS_BOOL(value);
+    case TYPE_PATTERN_STRING:
+      return IS_STRING(value);
+    case TYPE_PATTERN_BUFFER_OR_NIL:
+      return IS_NIL(value) || IS_BUFFER(value);
+    case TYPE_PATTERN_BUFFER:
+      return IS_BUFFER(value);
+    case TYPE_PATTERN_BOOL:
+      return IS_BOOL(value);
     case TYPE_PATTERN_NUMBER_OR_NIL:
       if (IS_NIL(value)) {
         return UTRUE;
       }
       /* fallthrough */
-    case TYPE_PATTERN_NUMBER: return IS_NUMBER(value);
+    case TYPE_PATTERN_NUMBER:
+      return IS_NUMBER(value);
     case TYPE_PATTERN_LIST_OR_NIL:
       if (IS_NIL(value)) {
         return UTRUE;
       }
       /* fallthrough */
-    case TYPE_PATTERN_LIST: return IS_LIST(value);
+    case TYPE_PATTERN_LIST:
+      return IS_LIST(value);
     case TYPE_PATTERN_LIST_NUMBER_OR_NIL:
       if (IS_NIL(value)) {
         return UTRUE;
@@ -332,19 +359,22 @@ ubool typePatternMatch(TypePattern pattern, Value value) {
       }
       return UTRUE;
     }
-    case TYPE_PATTERN_FROZEN_LIST: return IS_FROZEN_LIST(value);
-    case TYPE_PATTERN_DICT: return IS_DICT(value);
-    case TYPE_PATTERN_FROZEN_DICT: return IS_FROZEN_DICT(value);
-    case TYPE_PATTERN_CLASS: return IS_CLASS(value);
+    case TYPE_PATTERN_FROZEN_LIST:
+      return IS_FROZEN_LIST(value);
+    case TYPE_PATTERN_DICT:
+      return IS_DICT(value);
+    case TYPE_PATTERN_FROZEN_DICT:
+      return IS_FROZEN_DICT(value);
+    case TYPE_PATTERN_CLASS:
+      return IS_CLASS(value);
     case TYPE_PATTERN_NATIVE_OR_NIL:
       if (IS_NIL(value)) {
         return UTRUE;
       }
       /* fallthrough */
     case TYPE_PATTERN_NATIVE:
-      return IS_NATIVE(value) && (
-        pattern.nativeTypeDescriptor == NULL ||
-        AS_NATIVE(value)->descriptor == pattern.nativeTypeDescriptor);
+      return IS_NATIVE(value) && (pattern.nativeTypeDescriptor == NULL ||
+                                  AS_NATIVE(value)->descriptor == pattern.nativeTypeDescriptor);
   }
   panic("Unrecognized TypePattern type %d", pattern.type);
   return UFALSE;
@@ -352,69 +382,80 @@ ubool typePatternMatch(TypePattern pattern, Value value) {
 
 const char *getTypePatternName(TypePattern pattern) {
   switch (pattern.type) {
-    case TYPE_PATTERN_ANY: return "any";
-    case TYPE_PATTERN_STRING_OR_NIL: return "(String|nil)";
-    case TYPE_PATTERN_STRING: return "String";
-    case TYPE_PATTERN_BUFFER_OR_NIL: return "(Buffer|nil)";
-    case TYPE_PATTERN_BUFFER: return "Buffer";
-    case TYPE_PATTERN_BOOL: return "bool";
-    case TYPE_PATTERN_NUMBER_OR_NIL: return "(number|nil)";
-    case TYPE_PATTERN_NUMBER: return "number";
-    case TYPE_PATTERN_LIST_OR_NIL: return "(list|nil)";
-    case TYPE_PATTERN_LIST: return "list";
-    case TYPE_PATTERN_LIST_NUMBER_OR_NIL: return "(list[number]|nil)";
-    case TYPE_PATTERN_LIST_NUMBER: return "list[number]";
-    case TYPE_PATTERN_LIST_LIST_NUMBER: return "list[list[number]]";
-    case TYPE_PATTERN_FROZEN_LIST: return "frozenList";
-    case TYPE_PATTERN_DICT: return "dict";
-    case TYPE_PATTERN_FROZEN_DICT: return "frozendict";
-    case TYPE_PATTERN_CLASS: return "class";
+    case TYPE_PATTERN_ANY:
+      return "any";
+    case TYPE_PATTERN_STRING_OR_NIL:
+      return "(String|nil)";
+    case TYPE_PATTERN_STRING:
+      return "String";
+    case TYPE_PATTERN_BUFFER_OR_NIL:
+      return "(Buffer|nil)";
+    case TYPE_PATTERN_BUFFER:
+      return "Buffer";
+    case TYPE_PATTERN_BOOL:
+      return "bool";
+    case TYPE_PATTERN_NUMBER_OR_NIL:
+      return "(number|nil)";
+    case TYPE_PATTERN_NUMBER:
+      return "number";
+    case TYPE_PATTERN_LIST_OR_NIL:
+      return "(list|nil)";
+    case TYPE_PATTERN_LIST:
+      return "list";
+    case TYPE_PATTERN_LIST_NUMBER_OR_NIL:
+      return "(list[number]|nil)";
+    case TYPE_PATTERN_LIST_NUMBER:
+      return "list[number]";
+    case TYPE_PATTERN_LIST_LIST_NUMBER:
+      return "list[list[number]]";
+    case TYPE_PATTERN_FROZEN_LIST:
+      return "frozenList";
+    case TYPE_PATTERN_DICT:
+      return "dict";
+    case TYPE_PATTERN_FROZEN_DICT:
+      return "frozendict";
+    case TYPE_PATTERN_CLASS:
+      return "class";
     case TYPE_PATTERN_NATIVE_OR_NIL:
-      return pattern.nativeTypeDescriptor ?
-        ((NativeObjectDescriptor*) pattern.nativeTypeDescriptor)->name :
-        "(native|nil)";
+      return pattern.nativeTypeDescriptor ? ((NativeObjectDescriptor *)pattern.nativeTypeDescriptor)->name : "(native|nil)";
     case TYPE_PATTERN_NATIVE:
-      return pattern.nativeTypeDescriptor ?
-        ((NativeObjectDescriptor*) pattern.nativeTypeDescriptor)->name :
-        "native";
+      return pattern.nativeTypeDescriptor ? ((NativeObjectDescriptor *)pattern.nativeTypeDescriptor)->name : "native";
   }
   panic("Unrecognized TypePattern type %d", pattern.type);
   return UFALSE;
 }
 
-
 TypePattern argsNumbers[12] = {
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
+    {TYPE_PATTERN_NUMBER},
+    {TYPE_PATTERN_NUMBER},
+    {TYPE_PATTERN_NUMBER},
+    {TYPE_PATTERN_NUMBER},
+    {TYPE_PATTERN_NUMBER},
+    {TYPE_PATTERN_NUMBER},
+    {TYPE_PATTERN_NUMBER},
+    {TYPE_PATTERN_NUMBER},
+    {TYPE_PATTERN_NUMBER},
+    {TYPE_PATTERN_NUMBER},
+    {TYPE_PATTERN_NUMBER},
+    {TYPE_PATTERN_NUMBER},
 };
 
 TypePattern argsStrings[12] = {
-  { TYPE_PATTERN_STRING },
-  { TYPE_PATTERN_STRING },
-  { TYPE_PATTERN_STRING },
-  { TYPE_PATTERN_STRING },
-  { TYPE_PATTERN_STRING },
-  { TYPE_PATTERN_STRING },
-  { TYPE_PATTERN_STRING },
-  { TYPE_PATTERN_STRING },
-  { TYPE_PATTERN_STRING },
-  { TYPE_PATTERN_STRING },
-  { TYPE_PATTERN_STRING },
-  { TYPE_PATTERN_STRING },
+    {TYPE_PATTERN_STRING},
+    {TYPE_PATTERN_STRING},
+    {TYPE_PATTERN_STRING},
+    {TYPE_PATTERN_STRING},
+    {TYPE_PATTERN_STRING},
+    {TYPE_PATTERN_STRING},
+    {TYPE_PATTERN_STRING},
+    {TYPE_PATTERN_STRING},
+    {TYPE_PATTERN_STRING},
+    {TYPE_PATTERN_STRING},
+    {TYPE_PATTERN_STRING},
+    {TYPE_PATTERN_STRING},
 };
 
 TypePattern argsSetattr[2] = {
-  { TYPE_PATTERN_STRING },
-  { TYPE_PATTERN_ANY },
+    {TYPE_PATTERN_STRING},
+    {TYPE_PATTERN_ANY},
 };
-

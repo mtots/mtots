@@ -1,5 +1,6 @@
-#include "mtots_vm.h"
 #include "mtots_class_frozendict.h"
+
+#include "mtots_vm.h"
 
 typedef struct ObjFrozenDictIterator {
   ObjNative obj;
@@ -8,12 +9,12 @@ typedef struct ObjFrozenDictIterator {
 } ObjFrozenDictIterator;
 
 static void blackenFrozenDictIterator(ObjNative *n) {
-  ObjFrozenDictIterator *di = (ObjFrozenDictIterator*)n;
-  markObject((Obj*)(di->dict));
+  ObjFrozenDictIterator *di = (ObjFrozenDictIterator *)n;
+  markObject((Obj *)(di->dict));
 }
 
 static ubool implFrozenDictIteratorCall(i16 argCount, Value *args, Value *out) {
-  ObjFrozenDictIterator *iter = (ObjFrozenDictIterator*)AS_OBJ(args[-1]);
+  ObjFrozenDictIterator *iter = (ObjFrozenDictIterator *)AS_OBJ(args[-1]);
   if (mapIteratorNextKey(&iter->di, out)) {
     return UTRUE;
   }
@@ -22,13 +23,15 @@ static ubool implFrozenDictIteratorCall(i16 argCount, Value *args, Value *out) {
 }
 
 static CFunction funcFrozenDictIteratorCall = {
-  implFrozenDictIteratorCall, "__call__",
+    implFrozenDictIteratorCall,
+    "__call__",
 };
 
 static NativeObjectDescriptor descriptorFrozenDictIterator = {
-  blackenFrozenDictIterator, nopFree,
-  sizeof(ObjFrozenDictIterator),
-  "FrozenDictIterator",
+    blackenFrozenDictIterator,
+    nopFree,
+    sizeof(ObjFrozenDictIterator),
+    "FrozenDictIterator",
 };
 
 static ubool implFrozenDictGetItem(i16 argCount, Value *args, Value *out) {
@@ -40,7 +43,7 @@ static ubool implFrozenDictGetItem(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcFrozenDictGetItem = { implFrozenDictGetItem, "__getitem__", 1 };
+static CFunction funcFrozenDictGetItem = {implFrozenDictGetItem, "__getitem__", 1};
 
 static ubool implFrozenDictContains(i16 argCount, Value *args, Value *out) {
   Value dummy;
@@ -49,18 +52,18 @@ static ubool implFrozenDictContains(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcFrozenDictContains = { implFrozenDictContains, "__contains__", 1 };
+static CFunction funcFrozenDictContains = {implFrozenDictContains, "__contains__", 1};
 
 static ubool implFrozenDictIter(i16 argCount, Value *args, Value *out) {
   ObjFrozenDict *dict = AS_FROZEN_DICT(args[-1]);
   ObjFrozenDictIterator *iter = NEW_NATIVE(ObjFrozenDictIterator, &descriptorFrozenDictIterator);
   iter->dict = dict;
   initMapIterator(&iter->di, &dict->map);
-  *out = OBJ_VAL_EXPLICIT((Obj*)iter);
+  *out = OBJ_VAL_EXPLICIT((Obj *)iter);
   return UTRUE;
 }
 
-static CFunction funcFrozenDictIter = { implFrozenDictIter, "__iter__", 0 };
+static CFunction funcFrozenDictIter = {implFrozenDictIter, "__iter__", 0};
 
 /**
  * "Reverse Get" or inverse lookup
@@ -99,25 +102,25 @@ static ubool implFrozenDictRget(i16 argCount, Value *args, Value *out) {
   return UFALSE;
 }
 
-static CFunction funcFrozenDictRget = { implFrozenDictRget, "rget", 1, 2 };
+static CFunction funcFrozenDictRget = {implFrozenDictRget, "rget", 1, 2};
 
 void initFrozenDictClass(void) {
   {
     CFunction *methods[] = {
-      &funcFrozenDictGetItem,
-      &funcFrozenDictContains,
-      &funcFrozenDictIter,
-      &funcFrozenDictRget,
-      NULL,
+        &funcFrozenDictGetItem,
+        &funcFrozenDictContains,
+        &funcFrozenDictIter,
+        &funcFrozenDictRget,
+        NULL,
     };
     newBuiltinClass(
-      "FrozenDict", &vm.frozenDictClass, TYPE_PATTERN_FROZEN_DICT, methods, NULL);
+        "FrozenDict", &vm.frozenDictClass, TYPE_PATTERN_FROZEN_DICT, methods, NULL);
   }
 
   {
     CFunction *methods[] = {
-      &funcFrozenDictIteratorCall,
-      NULL,
+        &funcFrozenDictIteratorCall,
+        NULL,
     };
     newNativeClass(NULL, &descriptorFrozenDictIterator, methods, NULL);
   }

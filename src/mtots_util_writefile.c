@@ -1,8 +1,8 @@
 #include "mtots_util_writefile.h"
 
-#include "mtots_util_error.h"
-
 #include <stdio.h>
+
+#include "mtots_util_error.h"
 
 /*
  * Write some data to a file.

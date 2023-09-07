@@ -22,4 +22,4 @@ ubool bmonDump(Value value, Buffer *out);
  */
 void addNativeModuleBmon(void);
 
-#endif/*mtots_m_bmon_h*/
+#endif /*mtots_m_bmon_h*/

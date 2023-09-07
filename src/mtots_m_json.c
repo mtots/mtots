@@ -21,12 +21,11 @@ static ubool implLoad(i16 argc, Value *args, Value *out) {
 }
 
 static TypePattern argsLoad[] = {
-  { TYPE_PATTERN_NATIVE, &descriptorDataSource },
+    {TYPE_PATTERN_NATIVE, &descriptorDataSource},
 };
 
 static CFunction funcLoad = {
-  implLoad, "load", 1, 0, argsLoad
-};
+    implLoad, "load", 1, 0, argsLoad};
 
 static ubool implDump(i16 argc, Value *args, Value *out) {
   ObjDataSink *sink = AS_DATA_SINK(args[0]);
@@ -41,19 +40,18 @@ static ubool implDump(i16 argc, Value *args, Value *out) {
   chars = malloc(sizeof(char) * (len + 1));
   writeJSON(args[0], NULL, chars);
   chars[len] = '\0';
-  status = dataSinkWriteBytes(sink, (const u8*)chars, len);
+  status = dataSinkWriteBytes(sink, (const u8 *)chars, len);
   free(chars);
   return status;
 }
 
 static TypePattern argsDump[] = {
-  { TYPE_PATTERN_ANY },
-  { TYPE_PATTERN_NATIVE, &descriptorDataSink },
+    {TYPE_PATTERN_ANY},
+    {TYPE_PATTERN_NATIVE, &descriptorDataSink},
 };
 
 static CFunction funcDump = {
-  implDump, "dump", 2, 0, argsDump
-};
+    implDump, "dump", 2, 0, argsDump};
 
 static ubool implLoads(i16 argCount, Value *args, Value *out) {
   String *str = AS_STRING(args[0]);
@@ -66,7 +64,7 @@ static ubool implLoads(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcLoads = { implLoads, "loads", 1, 0, argsStrings };
+static CFunction funcLoads = {implLoads, "loads", 1, 0, argsStrings};
 
 static ubool implDumps(i16 argCount, Value *args, Value *out) {
   size_t len;
@@ -83,26 +81,26 @@ static ubool implDumps(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcDumps = { implDumps, "dumps", 1 };
+static CFunction funcDumps = {implDumps, "dumps", 1};
 
 static ubool impl(i16 argCount, Value *args, Value *out) {
   ObjModule *module = AS_MODULE(args[0]);
   CFunction *functions[] = {
-    &funcLoad,
-    &funcDump,
-    &funcLoads,
-    &funcDumps,
+      &funcLoad,
+      &funcDump,
+      &funcLoads,
+      &funcDumps,
   };
   size_t i;
 
-  for (i = 0; i < sizeof(functions)/sizeof(CFunction*); i++) {
+  for (i = 0; i < sizeof(functions) / sizeof(CFunction *); i++) {
     mapSetN(&module->fields, functions[i]->name, CFUNCTION_VAL(functions[i]));
   }
 
   return UTRUE;
 }
 
-static CFunction func = { impl, "json", 1 };
+static CFunction func = {impl, "json", 1};
 
 void addNativeModuleJson(void) {
   addNativeModule(&func);

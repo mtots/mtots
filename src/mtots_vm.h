@@ -1,12 +1,12 @@
 #ifndef mtots_vm_h
 #define mtots_vm_h
 
-#include "mtots_ops.h"
-#include "mtots_import.h"
 #include "mtots_class_range.h"
 #include "mtots_class_sb.h"
-#include "mtots_m_sys.h"
+#include "mtots_import.h"
 #include "mtots_m_bmon.h"
+#include "mtots_m_sys.h"
+#include "mtots_ops.h"
 
 #define FRAMES_MAX 64
 #define STACK_MAX (FRAMES_MAX * U8_COUNT)
@@ -14,14 +14,14 @@
 #define MAX_ERROR_STRING_LENGTH 2048
 
 #define LOCAL_GC_PAUSE(flag) \
-  do { \
-    flag = vm.localGCPause; \
+  do {                       \
+    flag = vm.localGCPause;  \
     vm.localGCPause = UTRUE; \
   } while (0)
 
 #define LOCAL_GC_UNPAUSE(flag) \
-  do { \
-    vm.localGCPause = flag; \
+  do {                         \
+    vm.localGCPause = flag;    \
   } while (0)
 
 typedef struct CallFrame {
@@ -44,10 +44,10 @@ typedef struct VM {
   TrySnapshot trySnapshots[TRY_SNAPSHOTS_MAX];
   i16 trySnapshotsCount;
   Map globals;
-  Map modules;             /* all preloaded modules */
-  Map nativeModuleThunks;  /* Map of CFunctions */
-  Map frozenLists;         /* table of all interned frozenLists */
-  Map frozenDicts;         /* a table of all interned FrozenDicts */
+  Map modules;            /* all preloaded modules */
+  Map nativeModuleThunks; /* Map of CFunctions */
+  Map frozenLists;        /* table of all interned frozenLists */
+  Map frozenDicts;        /* a table of all interned FrozenDicts */
 
   /* If set, will be run once the main script finishes -
    * a hack to get gg to work without an explicit
@@ -136,7 +136,6 @@ Value pop(void);
 
 void listAppend(ObjList *list, Value value);
 
-
 /* Functions for calling mtots functions and methods from C */
 
 /* Like callFunction, but a closure is provided explicitly as a C
@@ -185,4 +184,4 @@ ubool callFunction(i16 argCount);
  */
 ubool callMethod(String *methodName, i16 argCount);
 
-#endif/*mtots_vm_h*/
+#endif /*mtots_vm_h*/

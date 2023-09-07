@@ -1,7 +1,8 @@
 #include "mtots_main.h"
-#include "mtots_vm.h"
-#include "mtots_repl.h"
+
 #include "mtots_env.h"
+#include "mtots_repl.h"
+#include "mtots_vm.h"
 
 #if defined(__IPHONEOS__) || defined(__TVOS__)
 #include "SDL.h"
@@ -23,8 +24,10 @@ static ubool getModuleNameFromArchivePath(const char *path, char **out) {
   size_t start = strlen(path), end = start;
   char *moduleName;
 
-  for (; start > 0 && path[start - 1] != PATH_SEP; start--);
-  for (; end > 0 && path[end - 1] != '.'; end--);
+  for (; start > 0 && path[start - 1] != PATH_SEP; start--)
+    ;
+  for (; end > 0 && path[end - 1] != '.'; end--)
+    ;
 
   if (end == 0) {
     runtimeError("Could not infer module name from archive name");
@@ -32,7 +35,7 @@ static ubool getModuleNameFromArchivePath(const char *path, char **out) {
   }
 
   end--;
-  moduleName = (char*)malloc(end - start + strlen(".main") + 1);
+  moduleName = (char *)malloc(end - start + strlen(".main") + 1);
   memcpy(moduleName, path + start, end - start);
   strcpy(moduleName + (end - start), ".main");
   *out = moduleName;
@@ -63,8 +66,8 @@ static ubool runMainModule(int argc, const char **argv) {
     }
     if (!data) {
       runtimeError(
-        "File module %s not found in archive (%s)",
-        moduleNameCString, argv[1]);
+          "File module %s not found in archive (%s)",
+          moduleNameCString, argv[1]);
       free(moduleNameCString);
       return UFALSE;
     }
@@ -93,9 +96,8 @@ static ubool runMainModule(int argc, const char **argv) {
 int mtotsMain(int argc, const char *argv[]) {
 #ifdef __EMSCRIPTEN__
   const char *fakeArgv[2] = {
-    "",
-    MTOTS_WEB_START_SCRIPT
-  };
+      "",
+      MTOTS_WEB_START_SCRIPT};
   argc = 2;
   argv = fakeArgv;
 #endif

@@ -5,10 +5,10 @@
 
 typedef struct String {
   ubool isMarked;
-  char *chars;            /* UTF-8 encoding of the string */
-  u32 *utf32;             /* UTF-32 encoding, if this string is not ASCII */
-  size_t byteLength;      /* Number of bytes in the UTF-8 encoding */
-  size_t codePointCount;  /* Number of unicode code points in this String */
+  char *chars;           /* UTF-8 encoding of the string */
+  u32 *utf32;            /* UTF-32 encoding, if this string is not ASCII */
+  size_t byteLength;     /* Number of bytes in the UTF-8 encoding */
+  size_t codePointCount; /* Number of unicode code points in this String */
   u32 hash;
 } String;
 
@@ -21,5 +21,4 @@ ubool sliceString(String *string, size_t start, size_t end, String **out);
 size_t getInternedStringsAllocationSize(void);
 void freeUnmarkedStrings(void);
 
-
-#endif/*mtots_util_string_h*/
+#endif /*mtots_util_string_h*/

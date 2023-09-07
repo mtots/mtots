@@ -1,11 +1,12 @@
 #include "mtots_modules.h"
-#include "mtots_m_sys.h"
-#include "mtots_m_os.h"
+
+#include "mtots_m_bmon.h"
+#include "mtots_m_data.h"
 #include "mtots_m_fs.h"
 #include "mtots_m_json.h"
-#include "mtots_m_bmon.h"
+#include "mtots_m_os.h"
 #include "mtots_m_random.h"
-#include "mtots_m_data.h"
+#include "mtots_m_sys.h"
 
 #if MTOTS_ENABLE_GG
 #include "mtots_m_gg.h"
@@ -17,8 +18,8 @@
 
 #if MTOTS_ENABLE_IMAGE
 #include "mtots_m_image.h"
-#include "mtots_m_png.h"
 #include "mtots_m_imageloader.h"
+#include "mtots_m_png.h"
 #endif
 
 #if MTOTS_ENABLE_CANVAS

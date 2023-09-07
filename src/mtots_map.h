@@ -61,4 +61,4 @@ void initMapIterator(MapIterator *di, Map *map);
 ubool mapIteratorNext(MapIterator *di, MapEntry **out);
 ubool mapIteratorNextKey(MapIterator *di, Value *out);
 
-#endif/*mtots_map_h*/
+#endif /*mtots_map_h*/

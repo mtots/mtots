@@ -11,8 +11,8 @@ typedef enum ByteOrder {
 
 typedef struct Buffer {
   u8 *data;
-  size_t length;     /* readonly outside of mtots_util_buffer.c */
-  size_t capacity;   /* readonly outside of mtots_util_buffer.c */
+  size_t length;   /* readonly outside of mtots_util_buffer.c */
+  size_t capacity; /* readonly outside of mtots_util_buffer.c */
   ByteOrder byteOrder;
 
   /**
@@ -75,4 +75,4 @@ void bputstrlen(Buffer *buf, const char *chars, size_t byteLength);
 void bputstr(Buffer *buf, const char *string);
 void bprintf(Buffer *buf, const char *format, ...) MTOTS_PRINTFLIKE(2, 3);
 
-#endif/*mtots_util_buffer_h*/
+#endif /*mtots_util_buffer_h*/

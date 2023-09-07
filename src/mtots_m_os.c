@@ -1,15 +1,15 @@
 #include "mtots_m_os.h"
 
+#include <stdlib.h>
+#include <string.h>
+
 #include "mtots_vm.h"
 
-#include <string.h>
-#include <stdlib.h>
-
 #if MTOTS_ASSUME_POSIX
-#include <unistd.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #define MTOTS_USE_DIRENT 1
-#define MTOTS_USE_STAT   1
+#define MTOTS_USE_STAT 1
 #endif
 
 #if MTOTS_USE_DIRENT
@@ -34,7 +34,8 @@ static ubool implGetcwd(i16 argCount, Value *args, Value *out) {
 }
 
 static CFunction funcGetcwd = {
-  implGetcwd, "getcwd",
+    implGetcwd,
+    "getcwd",
 };
 
 static ubool implGetenv(i16 argCount, Value *args, Value *out) {
@@ -47,32 +48,36 @@ static ubool implGetenv(i16 argCount, Value *args, Value *out) {
 }
 
 static CFunction funcGetenv = {
-  implGetenv, "getenv", 1, 0, argsStrings,
+    implGetenv,
+    "getenv",
+    1,
+    0,
+    argsStrings,
 };
 
 static ubool implIsMacOS(i16 argCount, Value *args, Value *out) {
   *out = BOOL_VAL(
 #if MTOTS_ASSUME_MACOS
-    UTRUE
+      UTRUE
 #else
-    UFALSE
+      UFALSE
 #endif
   );
   return UTRUE;
 }
 
-static CFunction funcIsMacOS = { implIsMacOS, "isMacOS" };
+static CFunction funcIsMacOS = {implIsMacOS, "isMacOS"};
 
 static ubool impl(i16 argCount, Value *args, Value *out) {
   ObjModule *module = AS_MODULE(args[0]);
   CFunction *cfunctions[] = {
-    &funcGetcwd,
-    &funcGetenv,
-    &funcIsMacOS,
+      &funcGetcwd,
+      &funcGetenv,
+      &funcIsMacOS,
   };
   size_t i;
 
-  for (i = 0; i < sizeof(cfunctions)/sizeof(CFunction*); i++) {
+  for (i = 0; i < sizeof(cfunctions) / sizeof(CFunction *); i++) {
     mapSetN(&module->fields, cfunctions[i]->name, CFUNCTION_VAL(cfunctions[i]));
   }
 
@@ -82,7 +87,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction func = { impl, "os", 1 };
+static CFunction func = {impl, "os", 1};
 
 void addNativeModuleOs(void) {
   addNativeModule(&func);

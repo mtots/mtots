@@ -1,6 +1,6 @@
-#include "mtots_vm.h"
-
 #include <string.h>
+
+#include "mtots_vm.h"
 
 #define DICT_MAX_LOAD 0.75
 
@@ -21,31 +21,41 @@ void freeMap(Map *map) {
 u32 hashval(Value value) {
   switch (value.type) {
     /* hash values for bool taken from Java */
-    case VAL_NIL: return 17;
-    case VAL_BOOL: return AS_BOOL(value) ? 1231 : 1237;
+    case VAL_NIL:
+      return 17;
+    case VAL_BOOL:
+      return AS_BOOL(value) ? 1231 : 1237;
     case VAL_NUMBER: {
       double x = value.as.number;
       union {
         double number;
         u32 parts[2];
       } pun;
-      i32 ix = (i32) x;
+      i32 ix = (i32)x;
       if (x == (double)ix) {
-        return (u32) ix;
+        return (u32)ix;
       }
       pun.number = x;
       /* TODO: smarter hashing */
       return pun.parts[0] ^ pun.parts[1];
     }
-    case VAL_SYMBOL: return getSymbolHash(value.as.symbol);
-    case VAL_STRING: return AS_STRING(value)->hash;
-    case VAL_CFUNCTION: break;
-    case VAL_SENTINEL: return (u32) AS_SENTINEL(value);
-    case VAL_OBJ: switch (AS_OBJ(value)->type) {
-      case OBJ_FROZEN_LIST: return AS_FROZEN_LIST(value)->hash;
-      case OBJ_FROZEN_DICT: return AS_FROZEN_DICT(value)->hash;
-      default: break;
-    }
+    case VAL_SYMBOL:
+      return getSymbolHash(value.as.symbol);
+    case VAL_STRING:
+      return AS_STRING(value)->hash;
+    case VAL_CFUNCTION:
+      break;
+    case VAL_SENTINEL:
+      return (u32)AS_SENTINEL(value);
+    case VAL_OBJ:
+      switch (AS_OBJ(value)->type) {
+        case OBJ_FROZEN_LIST:
+          return AS_FROZEN_LIST(value)->hash;
+        case OBJ_FROZEN_DICT:
+          return AS_FROZEN_DICT(value)->hash;
+        default:
+          break;
+      }
   }
   panic("%s values are not hashable", getKindName(value));
   return 0;
@@ -161,10 +171,10 @@ ubool mapSet(Map *map, Value key, Value value) {
 
   if (isNewKey) {
     /* If entry->value is not nil, we're reusing a tombstone
-    * so we don't want to increment the count since tombstones
-    * are already included in count.
-    * We include tombstones in the count so that the loadfactor
-    * is sensitive to slots occupied by tombstones */
+     * so we don't want to increment the count since tombstones
+     * are already included in count.
+     * We include tombstones in the count so that the loadfactor
+     * is sensitive to slots occupied by tombstones */
     if (IS_NIL(entry->value)) {
       map->occupied++;
     }

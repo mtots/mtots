@@ -1,10 +1,10 @@
 #include "mtots_util_string.h"
 
-#include "mtots_util_error.h"
-#include "mtots_util_unicode.h"
-
 #include <stdlib.h>
 #include <string.h>
+
+#include "mtots_util_error.h"
+#include "mtots_util_unicode.h"
 
 #define STRING_SET_MAX_LOAD 0.75
 
@@ -38,7 +38,7 @@ static u32 hashString(const char *key, size_t length) {
   size_t i;
   u32 hash = 2166136261u;
   for (i = 0; i < length; i++) {
-    hash ^= (u8) key[i];
+    hash ^= (u8)key[i];
     hash *= 16777619;
   }
   return hash;
@@ -51,8 +51,8 @@ static String **stringSetFindEntry(const char *chars, size_t length, u32 hash) {
     String *str = *entry;
     if (str == NULL ||
         (str->byteLength == length &&
-        str->hash == hash &&
-        memcmp(str->chars, chars, length) == 0)) {
+         str->hash == hash &&
+         memcmp(str->chars, chars, length) == 0)) {
       return entry;
     }
     index = (index + 1) & (allStrings.capacity - 1);
@@ -72,7 +72,7 @@ static void computeUnicodeMetadata(String *string) {
     string->codePointCount++;
   }
   if (string->codePointCount != string->byteLength) {
-    u32 *utf32 = string->utf32 = (u32*)malloc(sizeof(u32) * string->codePointCount);
+    u32 *utf32 = string->utf32 = (u32 *)malloc(sizeof(u32) * string->codePointCount);
     for (p = string->chars; p < limit;) {
       p += decodeUTF8Char(p, limit, utf32++);
     }
@@ -94,7 +94,7 @@ String *internString(const char *chars, size_t byteLength) {
     size_t newCap = oldCap < 8 ? 8 : oldCap * 2;
     size_t i;
     String **oldStrings = allStrings.strings;
-    String **newStrings = (String**)malloc(sizeof(String*) * newCap);
+    String **newStrings = (String **)malloc(sizeof(String *) * newCap);
     String **entry;
     for (i = 0; i < newCap; i++) {
       newStrings[i] = NULL;
@@ -126,11 +126,11 @@ String *internString(const char *chars, size_t byteLength) {
     if (*entry) {
       return *entry;
     }
-    string = (String*)malloc(sizeof(String));
+    string = (String *)malloc(sizeof(String));
     string->isMarked = UFALSE;
     string->byteLength = byteLength;
     string->hash = hash;
-    string->chars = (char*)malloc(byteLength + 1);
+    string->chars = (char *)malloc(byteLength + 1);
     memcpy(string->chars, chars, byteLength);
     string->chars[byteLength] = '\0';
     *entry = string;
@@ -199,7 +199,7 @@ size_t getInternedStringsAllocationSize(void) {
 void freeUnmarkedStrings(void) {
   size_t i, cap = allStrings.capacity;
   String **oldEntries = allStrings.strings;
-  String **newEntries = (String**)malloc(sizeof(String*) * cap);
+  String **newEntries = (String **)malloc(sizeof(String *) * cap);
   if (specialStringsInitialized) {
     emptyString->isMarked = UTRUE;
     for (i = 0; i < 128; i++) {

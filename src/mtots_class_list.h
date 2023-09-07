@@ -3,4 +3,4 @@
 
 void initListClass(void);
 
-#endif/*mtots_class_list_h*/
+#endif /*mtots_class_list_h*/

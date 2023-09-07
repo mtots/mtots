@@ -3,4 +3,4 @@
 
 void initClassClass(void);
 
-#endif/*mtots_class_class_h*/
+#endif /*mtots_class_class_h*/

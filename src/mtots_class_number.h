@@ -3,4 +3,4 @@
 
 void initNumberClass(void);
 
-#endif/*mtots_class_number_h*/
+#endif /*mtots_class_number_h*/

@@ -1,28 +1,28 @@
 #include "mtots_m_bmon.h"
 
-#include "mtots_vm.h"
-
 #include <math.h>
 #include <string.h>
 
+#include "mtots_vm.h"
+
 /* When relevant, all integer are assumed to be little-endian */
 
-#define TAG_NIL         1
-#define TAG_TRUE        2
-#define TAG_FALSE       3
-#define TAG_NUMBER      4 /* IEEE 754 double precision, little endian */
-#define TAG_STRING      5
-#define TAG_LIST        6
-#define TAG_DICT        7
+#define TAG_NIL 1
+#define TAG_TRUE 2
+#define TAG_FALSE 3
+#define TAG_NUMBER 4 /* IEEE 754 double precision, little endian */
+#define TAG_STRING 5
+#define TAG_LIST 6
+#define TAG_DICT 7
 
 static String *stringBmon;
 
 static ubool runtimeErrorUnexpectedEOF(size_t i, size_t len, size_t limit) {
   runtimeError(
-    "Unexpected EOF when loading BMON (i=%lu len=%lu limit=%lu)",
-    (unsigned long)i,
-    (unsigned long)len,
-    (unsigned long)limit);
+      "Unexpected EOF when loading BMON (i=%lu len=%lu limit=%lu)",
+      (unsigned long)i,
+      (unsigned long)len,
+      (unsigned long)limit);
   return UFALSE;
 }
 
@@ -149,21 +149,20 @@ static ubool implLoads(i16 argCount, Value *args, Value *out) {
   }
   if (pos < buffer->handle.length) {
     runtimeError(
-      "Extra data when loading BMON (pos=%lu, length=%lu)",
-      (unsigned long)pos,
-      (unsigned long)buffer->handle.length);
+        "Extra data when loading BMON (pos=%lu, length=%lu)",
+        (unsigned long)pos,
+        (unsigned long)buffer->handle.length);
     return UFALSE;
   }
   return UTRUE;
 }
 
 static TypePattern argsLoads[] = {
-  { TYPE_PATTERN_BUFFER },
+    {TYPE_PATTERN_BUFFER},
 };
 
 static CFunction funcLoads = {
-  implLoads, "loads", 1, 0, argsLoads
-};
+    implLoads, "loads", 1, 0, argsLoads};
 
 ubool bmonDump(Value value, Buffer *out) {
   switch (value.type) {
@@ -199,8 +198,8 @@ ubool bmonDump(Value value, Buffer *out) {
           u32 i, len;
           if (list->length > (size_t)U32_MAX) {
             runtimeError(
-              "list is too long to serialize in BMON (length=%lu)",
-              (unsigned long)list->length);
+                "list is too long to serialize in BMON (length=%lu)",
+                (unsigned long)list->length);
             return UFALSE;
           }
           len = (u32)list->length;
@@ -252,10 +251,12 @@ ubool bmonDump(Value value, Buffer *out) {
             return UTRUE;
           }
         }
-        default: break;
+        default:
+          break;
       }
     }
-    default: break;
+    default:
+      break;
   }
   runtimeError("Cannot serialize %s to BMON", getKindName(value));
   return UFALSE;
@@ -274,27 +275,26 @@ static ubool implDumps(i16 argCount, Value *args, Value *out) {
 }
 
 static CFunction funcDumps = {
-  implDumps, "dumps", 1
-};
+    implDumps, "dumps", 1};
 
 static ubool impl(i16 argCount, Value *args, Value *out) {
   ObjModule *module = AS_MODULE(args[0]);
   CFunction *functions[] = {
-    &funcLoads,
-    &funcDumps,
+      &funcLoads,
+      &funcDumps,
   };
   size_t i;
 
   stringBmon = moduleRetainCString(module, "__bmon__");
 
-  for (i = 0; i < sizeof(functions)/sizeof(CFunction*); i++) {
+  for (i = 0; i < sizeof(functions) / sizeof(CFunction *); i++) {
     mapSetN(&module->fields, functions[i]->name, CFUNCTION_VAL(functions[i]));
   }
 
   return UTRUE;
 }
 
-static CFunction func = { impl, "bmon", 1 };
+static CFunction func = {impl, "bmon", 1};
 
 void addNativeModuleBmon(void) {
   addNativeModule(&func);

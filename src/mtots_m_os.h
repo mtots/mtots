@@ -5,4 +5,4 @@
 
 void addNativeModuleOs(void);
 
-#endif/*mtots_m_os_h*/
+#endif /*mtots_m_os_h*/

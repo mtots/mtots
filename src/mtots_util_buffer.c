@@ -4,14 +4,13 @@
 
 #include "mtots_util_buffer.h"
 
-#include "mtots_util_error.h"
-
-#include <stdlib.h>
-#include <string.h>
+#include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include <stdarg.h>
-#include <math.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "mtots_util_error.h"
 
 /**
  * For now, we assume that we're always little endian.
@@ -37,10 +36,10 @@ static void maybeReverseBytes(
 static void checkIndex(Buffer *buf, size_t pos, size_t length) {
   if (pos + length < pos || pos + length > buf->length) {
     panic(
-      "Buffer index out of bounds (buflen = %lu, pos = %lu, length = %lu)",
-      (unsigned long)buf->length,
-      (unsigned long)pos,
-      (unsigned long)length);
+        "Buffer index out of bounds (buflen = %lu, pos = %lu, length = %lu)",
+        (unsigned long)buf->length,
+        (unsigned long)pos,
+        (unsigned long)length);
   }
 }
 
@@ -59,7 +58,7 @@ static void addBytesWithByteOrder(Buffer *buf, u8 *bytes, size_t length) {
 static void getDataWithByteOrder(Buffer *buf, size_t pos, void *dest, size_t length) {
   checkIndex(buf, pos, length);
   memcpy(dest, buf->data + pos, length);
-  maybeReverseBytes((u8*)dest, length, buf->byteOrder);
+  maybeReverseBytes((u8 *)dest, length, buf->byteOrder);
 }
 
 static void setDataWithByteOrder(Buffer *buf, size_t pos, void *src, size_t length) {
@@ -99,7 +98,7 @@ void bufferSetMinCapacity(Buffer *buf, size_t minCap) {
     if (buf->isLocked) {
       panic("Cannot increase the capacity of a locked Buffer");
     }
-    data = (u8*)realloc(buf->data, newCap);
+    data = (u8 *)realloc(buf->data, newCap);
     if (data == NULL) {
       panic("Buffer: out of memory");
     }
@@ -138,13 +137,13 @@ u8 bufferGetU8(Buffer *buf, size_t pos) {
 
 u16 bufferGetU16(Buffer *buf, size_t pos) {
   u16 value;
-  getDataWithByteOrder(buf, pos, (void*)&value, 2);
+  getDataWithByteOrder(buf, pos, (void *)&value, 2);
   return value;
 }
 
 u32 bufferGetU32(Buffer *buf, size_t pos) {
   u32 value;
-  getDataWithByteOrder(buf, pos, (void*)&value, 4);
+  getDataWithByteOrder(buf, pos, (void *)&value, 4);
   return value;
 }
 
@@ -155,63 +154,63 @@ i8 bufferGetI8(Buffer *buf, size_t pos) {
 
 i16 bufferGetI16(Buffer *buf, size_t pos) {
   i16 value;
-  getDataWithByteOrder(buf, pos, (void*)&value, 2);
+  getDataWithByteOrder(buf, pos, (void *)&value, 2);
   return value;
 }
 
 i32 bufferGetI32(Buffer *buf, size_t pos) {
   i32 value;
-  getDataWithByteOrder(buf, pos, (void*)&value, 4);
+  getDataWithByteOrder(buf, pos, (void *)&value, 4);
   return value;
 }
 
 f32 bufferGetF32(Buffer *buf, size_t pos) {
   f32 value;
-  getDataWithByteOrder(buf, pos, (void*)&value, 4);
+  getDataWithByteOrder(buf, pos, (void *)&value, 4);
   return value;
 }
 
 f64 bufferGetF64(Buffer *buf, size_t pos) {
   f64 value;
-  getDataWithByteOrder(buf, pos, (void*)&value, 8);
+  getDataWithByteOrder(buf, pos, (void *)&value, 8);
   return value;
 }
 
 void bufferSetU8(Buffer *buf, size_t pos, u8 value) {
-  setDataWithByteOrder(buf, pos, (void*)&value, 1);
+  setDataWithByteOrder(buf, pos, (void *)&value, 1);
 }
 
 void bufferSetU16(Buffer *buf, size_t pos, u16 value) {
-  setDataWithByteOrder(buf, pos, (void*)&value, 2);
+  setDataWithByteOrder(buf, pos, (void *)&value, 2);
 }
 
 void bufferSetU32(Buffer *buf, size_t pos, u32 value) {
-  setDataWithByteOrder(buf, pos, (void*)&value, 4);
+  setDataWithByteOrder(buf, pos, (void *)&value, 4);
 }
 
 void bufferSetI8(Buffer *buf, size_t pos, i8 value) {
-  setDataWithByteOrder(buf, pos, (void*)&value, 1);
+  setDataWithByteOrder(buf, pos, (void *)&value, 1);
 }
 
 void bufferSetI16(Buffer *buf, size_t pos, i16 value) {
-  setDataWithByteOrder(buf, pos, (void*)&value, 2);
+  setDataWithByteOrder(buf, pos, (void *)&value, 2);
 }
 
 void bufferSetI32(Buffer *buf, size_t pos, i32 value) {
-  setDataWithByteOrder(buf, pos, (void*)&value, 4);
+  setDataWithByteOrder(buf, pos, (void *)&value, 4);
 }
 
 void bufferSetF32(Buffer *buf, size_t pos, f32 value) {
-  setDataWithByteOrder(buf, pos, (void*)&value, 4);
+  setDataWithByteOrder(buf, pos, (void *)&value, 4);
 }
 
 void bufferSetF64(Buffer *buf, size_t pos, f64 value) {
-  setDataWithByteOrder(buf, pos, (void*)&value, 8);
+  setDataWithByteOrder(buf, pos, (void *)&value, 8);
 }
 
 void bufferSetBytes(Buffer *buf, size_t pos, void *data, size_t length) {
   checkIndex(buf, pos, length);
-  memcpy((void*)(buf->data + pos), data, length);
+  memcpy((void *)(buf->data + pos), data, length);
 }
 
 void bufferAddU8(Buffer *buf, u8 value) {
@@ -219,11 +218,11 @@ void bufferAddU8(Buffer *buf, u8 value) {
 }
 
 void bufferAddU16(Buffer *buf, u16 value) {
-  addBytesWithByteOrder(buf, (u8*)(void*)&value, 2);
+  addBytesWithByteOrder(buf, (u8 *)(void *)&value, 2);
 }
 
 void bufferAddU32(Buffer *buf, u32 value) {
-  addBytesWithByteOrder(buf, (u8*)(void*)&value, 4);
+  addBytesWithByteOrder(buf, (u8 *)(void *)&value, 4);
 }
 
 void bufferAddI8(Buffer *buf, i8 value) {
@@ -231,19 +230,19 @@ void bufferAddI8(Buffer *buf, i8 value) {
 }
 
 void bufferAddI16(Buffer *buf, i16 value) {
-  addBytesWithByteOrder(buf, (u8*)(void*)&value, 2);
+  addBytesWithByteOrder(buf, (u8 *)(void *)&value, 2);
 }
 
 void bufferAddI32(Buffer *buf, i32 value) {
-  addBytesWithByteOrder(buf, (u8*)(void*)&value, 4);
+  addBytesWithByteOrder(buf, (u8 *)(void *)&value, 4);
 }
 
 void bufferAddF32(Buffer *buf, f32 value) {
-  addBytesWithByteOrder(buf, (u8*)(void*)&value, 4);
+  addBytesWithByteOrder(buf, (u8 *)(void *)&value, 4);
 }
 
 void bufferAddF64(Buffer *buf, f64 value) {
-  addBytesWithByteOrder(buf, (u8*)(void*)&value, 8);
+  addBytesWithByteOrder(buf, (u8 *)(void *)&value, 8);
 }
 
 void bufferAddBytes(Buffer *buf, const void *data, size_t length) {
@@ -254,7 +253,7 @@ void bufferAddBytes(Buffer *buf, const void *data, size_t length) {
 }
 
 String *bufferToString(Buffer *buf) {
-  return internString((char*)buf->data, buf->length);
+  return internString((char *)buf->data, buf->length);
 }
 
 void bputnumber(Buffer *buf, double number) {
@@ -277,7 +276,7 @@ void bputchar(Buffer *buf, char ch) {
 }
 
 void bputstrlen(Buffer *buf, const char *chars, size_t byteLength) {
-  bufferAddBytes(buf, (const void*)chars, byteLength);
+  bufferAddBytes(buf, (const void *)chars, byteLength);
 }
 
 void bputstr(Buffer *buf, const char *string) {
@@ -302,7 +301,7 @@ void bprintf(Buffer *buf, const char *format, ...) {
   bufferSetMinCapacity(buf, buf->length + size + 1);
 
   va_start(args, format);
-  vsnprintf((char*)(buf->data + buf->length), size + 1, format, args);
+  vsnprintf((char *)(buf->data + buf->length), size + 1, format, args);
   va_end(args);
 
   buf->length += size;

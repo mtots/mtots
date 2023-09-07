@@ -18,11 +18,11 @@ ObjRangeIterator *newRangeIterator(double next, double stop, double step) {
 
 static ubool implRangeIter(i16 argCount, Value *args, Value *out) {
   ObjRange *range = AS_RANGE(args[-1]);
-  *out = OBJ_VAL_EXPLICIT((Obj*)newRangeIterator(range->start, range->stop, range->step));
+  *out = OBJ_VAL_EXPLICIT((Obj *)newRangeIterator(range->start, range->stop, range->step));
   return UTRUE;
 }
 
-static CFunction funcRangeIter = { implRangeIter, "__iter__" };
+static CFunction funcRangeIter = {implRangeIter, "__iter__"};
 
 static ubool implRangeRepr(i16 argCount, Value *args, Value *out) {
   ObjRange *range = AS_RANGE(args[-1]);
@@ -40,13 +40,13 @@ static ubool implRangeRepr(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcRangeRepr = { implRangeRepr, "__repr__" };
+static CFunction funcRangeRepr = {implRangeRepr, "__repr__"};
 
 void initRangeClass(void) {
   CFunction *methods[] = {
-    &funcRangeIter,
-    &funcRangeRepr,
-    NULL,
+      &funcRangeIter,
+      &funcRangeRepr,
+      NULL,
   };
   newNativeClass(NULL, &descriptorRange, methods, NULL);
 }
@@ -67,22 +67,26 @@ static ubool implRangeIteratorCall(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcRangeIteratorCall = { implRangeIteratorCall, "__call__" };
+static CFunction funcRangeIteratorCall = {implRangeIteratorCall, "__call__"};
 
 void initRangeIteratorClass(void) {
   CFunction *methods[] = {
-    &funcRangeIteratorCall,
-    NULL,
+      &funcRangeIteratorCall,
+      NULL,
   };
   newNativeClass(NULL, &descriptorRangeIterator, methods, NULL);
 }
 
 NativeObjectDescriptor descriptorRange = {
-  nopBlacken, nopFree,
-  sizeof(ObjRange), "Range",
+    nopBlacken,
+    nopFree,
+    sizeof(ObjRange),
+    "Range",
 };
 
 NativeObjectDescriptor descriptorRangeIterator = {
-  nopBlacken, nopFree,
-  sizeof(ObjRangeIterator), "RangeIterator",
+    nopBlacken,
+    nopFree,
+    sizeof(ObjRangeIterator),
+    "RangeIterator",
 };

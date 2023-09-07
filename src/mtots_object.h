@@ -1,12 +1,12 @@
 #ifndef mtots_object_h
 #define mtots_object_h
 
-#include "mtots_common.h"
+#include <stdio.h>
+
 #include "mtots_chunk.h"
+#include "mtots_common.h"
 #include "mtots_map.h"
 #include "mtots_memory.h"
-
-#include <stdio.h>
 
 #define OBJ_TYPE(value) (AS_OBJ(value)->type)
 
@@ -21,25 +21,25 @@
 #define IS_FROZEN_DICT(value) isObjType(value, OBJ_FROZEN_DICT)
 #define IS_NATIVE(value) isObjType(value, OBJ_NATIVE)
 
-#define AS_CLASS(value) ((ObjClass*)AS_OBJ(value))
-#define AS_CLOSURE(value) ((ObjClosure*)AS_OBJ(value))
-#define AS_THUNK(value) ((ObjThunk*)AS_OBJ(value))
-#define AS_INSTANCE(value) ((ObjInstance*)AS_OBJ(value))
-#define AS_MODULE(value) ((ObjModule*)AS_OBJ(value))
-#define AS_BUFFER(value) ((ObjBuffer*)AS_OBJ(value))
-#define AS_LIST(value) ((ObjList*)AS_OBJ(value))
-#define AS_FROZEN_LIST(value) ((ObjFrozenList*)AS_OBJ(value))
-#define AS_DICT(value) ((ObjDict*)AS_OBJ(value))
-#define AS_FROZEN_DICT(value) ((ObjFrozenDict*)AS_OBJ(value))
-#define AS_NATIVE(value) ((ObjNative*)AS_OBJ(value))
+#define AS_CLASS(value) ((ObjClass *)AS_OBJ(value))
+#define AS_CLOSURE(value) ((ObjClosure *)AS_OBJ(value))
+#define AS_THUNK(value) ((ObjThunk *)AS_OBJ(value))
+#define AS_INSTANCE(value) ((ObjInstance *)AS_OBJ(value))
+#define AS_MODULE(value) ((ObjModule *)AS_OBJ(value))
+#define AS_BUFFER(value) ((ObjBuffer *)AS_OBJ(value))
+#define AS_LIST(value) ((ObjList *)AS_OBJ(value))
+#define AS_FROZEN_LIST(value) ((ObjFrozenList *)AS_OBJ(value))
+#define AS_DICT(value) ((ObjDict *)AS_OBJ(value))
+#define AS_FROZEN_DICT(value) ((ObjFrozenDict *)AS_OBJ(value))
+#define AS_NATIVE(value) ((ObjNative *)AS_OBJ(value))
 
 #define NEW_NATIVE(type, descriptor) \
-  ((type*)newNative(descriptor, sizeof(type)))
+  ((type *)newNative(descriptor, sizeof(type)))
 
 typedef struct ObjNative ObjNative;
 typedef struct ObjClass ObjClass;
 typedef struct ObjInstance ObjInstance;
-typedef struct ObjInstance ObjModule;   /* Modules alias to instances for now */
+typedef struct ObjInstance ObjModule; /* Modules alias to instances for now */
 
 typedef enum ObjType {
   OBJ_CLASS,
@@ -120,8 +120,8 @@ typedef struct ObjFrozenDict {
 } ObjFrozenDict;
 
 typedef struct NativeObjectDescriptor {
-  void (*blacken)(ObjNative*);
-  void (*free)(ObjNative*);
+  void (*blacken)(ObjNative *);
+  void (*free)(ObjNative *);
 
   size_t objectSize;
   const char *name;
@@ -209,16 +209,16 @@ ObjClass *newClassFromCString(const char *name);
 ObjClass *newForeverClassFromCString(const char *name);
 ObjClass *newClassForModule(ObjModule *module, const char *name);
 ObjClass *newNativeClass(
-  ObjModule *module,
-  NativeObjectDescriptor *descriptor,
-  CFunction **methods,
-  CFunction **staticMethods);
+    ObjModule *module,
+    NativeObjectDescriptor *descriptor,
+    CFunction **methods,
+    CFunction **staticMethods);
 ObjClass *newBuiltinClass(
-  const char *name,
-  ObjClass **slot,
-  TypePatternType typePatternType,
-  CFunction **methods,
-  CFunction **staticMethods);
+    const char *name,
+    ObjClass **slot,
+    TypePatternType typePatternType,
+    CFunction **methods,
+    CFunction **staticMethods);
 ObjClosure *newClosure(ObjThunk *function, ObjModule *module);
 ObjThunk *newThunk(void);
 ObjInstance *newInstance(ObjClass *klass);
@@ -241,7 +241,7 @@ void printObject(Value value);
 const char *getObjectTypeName(ObjType type);
 
 /* should-be-inline */ ubool isNative(
-  Value value, NativeObjectDescriptor *descriptor);
+    Value value, NativeObjectDescriptor *descriptor);
 /* should-be-inline */ ubool isObjType(Value value, ObjType type);
 
 NativeObjectDescriptor *getNativeObjectDescriptor(Value value);
@@ -260,4 +260,4 @@ Value CLOSURE_VAL(ObjClosure *closure);
 Value FROZEN_LIST_VAL(ObjFrozenList *frozenList);
 Value CLASS_VAL(ObjClass *klass);
 
-#endif/*mtots_object_h*/
+#endif /*mtots_object_h*/

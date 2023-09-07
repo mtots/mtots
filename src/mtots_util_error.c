@@ -9,7 +9,7 @@
 #include <android/log.h>
 #endif
 
-static void (*errorContextProvider)(Buffer*);
+static void (*errorContextProvider)(Buffer *);
 static char *errorString;
 static char *savedErrorString;
 
@@ -31,7 +31,7 @@ NORETURN void panic(const char *format, ...) {
 #ifdef __ANDROID__
     __android_log_print(ANDROID_LOG_ERROR, "MTOTS_RT", "%s", bufferToString(&buf)->chars);
 #else
-    fprintf(stderr, "%.*s", (int)buf.length, (char*)buf.data);
+    fprintf(stderr, "%.*s", (int)buf.length, (char *)buf.data);
 #endif
     freeBuffer(&buf);
   }
@@ -58,7 +58,7 @@ void runtimeError(const char *format, ...) {
 
   len += buf.length;
 
-  ptr = errorString = (char*)realloc(errorString, sizeof(char) * (len + 1));
+  ptr = errorString = (char *)realloc(errorString, sizeof(char) * (len + 1));
 
   va_start(args, format);
   ptr += vsnprintf(ptr, (len + 1), format, args);
@@ -82,7 +82,7 @@ void clearErrorString(void) {
   errorString = NULL;
 }
 
-void setErrorContextProvider(void (*contextProvider)(Buffer*)) {
+void setErrorContextProvider(void (*contextProvider)(Buffer *)) {
   errorContextProvider = contextProvider;
 }
 

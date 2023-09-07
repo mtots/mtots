@@ -3,4 +3,4 @@
 
 void initFrozenDictClass(void);
 
-#endif/*mtots_class_frozendict_h*/
+#endif /*mtots_class_frozendict_h*/

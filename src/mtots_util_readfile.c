@@ -1,10 +1,10 @@
 #include "mtots_util_readfile.h"
 
-#include "mtots_util_error.h"
-#include "mtots_util_buffer.h"
-
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+#include "mtots_util_buffer.h"
+#include "mtots_util_error.h"
 
 /*
  * Allocate enough space for the entire contents of a file,
@@ -38,7 +38,7 @@ ubool readFile(const char *path, void **out, size_t *readFileSize) {
     runtimeError("Could not read file \"%s\"", path);
     return UFALSE;
   }
-  ((char*)bytes)[fileSize] = '\0';
+  ((char *)bytes)[fileSize] = '\0';
 
   *out = bytes;
   if (readFileSize) {

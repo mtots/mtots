@@ -1,9 +1,10 @@
 #include "mtots_repl.h"
-#include "mtots_vm.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "mtots_vm.h"
 
 /* State stored for the repl in case something goes wrong and
  * we need to recover

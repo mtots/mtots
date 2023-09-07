@@ -77,4 +77,4 @@ void freeChunk(Chunk *chunk);
 void writeChunk(Chunk *chunk, u8 byte, i16 line);
 size_t addConstant(Chunk *chunk, Value value);
 
-#endif/*mtots_chunk_h*/
+#endif /*mtots_chunk_h*/

@@ -1,5 +1,6 @@
-#include "mtots_vm.h"
 #include "mtots_class_dict.h"
+
+#include "mtots_vm.h"
 
 static ubool implInstantiateDict(i16 argCount, Value *args, Value *out) {
   ObjDict *dict;
@@ -10,7 +11,7 @@ static ubool implInstantiateDict(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcInstantiateDict = { implInstantiateDict, "__call__", 1 };
+static CFunction funcInstantiateDict = {implInstantiateDict, "__call__", 1};
 
 typedef struct ObjDictIterator {
   ObjNative obj;
@@ -19,12 +20,12 @@ typedef struct ObjDictIterator {
 } ObjDictIterator;
 
 static void blackenDictIterator(ObjNative *n) {
-  ObjDictIterator *di = (ObjDictIterator*)n;
-  markObject((Obj*)(di->dict));
+  ObjDictIterator *di = (ObjDictIterator *)n;
+  markObject((Obj *)(di->dict));
 }
 
 static ubool implDictIteratorCall(i16 argCount, Value *args, Value *out) {
-  ObjDictIterator *iter = (ObjDictIterator*)AS_OBJ(args[-1]);
+  ObjDictIterator *iter = (ObjDictIterator *)AS_OBJ(args[-1]);
   if (mapIteratorNextKey(&iter->di, out)) {
     return UTRUE;
   }
@@ -33,13 +34,15 @@ static ubool implDictIteratorCall(i16 argCount, Value *args, Value *out) {
 }
 
 static CFunction funcDictIteratorCall = {
-  implDictIteratorCall, "__call__",
+    implDictIteratorCall,
+    "__call__",
 };
 
 static NativeObjectDescriptor descriptorDictIterator = {
-  blackenDictIterator, nopFree,
-  sizeof(ObjDictIterator),
-  "DictIterator",
+    blackenDictIterator,
+    nopFree,
+    sizeof(ObjDictIterator),
+    "DictIterator",
 };
 
 static ubool implDictGetOrNil(i16 argCount, Value *args, Value *out) {
@@ -50,7 +53,7 @@ static ubool implDictGetOrNil(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcDictGetOrNil = { implDictGetOrNil, "get", 1 };
+static CFunction funcDictGetOrNil = {implDictGetOrNil, "get", 1};
 
 static ubool implDictGet(i16 argCount, Value *args, Value *out) {
   ObjDict *dict = AS_DICT(args[-1]);
@@ -60,7 +63,7 @@ static ubool implDictGet(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcDictGet = { implDictGet, "get", 2 };
+static CFunction funcDictGet = {implDictGet, "get", 2};
 
 static ubool implDictGetItem(i16 argCount, Value *args, Value *out) {
   ObjDict *dict = AS_DICT(args[-1]);
@@ -71,7 +74,7 @@ static ubool implDictGetItem(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcDictGetItem = { implDictGetItem, "__getitem__", 1 };
+static CFunction funcDictGetItem = {implDictGetItem, "__getitem__", 1};
 
 static ubool implDictSetItem(i16 argCount, Value *args, Value *out) {
   ObjDict *dict = AS_DICT(args[-1]);
@@ -79,7 +82,7 @@ static ubool implDictSetItem(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcDictSetItem = { implDictSetItem, "__setitem__", 2 };
+static CFunction funcDictSetItem = {implDictSetItem, "__setitem__", 2};
 
 static ubool implDictDelete(i16 argCount, Value *args, Value *out) {
   ObjDict *dict = AS_DICT(args[-1]);
@@ -87,7 +90,7 @@ static ubool implDictDelete(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcDictDelete = { implDictDelete, "delete", 1 };
+static CFunction funcDictDelete = {implDictDelete, "delete", 1};
 
 static ubool implDictContains(i16 argCount, Value *args, Value *out) {
   Value dummy;
@@ -96,7 +99,7 @@ static ubool implDictContains(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcDictContains = { implDictContains, "__contains__", 1 };
+static CFunction funcDictContains = {implDictContains, "__contains__", 1};
 
 static ubool implDictIter(i16 argCount, Value *args, Value *out) {
   ObjDict *dict = AS_DICT(args[-1]);
@@ -104,11 +107,11 @@ static ubool implDictIter(i16 argCount, Value *args, Value *out) {
   iter = NEW_NATIVE(ObjDictIterator, &descriptorDictIterator);
   iter->dict = dict;
   initMapIterator(&iter->di, &dict->map);
-  *out = OBJ_VAL_EXPLICIT((Obj*)iter);
+  *out = OBJ_VAL_EXPLICIT((Obj *)iter);
   return UTRUE;
 }
 
-static CFunction funcDictIter = { implDictIter, "__iter__", 0 };
+static CFunction funcDictIter = {implDictIter, "__iter__", 0};
 
 /**
  * "Reverse Get" or inverse lookup
@@ -147,7 +150,7 @@ static ubool implDictRget(i16 argCount, Value *args, Value *out) {
   return UFALSE;
 }
 
-static CFunction funcDictRget = { implDictRget, "rget", 1, 2 };
+static CFunction funcDictRget = {implDictRget, "rget", 1, 2};
 
 static ubool implDictFreeze(i16 argCount, Value *args, Value *out) {
   ObjDict *dict = AS_DICT(args[-1]);
@@ -156,7 +159,7 @@ static ubool implDictFreeze(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcDictFreeze = { implDictFreeze, "freeze", 0 };
+static CFunction funcDictFreeze = {implDictFreeze, "freeze", 0};
 
 static ubool implDictStaticFromPairs(i16 argCount, Value *args, Value *out) {
   ObjDict *dict;
@@ -168,34 +171,34 @@ static ubool implDictStaticFromPairs(i16 argCount, Value *args, Value *out) {
 }
 
 static CFunction funcDictStaticFromPairs = {
-  implDictStaticFromPairs, "fromPairs", 1
-};
+    implDictStaticFromPairs, "fromPairs", 1};
 
 void initDictClass(void) {
   {
     CFunction *methods[] = {
-      &funcDictGetOrNil,
-      &funcDictGet,
-      &funcDictGetItem,
-      &funcDictSetItem,
-      &funcDictDelete,
-      &funcDictContains,
-      &funcDictIter,
-      &funcDictRget,
-      &funcDictFreeze,
-      NULL,
-    }, *staticMethods[] = {
-      &funcInstantiateDict,
-      &funcDictStaticFromPairs,
-      NULL,
-    };
+        &funcDictGetOrNil,
+        &funcDictGet,
+        &funcDictGetItem,
+        &funcDictSetItem,
+        &funcDictDelete,
+        &funcDictContains,
+        &funcDictIter,
+        &funcDictRget,
+        &funcDictFreeze,
+        NULL,
+    },
+              *staticMethods[] = {
+                  &funcInstantiateDict,
+                  &funcDictStaticFromPairs,
+                  NULL,
+              };
     newBuiltinClass("Dict", &vm.dictClass, TYPE_PATTERN_DICT, methods, staticMethods);
   }
 
   {
     CFunction *methods[] = {
-      &funcDictIteratorCall,
-      NULL,
+        &funcDictIteratorCall,
+        NULL,
     };
     newNativeClass(NULL, &descriptorDictIterator, methods, NULL);
   }

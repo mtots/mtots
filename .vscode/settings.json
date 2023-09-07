@@ -64,10 +64,19 @@
     "C_Cpp.default.mergeConfigurations": false,
     "C_Cpp.default.enableConfigurationSquiggles": true,
     "[c]": {
+        "editor.formatOnSave": true,
         "editor.wordBasedSuggestions": false,
         "editor.suggest.insertMode": "replace",
         "editor.semanticHighlighting.enabled": true,
         "editor.tabSize": 2
     },
+    "[cpp]": {
+        "editor.formatOnSave": true,
+        "editor.wordBasedSuggestions": false,
+        "editor.suggest.insertMode": "replace",
+        "editor.semanticHighlighting.enabled": true,
+        "editor.tabSize": 2
+    },
+    "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 2, ColumnLimit: 0}",
     "python.analysis.typeCheckingMode": "strict"
 }

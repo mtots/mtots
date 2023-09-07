@@ -5,7 +5,6 @@
 
 #include "mtots_common.h"
 
-
 /* Encodes the unicode codePoint to the buffer out as UTF-8.
  * If out is not NULL, writes 1-4 bytes.
  * If out is NULL, nothing is written.
@@ -24,4 +23,4 @@ int encodeUTF8Char(u32 codePoint, char *outBytes);
  */
 int decodeUTF8Char(const char *bytes, const char *limit, u32 *outCodePoint);
 
-#endif/*mtots_util_unicode_h*/
+#endif /*mtots_util_unicode_h*/

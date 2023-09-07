@@ -2,7 +2,6 @@
 
 #include <math.h>
 
-
 ubool doubleIsI32(double value) {
   return value == (double)(i32)value;
 }

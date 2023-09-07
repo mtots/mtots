@@ -1,23 +1,24 @@
-#include "mtots_assumptions.h"
 #include "mtots_vm.h"
-#include "mtots_globals.h"
-#include "mtots_class_number.h"
-#include "mtots_class_list.h"
-#include "mtots_class_frozenlist.h"
-#include "mtots_class_str.h"
-#include "mtots_class_dict.h"
-#include "mtots_class_frozendict.h"
-#include "mtots_class_class.h"
-#include "mtots_class_buffer.h"
-#include "mtots_modules.h"
-#include "mtots_parser.h"
 
+#include <math.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <string.h>
 #include <time.h>
-#include <math.h>
+
+#include "mtots_assumptions.h"
+#include "mtots_class_buffer.h"
+#include "mtots_class_class.h"
+#include "mtots_class_dict.h"
+#include "mtots_class_frozendict.h"
+#include "mtots_class_frozenlist.h"
+#include "mtots_class_list.h"
+#include "mtots_class_number.h"
+#include "mtots_class_str.h"
+#include "mtots_globals.h"
+#include "mtots_modules.h"
+#include "mtots_parser.h"
 
 VM vm;
 
@@ -32,12 +33,12 @@ static void resetStack(void) {
 
 static void printStackToStringBuffer(Buffer *out) {
   i16 i;
-  for (i = vm.frameCount - 1; i >=0; i--) {
+  for (i = vm.frameCount - 1; i >= 0; i--) {
     CallFrame *frame = &vm.frames[i];
     ObjThunk *thunk = frame->closure->thunk;
     size_t instruction = frame->ip - thunk->chunk.code - 1;
     bprintf(
-      out, "[line %d] in ", thunk->chunk.lines[instruction]);
+        out, "[line %d] in ", thunk->chunk.lines[instruction]);
     if (thunk->name == NULL) {
       if (thunk->moduleName == NULL) {
         bprintf(out, "[script]\n");
@@ -49,7 +50,7 @@ static void printStackToStringBuffer(Buffer *out) {
         bprintf(out, "%s()\n", thunk->name->chars);
       } else {
         bprintf(out, "%s:%s()\n",
-          thunk->moduleName->chars, thunk->name->chars);
+                thunk->moduleName->chars, thunk->name->chars);
       }
     }
   }
@@ -206,12 +207,14 @@ static Value peek(int distance) {
 static ubool isIterator(Value value) {
   if (IS_OBJ(value)) {
     switch (AS_OBJ(value)->type) {
-      case OBJ_CLOSURE: return AS_CLOSURE(value)->thunk->arity == 0;
+      case OBJ_CLOSURE:
+        return AS_CLOSURE(value)->thunk->arity == 0;
       case OBJ_NATIVE: {
         CFunction *call = AS_NATIVE(value)->descriptor->klass->call;
         return call && call->arity == 0;
       }
-      default: break;
+      default:
+        break;
     }
   }
   return UFALSE;
@@ -227,21 +230,21 @@ static ubool callCFunction(CFunction *cfunc, i16 argCount) {
       /* we have optional args */
       if (argCount < cfunc->arity) {
         runtimeError(
-          "Function %s expects at least %d arguments but got %d",
-          cfunc->name, cfunc->arity, argCount);
+            "Function %s expects at least %d arguments but got %d",
+            cfunc->name, cfunc->arity, argCount);
         return UFALSE;
       } else if (argCount > cfunc->maxArity) {
         runtimeError(
-          "Function %s expects at most %d arguments but got %d",
-          cfunc->name, cfunc->maxArity, argCount);
+            "Function %s expects at most %d arguments but got %d",
+            cfunc->name, cfunc->maxArity, argCount);
         return UFALSE;
       }
       /* At this point we have argCount between
        * cfunc->arity and cfunc->maxArity */
     } else {
       runtimeError(
-        "Function %s expects %d arguments but got %d",
-        cfunc->name, cfunc->arity, argCount);
+          "Function %s expects %d arguments but got %d",
+          cfunc->name, cfunc->arity, argCount);
       return UFALSE;
     }
   }
@@ -251,10 +254,10 @@ static ubool callCFunction(CFunction *cfunc, i16 argCount) {
    * itself in the receiver slot */
   if (!typePatternMatch(cfunc->receiverType, argsStart[-1])) {
     runtimeError(
-      "Invalid receiver passed to method %s() (expected %s, but got %s)",
-      cfunc->name,
-      getTypePatternName(cfunc->receiverType),
-      getKindName(argsStart[-1]));
+        "Invalid receiver passed to method %s() (expected %s, but got %s)",
+        cfunc->name,
+        getTypePatternName(cfunc->receiverType),
+        getKindName(argsStart[-1]));
     return UFALSE;
   }
   if (cfunc->argTypes != NULL) {
@@ -262,9 +265,9 @@ static ubool callCFunction(CFunction *cfunc, i16 argCount) {
     for (i = 0; i < argCount; i++) {
       if (!typePatternMatch(cfunc->argTypes[i], argsStart[i])) {
         runtimeError(
-          "%s() expects %s for argument %d, but got %s",
-          cfunc->name, getTypePatternName(cfunc->argTypes[i]),
-          (int)i, getKindName(argsStart[i]));
+            "%s() expects %s for argument %d, but got %s",
+            cfunc->name, getTypePatternName(cfunc->argTypes[i]),
+            (int)i, getKindName(argsStart[i]));
         return UFALSE;
       }
     }
@@ -283,7 +286,7 @@ static ubool setupCallClosure(ObjClosure *closure, i16 argCount) {
 
   if (argCount < closure->thunk->arity &&
       argCount + closure->thunk->defaultArgsCount >=
-        closure->thunk->arity) {
+          closure->thunk->arity) {
     i16 requiredArgCount = closure->thunk->arity - closure->thunk->defaultArgsCount;
     while (argCount < closure->thunk->arity) {
       push(closure->thunk->defaultArgs[argCount - requiredArgCount]);
@@ -293,8 +296,8 @@ static ubool setupCallClosure(ObjClosure *closure, i16 argCount) {
 
   if (argCount != closure->thunk->arity) {
     runtimeError(
-      "Expected %d arguments but got %d",
-      closure->thunk->arity, argCount);
+        "Expected %d arguments but got %d",
+        closure->thunk->arity, argCount);
     return UFALSE;
   }
 
@@ -321,9 +324,9 @@ static ubool invokeFromClass(
   Value method;
   if (!mapGetStr(&klass->methods, name, &method)) {
     runtimeError(
-      "Method '%s' not found in '%s'",
-      name->chars,
-      klass->name->chars);
+        "Method '%s' not found in '%s'",
+        name->chars,
+        klass->name->chars);
     return UFALSE;
   }
   return setupOrCallValue(method, argCount);
@@ -337,7 +340,7 @@ static ubool invoke(String *name, i16 argCount) {
   klass = getClassOfValue(receiver);
   if (klass == NULL) {
     runtimeError(
-      "%s kind does not yet support method calls", getKindName(receiver));
+        "%s kind does not yet support method calls", getKindName(receiver));
     return UFALSE;
   }
   if (klass == vm.classClass) {
@@ -350,9 +353,9 @@ static ubool invoke(String *name, i16 argCount) {
     cls = AS_CLASS(receiver);
     if (!mapGetStr(&cls->staticMethods, name, &method)) {
       runtimeError(
-        "Static method '%s' not found in '%s'",
-        name->chars,
-        cls->name->chars);
+          "Static method '%s' not found in '%s'",
+          name->chars,
+          cls->name->chars);
       return UFALSE;
     }
     return setupOrCallValue(method, argCount);
@@ -387,7 +390,7 @@ static ObjUpvalue *captureUpvalue(Value *local) {
 
 void closeUpvalues(Value *last) {
   while (vm.openUpvalues != NULL &&
-      vm.openUpvalues->location >= last) {
+         vm.openUpvalues->location >= last) {
     ObjUpvalue *upvalue = vm.openUpvalues;
     upvalue->closed = *upvalue->location;
     upvalue->location = &upvalue->closed;
@@ -411,8 +414,8 @@ static void defineStaticMethod(String *name) {
 
 static ubool isFalsey(Value value) {
   return IS_NIL(value) ||
-    (IS_BOOL(value) && !value.as.boolean) ||
-    (IS_NUMBER(value) && value.as.number == 0);
+         (IS_BOOL(value) && !value.as.boolean) ||
+         (IS_NUMBER(value) && value.as.number == 0);
 }
 
 static void concatenate(void) {
@@ -441,72 +444,80 @@ static ubool run(void) {
 #define READ_CONSTANT() \
   (frame->closure->thunk->chunk.constants.values[READ_SHORT()])
 #define READ_STRING() AS_STRING(READ_CONSTANT())
-#define RETURN_RUNTIME_ERROR() \
-  do { \
-    TrySnapshot *snap; \
+#define RETURN_RUNTIME_ERROR()                                          \
+  do {                                                                  \
+    TrySnapshot *snap;                                                  \
     if (vm.trySnapshotsCount <= trySnapShotCountAtStart) return UFALSE; \
-    snap = &vm.trySnapshots[--vm.trySnapshotsCount]; \
-    vm.stackTop = snap->stackTop; \
-    vm.frameCount = snap->frameCount; \
-    frame = &vm.frames[vm.frameCount - 1]; \
-    frame->ip = snap->ip; \
-    saveCurrentErrorString(); \
-    goto loop; \
-  } while(0)
-#define INVOKE(methodName, argCount) \
-  do { \
-    if (!invoke(methodName, argCount)) { \
-      RETURN_RUNTIME_ERROR(); \
-    } \
+    snap = &vm.trySnapshots[--vm.trySnapshotsCount];                    \
+    vm.stackTop = snap->stackTop;                                       \
+    vm.frameCount = snap->frameCount;                                   \
+    frame = &vm.frames[vm.frameCount - 1];                              \
+    frame->ip = snap->ip;                                               \
+    saveCurrentErrorString();                                           \
+    goto loop;                                                          \
+  } while (0)
+#define INVOKE(methodName, argCount)       \
+  do {                                     \
+    if (!invoke(methodName, argCount)) {   \
+      RETURN_RUNTIME_ERROR();              \
+    }                                      \
     frame = &vm.frames[vm.frameCount - 1]; \
   } while (0)
-#define CALL(argCount) \
-  do { \
-    i16 ac = argCount; \
+#define CALL(argCount)                     \
+  do {                                     \
+    i16 ac = argCount;                     \
     if (!setupOrCallValue(peek(ac), ac)) { \
-      RETURN_RUNTIME_ERROR(); \
-    } \
+      RETURN_RUNTIME_ERROR();              \
+    }                                      \
     frame = &vm.frames[vm.frameCount - 1]; \
   } while (0)
-#define BINARY_OP(opexpr, invokeStr) \
-  do { \
-    if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) { \
-      double b = pop().as.number; \
-      double a = pop().as.number; \
+#define BINARY_OP(opexpr, invokeStr)                 \
+  do {                                               \
+    if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {  \
+      double b = pop().as.number;                    \
+      double a = pop().as.number;                    \
       /* TODO: Forgive myself for this evil macro */ \
-      push(NUMBER_VAL(opexpr)); \
-    } else { \
-      INVOKE(invokeStr, 1); \
-    } \
+      push(NUMBER_VAL(opexpr));                      \
+    } else {                                         \
+      INVOKE(invokeStr, 1);                          \
+    }                                                \
   } while (0)
-#define BINARY_BITWISE_OP(opname, op) \
-  do { \
-    if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) { \
-      runtimeError( \
-        "Operands to %s must be numbers but got %s and %s", \
-        opname, getKindName(peek(1)), getKindName(peek(0))); \
-      RETURN_RUNTIME_ERROR(); \
-    } \
-    { \
-      u32 b = AS_U32_BITS(pop()); \
-      u32 a = AS_U32_BITS(pop()); \
-      push(NUMBER_VAL(a op b)); \
-    } \
+#define BINARY_BITWISE_OP(opname, op)                          \
+  do {                                                         \
+    if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) {          \
+      runtimeError(                                            \
+          "Operands to %s must be numbers but got %s and %s",  \
+          opname, getKindName(peek(1)), getKindName(peek(0))); \
+      RETURN_RUNTIME_ERROR();                                  \
+    }                                                          \
+    {                                                          \
+      u32 b = AS_U32_BITS(pop());                              \
+      u32 a = AS_U32_BITS(pop());                              \
+      push(NUMBER_VAL(a op b));                                \
+    }                                                          \
   } while (0)
 
-  for(;;) {
+  for (;;) {
     u8 instruction;
-loop:
+  loop:
     switch (instruction = READ_BYTE()) {
       case OP_CONSTANT: {
         Value constant = READ_CONSTANT();
         push(constant);
         break;
       }
-      case OP_NIL: push(NIL_VAL()); break;
-      case OP_TRUE: push(BOOL_VAL(1)); break;
-      case OP_FALSE: push(BOOL_VAL(0)); break;
-      case OP_POP: pop(); break;
+      case OP_NIL:
+        push(NIL_VAL());
+        break;
+      case OP_TRUE:
+        push(BOOL_VAL(1));
+        break;
+      case OP_FALSE:
+        push(BOOL_VAL(0));
+        break;
+      case OP_POP:
+        pop();
+        break;
       case OP_GET_LOCAL: {
         u8 slot = READ_BYTE();
         push(frame->slots[slot]);
@@ -566,8 +577,8 @@ loop:
             break;
           }
           runtimeError(
-            "Field '%s' not found in %s",
-            name->chars, instance->klass->name->chars);
+              "Field '%s' not found in %s",
+              name->chars, instance->klass->name->chars);
           RETURN_RUNTIME_ERROR();
         }
 
@@ -607,7 +618,7 @@ loop:
         }
 
         runtimeError(
-          "%s values do not have have fields", getKindName(peek(0)));
+            "%s values do not have have fields", getKindName(peek(0)));
         RETURN_RUNTIME_ERROR();
       }
       case OP_SET_FIELD: {
@@ -646,7 +657,7 @@ loop:
         }
 
         runtimeError(
-          "%s values do not have have fields", getKindName(peek(1)));
+            "%s values do not have have fields", getKindName(peek(1)));
         RETURN_RUNTIME_ERROR();
         break;
       }
@@ -688,17 +699,39 @@ loop:
         }
         break;
       }
-      case OP_SUBTRACT: BINARY_OP(a - b, vm.subString); break;
-      case OP_MULTIPLY: BINARY_OP(a * b, vm.mulString); break;
-      case OP_DIVIDE: BINARY_OP(a / b, vm.divString); break;
-      case OP_FLOOR_DIVIDE: BINARY_OP(floor(a / b), vm.floordivString); break;
-      case OP_MODULO: BINARY_OP(mfmod(a, b), vm.modString); break;
-      case OP_POWER: BINARY_OP(pow(a, b), vm.powString); break;
-      case OP_SHIFT_LEFT: BINARY_BITWISE_OP("lshift", <<); break;
-      case OP_SHIFT_RIGHT: BINARY_BITWISE_OP("rshift", >>); break;
-      case OP_BITWISE_OR: BINARY_BITWISE_OP("bitwise or", |); break;
-      case OP_BITWISE_AND: BINARY_BITWISE_OP("bitwise and", &); break;
-      case OP_BITWISE_XOR: BINARY_BITWISE_OP("bitwise xor", ^); break;
+      case OP_SUBTRACT:
+        BINARY_OP(a - b, vm.subString);
+        break;
+      case OP_MULTIPLY:
+        BINARY_OP(a * b, vm.mulString);
+        break;
+      case OP_DIVIDE:
+        BINARY_OP(a / b, vm.divString);
+        break;
+      case OP_FLOOR_DIVIDE:
+        BINARY_OP(floor(a / b), vm.floordivString);
+        break;
+      case OP_MODULO:
+        BINARY_OP(mfmod(a, b), vm.modString);
+        break;
+      case OP_POWER:
+        BINARY_OP(pow(a, b), vm.powString);
+        break;
+      case OP_SHIFT_LEFT:
+        BINARY_BITWISE_OP("lshift", <<);
+        break;
+      case OP_SHIFT_RIGHT:
+        BINARY_BITWISE_OP("rshift", >>);
+        break;
+      case OP_BITWISE_OR:
+        BINARY_BITWISE_OP("bitwise or", |);
+        break;
+      case OP_BITWISE_AND:
+        BINARY_BITWISE_OP("bitwise and", &);
+        break;
+      case OP_BITWISE_XOR:
+        BINARY_BITWISE_OP("bitwise xor", ^);
+        break;
       case OP_BITWISE_NOT: {
         u32 x;
         if (!IS_NUMBER(peek(0))) {
@@ -830,7 +863,7 @@ loop:
           u8 index = READ_BYTE();
           if (isLocal) {
             closure->upvalues[i] =
-              captureUpvalue(frame->slots + index);
+                captureUpvalue(frame->slots + index);
           } else {
             closure->upvalues[i] = frame->closure->upvalues[index];
           }
@@ -846,7 +879,6 @@ loop:
         closeUpvalues(frame->slots);
         vm.frameCount--;
         if (vm.frameCount == returnFrameCount) {
-
           vm.stackTop = frame->slots;
           push(result);
           if (vm.frameCount > 0) {
@@ -978,7 +1010,7 @@ void listAppend(ObjList *list, Value value) {
     size_t oldCapacity = list->capacity;
     list->capacity = GROW_CAPACITY(list->capacity);
     list->buffer = GROW_ARRAY(
-      Value, list->buffer, oldCapacity, list->capacity);
+        Value, list->buffer, oldCapacity, list->capacity);
   }
   list->buffer[list->length++] = value;
 }
@@ -991,12 +1023,12 @@ static ubool callClass(ObjClass *klass, i16 argCount, ubool consummate) {
   } else if (klass->isBuiltinClass) {
     /* builtin class */
     runtimeError("Builtin class %s does not support being called",
-      klass->name->chars);
+                 klass->name->chars);
     return UFALSE;
   } else if (klass->descriptor) {
     /* native class */
     runtimeError("Native class %s does not support being called",
-      klass->name->chars);
+                 klass->name->chars);
     return UFALSE;
   } else if (klass->isModuleClass) {
     /* module */
@@ -1064,7 +1096,7 @@ static ubool callFunctionOrMethod(Value callable, i16 argCount, ubool consummate
     }
   }
   runtimeError(
-    "Can only call functions and classes but got %s", getKindName(callable));
+      "Can only call functions and classes but got %s", getKindName(callable));
   return UFALSE;
 }
 
@@ -1087,9 +1119,9 @@ static ubool callMethodHelper(String *name, i16 argCount, ubool consummate) {
     cls = AS_CLASS(receiver);
     if (!mapGetStr(&cls->staticMethods, name, &method)) {
       runtimeError(
-        "Static method '%s' not found in '%s'",
-        name->chars,
-        cls->name->chars);
+          "Static method '%s' not found in '%s'",
+          name->chars,
+          cls->name->chars);
       return UFALSE;
     }
     return callFunctionOrMethod(method, argCount, consummate);
@@ -1097,9 +1129,9 @@ static ubool callMethodHelper(String *name, i16 argCount, ubool consummate) {
 
   if (!mapGetStr(&klass->methods, name, &method)) {
     runtimeError(
-      "Method '%s' not found in '%s'",
-      name->chars,
-      klass->name->chars);
+        "Method '%s' not found in '%s'",
+        name->chars,
+        klass->name->chars);
     return UFALSE;
   }
   return callFunctionOrMethod(method, argCount, consummate);

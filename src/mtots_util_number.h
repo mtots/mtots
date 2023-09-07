@@ -3,8 +3,8 @@
 
 #include "mtots_common.h"
 
-#define PI    3.14159265358979323846264338327950288
-#define TAU  (2 * PI)
+#define PI 3.14159265358979323846264338327950288
+#define TAU (2 * PI)
 
 #define DEFAULT_RELATIVE_TOLERANCE (1e-9)
 #define DEFAULT_ABSOLUTE_TOLERANCE (0.0)
@@ -30,4 +30,4 @@ ubool doubleIsCloseEx(double a, double b, double relTol, double absTol);
 float partsToF24(i8 exponent, i16 significand);
 void f24ToParts(float value, i8 *exponent, i16 *significand);
 
-#endif/*mtots_util_number_h*/
+#endif /*mtots_util_number_h*/

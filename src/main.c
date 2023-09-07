@@ -4,7 +4,6 @@
 #include "SDL.h"
 #endif
 
-
 int main(int argc, const char *argv[]) {
   return mtotsMain(argc, argv);
 }

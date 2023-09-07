@@ -1,19 +1,19 @@
 #include "mtots_globals.h"
+
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
 #include "mtots_vm.h"
 
-#include <time.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <math.h>
-
-
 static ubool implClock(i16 argCount, Value *args, Value *out) {
-  *out = NUMBER_VAL(clock() / (double) CLOCKS_PER_SEC);
+  *out = NUMBER_VAL(clock() / (double)CLOCKS_PER_SEC);
   return UTRUE;
 }
 
-static CFunction cfunctionClock = { implClock, "clock", 0 };
+static CFunction cfunctionClock = {implClock, "clock", 0};
 
 static ubool implExit(i16 argCount, Value *args, Value *out) {
   int exitCode = 0;
@@ -24,7 +24,7 @@ static ubool implExit(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction cfuncExit = { implExit, "exit", 0, 1, argsNumbers };
+static CFunction cfuncExit = {implExit, "exit", 0, 1, argsNumbers};
 
 static ubool implGetErrorString(i16 argCount, Value *args, Value *out) {
   const char *errorString = getSavedErrorString();
@@ -37,7 +37,7 @@ static ubool implGetErrorString(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction cfuncGetErrorString = { implGetErrorString, "getErrorString", 0 };
+static CFunction cfuncGetErrorString = {implGetErrorString, "getErrorString", 0};
 
 static ubool implLen(i16 argCount, Value *args, Value *out) {
   Value recv = args[0];
@@ -49,7 +49,7 @@ static ubool implLen(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction cfuncLen = { implLen, "len", 1 };
+static CFunction cfuncLen = {implLen, "len", 1};
 
 static ubool implSum(i16 argCount, Value *args, Value *out) {
   Value iterable = args[0];
@@ -59,7 +59,7 @@ static ubool implSum(i16 argCount, Value *args, Value *out) {
     return UFALSE;
   }
   push(iterator);
-    for (;;) {
+  for (;;) {
     if (!valueFastIterNext(&iterator, &item)) {
       return UFALSE;
     }
@@ -77,7 +77,7 @@ static ubool implSum(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction cfuncSum = { implSum, "sum", 1 };
+static CFunction cfuncSum = {implSum, "sum", 1};
 
 static ubool implHex(i16 argCount, Value *args, Value *out) {
   double rawValue = asNumber(args[0]);
@@ -119,7 +119,7 @@ static ubool implHex(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcHex = { implHex, "hex", 1, 0, argsNumbers };
+static CFunction funcHex = {implHex, "hex", 1, 0, argsNumbers};
 
 static ubool implBin(i16 argCount, Value *args, Value *out) {
   double rawValue = asNumber(args[0]);
@@ -156,7 +156,7 @@ static ubool implBin(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcBin = { implBin, "bin", 1, 0, argsNumbers };
+static CFunction funcBin = {implBin, "bin", 1, 0, argsNumbers};
 
 static ubool implRound(i16 argCount, Value *args, Value *out) {
   double number = asNumber(args[0]);
@@ -164,14 +164,14 @@ static ubool implRound(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction cfuncRound = { implRound, "round", 0, 1, argsNumbers };
+static CFunction cfuncRound = {implRound, "round", 0, 1, argsNumbers};
 
 static ubool implType(i16 argCount, Value *args, Value *out) {
   *out = CLASS_VAL(getClassOfValue(args[0]));
   return UTRUE;
 }
 
-static CFunction cfuncType = { implType, "type", 1};
+static CFunction cfuncType = {implType, "type", 1};
 
 static ubool implRepr(i16 argCount, Value *args, Value *out) {
   Buffer buf;
@@ -185,7 +185,7 @@ static ubool implRepr(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction cfunctionRepr = { implRepr, "repr", 1 };
+static CFunction cfunctionRepr = {implRepr, "repr", 1};
 
 static ubool implStr(i16 argCount, Value *args, Value *out) {
   if (IS_STRING(*args)) {
@@ -195,41 +195,41 @@ static ubool implStr(i16 argCount, Value *args, Value *out) {
   return implRepr(argCount, args, out);
 }
 
-static CFunction cfunctionStr = { implStr, "str", 1 };
+static CFunction cfunctionStr = {implStr, "str", 1};
 
 static ubool implChr(i16 argCount, Value *args, Value *out) {
   char c;
   if (!IS_NUMBER(args[0])) {
     runtimeError("chr() requires a number but got %s",
-      getKindName(args[0]));
+                 getKindName(args[0]));
     return UFALSE;
   }
-  c = (char) AS_I32(args[0]);
+  c = (char)AS_I32(args[0]);
   *out = STRING_VAL(internString(&c, 1));
   return UTRUE;
 }
 
-static CFunction cfunctionChr = { implChr, "chr", 1 };
+static CFunction cfunctionChr = {implChr, "chr", 1};
 
 static ubool implOrd(i16 argCount, Value *args, Value *out) {
   String *str;
   if (!IS_STRING(args[0])) {
     runtimeError("ord() requires a string but got %s",
-      getKindName(args[0]));
+                 getKindName(args[0]));
     return UFALSE;
   }
   str = AS_STRING(args[0]);
   if (str->byteLength != 1) {
     runtimeError(
-      "ord() requires a string of length 1 but got a string of length %lu",
-      (long) str->byteLength);
+        "ord() requires a string of length 1 but got a string of length %lu",
+        (long)str->byteLength);
     return UFALSE;
   }
   *out = NUMBER_VAL((u8)str->chars[0]);
   return UTRUE;
 }
 
-static CFunction cfunctionOrd = { implOrd, "ord", 1 };
+static CFunction cfunctionOrd = {implOrd, "ord", 1};
 
 static ubool implMin(i16 argCount, Value *args, Value *out) {
   Value best = args[0];
@@ -246,7 +246,7 @@ static ubool implMin(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction cfunctionMin = { implMin, "min", 1, MAX_ARG_COUNT };
+static CFunction cfunctionMin = {implMin, "min", 1, MAX_ARG_COUNT};
 
 static ubool implMax(i16 argCount, Value *args, Value *out) {
   Value best = args[0];
@@ -263,7 +263,7 @@ static ubool implMax(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction cfunctionMax = { implMax, "max", 1, MAX_ARG_COUNT };
+static CFunction cfunctionMax = {implMax, "max", 1, MAX_ARG_COUNT};
 
 static ubool implSorted(i16 argCount, Value *args, Value *out) {
   ObjList *list;
@@ -278,7 +278,7 @@ static ubool implSorted(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction cfunctionSorted = { implSorted, "sorted", 1, 2 };
+static CFunction cfunctionSorted = {implSorted, "sorted", 1, 2};
 
 static ubool implSet(i16 argCount, Value *args, Value *out) {
   ObjDict *dict = newDict();
@@ -300,12 +300,12 @@ static ubool implSet(i16 argCount, Value *args, Value *out) {
     mapSet(&dict->map, key, NIL_VAL());
     pop(); /* key */
   }
-  pop(); /* iterator */
+  pop();        /* iterator */
   *out = pop(); /* dict */
   return UTRUE;
 }
 
-static CFunction cfunctionSet = { implSet, "Set", 1 };
+static CFunction cfunctionSet = {implSet, "Set", 1};
 
 static ubool implTuple(i16 argCount, Value *args, Value *out) {
   ObjFrozenList *frozenList = copyFrozenList(args, argCount);
@@ -313,7 +313,7 @@ static ubool implTuple(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction cfunctionTuple = { implTuple, "Tuple", 1, 4 };
+static CFunction cfunctionTuple = {implTuple, "Tuple", 1, 4};
 
 static ubool implPrint(i16 argCount, Value *args, Value *out) {
   Value strVal;
@@ -328,7 +328,7 @@ static ubool implPrint(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction cfunctionPrint = { implPrint, "print", 1 };
+static CFunction cfunctionPrint = {implPrint, "print", 1};
 
 static ubool implRange(i16 argCount, Value *args, Value *out) {
   double start = 0, stop, step = 1;
@@ -336,8 +336,8 @@ static ubool implRange(i16 argCount, Value *args, Value *out) {
   for (i = 0; i < argCount; i++) {
     if (!IS_NUMBER(args[i])) {
       panic(
-        "range() requires number arguments but got %s for argument %d",
-        getKindName(args[i]), i);
+          "range() requires number arguments but got %s for argument %d",
+          getKindName(args[i]), i);
     }
   }
   switch (argCount) {
@@ -357,11 +357,11 @@ static ubool implRange(i16 argCount, Value *args, Value *out) {
       panic("Invalid argc to range() (%d)", argCount);
       return UFALSE;
   }
-  *out = OBJ_VAL_EXPLICIT((Obj*)newRange(start, stop, step));
+  *out = OBJ_VAL_EXPLICIT((Obj *)newRange(start, stop, step));
   return UTRUE;
 }
 
-static CFunction cfunctionRange = { implRange, "range", 1, 3 };
+static CFunction cfunctionRange = {implRange, "range", 1, 3};
 
 static ubool implFloat(i16 argCount, Value *args, Value *out) {
   Value arg = args[0];
@@ -413,7 +413,7 @@ static ubool implFloat(i16 argCount, Value *args, Value *out) {
   return UFALSE;
 }
 
-static CFunction funcFloat = { implFloat, "float", 1 };
+static CFunction funcFloat = {implFloat, "float", 1};
 
 static ubool implInt(i16 argCount, Value *args, Value *out) {
   Value arg = args[0];
@@ -439,8 +439,8 @@ static ubool implInt(i16 argCount, Value *args, Value *out) {
       return UFALSE;
     }
     while (('0' <= *ptr && *ptr <= '9') ||
-        ('A' <= *ptr && *ptr <= 'Z') ||
-        ('a' <= *ptr && *ptr <= 'z')) {
+           ('A' <= *ptr && *ptr <= 'Z') ||
+           ('a' <= *ptr && *ptr <= 'z')) {
       char ch = *ptr++;
       i32 digit = -1;
       if ('0' <= ch && ch <= '9') {
@@ -454,8 +454,8 @@ static ubool implInt(i16 argCount, Value *args, Value *out) {
       }
       if (digit >= base) {
         runtimeError(
-          "int(): digit value is too big for base (digit=%d, base=%d)",
-          (int)digit, (int)base);
+            "int(): digit value is too big for base (digit=%d, base=%d)",
+            (int)digit, (int)base);
         return UFALSE;
       }
       value = value * base + digit;
@@ -472,11 +472,11 @@ static ubool implInt(i16 argCount, Value *args, Value *out) {
 }
 
 static TypePattern argsInt[] = {
-  { TYPE_PATTERN_ANY },
-  { TYPE_PATTERN_NUMBER },
+    {TYPE_PATTERN_ANY},
+    {TYPE_PATTERN_NUMBER},
 };
 
-static CFunction funcInt = { implInt, "int", 1, 2, argsInt };
+static CFunction funcInt = {implInt, "int", 1, 2, argsInt};
 
 static ubool implIsClose(i16 argc, Value *args, Value *out) {
   Value a = args[0];
@@ -488,40 +488,40 @@ static ubool implIsClose(i16 argc, Value *args, Value *out) {
     return UTRUE;
   }
   runtimeError(
-    "Expectecd two Numbers, but got %s and %s",
-    getKindName(a), getKindName(b));
+      "Expectecd two Numbers, but got %s and %s",
+      getKindName(a), getKindName(b));
   return UFALSE;
 }
 
 static TypePattern argsIsClose[] = {
-  { TYPE_PATTERN_ANY },
-  { TYPE_PATTERN_ANY },
-  { TYPE_PATTERN_NUMBER },
-  { TYPE_PATTERN_NUMBER },
+    {TYPE_PATTERN_ANY},
+    {TYPE_PATTERN_ANY},
+    {TYPE_PATTERN_NUMBER},
+    {TYPE_PATTERN_NUMBER},
 };
 
-static CFunction funcIsClose = { implIsClose, "isClose", 2, 4, argsIsClose };
+static CFunction funcIsClose = {implIsClose, "isClose", 2, 4, argsIsClose};
 
 static ubool implSin(i16 argCount, Value *args, Value *out) {
   *out = NUMBER_VAL(sin(asNumber(args[0])));
   return UTRUE;
 }
 
-static CFunction funcSin = { implSin, "sin", 1, 0, argsNumbers };
+static CFunction funcSin = {implSin, "sin", 1, 0, argsNumbers};
 
 static ubool implCos(i16 argCount, Value *args, Value *out) {
   *out = NUMBER_VAL(cos(asNumber(args[0])));
   return UTRUE;
 }
 
-static CFunction funcCos = { implCos, "cos", 1, 0, argsNumbers };
+static CFunction funcCos = {implCos, "cos", 1, 0, argsNumbers};
 
 static ubool implTan(i16 argCount, Value *args, Value *out) {
   *out = NUMBER_VAL(tan(asNumber(args[0])));
   return UTRUE;
 }
 
-static CFunction funcTan = { implTan, "tan", 1, 0, argsNumbers };
+static CFunction funcTan = {implTan, "tan", 1, 0, argsNumbers};
 
 static ubool implAbs(i16 argCount, Value *args, Value *out) {
   double value = asNumber(args[0]);
@@ -529,7 +529,7 @@ static ubool implAbs(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcAbs = { implAbs, "abs", 1, 0, argsNumbers };
+static CFunction funcAbs = {implAbs, "abs", 1, 0, argsNumbers};
 
 static ubool implLog(i16 argCount, Value *args, Value *out) {
   double value = asNumber(args[0]);
@@ -541,7 +541,7 @@ static ubool implLog(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcLog = { implLog, "log", 1, 0, argsNumbers };
+static CFunction funcLog = {implLog, "log", 1, 0, argsNumbers};
 
 static ubool implFlog2(i16 argCount, Value *args, Value *out) {
   double value = asNumber(args[0]);
@@ -558,7 +558,7 @@ static ubool implFlog2(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcFlog2 = { implFlog2, "flog2", 1, 0, argsNumbers };
+static CFunction funcFlog2 = {implFlog2, "flog2", 1, 0, argsNumbers};
 
 static ubool implIsInstance(i16 argCount, Value *args, Value *out) {
   *out = BOOL_VAL(AS_CLASS(args[1]) == getClassOfValue(args[0]));
@@ -566,91 +566,90 @@ static ubool implIsInstance(i16 argCount, Value *args, Value *out) {
 }
 
 static TypePattern argsIsInstance[] = {
-  { TYPE_PATTERN_ANY },
-  { TYPE_PATTERN_CLASS },
+    {TYPE_PATTERN_ANY},
+    {TYPE_PATTERN_CLASS},
 };
 
 static CFunction funcIsInstance = {
-  implIsInstance, "isinstance", sizeof(argsIsInstance)/sizeof(TypePattern), 0, argsIsInstance
-};
+    implIsInstance, "isinstance", sizeof(argsIsInstance) / sizeof(TypePattern), 0, argsIsInstance};
 
 static ubool implSort(i16 argCount, Value *args, Value *out) {
   ObjList *list = AS_LIST(args[0]);
   ObjList *keys =
-    argCount < 2 ?
-      NULL :
-      IS_NIL(args[1]) ?
-        NULL :
-        AS_LIST(args[1]);
+      argCount < 2 ? NULL : IS_NIL(args[1]) ? NULL
+                                            : AS_LIST(args[1]);
   sortList(list, keys);
   return UTRUE;
 }
 
 static TypePattern argsSort[] = {
-  { TYPE_PATTERN_LIST },
-  { TYPE_PATTERN_LIST_OR_NIL },
+    {TYPE_PATTERN_LIST},
+    {TYPE_PATTERN_LIST_OR_NIL},
 };
 
-static CFunction funcSort = { implSort, "__sort__", 1, 2, argsSort };
+static CFunction funcSort = {implSort, "__sort__", 1, 2, argsSort};
 
 void defineDefaultGlobals(void) {
   NativeObjectDescriptor *descriptors[] = {
-    &descriptorStringBuilder,
-    NULL,
-  }, **descriptor;
+      &descriptorStringBuilder,
+      NULL,
+  },
+                         **descriptor;
   CFunction *functions[] = {
-    &cfunctionClock,
-    &cfuncExit,
-    &cfuncGetErrorString,
-    &cfuncLen,
-    &cfuncSum,
-    &funcHex,
-    &funcBin,
-    &cfuncRound,
-    &cfuncType,
-    &cfunctionRepr,
-    &cfunctionStr,
-    &cfunctionChr,
-    &cfunctionOrd,
-    &cfunctionMin,
-    &cfunctionMax,
-    &cfunctionSorted,
-    &cfunctionSet,
-    &cfunctionTuple,
-    &cfunctionPrint,
-    &cfunctionRange,
-    &funcFloat,
-    &funcInt,
-    &funcIsClose,
-    &funcSin,
-    &funcCos,
-    &funcTan,
-    &funcAbs,
-    &funcLog,
-    &funcFlog2,
-    &funcIsInstance,
-    &funcSort,
-    NULL,
-  }, **function;
+      &cfunctionClock,
+      &cfuncExit,
+      &cfuncGetErrorString,
+      &cfuncLen,
+      &cfuncSum,
+      &funcHex,
+      &funcBin,
+      &cfuncRound,
+      &cfuncType,
+      &cfunctionRepr,
+      &cfunctionStr,
+      &cfunctionChr,
+      &cfunctionOrd,
+      &cfunctionMin,
+      &cfunctionMax,
+      &cfunctionSorted,
+      &cfunctionSet,
+      &cfunctionTuple,
+      &cfunctionPrint,
+      &cfunctionRange,
+      &funcFloat,
+      &funcInt,
+      &funcIsClose,
+      &funcSin,
+      &funcCos,
+      &funcTan,
+      &funcAbs,
+      &funcLog,
+      &funcFlog2,
+      &funcIsInstance,
+      &funcSort,
+      NULL,
+  },
+            **function;
 
   /* I hate to be 3-star programmer here, but C initializer lists require
    * compile time constants, and the extra level of indirection
    * helps with that */
   ObjClass **builtinClasses[] = {
-    &vm.sentinelClass,
-    &vm.nilClass,
-    &vm.boolClass,
-    &vm.numberClass,
-    &vm.stringClass,
-    &vm.bufferClass,
-    &vm.listClass,
-    &vm.frozenListClass,
-    &vm.dictClass,
-    &vm.frozenDictClass,
-    &vm.functionClass,
-    &vm.classClass,
-    NULL,
-  }, ***builtinClass;
+      &vm.sentinelClass,
+      &vm.nilClass,
+      &vm.boolClass,
+      &vm.numberClass,
+      &vm.stringClass,
+      &vm.bufferClass,
+      &vm.listClass,
+      &vm.frozenListClass,
+      &vm.dictClass,
+      &vm.frozenDictClass,
+      &vm.functionClass,
+      &vm.classClass,
+      NULL,
+  },
+           ***builtinClass;
 
   defineGlobal("PI", NUMBER_VAL(PI));
   defineGlobal("TAU", NUMBER_VAL(TAU));
@@ -658,13 +657,13 @@ void defineDefaultGlobals(void) {
 #ifdef NAN
   defineGlobal("NAN", NUMBER_VAL(NAN));
 #else
-  defineGlobal("NAN", NUMBER_VAL(0.0/0.0));
+  defineGlobal("NAN", NUMBER_VAL(0.0 / 0.0));
 #endif
 
 #ifdef INFINITY
   defineGlobal("INFINITY", NUMBER_VAL(INFINITY));
 #else
-  defineGlobal("INFINITY", NUMBER_VAL(1.0/0.0));
+  defineGlobal("INFINITY", NUMBER_VAL(1.0 / 0.0));
 #endif
 
   defineGlobal("StopIteration", STOP_ITERATION_VAL());

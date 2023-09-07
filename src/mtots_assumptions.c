@@ -1,9 +1,8 @@
 #include "mtots_assumptions.h"
 
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <string.h>
 
 void checkAssumptions(void) {
   /* check type sizes */
@@ -27,20 +26,20 @@ void checkAssumptions(void) {
     fprintf(stderr, "double is not 8 bytes (got %lu)", (unsigned long)sizeof(double));
     exit(1);
   }
-  if (sizeof(void*) != 4 && sizeof(void*) != 8) {
-    fprintf(stderr, "void* is neither 4 nor 8 bytes (got %lu)", (unsigned long)sizeof(void*));
+  if (sizeof(void *) != 4 && sizeof(void *) != 8) {
+    fprintf(stderr, "void* is neither 4 nor 8 bytes (got %lu)", (unsigned long)sizeof(void *));
     exit(1);
   }
-  if (sizeof(void*) != sizeof(size_t)) {
+  if (sizeof(void *) != sizeof(size_t)) {
     fprintf(stderr, "sizeof(void*) != sizeof(size_t) (got %lu and %lu)",
-      (unsigned long)sizeof(void*), (unsigned long)sizeof(size_t));
+            (unsigned long)sizeof(void *), (unsigned long)sizeof(size_t));
     exit(1);
   }
 
   /* check endianness */
   {
     unsigned int i = 0x01020304;
-    unsigned char *ptr = (unsigned char*) &i;
+    unsigned char *ptr = (unsigned char *)&i;
     if (ptr[0] != 4 || ptr[1] != 3 || ptr[2] != 2 || ptr[3] != 1) {
       fprintf(stderr, "platform is not little endian\n");
       exit(1);
@@ -66,27 +65,27 @@ void checkAssumptions(void) {
     u.x = 1;
     if (u.arr[0] != 0 || u.arr[1] != 0x3FF00000) {
       fprintf(
-        stderr,
-        "double type punning does not work (1 => %u, %u)\n",
-        u.arr[0],
-        u.arr[1]);
+          stderr,
+          "double type punning does not work (1 => %u, %u)\n",
+          u.arr[0],
+          u.arr[1]);
       exit(1);
     }
     u.x = -1;
     if (u.arr[0] != 0 || u.arr[1] != 0xBFF00000) {
       fprintf(
-        stderr,
-        "double type punning does not work (-1 => %u, %u)\n",
-        u.arr[0],
-        u.arr[1]);
+          stderr,
+          "double type punning does not work (-1 => %u, %u)\n",
+          u.arr[0],
+          u.arr[1]);
       exit(1);
     }
     u.arr[1] = 0x40000000;
     if (u.x != 2) {
       fprintf(
-        stderr,
-        "double type punning does not work (0, 0x40000000 => %f)\n",
-        u.x);
+          stderr,
+          "double type punning does not work (0, 0x40000000 => %f)\n",
+          u.x);
       exit(1);
     }
   }

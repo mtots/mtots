@@ -4,10 +4,10 @@
 #include "mtots_vm.h"
 
 static void blackenDataSource(ObjNative *n) {
-  ObjDataSource *dataSource = (ObjDataSource*)n;
+  ObjDataSource *dataSource = (ObjDataSource *)n;
   switch (dataSource->type) {
     case DATA_SOURCE_BUFFER:
-      markObject((Obj*)dataSource->as.buffer);
+      markObject((Obj *)dataSource->as.buffer);
       break;
     case DATA_SOURCE_STRING:
       markString(dataSource->as.string);
@@ -25,10 +25,10 @@ static void blackenDataSource(ObjNative *n) {
 }
 
 static void blackenDataSink(ObjNative *n) {
-  ObjDataSink *dataSink = (ObjDataSink*)n;
+  ObjDataSink *dataSink = (ObjDataSink *)n;
   switch (dataSink->type) {
     case DATA_SINK_BUFFER:
-      markObject((Obj*)dataSink->as.buffer);
+      markObject((Obj *)dataSink->as.buffer);
       break;
     case DATA_SINK_FILE:
       markString(dataSink->as.file.path);
@@ -39,21 +39,25 @@ static void blackenDataSink(ObjNative *n) {
 }
 
 NativeObjectDescriptor descriptorDataSource = {
-  blackenDataSource, nopFree,
-  sizeof(ObjDataSource), "DataSource",
+    blackenDataSource,
+    nopFree,
+    sizeof(ObjDataSource),
+    "DataSource",
 };
 
 NativeObjectDescriptor descriptorDataSink = {
-  blackenDataSink, nopFree,
-  sizeof(ObjDataSink), "DataSink",
+    blackenDataSink,
+    nopFree,
+    sizeof(ObjDataSink),
+    "DataSink",
 };
 
 Value DATA_SOURCE_VAL(ObjDataSource *ds) {
-  return OBJ_VAL_EXPLICIT((Obj*)ds);
+  return OBJ_VAL_EXPLICIT((Obj *)ds);
 }
 
 Value DATA_SINK_VAL(ObjDataSink *ds) {
-  return OBJ_VAL_EXPLICIT((Obj*)ds);
+  return OBJ_VAL_EXPLICIT((Obj *)ds);
 }
 
 ObjDataSource *newDataSourceFromBuffer(ObjBuffer *buffer) {
@@ -99,9 +103,10 @@ ubool dataSourceInitBuffer(ObjDataSource *ds, Buffer *out) {
   switch (ds->type) {
     case DATA_SOURCE_BUFFER:
       initBufferWithExternalData(
-        out, ds->as.buffer->handle.data, ds->as.buffer->handle.length);
+          out, ds->as.buffer->handle.data, ds->as.buffer->handle.length);
       return UTRUE;
-    default:break;
+    default:
+      break;
   }
   initBuffer(out);
   if (!dataSourceReadIntoBuffer(ds, out)) {
@@ -123,7 +128,8 @@ ubool dataSourceReadIntoBuffer(ObjDataSource *ds, Buffer *out) {
       return readFileIntoBuffer(ds->as.file.path->chars, out);
     case DATA_SOURCE_BUNDLE:
       return readBufferFromBundle(ds->as.bundle.src->chars, ds->as.bundle.path->chars, out);
-    default:break;
+    default:
+      break;
   }
   panic("Invalid DataSourceType %d", ds->type);
   return UFALSE; /* unreachable */
@@ -132,14 +138,15 @@ ubool dataSourceReadIntoBuffer(ObjDataSource *ds, Buffer *out) {
 ubool dataSourceReadToString(ObjDataSource *ds, String **out) {
   switch (ds->type) {
     case DATA_SOURCE_BUFFER:
-      *out = internString((char*)ds->as.buffer->handle.data, ds->as.buffer->handle.length);
+      *out = internString((char *)ds->as.buffer->handle.data, ds->as.buffer->handle.length);
       return UTRUE;
     case DATA_SOURCE_STRING:
       *out = ds->as.string;
       return UTRUE;
     case DATA_SOURCE_BUNDLE:
       return readStringFromBundle(ds->as.bundle.src->chars, ds->as.bundle.path->chars, out);
-    default: break;
+    default:
+      break;
   }
 
   /* If not one of the cases enumerated above, we fall back to reading
@@ -151,7 +158,7 @@ ubool dataSourceReadToString(ObjDataSource *ds, String **out) {
       freeBuffer(&buffer);
       return UFALSE;
     }
-    *out = internString((char*)buffer.data, buffer.length);
+    *out = internString((char *)buffer.data, buffer.length);
     freeBuffer(&buffer);
   }
   return UTRUE;
@@ -174,11 +181,12 @@ ObjDataSink *newDataSinkFromFile(String *filePath) {
 ubool dataSinkWriteBytes(ObjDataSink *ds, const u8 *data, size_t dataLen) {
   switch (ds->type) {
     case DATA_SINK_BUFFER:
-      bufferAddBytes(&ds->as.buffer->handle, (const void*)data, dataLen);
+      bufferAddBytes(&ds->as.buffer->handle, (const void *)data, dataLen);
       return UTRUE;
     case DATA_SINK_FILE:
-      return writeFile((const void*)data, dataLen, ds->as.file.path->chars);
-    default: break;
+      return writeFile((const void *)data, dataLen, ds->as.file.path->chars);
+    default:
+      break;
   }
   runtimeError("dataSinkWriteBytes: invalid data sink type %d", ds->type);
   return UFALSE;
@@ -188,15 +196,16 @@ ubool dataSinkWrite(ObjDataSink *sink, ObjDataSource *src) {
   switch (src->type) {
     case DATA_SOURCE_BUFFER:
       return dataSinkWriteBytes(
-        sink,
-        src->as.buffer->handle.data,
-        src->as.buffer->handle.length);
+          sink,
+          src->as.buffer->handle.data,
+          src->as.buffer->handle.length);
     case DATA_SOURCE_STRING:
       return dataSinkWriteBytes(
-        sink,
-        (const u8*)src->as.string->chars,
-        src->as.string->byteLength);
-    default:break;
+          sink,
+          (const u8 *)src->as.string->chars,
+          src->as.string->byteLength);
+    default:
+      break;
   }
   /* Fallback - use generic methods and store to an intermediate buffer */
   {
@@ -220,12 +229,11 @@ static ubool implFromBuffer(i16 argc, Value *args, Value *out) {
 }
 
 static TypePattern argsFromBuffer[] = {
-  { TYPE_PATTERN_BUFFER },
+    {TYPE_PATTERN_BUFFER},
 };
 
 static CFunction funcFromBuffer = {
-  implFromBuffer, "fromBuffer", 1, 0, argsFromBuffer
-};
+    implFromBuffer, "fromBuffer", 1, 0, argsFromBuffer};
 
 static ubool implFromString(i16 argc, Value *args, Value *out) {
   String *path = AS_STRING(args[0]);
@@ -234,8 +242,7 @@ static ubool implFromString(i16 argc, Value *args, Value *out) {
 }
 
 static CFunction funcFromString = {
-  implFromString, "fromString", 1, 0, argsStrings
-};
+    implFromString, "fromString", 1, 0, argsStrings};
 
 static ubool implFromFile(i16 argc, Value *args, Value *out) {
   String *path = AS_STRING(args[0]);
@@ -244,8 +251,7 @@ static ubool implFromFile(i16 argc, Value *args, Value *out) {
 }
 
 static CFunction funcFromFile = {
-  implFromFile, "fromFile", 1, 0, argsStrings
-};
+    implFromFile, "fromFile", 1, 0, argsStrings};
 
 static ubool implFromBundle(i16 argc, Value *args, Value *out) {
   String *src = AS_STRING(args[0]);
@@ -255,8 +261,7 @@ static ubool implFromBundle(i16 argc, Value *args, Value *out) {
 }
 
 static CFunction funcFromBundle = {
-  implFromBundle, "fromBundle", 2, 0, argsStrings
-};
+    implFromBundle, "fromBundle", 2, 0, argsStrings};
 
 static ubool implToBuffer(i16 argc, Value *args, Value *out) {
   ObjBuffer *buffer = AS_BUFFER(args[0]);
@@ -265,16 +270,14 @@ static ubool implToBuffer(i16 argc, Value *args, Value *out) {
 }
 
 static TypePattern argsToBuffer[] = {
-  { TYPE_PATTERN_BUFFER },
+    {TYPE_PATTERN_BUFFER},
 };
 
 static CFunction funcToBuffer = {
-  implToBuffer, "toBuffer", 1, 0, argsToBuffer
-};
+    implToBuffer, "toBuffer", 1, 0, argsToBuffer};
 
 static CFunction funcDataSinkStaticFromBuffer = {
-  implToBuffer, "fromBuffer", 1, 0, argsToBuffer
-};
+    implToBuffer, "fromBuffer", 1, 0, argsToBuffer};
 
 static ubool implToFile(i16 argc, Value *args, Value *out) {
   String *filePath = AS_STRING(args[0]);
@@ -283,12 +286,10 @@ static ubool implToFile(i16 argc, Value *args, Value *out) {
 }
 
 static CFunction funcToFile = {
-  implToFile, "toFile", 1, 0, argsStrings
-};
+    implToFile, "toFile", 1, 0, argsStrings};
 
 static CFunction funcDataSinkStaticFromFile = {
-  implToFile, "fromFile", 1, 0, argsStrings
-};
+    implToFile, "fromFile", 1, 0, argsStrings};
 
 static ubool implDataSourceRead(i16 argc, Value *args, Value *out) {
   ObjDataSource *ds = AS_DATA_SOURCE(args[-1]);
@@ -297,12 +298,11 @@ static ubool implDataSourceRead(i16 argc, Value *args, Value *out) {
 }
 
 static TypePattern argsDataSourceRead[] = {
-  { TYPE_PATTERN_BUFFER },
+    {TYPE_PATTERN_BUFFER},
 };
 
 static CFunction funcDataSourceRead = {
-  implDataSourceRead, "read", 1, 0, argsDataSourceRead
-};
+    implDataSourceRead, "read", 1, 0, argsDataSourceRead};
 
 static ubool implDataSourceToBuffer(i16 argc, Value *args, Value *out) {
   ObjDataSource *ds = AS_DATA_SOURCE(args[-1]);
@@ -322,7 +322,7 @@ static ubool implDataSourceToBuffer(i16 argc, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcDataSourceToBuffer = { implDataSourceToBuffer, "toBuffer" };
+static CFunction funcDataSourceToBuffer = {implDataSourceToBuffer, "toBuffer"};
 
 static ubool implDataSourceToString(i16 argc, Value *args, Value *out) {
   ObjDataSource *ds = AS_DATA_SOURCE(args[-1]);
@@ -336,7 +336,7 @@ static ubool implDataSourceToString(i16 argc, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcDataSourceToString = { implDataSourceToString, "toString" };
+static CFunction funcDataSourceToString = {implDataSourceToString, "toString"};
 
 static ubool implDataSinkWrite(i16 argc, Value *args, Value *out) {
   ObjDataSink *sink = AS_DATA_SINK(args[-1]);
@@ -345,63 +345,62 @@ static ubool implDataSinkWrite(i16 argc, Value *args, Value *out) {
 }
 
 static TypePattern argsDataSinkWrite[] = {
-  { TYPE_PATTERN_NATIVE, &descriptorDataSource },
+    {TYPE_PATTERN_NATIVE, &descriptorDataSource},
 };
 
 static CFunction funcDataSinkWrite = {
-  implDataSinkWrite, "write", 1, 0, argsDataSinkWrite
-};
+    implDataSinkWrite, "write", 1, 0, argsDataSinkWrite};
 
 static ubool impl(i16 argCount, Value *args, Value *out) {
   ObjModule *module = AS_MODULE(args[0]);
   CFunction *functions[] = {
-    &funcFromBuffer,
-    &funcFromString,
-    &funcFromFile,
-    &funcFromBundle,
-    &funcToBuffer,
-    &funcToFile,
-    NULL,
+      &funcFromBuffer,
+      &funcFromString,
+      &funcFromFile,
+      &funcFromBundle,
+      &funcToBuffer,
+      &funcToFile,
+      NULL,
   };
   CFunction *dataSourceStaticMethods[] = {
-    &funcFromBuffer,
-    &funcFromString,
-    &funcFromFile,
-    &funcFromBundle,
-    NULL,
+      &funcFromBuffer,
+      &funcFromString,
+      &funcFromFile,
+      &funcFromBundle,
+      NULL,
   };
   CFunction *dataSourceMethods[] = {
-    &funcDataSourceRead,
-    &funcDataSourceToBuffer,
-    &funcDataSourceToString,
-    NULL,
+      &funcDataSourceRead,
+      &funcDataSourceToBuffer,
+      &funcDataSourceToString,
+      NULL,
   };
   CFunction *dataSinkStaticMethods[] = {
-    &funcDataSinkStaticFromBuffer,
-    &funcDataSinkStaticFromFile,
-    NULL,
+      &funcDataSinkStaticFromBuffer,
+      &funcDataSinkStaticFromFile,
+      NULL,
   };
   CFunction *dataSinkMethods[] = {
-    &funcDataSinkWrite,
-    NULL,
+      &funcDataSinkWrite,
+      NULL,
   };
 
   moduleAddFunctions(module, functions);
   newNativeClass(
-    module,
-    &descriptorDataSource,
-    dataSourceMethods,
-    dataSourceStaticMethods);
+      module,
+      &descriptorDataSource,
+      dataSourceMethods,
+      dataSourceStaticMethods);
   newNativeClass(
-    module,
-    &descriptorDataSink,
-    dataSinkMethods,
-    dataSinkStaticMethods);
+      module,
+      &descriptorDataSink,
+      dataSinkMethods,
+      dataSinkStaticMethods);
 
   return UTRUE;
 }
 
-static CFunction func = { impl, "data", 1 };
+static CFunction func = {impl, "data", 1};
 
 void addNativeModuleData(void) {
   addNativeModule(&func);

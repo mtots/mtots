@@ -1,6 +1,6 @@
-#include "mtots_vm.h"
-
 #include <stdlib.h>
+
+#include "mtots_vm.h"
 
 void initChunk(Chunk *chunk) {
   chunk->count = 0;
@@ -22,9 +22,9 @@ void writeChunk(Chunk *chunk, u8 byte, i16 line) {
     i32 oldCapacity = chunk->capacity;
     chunk->capacity = GROW_CAPACITY(oldCapacity);
     chunk->code = GROW_ARRAY(
-      u8, chunk->code, oldCapacity, chunk->capacity);
+        u8, chunk->code, oldCapacity, chunk->capacity);
     chunk->lines = GROW_ARRAY(
-      i16, chunk->lines, oldCapacity, chunk->capacity);
+        i16, chunk->lines, oldCapacity, chunk->capacity);
   }
 
   chunk->code[chunk->count] = byte;

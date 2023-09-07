@@ -18,12 +18,12 @@ ubool isDirectory(const char *path);
  * The given callback will be called with the given userData and
  * each file name. */
 ubool listDirectory(
-  const char *dirpath,
-  void *userData,
-  ubool (*callback)(void *userData, const char *fileName));
+    const char *dirpath,
+    void *userData,
+    ubool (*callback)(void *userData, const char *fileName));
 
 /* Creates a directory. If `existOK` is true, error resulting
  * from the directory already existing is ignored */
 ubool makeDirectory(const char *dirpath, ubool existOK);
 
-#endif/*mtots_util_fs_h*/
+#endif /*mtots_util_fs_h*/

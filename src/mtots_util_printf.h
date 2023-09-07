@@ -19,4 +19,4 @@ void oprintln(const char *format, ...) MTOTS_PRINTFLIKE(1, 2);
  */
 void eprintln(const char *format, ...) MTOTS_PRINTFLIKE(1, 2);
 
-#endif/*mtots_util_printf_h*/
+#endif /*mtots_util_printf_h*/

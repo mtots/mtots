@@ -3,4 +3,4 @@
 
 void initDictClass(void);
 
-#endif/*mtots_class_dict_h*/
+#endif /*mtots_class_dict_h*/

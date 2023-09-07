@@ -1,12 +1,12 @@
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "mtots_vm.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <errno.h>
-
 #define ALLOCATE_OBJ(type, objectType) \
-  (type*)allocateObject(sizeof(type), objectType, NULL)
+  (type *)allocateObject(sizeof(type), objectType, NULL)
 
 /* should-be-inline */ ubool isObjType(Value value, ObjType type) {
   return IS_OBJ(value) && AS_OBJ(value)->type == type;
@@ -25,16 +25,16 @@ void nopBlacken(ObjNative *n) {}
 void nopFree(ObjNative *n) {}
 
 static Obj *allocateObject(size_t size, ObjType type, const char *typeName) {
-  Obj *object = (Obj*)reallocate(NULL, 0, size);
+  Obj *object = (Obj *)reallocate(NULL, 0, size);
   object->type = type;
   object->isMarked = UFALSE;
   object->next = vm.memory.objects;
   vm.memory.objects = object;
   if (vm.enableMallocFreeLogs) {
     eprintln(
-      "DEBUG: allocate Object %s at %p",
-      typeName ? typeName : getObjectTypeName(type),
-      (void*)object);
+        "DEBUG: allocate Object %s at %p",
+        typeName ? typeName : getObjectTypeName(type),
+        (void *)object);
   }
   return object;
 }
@@ -202,12 +202,10 @@ ObjClass *newNativeClass(
     NativeObjectDescriptor *descriptor,
     CFunction **methods,
     CFunction **staticMethods) {
-  ObjClass *cls = descriptor->klass = module ?
-    newClassForModule(module, descriptor->name) :
-    newForeverClassFromCString(descriptor->name);
+  ObjClass *cls = descriptor->klass = module ? newClassForModule(module, descriptor->name) : newForeverClassFromCString(descriptor->name);
   cls->descriptor = descriptor;
   addMethodsToNativeOrBuiltinClass(
-    cls, TYPE_PATTERN_NATIVE, descriptor, methods, staticMethods);
+      cls, TYPE_PATTERN_NATIVE, descriptor, methods, staticMethods);
   return cls;
 }
 
@@ -221,12 +219,12 @@ ObjClass *newBuiltinClass(
   *slot = cls;
   cls->isBuiltinClass = UTRUE;
   addMethodsToNativeOrBuiltinClass(
-    cls, typePatternType, NULL, methods, staticMethods);
+      cls, typePatternType, NULL, methods, staticMethods);
   return cls;
 }
 
 ObjClosure *newClosure(ObjThunk *thunk, ObjModule *module) {
-  ObjUpvalue **upvalues = ALLOCATE(ObjUpvalue*, thunk->upvalueCount);
+  ObjUpvalue **upvalues = ALLOCATE(ObjUpvalue *, thunk->upvalueCount);
   ObjClosure *closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE);
   i16 i;
   for (i = 0; i < thunk->upvalueCount; i++) {
@@ -265,13 +263,13 @@ static u32 hashFrozenList(Value *buffer, size_t length) {
   u32 hash = 2166136261u;
   for (i = 0; i < length; i++) {
     u32 itemhash = hashval(buffer[i]);
-    hash ^= (u8) (itemhash);
+    hash ^= (u8)(itemhash);
     hash *= 16777619;
-    hash ^= (u8) (itemhash >> 8);
+    hash ^= (u8)(itemhash >> 8);
     hash *= 16777619;
-    hash ^= (u8) (itemhash >> 16);
+    hash ^= (u8)(itemhash >> 16);
     hash *= 16777619;
-    hash ^= (u8) (itemhash >> 24);
+    hash ^= (u8)(itemhash >> 24);
     hash *= 16777619;
   }
   return hash;
@@ -319,9 +317,9 @@ ObjList *newList(size_t size) {
 ObjList *newListFromArray(Value *values, size_t length) {
   ObjList *list = newList(length);
   memcpy(
-    (void*)(list->buffer),
-    (void*)values,
-    sizeof(Value) * length);
+      (void *)(list->buffer),
+      (void *)values,
+      sizeof(Value) * length);
   return list;
 }
 
@@ -514,8 +512,8 @@ static u32 hashMap(Map *map) {
   while (mapIteratorNext(&mi, &entry)) {
     u32 kh = hashval(entry->key);
     u32 vh = hashval(entry->value);
-    hash ^= (kh ^ (kh << 16) ^ 89869747UL)  * 3644798167UL;
-    hash ^= (vh ^ (vh << 16) ^ 89869747UL)  * 3644798167UL;
+    hash ^= (kh ^ (kh << 16) ^ 89869747UL) * 3644798167UL;
+    hash ^= (vh ^ (vh << 16) ^ 89869747UL) * 3644798167UL;
   }
   hash = hash * 69069U + 907133923UL;
   return hash;
@@ -530,7 +528,7 @@ ObjNative *newNative(NativeObjectDescriptor *descriptor, size_t objectSize) {
   if (descriptor->objectSize != objectSize) {
     panic("Mismatched native object size");
   }
-  n = (ObjNative*)allocateObject(objectSize, OBJ_NATIVE, descriptor->name);
+  n = (ObjNative *)allocateObject(objectSize, OBJ_NATIVE, descriptor->name);
   n->descriptor = descriptor;
   return n;
 }
@@ -545,26 +543,44 @@ ObjUpvalue *newUpvalue(Value *slot) {
 
 ObjClass *getClassOfValue(Value value) {
   switch (value.type) {
-    case VAL_NIL: return vm.nilClass;
-    case VAL_BOOL: return vm.boolClass;
-    case VAL_NUMBER: return vm.numberClass;
-    case VAL_SYMBOL: return vm.symbolClass;
-    case VAL_STRING: return vm.stringClass;
-    case VAL_CFUNCTION: return vm.functionClass;
-    case VAL_SENTINEL: return vm.sentinelClass;
+    case VAL_NIL:
+      return vm.nilClass;
+    case VAL_BOOL:
+      return vm.boolClass;
+    case VAL_NUMBER:
+      return vm.numberClass;
+    case VAL_SYMBOL:
+      return vm.symbolClass;
+    case VAL_STRING:
+      return vm.stringClass;
+    case VAL_CFUNCTION:
+      return vm.functionClass;
+    case VAL_SENTINEL:
+      return vm.sentinelClass;
     case VAL_OBJ: {
       switch (AS_OBJ(value)->type) {
-        case OBJ_CLASS: return vm.classClass;
-        case OBJ_CLOSURE: return vm.functionClass;
-        case OBJ_THUNK: panic("thunk kinds do not have classes");
-        case OBJ_INSTANCE: return AS_INSTANCE(value)->klass;
-        case OBJ_BUFFER: return vm.bufferClass;
-        case OBJ_LIST: return vm.listClass;
-        case OBJ_FROZEN_LIST: return vm.frozenListClass;
-        case OBJ_DICT: return vm.dictClass;
-        case OBJ_FROZEN_DICT: return vm.frozenDictClass;
-        case OBJ_NATIVE: return AS_NATIVE(value)->descriptor->klass;
-        case OBJ_UPVALUE: panic("upvalue kinds do not have classes");
+        case OBJ_CLASS:
+          return vm.classClass;
+        case OBJ_CLOSURE:
+          return vm.functionClass;
+        case OBJ_THUNK:
+          panic("thunk kinds do not have classes");
+        case OBJ_INSTANCE:
+          return AS_INSTANCE(value)->klass;
+        case OBJ_BUFFER:
+          return vm.bufferClass;
+        case OBJ_LIST:
+          return vm.listClass;
+        case OBJ_FROZEN_LIST:
+          return vm.frozenListClass;
+        case OBJ_DICT:
+          return vm.dictClass;
+        case OBJ_FROZEN_DICT:
+          return vm.frozenDictClass;
+        case OBJ_NATIVE:
+          return AS_NATIVE(value)->descriptor->klass;
+        case OBJ_UPVALUE:
+          panic("upvalue kinds do not have classes");
       }
       break;
     }
@@ -608,10 +624,10 @@ void printObject(Value value) {
       printf("<buffer %lu>", (unsigned long)AS_BUFFER(value)->handle.length);
       break;
     case OBJ_LIST:
-      printf("<list %lu items>", (unsigned long) AS_LIST(value)->length);
+      printf("<list %lu items>", (unsigned long)AS_LIST(value)->length);
       break;
     case OBJ_FROZEN_LIST:
-      printf("<frozenList %lu items>", (unsigned long) AS_FROZEN_LIST(value)->length);
+      printf("<frozenList %lu items>", (unsigned long)AS_FROZEN_LIST(value)->length);
       break;
     case OBJ_DICT:
       printf("<dict>");
@@ -621,8 +637,8 @@ void printObject(Value value) {
       break;
     case OBJ_NATIVE:
       printf(
-        "<native-object %s>",
-        AS_NATIVE(value)->descriptor->klass->name->chars);
+          "<native-object %s>",
+          AS_NATIVE(value)->descriptor->klass->name->chars);
       break;
     case OBJ_UPVALUE:
       printf("<upvalue>");
@@ -634,17 +650,28 @@ void printObject(Value value) {
 
 const char *getObjectTypeName(ObjType type) {
   switch (type) {
-  case OBJ_CLASS: return "OBJ_CLASS";
-  case OBJ_CLOSURE: return "OBJ_CLOSURE";
-  case OBJ_THUNK: return "OBJ_THUNK";
-  case OBJ_INSTANCE: return "OBJ_INSTANCE";
-  case OBJ_BUFFER: return "OBJ_BUFFER";
-  case OBJ_LIST: return "OBJ_LIST";
-  case OBJ_FROZEN_LIST: return "OBJ_FROZEN_LIST";
-  case OBJ_DICT: return "OBJ_DICT";
-  case OBJ_FROZEN_DICT: return "OBJ_FROZEN_DICT";
-  case OBJ_NATIVE: return "OBJ_NATIVE";
-  case OBJ_UPVALUE: return "OBJ_UPVALUE";
+    case OBJ_CLASS:
+      return "OBJ_CLASS";
+    case OBJ_CLOSURE:
+      return "OBJ_CLOSURE";
+    case OBJ_THUNK:
+      return "OBJ_THUNK";
+    case OBJ_INSTANCE:
+      return "OBJ_INSTANCE";
+    case OBJ_BUFFER:
+      return "OBJ_BUFFER";
+    case OBJ_LIST:
+      return "OBJ_LIST";
+    case OBJ_FROZEN_LIST:
+      return "OBJ_FROZEN_LIST";
+    case OBJ_DICT:
+      return "OBJ_DICT";
+    case OBJ_FROZEN_DICT:
+      return "OBJ_FROZEN_DICT";
+    case OBJ_NATIVE:
+      return "OBJ_NATIVE";
+    case OBJ_UPVALUE:
+      return "OBJ_UPVALUE";
   }
   return "OBJ_<unrecognized>";
 }
@@ -654,41 +681,41 @@ ubool isNative(Value value, NativeObjectDescriptor *descriptor) {
 }
 
 Value LIST_VAL(ObjList *list) {
-  return OBJ_VAL_EXPLICIT((Obj*)list);
+  return OBJ_VAL_EXPLICIT((Obj *)list);
 }
 
 Value DICT_VAL(ObjDict *dict) {
-  return OBJ_VAL_EXPLICIT((Obj*)dict);
+  return OBJ_VAL_EXPLICIT((Obj *)dict);
 }
 
 Value FROZEN_DICT_VAL(ObjFrozenDict *fdict) {
-  return OBJ_VAL_EXPLICIT((Obj*)fdict);
+  return OBJ_VAL_EXPLICIT((Obj *)fdict);
 }
 
 Value INSTANCE_VAL(ObjInstance *instance) {
-  return OBJ_VAL_EXPLICIT((Obj*)instance);
+  return OBJ_VAL_EXPLICIT((Obj *)instance);
 }
 
 Value MODULE_VAL(ObjModule *module) {
-  return OBJ_VAL_EXPLICIT((Obj*)module);
+  return OBJ_VAL_EXPLICIT((Obj *)module);
 }
 
 Value BUFFER_VAL(ObjBuffer *buffer) {
-  return OBJ_VAL_EXPLICIT((Obj*)buffer);
+  return OBJ_VAL_EXPLICIT((Obj *)buffer);
 }
 
 Value THUNK_VAL(ObjThunk *thunk) {
-  return OBJ_VAL_EXPLICIT((Obj*)thunk);
+  return OBJ_VAL_EXPLICIT((Obj *)thunk);
 }
 
 Value CLOSURE_VAL(ObjClosure *closure) {
-  return OBJ_VAL_EXPLICIT((Obj*)closure);
+  return OBJ_VAL_EXPLICIT((Obj *)closure);
 }
 
 Value FROZEN_LIST_VAL(ObjFrozenList *frozenList) {
-  return OBJ_VAL_EXPLICIT((Obj*)frozenList);
+  return OBJ_VAL_EXPLICIT((Obj *)frozenList);
 }
 
 Value CLASS_VAL(ObjClass *klass) {
-  return OBJ_VAL_EXPLICIT((Obj*)klass);
+  return OBJ_VAL_EXPLICIT((Obj *)klass);
 }

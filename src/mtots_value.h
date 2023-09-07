@@ -35,7 +35,7 @@ typedef struct TypePattern {
 
 typedef enum Sentinel {
   SentinelStopIteration,
-  SentinelEmptyKey        /* Used internally in Map */
+  SentinelEmptyKey /* Used internally in Map */
 } Sentinel;
 
 typedef enum ValueType {
@@ -51,12 +51,11 @@ typedef enum ValueType {
 
 /* Value struct should be 16-bytes on all supported platforms */
 typedef struct Value {
-
   ValueType type; /* 4-bytes */
 
   union {
-    i32 integer;       /* placeholder, for now */
-  } extra; /* 4-bytes */
+    i32 integer; /* placeholder, for now */
+  } extra;       /* 4-bytes */
 
   /*
    * All members of this union are either:
@@ -132,11 +131,11 @@ Value SENTINEL_VAL(Sentinel sentinel);
 Value OBJ_VAL_EXPLICIT(Obj *object);
 
 #define IS_STOP_ITERATION(value) ( \
-  IS_SENTINEL(value) && \
-  ((value).as.sentinel == SentinelStopIteration))
+    IS_SENTINEL(value) &&          \
+    ((value).as.sentinel == SentinelStopIteration))
 #define IS_EMPTY_KEY(value) ( \
-  IS_SENTINEL(value) && \
-  ((value).as.sentinel == SentinelEmptyKey))
+    IS_SENTINEL(value) &&     \
+    ((value).as.sentinel == SentinelEmptyKey))
 
 #define STOP_ITERATION_VAL() (SENTINEL_VAL(SentinelStopIteration))
 #define EMPTY_KEY_VAL() (SENTINEL_VAL(SentinelEmptyKey))
@@ -159,4 +158,4 @@ extern TypePattern argsNumbers[12];
 extern TypePattern argsStrings[12];
 extern TypePattern argsSetattr[2];
 
-#endif/*mtots_value_h*/
+#endif /*mtots_value_h*/

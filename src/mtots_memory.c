@@ -1,8 +1,8 @@
-#include "mtots_vm.h"
-#include "mtots_parser.h"
-
 #include <stdlib.h>
 #include <string.h>
+
+#include "mtots_parser.h"
+#include "mtots_vm.h"
 
 #define GC_HEAP_GROW_FACTOR 2
 
@@ -30,7 +30,7 @@ String *internForeverCString(const char *cstr) {
   return str;
 }
 
-void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
+void *reallocate(void *pointer, size_t oldSize, size_t newSize) {
   void *result;
 
   vm.memory.bytesAllocated += newSize - oldSize;
@@ -64,8 +64,8 @@ void markObject(Obj *object) {
 
   if (vm.memory.grayCapacity < vm.memory.grayCount + 1) {
     vm.memory.grayCapacity = GROW_CAPACITY(vm.memory.grayCapacity);
-    vm.memory.grayStack = (Obj**)realloc(
-      vm.memory.grayStack, sizeof(Obj*) * vm.memory.grayCapacity);
+    vm.memory.grayStack = (Obj **)realloc(
+        vm.memory.grayStack, sizeof(Obj *) * vm.memory.grayCapacity);
     if (vm.memory.grayStack == NULL) {
       panic("out of memory (during gc)");
     }
@@ -102,7 +102,7 @@ static void markArray(ValueArray *array) {
 static void blackenObject(Obj *object) {
   switch (object->type) {
     case OBJ_CLASS: {
-      ObjClass *klass = (ObjClass*)object;
+      ObjClass *klass = (ObjClass *)object;
       markString(klass->name);
       markMap(&klass->methods);
       markMap(&klass->staticMethods);
@@ -110,16 +110,16 @@ static void blackenObject(Obj *object) {
     }
     case OBJ_CLOSURE: {
       i16 i;
-      ObjClosure *closure = (ObjClosure*)object;
-      markObject((Obj*)closure->module);
-      markObject((Obj*)closure->thunk);
+      ObjClosure *closure = (ObjClosure *)object;
+      markObject((Obj *)closure->module);
+      markObject((Obj *)closure->thunk);
       for (i = 0; i < closure->upvalueCount; i++) {
-        markObject((Obj*)closure->upvalues[i]);
+        markObject((Obj *)closure->upvalues[i]);
       }
       break;
     }
     case OBJ_THUNK: {
-      ObjThunk *thunk = (ObjThunk*) object;
+      ObjThunk *thunk = (ObjThunk *)object;
       size_t i;
       markString(thunk->name);
       markString(thunk->moduleName);
@@ -130,20 +130,20 @@ static void blackenObject(Obj *object) {
       break;
     }
     case OBJ_INSTANCE: {
-      ObjInstance *instance = (ObjInstance*)object;
-      markObject((Obj*)instance->klass);
+      ObjInstance *instance = (ObjInstance *)object;
+      markObject((Obj *)instance->klass);
       markMap(&instance->fields);
-      markObject((Obj*)instance->retainList);
+      markObject((Obj *)instance->retainList);
       break;
     }
     case OBJ_UPVALUE:
-      markValue(((ObjUpvalue*)object)->closed);
+      markValue(((ObjUpvalue *)object)->closed);
       break;
     case OBJ_BUFFER:
-      markValue(((ObjBuffer*)object)->memoryRegionOwner);
+      markValue(((ObjBuffer *)object)->memoryRegionOwner);
       break;
     case OBJ_LIST: {
-      ObjList *list = (ObjList*)object;
+      ObjList *list = (ObjList *)object;
       size_t i;
       for (i = 0; i < list->length; i++) {
         markValue(list->buffer[i]);
@@ -151,7 +151,7 @@ static void blackenObject(Obj *object) {
       break;
     }
     case OBJ_FROZEN_LIST: {
-      ObjFrozenList *frozenList = (ObjFrozenList*)object;
+      ObjFrozenList *frozenList = (ObjFrozenList *)object;
       size_t i;
       for (i = 0; i < frozenList->length; i++) {
         markValue(frozenList->buffer[i]);
@@ -159,17 +159,17 @@ static void blackenObject(Obj *object) {
       break;
     }
     case OBJ_DICT: {
-      ObjDict *dict = (ObjDict*)object;
+      ObjDict *dict = (ObjDict *)object;
       markMap(&dict->map);
       break;
     }
     case OBJ_FROZEN_DICT: {
-      ObjFrozenDict *dict = (ObjFrozenDict*)object;
+      ObjFrozenDict *dict = (ObjFrozenDict *)object;
       markMap(&dict->map);
       break;
     }
     case OBJ_NATIVE: {
-      ObjNative *n = (ObjNative*)object;
+      ObjNative *n = (ObjNative *)object;
       n->descriptor->blacken(n);
       break;
     }
@@ -181,71 +181,69 @@ static void blackenObject(Obj *object) {
 static void freeObject(Obj *object) {
   if (vm.enableMallocFreeLogs) {
     eprintln(
-      "DEBUG: free     Object %s at %p",
-      object->type == OBJ_NATIVE ?
-        ((ObjNative*)object)->descriptor->name :
-        getObjectTypeName(object->type),
-      (void*)object);
+        "DEBUG: free     Object %s at %p",
+        object->type == OBJ_NATIVE ? ((ObjNative *)object)->descriptor->name : getObjectTypeName(object->type),
+        (void *)object);
   }
   switch (object->type) {
     case OBJ_CLASS: {
-      ObjClass *klass = (ObjClass*)object;
+      ObjClass *klass = (ObjClass *)object;
       freeMap(&klass->methods);
       freeMap(&klass->staticMethods);
       FREE(ObjClass, object);
       break;
     }
     case OBJ_CLOSURE: {
-      ObjClosure *closure = (ObjClosure*) object;
-      FREE_ARRAY(ObjUpvalue*, closure->upvalues, closure->upvalueCount);
+      ObjClosure *closure = (ObjClosure *)object;
+      FREE_ARRAY(ObjUpvalue *, closure->upvalues, closure->upvalueCount);
       FREE(ObjClosure, object);
       break;
     }
     case OBJ_THUNK: {
-      ObjThunk *thunk = (ObjThunk*) object;
+      ObjThunk *thunk = (ObjThunk *)object;
       freeChunk(&thunk->chunk);
       FREE_ARRAY(Value, thunk->defaultArgs, thunk->defaultArgsCount);
       FREE(ObjThunk, object);
       break;
     }
     case OBJ_INSTANCE: {
-      ObjInstance *instance = (ObjInstance*)object;
+      ObjInstance *instance = (ObjInstance *)object;
       freeMap(&instance->fields);
       FREE(ObjInstance, object);
       break;
     }
     case OBJ_BUFFER: {
-      ObjBuffer *buffer = (ObjBuffer*)object;
+      ObjBuffer *buffer = (ObjBuffer *)object;
       freeBuffer(&buffer->handle);
       FREE(ObjBuffer, object);
       break;
     }
     case OBJ_LIST: {
-      ObjList *list = (ObjList*)object;
+      ObjList *list = (ObjList *)object;
       FREE_ARRAY(Value, list->buffer, list->capacity);
       FREE(ObjList, object);
       break;
     }
     case OBJ_FROZEN_LIST: {
-      ObjFrozenList *frozenList = (ObjFrozenList*)object;
+      ObjFrozenList *frozenList = (ObjFrozenList *)object;
       FREE_ARRAY(Value, frozenList->buffer, frozenList->length);
       FREE(ObjFrozenList, object);
       break;
     }
     case OBJ_DICT: {
-      ObjDict *dict = (ObjDict*)object;
+      ObjDict *dict = (ObjDict *)object;
       freeMap(&dict->map);
       FREE(ObjDict, object);
       break;
     }
     case OBJ_FROZEN_DICT: {
-      ObjFrozenDict *dict = (ObjFrozenDict*)object;
+      ObjFrozenDict *dict = (ObjFrozenDict *)object;
       freeMap(&dict->map);
       FREE(ObjFrozenDict, object);
       break;
     }
     case OBJ_NATIVE: {
-      ObjNative *n = (ObjNative*)object;
+      ObjNative *n = (ObjNative *)object;
       n->descriptor->free(n);
       reallocate(object, n->descriptor->objectSize, 0);
       break;
@@ -267,13 +265,13 @@ static void markRoots(void) {
   }
 
   for (i = 0; i < vm.frameCount; i++) {
-    markObject((Obj*)vm.frames[i].closure);
+    markObject((Obj *)vm.frames[i].closure);
   }
 
   for (upvalue = vm.openUpvalues;
-      upvalue != NULL;
-      upvalue = upvalue->next) {
-    markObject((Obj*)upvalue);
+       upvalue != NULL;
+       upvalue = upvalue->next) {
+    markObject((Obj *)upvalue);
   }
 
   for (i = 0; i < vm.memory.foreverValueCount; i++) {
@@ -356,21 +354,21 @@ void collectGarbage(void) {
   sweep();
 
   vm.memory.nextGC =
-    (vm.memory.bytesAllocated + getInternedStringsAllocationSize()) *
-    GC_HEAP_GROW_FACTOR;
+      (vm.memory.bytesAllocated + getInternedStringsAllocationSize()) *
+      GC_HEAP_GROW_FACTOR;
 
   if (emitLog) {
     eprintln(
-      "DEBUG: Finished collecting garbage\n"
-      "       collected %lu bytes (from %lu to %lu) next at %lu\n"
-      "       object-count = %lu -> %lu",
-      (unsigned long)before - (vm.memory.bytesAllocated +
-        getInternedStringsAllocationSize()),
-      (unsigned long)before,
-      (unsigned long)vm.memory.bytesAllocated +
-        getInternedStringsAllocationSize(),
-      (unsigned long)vm.memory.nextGC,
-      (unsigned long)objectCountBefore,
-      (unsigned long)countObjects());
+        "DEBUG: Finished collecting garbage\n"
+        "       collected %lu bytes (from %lu to %lu) next at %lu\n"
+        "       object-count = %lu -> %lu",
+        (unsigned long)before - (vm.memory.bytesAllocated +
+                                 getInternedStringsAllocationSize()),
+        (unsigned long)before,
+        (unsigned long)vm.memory.bytesAllocated +
+            getInternedStringsAllocationSize(),
+        (unsigned long)vm.memory.nextGC,
+        (unsigned long)objectCountBefore,
+        (unsigned long)countObjects());
   }
 }

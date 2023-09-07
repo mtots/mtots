@@ -3,4 +3,4 @@
 
 void initBufferClass(void);
 
-#endif/*mtots_class_buffer*/
+#endif /*mtots_class_buffer*/

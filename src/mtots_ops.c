@@ -1,22 +1,31 @@
 #include "mtots_ops.h"
-#include "mtots_vm.h"
 
 #include <stdlib.h>
 #include <string.h>
+
+#include "mtots_vm.h"
 
 ubool valuesIs(Value a, Value b) {
   if (a.type != b.type) {
     return UFALSE;
   }
   switch (a.type) {
-    case VAL_NIL: return UTRUE;
-    case VAL_BOOL: return AS_BOOL(a) == AS_BOOL(b);
-    case VAL_NUMBER: return a.as.number == b.as.number;
-    case VAL_SYMBOL: return a.as.symbol == b.as.symbol;
-    case VAL_STRING: return AS_STRING(a) == AS_STRING(b);
-    case VAL_CFUNCTION: return AS_CFUNCTION(a) == AS_CFUNCTION(b);
-    case VAL_SENTINEL: return AS_SENTINEL(a) == AS_SENTINEL(b);
-    case VAL_OBJ: return AS_OBJ(a) == AS_OBJ(b);
+    case VAL_NIL:
+      return UTRUE;
+    case VAL_BOOL:
+      return AS_BOOL(a) == AS_BOOL(b);
+    case VAL_NUMBER:
+      return a.as.number == b.as.number;
+    case VAL_SYMBOL:
+      return a.as.symbol == b.as.symbol;
+    case VAL_STRING:
+      return AS_STRING(a) == AS_STRING(b);
+    case VAL_CFUNCTION:
+      return AS_CFUNCTION(a) == AS_CFUNCTION(b);
+    case VAL_SENTINEL:
+      return AS_SENTINEL(a) == AS_SENTINEL(b);
+    case VAL_OBJ:
+      return AS_OBJ(a) == AS_OBJ(b);
   }
   abort();
   return UFALSE; /* Unreachable */
@@ -49,13 +58,20 @@ ubool valuesEqual(Value a, Value b) {
     return UFALSE;
   }
   switch (a.type) {
-    case VAL_NIL: return UTRUE;
-    case VAL_BOOL: return AS_BOOL(a) == AS_BOOL(b);
-    case VAL_NUMBER: return a.as.number == b.as.number;
-    case VAL_SYMBOL: return a.as.symbol == b.as.symbol;
-    case VAL_STRING: return AS_STRING(a) == AS_STRING(b);
-    case VAL_CFUNCTION: return AS_CFUNCTION(a) == AS_CFUNCTION(b);
-    case VAL_SENTINEL: return AS_SENTINEL(a) == AS_SENTINEL(b);
+    case VAL_NIL:
+      return UTRUE;
+    case VAL_BOOL:
+      return AS_BOOL(a) == AS_BOOL(b);
+    case VAL_NUMBER:
+      return a.as.number == b.as.number;
+    case VAL_SYMBOL:
+      return a.as.symbol == b.as.symbol;
+    case VAL_STRING:
+      return AS_STRING(a) == AS_STRING(b);
+    case VAL_CFUNCTION:
+      return AS_CFUNCTION(a) == AS_CFUNCTION(b);
+    case VAL_SENTINEL:
+      return AS_SENTINEL(a) == AS_SENTINEL(b);
     case VAL_OBJ: {
       Obj *objA = AS_OBJ(a);
       Obj *objB = AS_OBJ(b);
@@ -67,14 +83,14 @@ ubool valuesEqual(Value a, Value b) {
       }
       switch (objA->type) {
         case OBJ_BUFFER: {
-          ObjBuffer *bA = (ObjBuffer*)objA, *bB = (ObjBuffer*)objB;
+          ObjBuffer *bA = (ObjBuffer *)objA, *bB = (ObjBuffer *)objB;
           if (bA->handle.length != bB->handle.length) {
             return UFALSE;
           }
           return memcmp(bA->handle.data, bB->handle.data, bA->handle.length) == 0;
         }
         case OBJ_LIST: {
-          ObjList *listA = (ObjList*)objA, *listB = (ObjList*)objB;
+          ObjList *listA = (ObjList *)objA, *listB = (ObjList *)objB;
           size_t i;
           if (listA->length != listB->length) {
             return UFALSE;
@@ -87,19 +103,20 @@ ubool valuesEqual(Value a, Value b) {
           return UTRUE;
         }
         case OBJ_DICT: {
-          ObjDict *dictA = (ObjDict*)objA, *dictB = (ObjDict*)objB;
+          ObjDict *dictA = (ObjDict *)objA, *dictB = (ObjDict *)objB;
           return mapsEqual(&dictA->map, &dictB->map);
         }
         case OBJ_NATIVE: {
           /* TODO: Consider supporting overridable __eq__ */
-          ObjNative *na = (ObjNative*)objA;
-          ObjNative *nb = (ObjNative*)objB;
+          ObjNative *na = (ObjNative *)objA;
+          ObjNative *nb = (ObjNative *)objB;
           if (na->descriptor != nb->descriptor) {
             return UFALSE;
           }
           return objA == objB;
         }
-        default: return objA == objB;
+        default:
+          return objA == objB;
       }
     }
   }
@@ -110,13 +127,16 @@ ubool valuesEqual(Value a, Value b) {
 ubool valueLessThan(Value a, Value b) {
   if (a.type != b.type) {
     panic(
-      "'<' requires values of the same type but got %s and %s",
-      getKindName(a), getKindName(b));
+        "'<' requires values of the same type but got %s and %s",
+        getKindName(a), getKindName(b));
   }
   switch (a.type) {
-    case VAL_NIL: return UFALSE;
-    case VAL_BOOL: return AS_BOOL(a) < AS_BOOL(b);
-    case VAL_NUMBER: return a.as.number < b.as.number;
+    case VAL_NIL:
+      return UFALSE;
+    case VAL_BOOL:
+      return AS_BOOL(a) < AS_BOOL(b);
+    case VAL_NUMBER:
+      return a.as.number < b.as.number;
     case VAL_SYMBOL: {
       Symbol *sa = a.as.symbol;
       Symbol *sb = b.as.symbol;
@@ -134,8 +154,8 @@ ubool valueLessThan(Value a, Value b) {
       size_t lenB = strB->byteLength;
       size_t len = lenA < lenB ? lenA : lenB;
       size_t i;
-      const u8 *charsA = (u8*)strA->chars;
-      const u8 *charsB = (u8*)strB->chars;
+      const u8 *charsA = (u8 *)strA->chars;
+      const u8 *charsB = (u8 *)strB->chars;
       if (strA == strB) {
         return UFALSE;
       }
@@ -146,20 +166,22 @@ ubool valueLessThan(Value a, Value b) {
       }
       return lenA < lenB;
     }
-    case VAL_CFUNCTION: break;
-    case VAL_SENTINEL: break;
+    case VAL_CFUNCTION:
+      break;
+    case VAL_SENTINEL:
+      break;
     case VAL_OBJ: {
       Obj *objA = AS_OBJ(a);
       Obj *objB = AS_OBJ(b);
       if (objA->type != objB->type) {
         panic(
-          "'<' requires values of the same type but got %s and %s",
-          getKindName(a), getKindName(b));
+            "'<' requires values of the same type but got %s and %s",
+            getKindName(a), getKindName(b));
       }
       switch (objA->type) {
         case OBJ_LIST: {
-          ObjList *listA = (ObjList*)objA;
-          ObjList *listB = (ObjList*)objB;
+          ObjList *listA = (ObjList *)objA;
+          ObjList *listB = (ObjList *)objB;
           size_t lenA = listA->length;
           size_t lenB = listB->length;
           size_t len = lenA < lenB ? lenA : lenB;
@@ -177,8 +199,8 @@ ubool valueLessThan(Value a, Value b) {
           return lenA < lenB;
         }
         case OBJ_FROZEN_LIST: {
-          ObjFrozenList *frozenListA = (ObjFrozenList*)objA;
-          ObjFrozenList *frozenListB = (ObjFrozenList*)objB;
+          ObjFrozenList *frozenListA = (ObjFrozenList *)objA;
+          ObjFrozenList *frozenListB = (ObjFrozenList *)objB;
           size_t lenA = frozenListA->length;
           size_t lenB = frozenListB->length;
           size_t len = lenA < lenB ? lenA : lenB;
@@ -195,7 +217,8 @@ ubool valueLessThan(Value a, Value b) {
           }
           return lenA < lenB;
         }
-        default: break;
+        default:
+          break;
       }
       break;
     }
@@ -215,15 +238,15 @@ void sortList(ObjList *list, ObjList *keys) {
   SortEntry *buffer, *src, *dst;
   size_t i, len = list->length, width;
   /* TODO: this check is untested - come back and
-    * actually think this through when there is more bandwidth */
+   * actually think this through when there is more bandwidth */
   if (len >= ((size_t)(-1)) / 4) {
-    panic("sortList(): list too long (%lu)", (long) len);
+    panic("sortList(): list too long (%lu)", (long)len);
   }
   if (keys != NULL && len != keys->length) {
     panic(
-      "sortList(): item list and key list lengths do not match: "
-      "%lu, %lu",
-      (unsigned long) list->length, (unsigned long) keys->length);
+        "sortList(): item list and key list lengths do not match: "
+        "%lu, %lu",
+        (unsigned long)list->length, (unsigned long)keys->length);
   }
   /* TODO: Consider falling back to an in-place sorting algorithm
    * if we run do not have enough memory for the buffer (maybe qsort?) */
@@ -242,14 +265,13 @@ void sortList(ObjList *list, ObjList *keys) {
   /* bottom up merge sort */
   for (width = 1; width < len; width *= 2) {
     for (i = 0; i < len; i += 2 * width) {
-      size_t low  = i;
-      size_t mid  = i +     width < len ? i +     width : len;
+      size_t low = i;
+      size_t mid = i + width < len ? i + width : len;
       size_t high = i + 2 * width < len ? i + 2 * width : len;
       size_t a = low, b = mid, j;
       for (j = low; j < high; j++) {
         dst[j] =
-          b < high && (a >= mid || valueLessThan(src[b].key, src[a].key)) ?
-            src[b++] : src[a++];
+            b < high && (a >= mid || valueLessThan(src[b].key, src[a].key)) ? src[b++] : src[a++];
       }
     }
     {
@@ -319,10 +341,18 @@ static ubool mapRepr(Buffer *out, Map *map) {
 
 ubool valueRepr(Buffer *out, Value value) {
   switch (value.type) {
-    case VAL_NIL: bprintf(out, "nil"); return UTRUE;
-    case VAL_BOOL: bprintf(out, AS_BOOL(value) ? "true" : "false"); return UTRUE;
-    case VAL_NUMBER: bputnumber(out, value.as.number); return UTRUE;
-    case VAL_SYMBOL: bprintf(out, "<Symbol %s>", getSymbolChars(value.as.symbol)); return UTRUE;
+    case VAL_NIL:
+      bprintf(out, "nil");
+      return UTRUE;
+    case VAL_BOOL:
+      bprintf(out, AS_BOOL(value) ? "true" : "false");
+      return UTRUE;
+    case VAL_NUMBER:
+      bputnumber(out, value.as.number);
+      return UTRUE;
+    case VAL_SYMBOL:
+      bprintf(out, "<Symbol %s>", getSymbolChars(value.as.symbol));
+      return UTRUE;
     case VAL_STRING: {
       String *str = AS_STRING(value);
       bputchar(out, '"');
@@ -332,16 +362,24 @@ ubool valueRepr(Buffer *out, Value value) {
       bputchar(out, '"');
       return UTRUE;
     }
-    case VAL_CFUNCTION: bprintf(out, "<function %s>", AS_CFUNCTION(value)->name); return UTRUE;
-    case VAL_SENTINEL: bprintf(out, "<sentinel %d>", AS_SENTINEL(value)); return UTRUE;
+    case VAL_CFUNCTION:
+      bprintf(out, "<function %s>", AS_CFUNCTION(value)->name);
+      return UTRUE;
+    case VAL_SENTINEL:
+      bprintf(out, "<sentinel %d>", AS_SENTINEL(value));
+      return UTRUE;
     case VAL_OBJ: {
       Obj *obj = AS_OBJ(value);
       switch (obj->type) {
-        case OBJ_CLASS: bprintf(out, "<class %s>", AS_CLASS(value)->name->chars); return UTRUE;
+        case OBJ_CLASS:
+          bprintf(out, "<class %s>", AS_CLASS(value)->name->chars);
+          return UTRUE;
         case OBJ_CLOSURE:
           bprintf(out, "<function %s>", AS_CLOSURE(value)->thunk->name->chars);
           return UTRUE;
-        case OBJ_THUNK: bprintf(out, "<thunk %s>", AS_THUNK(value)->name->chars); return UTRUE;
+        case OBJ_THUNK:
+          bprintf(out, "<thunk %s>", AS_THUNK(value)->name->chars);
+          return UTRUE;
         case OBJ_INSTANCE:
           if (AS_INSTANCE(value)->klass->isModuleClass) {
             bprintf(out, "<module %s>", AS_INSTANCE(value)->klass->name->chars);
@@ -356,9 +394,9 @@ ubool valueRepr(Buffer *out, Value value) {
             if (!IS_STRING(resultValue)) {
               ObjClass *cls = getClassOfValue(value);
               runtimeError(
-                "%s.__repr__() must return a String but returned %s",
-                cls->name->chars,
-                getKindName(resultValue));
+                  "%s.__repr__() must return a String but returned %s",
+                  cls->name->chars,
+                  getKindName(resultValue));
               return UFALSE;
             }
             resultString = AS_STRING(resultValue);
@@ -376,7 +414,7 @@ ubool valueRepr(Buffer *out, Value value) {
           opts.tryUnicode = UFALSE;
           bputchar(out, 'b');
           bputchar(out, '"');
-          escapeString2(out, (const char*)buf->data, buf->length, &opts);
+          escapeString2(out, (const char *)buf->data, buf->length, &opts);
           bputchar(out, '"');
           return UTRUE;
         }
@@ -433,16 +471,16 @@ ubool valueRepr(Buffer *out, Value value) {
             if (!IS_STRING(resultValue)) {
               ObjClass *cls = getClassOfValue(value);
               runtimeError(
-                "%s.__repr__() must return a String but returned %s",
-                cls->name->chars,
-                getKindName(resultValue));
+                  "%s.__repr__() must return a String but returned %s",
+                  cls->name->chars,
+                  getKindName(resultValue));
               return UFALSE;
             }
             resultString = AS_STRING(resultValue);
             bputstrlen(out, resultString->chars, resultString->byteLength);
           } else {
             bprintf(out, "<%s native-instance>",
-              AS_NATIVE(value)->descriptor->klass->name->chars);
+                    AS_NATIVE(value)->descriptor->klass->name->chars);
           }
           return UTRUE;
         case OBJ_UPVALUE:
@@ -537,8 +575,8 @@ ubool valueLen(Value recv, size_t *out) {
         value = pop();
         if (!IS_NUMBER(value)) {
           runtimeError(
-            "__len__ did not return a number (got %s)",
-            getKindName(value));
+              "__len__ did not return a number (got %s)",
+              getKindName(value));
           return UFALSE;
         }
         *out = value.as.number;
@@ -547,20 +585,22 @@ ubool valueLen(Value recv, size_t *out) {
     }
   }
   runtimeError(
-    "object of kind '%s' has no len()",
-    getKindName(recv));
+      "object of kind '%s' has no len()",
+      getKindName(recv));
   return UFALSE;
 }
 
 static ubool isIterator(Value value) {
   if (IS_OBJ(value)) {
     switch (AS_OBJ(value)->type) {
-      case OBJ_CLOSURE: return AS_CLOSURE(value)->thunk->arity == 0;
+      case OBJ_CLOSURE:
+        return AS_CLOSURE(value)->thunk->arity == 0;
       case OBJ_NATIVE: {
         CFunction *call = AS_NATIVE(value)->descriptor->klass->call;
         return call && call->arity == 0;
       }
-      default: break;
+      default:
+        break;
     }
   }
   return UFALSE;

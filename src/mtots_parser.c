@@ -1,44 +1,53 @@
 #include "mtots_parser.h"
 
-#include "mtots_vm.h"
-
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_CONST_PER_THUNK      255
-#define AT(t)                    (atToken(parser,(t)))
-#define WRAP(e)                  do { if (!(e)) { return UFALSE; } } while (0)
-#define EXPECT(t)                WRAP(expectToken(parser,(t)))
-#define ADVANCE()                WRAP(advance(parser))
-#define ADD_CONST_VALUE(v,r)     WRAP(addConstValue(parser,(v),(r)))
-#define ADD_CONST_STRING(v,r)    WRAP(addConstValue(parser,STRING_VAL(v),(r)))
-#define ADD_CONST_SLICE(s,r)     WRAP(addConstSlice(parser,(s),(r)))
-#define CHECK(f)                 WRAP((f)(parser))
-#define CHECK1(f,a)              WRAP((f)(parser,(a)))
-#define CHECK2(f,a,b)            WRAP((f)(parser,(a),(b)))
-#define CHECK3(f,a,b,c)          WRAP((f)(parser,(a),(b),(c)))
-#define CHECK4(f,a,b,c,d)        WRAP((f)(parser,(a),(b),(c),(d)))
-#define EMIT1(a)                 WRAP(emit1(parser,(a)))
-#define EMIT2(a,b)               WRAP(emit2(parser,(a),(b)))
-#define EMIT3(a,b,c)             WRAP(emit3(parser,(a),(b),(c)))
-#define EMIT_CONSTID(v)          WRAP(emitConstID(parser,(v)))
-#define EMIT1C(a,b)              WRAP(emit1C(parser,(a),(b)))
-#define EMIT1C1(a,b,c)           WRAP(emit1C1(parser,(a),(b),(c)))
-#define EMIT_CONST(v)            WRAP(emitConst(parser,(v)))
-#define TODO(n)                  do { runtimeError("TODO " # n); return UFALSE; } while (0)
-#define ENV                      (parser->env)
-#define THUNK                    (ENV->thunk)
-#define THUNK_CONTEXT            (ENV->thunkContext)
-#define MODULE_NAME_CHARS        (THUNK->moduleName->chars)
-#define CURRENT_LINE             (parser->current.line)
-#define PREVIOUS_LINE            (parser->previous.line)
-#define MARK_LOCAL_READY(local)  ((local)->scopeDepth = ENV->scopeDepth)
-#define CHUNK_POS                (THUNK->chunk.count)
-#define SLICE_PREVIOUS()         (newSlice(parser->previous.start, parser->previous.length))
-#define SLICE_CURRENT()          (newSlice(parser->current.start, parser->current.length))
+#include "mtots_vm.h"
+
+#define MAX_CONST_PER_THUNK 255
+#define AT(t) (atToken(parser, (t)))
+#define WRAP(e)      \
+  do {               \
+    if (!(e)) {      \
+      return UFALSE; \
+    }                \
+  } while (0)
+#define EXPECT(t) WRAP(expectToken(parser, (t)))
+#define ADVANCE() WRAP(advance(parser))
+#define ADD_CONST_VALUE(v, r) WRAP(addConstValue(parser, (v), (r)))
+#define ADD_CONST_STRING(v, r) WRAP(addConstValue(parser, STRING_VAL(v), (r)))
+#define ADD_CONST_SLICE(s, r) WRAP(addConstSlice(parser, (s), (r)))
+#define CHECK(f) WRAP((f)(parser))
+#define CHECK1(f, a) WRAP((f)(parser, (a)))
+#define CHECK2(f, a, b) WRAP((f)(parser, (a), (b)))
+#define CHECK3(f, a, b, c) WRAP((f)(parser, (a), (b), (c)))
+#define CHECK4(f, a, b, c, d) WRAP((f)(parser, (a), (b), (c), (d)))
+#define EMIT1(a) WRAP(emit1(parser, (a)))
+#define EMIT2(a, b) WRAP(emit2(parser, (a), (b)))
+#define EMIT3(a, b, c) WRAP(emit3(parser, (a), (b), (c)))
+#define EMIT_CONSTID(v) WRAP(emitConstID(parser, (v)))
+#define EMIT1C(a, b) WRAP(emit1C(parser, (a), (b)))
+#define EMIT1C1(a, b, c) WRAP(emit1C1(parser, (a), (b), (c)))
+#define EMIT_CONST(v) WRAP(emitConst(parser, (v)))
+#define TODO(n)               \
+  do {                        \
+    runtimeError("TODO " #n); \
+    return UFALSE;            \
+  } while (0)
+#define ENV (parser->env)
+#define THUNK (ENV->thunk)
+#define THUNK_CONTEXT (ENV->thunkContext)
+#define MODULE_NAME_CHARS (THUNK->moduleName->chars)
+#define CURRENT_LINE (parser->current.line)
+#define PREVIOUS_LINE (parser->previous.line)
+#define MARK_LOCAL_READY(local) ((local)->scopeDepth = ENV->scopeDepth)
+#define CHUNK_POS (THUNK->chunk.count)
+#define SLICE_PREVIOUS() (newSlice(parser->previous.start, parser->previous.length))
+#define SLICE_CURRENT() (newSlice(parser->current.start, parser->current.length))
 
 #define ADD_CONST_NAME_FROM_PREVIOUS_TOKEN(r) \
-  ADD_CONST_SLICE(SLICE_PREVIOUS(),(r))
+  ADD_CONST_SLICE(SLICE_PREVIOUS(), (r))
 
 #define EXPECT_STATEMENT_DELIMITER() CHECK(expectStatementDelimiter)
 
@@ -81,7 +90,7 @@ typedef struct Local {
 typedef struct VariableDeclaration {
   ubool isLocal;
   union {
-    ConstID global;     /* the constant ID containing the name of the variable */
+    ConstID global; /* the constant ID containing the name of the variable */
     Local *local;
   } as;
 } VariableDeclaration;
@@ -93,18 +102,18 @@ typedef struct Upvalue {
 
 /* Additional context about the Thunk as we are compiling the code */
 typedef struct ThunkContext {
-  ubool isInitializer;  /* if true, disallows explicit returns and returns 'this' */
-  ubool isMethod;       /* if true, 'this' variable is set up */
-  ubool isLambda;       /* if true, may not contain any statements */
+  ubool isInitializer; /* if true, disallows explicit returns and returns 'this' */
+  ubool isMethod;      /* if true, 'this' variable is set up */
+  ubool isLambda;      /* if true, may not contain any statements */
 } ThunkContext;
 
 typedef struct Environment {
-  struct Environment *enclosing;  /* the parent environment */
-  ObjThunk *thunk;                /* active Thunk */
+  struct Environment *enclosing; /* the parent environment */
+  ObjThunk *thunk;               /* active Thunk */
   ThunkContext *thunkContext;
   Local locals[U8_COUNT];
-  i16 localsCount;                /* number of active local variables in this environment */
-  i16 scopeDepth;                 /* scope depth */
+  i16 localsCount; /* number of active local variables in this environment */
+  i16 scopeDepth;  /* scope depth */
   Upvalue upvalues[U8_COUNT];
 } Environment;
 
@@ -114,17 +123,17 @@ typedef struct ClassInfo {
 } ClassInfo;
 
 typedef struct Parser {
-  Environment *env;      /* the deepest currently active environment */
-  ClassInfo *classInfo;  /* information about the current class definition, if any */
-  Lexer *lexer;          /* lexer to read tokens from */
-  Token current;         /* currently considered token */
-  Token previous;        /* previously considered token */
+  Environment *env;     /* the deepest currently active environment */
+  ClassInfo *classInfo; /* information about the current class definition, if any */
+  Lexer *lexer;         /* lexer to read tokens from */
+  Token current;        /* currently considered token */
+  Token previous;       /* previously considered token */
 
   /* A list to use as a scratch buffer when parsing default arguments */
   ObjList *defaultArgs;
 } Parser;
 
-typedef ubool (*ParseFn)(Parser*);
+typedef ubool (*ParseFn)(Parser *);
 
 typedef struct ParseRule {
   ParseFn prefix;
@@ -201,9 +210,9 @@ static ubool newLocal(Parser *parser, StringSlice name, Local **out) {
   Local *local;
   if (ENV->localsCount == U8_MAX) {
     runtimeError(
-      "[%s:%d] Too many local variables",
-      MODULE_NAME_CHARS,
-      PREVIOUS_LINE);
+        "[%s:%d] Too many local variables",
+        MODULE_NAME_CHARS,
+        PREVIOUS_LINE);
     return UFALSE;
   }
   local = *out = &ENV->locals[ENV->localsCount++];
@@ -229,11 +238,11 @@ static ubool advance(Parser *parser) {
 static ubool expectToken(Parser *parser, TokenType type) {
   if (!atToken(parser, type)) {
     runtimeError(
-      "[%s:%d] Expected token %s but got %s",
-      MODULE_NAME_CHARS,
-      CURRENT_LINE,
-      tokenTypeToName(type),
-      tokenTypeToName(parser->current.type));
+        "[%s:%d] Expected token %s but got %s",
+        MODULE_NAME_CHARS,
+        CURRENT_LINE,
+        tokenTypeToName(type),
+        tokenTypeToName(parser->current.type));
     return UFALSE;
   }
   return advance(parser);
@@ -299,9 +308,9 @@ static ubool emitLoop(Parser *parser, i32 loopStart) {
   offset = CHUNK_POS - loopStart + 2;
   if (offset > U16_MAX) {
     runtimeError(
-      "[%s:%d] Loop body too large",
-      MODULE_NAME_CHARS,
-      PREVIOUS_LINE);
+        "[%s:%d] Loop body too large",
+        MODULE_NAME_CHARS,
+        PREVIOUS_LINE);
     return UFALSE;
   }
 
@@ -322,13 +331,13 @@ static ubool patchJump(Parser *parser, i32 offset) {
 
   if (jump > U16_MAX) {
     runtimeError(
-      "[%s:%d] Too much code to jump over",
-      MODULE_NAME_CHARS,
-      PREVIOUS_LINE);
+        "[%s:%d] Too much code to jump over",
+        MODULE_NAME_CHARS,
+        PREVIOUS_LINE);
     return UFALSE;
   }
 
-  THUNK->chunk.code[offset    ] = (jump >> 8) & 0xFF;
+  THUNK->chunk.code[offset] = (jump >> 8) & 0xFF;
   THUNK->chunk.code[offset + 1] = jump & 0xFF;
   return UTRUE;
 }
@@ -346,10 +355,10 @@ static ubool addConstValue(Parser *parser, Value value, ConstID *ref) {
   size_t id = addConstant(&THUNK->chunk, value);
   if (id >= CONST_ID_MAX) {
     runtimeError("[%s:%d] Too many constants in thunk (count=%d, max=%d)",
-      MODULE_NAME_CHARS,
-      PREVIOUS_LINE,
-      (int)(id + 1),
-      (int)CONST_ID_MAX);
+                 MODULE_NAME_CHARS,
+                 PREVIOUS_LINE,
+                 (int)(id + 1),
+                 (int)CONST_ID_MAX);
     return UFALSE;
   }
   ref->value = (u16)id;
@@ -373,7 +382,7 @@ static ubool endScope(Parser *parser) {
   /* TODO: Coalesce multiple of these pops into a single instruction */
   ENV->scopeDepth--;
   while (ENV->localsCount > 0 &&
-      ENV->locals[ENV->localsCount - 1].scopeDepth > ENV->scopeDepth) {
+         ENV->locals[ENV->localsCount - 1].scopeDepth > ENV->scopeDepth) {
     if (ENV->locals[ENV->localsCount - 1].isCaptured) {
       EMIT1(OP_CLOSE_UPVALUE);
     } else {
@@ -625,17 +634,25 @@ static ubool parseClassDeclaration(Parser *parser) {
 
   CHECK1(loadVariableByName, className);
   EXPECT(TOKEN_COLON);
-  while (AT(TOKEN_NEWLINE)) { ADVANCE(); }
+  while (AT(TOKEN_NEWLINE)) {
+    ADVANCE();
+  }
   EXPECT(TOKEN_INDENT);
-  while (AT(TOKEN_NEWLINE)) { ADVANCE(); }
+  while (AT(TOKEN_NEWLINE)) {
+    ADVANCE();
+  }
   if (AT(TOKEN_STRING) || AT(TOKEN_RAW_STRING)) { /* comments */
     ADVANCE();
-    while (AT(TOKEN_NEWLINE)) { ADVANCE(); }
+    while (AT(TOKEN_NEWLINE)) {
+      ADVANCE();
+    }
   }
 
   if (AT(TOKEN_PASS)) {
     ADVANCE();
-    while (AT(TOKEN_NEWLINE)) { ADVANCE(); }
+    while (AT(TOKEN_NEWLINE)) {
+      ADVANCE();
+    }
   }
 
   while (AT(TOKEN_STATIC)) {
@@ -648,11 +665,13 @@ static ubool parseClassDeclaration(Parser *parser) {
 
   while (AT(TOKEN_DEF)) {
     CHECK(parseMethodDeclaration);
-    while (AT(TOKEN_NEWLINE)) { ADVANCE(); }
+    while (AT(TOKEN_NEWLINE)) {
+      ADVANCE();
+    }
   }
 
   EXPECT(TOKEN_DEDENT);
-  EMIT1(OP_POP);          /* class (from loadVariableByName) */
+  EMIT1(OP_POP); /* class (from loadVariableByName) */
 
   if (classInfo.hasSuperClass) {
     CHECK(endScope);
@@ -674,9 +693,14 @@ static ubool parseTraitDeclaration(Parser *parser) {
     ADVANCE();
     while (!AT(TOKEN_EOF) && depth > 0) {
       switch (parser->current.type) {
-        case TOKEN_INDENT: depth++; break;
-        case TOKEN_DEDENT: depth--; break;
-        default: break;
+        case TOKEN_INDENT:
+          depth++;
+          break;
+        case TOKEN_DEDENT:
+          depth--;
+          break;
+        default:
+          break;
       }
       ADVANCE();
     }
@@ -710,10 +734,10 @@ static ubool parseDefaultArgument(Parser *parser, Value *out) {
         return UTRUE;
       } else {
         runtimeError(
-          "[%s:%d] Expected number (for negation of) default argument expression but got %s",
-          MODULE_NAME_CHARS,
-          CURRENT_LINE,
-          tokenTypeToName(parser->current.type));
+            "[%s:%d] Expected number (for negation of) default argument expression but got %s",
+            MODULE_NAME_CHARS,
+            CURRENT_LINE,
+            tokenTypeToName(parser->current.type));
         return UFALSE;
       }
     case TOKEN_STRING: {
@@ -723,13 +747,14 @@ static ubool parseDefaultArgument(Parser *parser, Value *out) {
       *out = STRING_VAL(str);
       return UTRUE;
     }
-    default: break;
+    default:
+      break;
   }
   runtimeError(
-    "[%s:%d] Expected default argument expression but got %s",
-    MODULE_NAME_CHARS,
-    CURRENT_LINE,
-    tokenTypeToName(parser->current.type));
+      "[%s:%d] Expected default argument expression but got %s",
+      MODULE_NAME_CHARS,
+      CURRENT_LINE,
+      tokenTypeToName(parser->current.type));
   return UTRUE;
 }
 
@@ -752,17 +777,17 @@ static ubool parseParameterList(Parser *parser, i16 *argCount) {
     }
     if (parser->defaultArgs->length > 0 && !AT(TOKEN_EQUAL)) {
       runtimeError(
-        "[%s:%d] Non-optional arguments may not follow any optional arguments",
-        MODULE_NAME_CHARS,
-        PREVIOUS_LINE);
+          "[%s:%d] Non-optional arguments may not follow any optional arguments",
+          MODULE_NAME_CHARS,
+          PREVIOUS_LINE);
       return UFALSE;
     }
     if (AT(TOKEN_EQUAL)) {
       ADVANCE();
       listAppend(parser->defaultArgs, NIL_VAL());
       CHECK1(
-        parseDefaultArgument,
-        &parser->defaultArgs->buffer[parser->defaultArgs->length - 1]);
+          parseDefaultArgument,
+          &parser->defaultArgs->buffer[parser->defaultArgs->length - 1]);
     }
     if (AT(TOKEN_COMMA)) {
       ADVANCE();
@@ -799,9 +824,9 @@ static ubool parseFunctionCore(Parser *parser, StringSlice name, ThunkContext *t
     thunk->defaultArgs = ALLOCATE(Value, parser->defaultArgs->length);
     thunk->defaultArgsCount = parser->defaultArgs->length;
     memcpy(
-      thunk->defaultArgs,
-      parser->defaultArgs->buffer,
-      sizeof(Value) * parser->defaultArgs->length);
+        thunk->defaultArgs,
+        parser->defaultArgs->buffer,
+        sizeof(Value) * parser->defaultArgs->length);
     parser->defaultArgs->length = 0; /* clear the defaultArgs list for next use */
   }
 
@@ -920,10 +945,10 @@ static ubool parsePrec(Parser *parser, Precedence prec) {
   prefixRule = getRule(parser->current.type)->prefix;
   if (prefixRule == NULL) {
     runtimeError(
-      "[%s:%d] Expected expression but got %s",
-      MODULE_NAME_CHARS,
-      PREVIOUS_LINE,
-      tokenTypeToName(parser->current.type));
+        "[%s:%d] Expected expression but got %s",
+        MODULE_NAME_CHARS,
+        PREVIOUS_LINE,
+        tokenTypeToName(parser->current.type));
     return UFALSE;
   }
   CHECK(prefixRule);
@@ -948,12 +973,12 @@ static ubool parseRawStringLiteral(Parser *parser) {
     if (quote == parser->previous.start[2] &&
         quote == parser->previous.start[3]) {
       EMIT_CONST(STRING_VAL(internString(
-        parser->previous.start + 4,
-        parser->previous.length - 7)));
+          parser->previous.start + 4,
+          parser->previous.length - 7)));
     } else {
       EMIT_CONST(STRING_VAL(internString(
-        parser->previous.start + 2,
-        parser->previous.length - 3)));
+          parser->previous.start + 2,
+          parser->previous.length - 3)));
     }
   }
   return UTRUE;
@@ -1060,9 +1085,9 @@ static ubool resolveLocalForEnv(
         memcmp(local->name.chars, name.chars, name.length) == 0) {
       if (local->scopeDepth == -1) {
         runtimeError(
-          "[%s:%d] Reading a local variable in its own initializer is not allowed",
-          MODULE_NAME_CHARS,
-          PREVIOUS_LINE);
+            "[%s:%d] Reading a local variable in its own initializer is not allowed",
+            MODULE_NAME_CHARS,
+            PREVIOUS_LINE);
         return UFALSE;
       }
       *out = i;
@@ -1092,8 +1117,8 @@ static ubool addUpvalue(
 
   if (upvalueCount >= U8_COUNT) {
     runtimeError(
-      "[%s:%d] Too many closure variables in thunk",
-      MODULE_NAME_CHARS, PREVIOUS_LINE);
+        "[%s:%d] Too many closure variables in thunk",
+        MODULE_NAME_CHARS, PREVIOUS_LINE);
     return UFALSE;
   }
 
@@ -1255,9 +1280,15 @@ static ubool parseRaise(Parser *parser) {
 static ubool parseLiteral(Parser *parser) {
   ADVANCE();
   switch (parser->previous.type) {
-    case TOKEN_FALSE: EMIT1(OP_FALSE); break;
-    case TOKEN_NIL: EMIT1(OP_NIL); break;
-    case TOKEN_TRUE: EMIT1(OP_TRUE); break;
+    case TOKEN_FALSE:
+      EMIT1(OP_FALSE);
+      break;
+    case TOKEN_NIL:
+      EMIT1(OP_NIL);
+      break;
+    case TOKEN_TRUE:
+      EMIT1(OP_TRUE);
+      break;
     default:
       assertionError("parseLiteral");
       return UFALSE; /* unreachable */
@@ -1281,9 +1312,15 @@ static ubool parseUnary(Parser *parser) {
 
   /* Emit the operator instruction */
   switch (operatorType) {
-    case TOKEN_TILDE: EMIT1(OP_BITWISE_NOT); break;
-    case TOKEN_NOT: EMIT1(OP_NOT); break;
-    case TOKEN_MINUS: EMIT1(OP_NEGATE); break;
+    case TOKEN_TILDE:
+      EMIT1(OP_BITWISE_NOT);
+      break;
+    case TOKEN_NOT:
+      EMIT1(OP_NOT);
+      break;
+    case TOKEN_MINUS:
+      EMIT1(OP_NEGATE);
+      break;
     default:
       assertionError("parseUnary");
       return UFALSE; /* Unreachable */
@@ -1301,10 +1338,10 @@ static ubool parseListDisplayBody(Parser *parser, u8 *out) {
     CHECK(parseExpression);
     if (length == U8_MAX) {
       runtimeError(
-        "[%s:%d] The number of items in a list display cannot exceed %d",
-        MODULE_NAME_CHARS,
-        PREVIOUS_LINE,
-        U8_MAX);
+          "[%s:%d] The number of items in a list display cannot exceed %d",
+          MODULE_NAME_CHARS,
+          PREVIOUS_LINE,
+          U8_MAX);
       return UFALSE;
     }
     length++;
@@ -1346,10 +1383,10 @@ static ubool parseMapDisplayBody(Parser *parser, u8 *out) {
 
     if (length == U8_MAX) {
       runtimeError(
-        "[%s:%d] The number of pairs in a map display cannot exceed %d",
-        MODULE_NAME_CHARS,
-        PREVIOUS_LINE,
-        U8_MAX);
+          "[%s:%d] The number of pairs in a map display cannot exceed %d",
+          MODULE_NAME_CHARS,
+          PREVIOUS_LINE,
+          U8_MAX);
       return UFALSE;
     }
     length++;
@@ -1399,10 +1436,10 @@ static ubool parseArgumentList(Parser *parser, u8 *out) {
     CHECK(parseExpression);
     if (argCount == U8_MAX) {
       runtimeError(
-        "[%s:%d] Too many arguments (no more than %d are allowed)",
-        MODULE_NAME_CHARS,
-        PREVIOUS_LINE,
-        U8_MAX);
+          "[%s:%d] Too many arguments (no more than %d are allowed)",
+          MODULE_NAME_CHARS,
+          PREVIOUS_LINE,
+          U8_MAX);
       return UFALSE;
     }
     argCount++;
@@ -1469,7 +1506,6 @@ static ubool parseAs(Parser *parser) {
   return parseTypeExpression(parser);
 }
 
-
 static ubool parseDot(Parser *parser) {
   ConstID nameID;
 
@@ -1532,31 +1568,71 @@ static ubool parseBinary(Parser *parser) {
     operatorType = TOKEN_IN;
   }
 
-  CHECK1(parsePrec, rightAssociative ?
-      rule->precedence :
-      (Precedence) (rule->precedence + 1));
+  CHECK1(parsePrec, rightAssociative ? rule->precedence : (Precedence)(rule->precedence + 1));
 
   switch (operatorType) {
-    case TOKEN_IS: EMIT1(OP_IS); if (isNot) EMIT1(OP_NOT); break;
-    case TOKEN_BANG_EQUAL: EMIT2(OP_EQUAL, OP_NOT); break;
-    case TOKEN_EQUAL_EQUAL: EMIT1(OP_EQUAL); break;
-    case TOKEN_GREATER: EMIT1(OP_GREATER); break;
-    case TOKEN_GREATER_EQUAL: EMIT2(OP_LESS, OP_NOT); break;
-    case TOKEN_LESS: EMIT1(OP_LESS); break;
-    case TOKEN_LESS_EQUAL: EMIT2(OP_GREATER, OP_NOT); break;
-    case TOKEN_IN: EMIT1(OP_IN); if (notIn) EMIT1(OP_NOT); break;
-    case TOKEN_PLUS: EMIT1(OP_ADD); break;
-    case TOKEN_MINUS: EMIT1(OP_SUBTRACT); break;
-    case TOKEN_STAR: EMIT1(OP_MULTIPLY); break;
-    case TOKEN_SLASH: EMIT1(OP_DIVIDE); break;
-    case TOKEN_SLASH_SLASH: EMIT1(OP_FLOOR_DIVIDE); break;
-    case TOKEN_PERCENT: EMIT1(OP_MODULO); break;
-    case TOKEN_STAR_STAR: EMIT1(OP_POWER); break;
-    case TOKEN_SHIFT_LEFT: EMIT1(OP_SHIFT_LEFT); break;
-    case TOKEN_SHIFT_RIGHT: EMIT1(OP_SHIFT_RIGHT); break;
-    case TOKEN_PIPE: EMIT1(OP_BITWISE_OR); break;
-    case TOKEN_AMPERSAND: EMIT1(OP_BITWISE_AND); break;
-    case TOKEN_CARET: EMIT1(OP_BITWISE_XOR); break;
+    case TOKEN_IS:
+      EMIT1(OP_IS);
+      if (isNot) EMIT1(OP_NOT);
+      break;
+    case TOKEN_BANG_EQUAL:
+      EMIT2(OP_EQUAL, OP_NOT);
+      break;
+    case TOKEN_EQUAL_EQUAL:
+      EMIT1(OP_EQUAL);
+      break;
+    case TOKEN_GREATER:
+      EMIT1(OP_GREATER);
+      break;
+    case TOKEN_GREATER_EQUAL:
+      EMIT2(OP_LESS, OP_NOT);
+      break;
+    case TOKEN_LESS:
+      EMIT1(OP_LESS);
+      break;
+    case TOKEN_LESS_EQUAL:
+      EMIT2(OP_GREATER, OP_NOT);
+      break;
+    case TOKEN_IN:
+      EMIT1(OP_IN);
+      if (notIn) EMIT1(OP_NOT);
+      break;
+    case TOKEN_PLUS:
+      EMIT1(OP_ADD);
+      break;
+    case TOKEN_MINUS:
+      EMIT1(OP_SUBTRACT);
+      break;
+    case TOKEN_STAR:
+      EMIT1(OP_MULTIPLY);
+      break;
+    case TOKEN_SLASH:
+      EMIT1(OP_DIVIDE);
+      break;
+    case TOKEN_SLASH_SLASH:
+      EMIT1(OP_FLOOR_DIVIDE);
+      break;
+    case TOKEN_PERCENT:
+      EMIT1(OP_MODULO);
+      break;
+    case TOKEN_STAR_STAR:
+      EMIT1(OP_POWER);
+      break;
+    case TOKEN_SHIFT_LEFT:
+      EMIT1(OP_SHIFT_LEFT);
+      break;
+    case TOKEN_SHIFT_RIGHT:
+      EMIT1(OP_SHIFT_RIGHT);
+      break;
+    case TOKEN_PIPE:
+      EMIT1(OP_BITWISE_OR);
+      break;
+    case TOKEN_AMPERSAND:
+      EMIT1(OP_BITWISE_AND);
+      break;
+    case TOKEN_CARET:
+      EMIT1(OP_BITWISE_XOR);
+      break;
     default:
       assertionError("parseBinary");
       return UFALSE; /* unreachable */
@@ -1575,14 +1651,14 @@ static ubool parseConditional(Parser *parser) {
 
   /* Left Branch */
   EXPECT(TOKEN_THEN);
-  EMIT1(OP_POP); /* pop condition */
+  EMIT1(OP_POP);          /* pop condition */
   CHECK(parseExpression); /* evaluate left branch */
   CHECK2(emitJump, OP_JUMP, &endJump);
 
   /* Right Branch */
   EXPECT(TOKEN_ELSE);
   CHECK1(patchJump, elseJump);
-  EMIT1(OP_POP); /* pop condition */
+  EMIT1(OP_POP);          /* pop condition */
   CHECK(parseExpression); /* evaluate right branch */
   CHECK1(patchJump, endJump);
 
@@ -1595,21 +1671,27 @@ static ubool parseBlock(Parser *parser, ubool newScope) {
     CHECK(beginScope);
   }
 
-  while (AT(TOKEN_NEWLINE)) { ADVANCE(); }
+  while (AT(TOKEN_NEWLINE)) {
+    ADVANCE();
+  }
   EXPECT(TOKEN_INDENT);
-  while (AT(TOKEN_NEWLINE)) { ADVANCE(); }
+  while (AT(TOKEN_NEWLINE)) {
+    ADVANCE();
+  }
   while (!AT(TOKEN_DEDENT) && !AT(TOKEN_EOF)) {
     atLeastOneDeclaration = UTRUE;
     CHECK(parseDeclaration);
-    while (AT(TOKEN_NEWLINE)) { ADVANCE(); }
+    while (AT(TOKEN_NEWLINE)) {
+      ADVANCE();
+    }
   }
   EXPECT(TOKEN_DEDENT);
 
   if (!atLeastOneDeclaration) {
     runtimeError(
-      "[%s:%d] Blocks require at least one declaration, but got none",
-      MODULE_NAME_CHARS,
-      PREVIOUS_LINE);
+        "[%s:%d] Blocks require at least one declaration, but got none",
+        MODULE_NAME_CHARS,
+        PREVIOUS_LINE);
     return UFALSE;
   }
 
@@ -1633,12 +1715,12 @@ static ubool parseForInStatement(Parser *parser) {
   itemVariableName = SLICE_PREVIOUS();
 
   EXPECT(TOKEN_IN);
-  CHECK(parseExpression);  /* iterable */
-  EMIT1(OP_GET_ITER);      /* replace the iterable with an iterator */
+  CHECK(parseExpression); /* iterable */
+  EMIT1(OP_GET_ITER);     /* replace the iterable with an iterator */
   CHECK3(declareVariable, newSlice("@iterator", 9), UTRUE, &iterator);
   CHECK1(defineVariable, &iterator);
   loopStart = CHUNK_POS;
-  EMIT1(OP_GET_NEXT);      /* gets next value returned by the iterator */
+  EMIT1(OP_GET_NEXT); /* gets next value returned by the iterator */
   CHECK2(emitJump, OP_JUMP_IF_STOP_ITERATION, &jump);
 
   CHECK(beginScope);
@@ -1679,8 +1761,8 @@ static ubool parseIfStatement(Parser *parser) {
     CHECK1(parseBlock, UTRUE);
     if (endJumpsCount >= MAX_ELIF_CHAIN_COUNT) {
       runtimeError(
-        "[%s:%d] Too many chained 'elif' clauses",
-        MODULE_NAME_CHARS, PREVIOUS_LINE);
+          "[%s:%d] Too many chained 'elif' clauses",
+          MODULE_NAME_CHARS, PREVIOUS_LINE);
       return UFALSE;
     }
     CHECK2(emitJump, OP_JUMP, &endJumps[endJumpsCount++]);
@@ -1775,7 +1857,8 @@ static ubool parseStatement(Parser *parser) {
       ADVANCE();
       EXPECT_STATEMENT_DELIMITER();
       return UTRUE;
-    default: break;
+    default:
+      break;
   }
   return parseExpressionStatement(parser);
 }
@@ -1902,9 +1985,9 @@ void markParserRoots(void) {
   Parser *parser = activeParser;
   if (parser) {
     Environment *env = parser->env;
-    markObject((Obj*)parser->defaultArgs);
+    markObject((Obj *)parser->defaultArgs);
     for (; env; env = env->enclosing) {
-      markObject((Obj*)env->thunk);
+      markObject((Obj *)env->thunk);
     }
   }
 }

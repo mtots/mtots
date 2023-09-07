@@ -1,12 +1,11 @@
-#include "mtots_common.h"
-
 #include "mtots_m_fs.h"
-
-#include "mtots_vm.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "mtots_common.h"
+#include "mtots_vm.h"
 
 static ubool implReadString(i16 argCount, Value *args, Value *out) {
   String *fileName = AS_STRING(args[0]);
@@ -24,7 +23,7 @@ static ubool implReadString(i16 argCount, Value *args, Value *out) {
     return UFALSE;
   }
 
-  buffer = (char*)malloc(fileSize);
+  buffer = (char *)malloc(fileSize);
   if (fread(buffer, 1, fileSize, file) != fileSize) {
     free(buffer);
     runtimeError("Error while reading file %s", fileName->chars);
@@ -37,7 +36,7 @@ static ubool implReadString(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcReadString = { implReadString, "readString", 1, 0, argsStrings };
+static CFunction funcReadString = {implReadString, "readString", 1, 0, argsStrings};
 
 static ubool implReadBytes(i16 argCount, Value *args, Value *out) {
   String *fileName = AS_STRING(args[0]);
@@ -69,7 +68,7 @@ static ubool implReadBytes(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcReadBytes = { implReadBytes, "readBytes", 1, 0, argsStrings };
+static CFunction funcReadBytes = {implReadBytes, "readBytes", 1, 0, argsStrings};
 
 static ubool implWriteString(i16 argCount, Value *args, Value *out) {
   String *fileName = AS_STRING(args[0]);
@@ -91,7 +90,7 @@ static ubool implWriteString(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcWriteString = { implWriteString, "writeString", 2, 0, argsStrings };
+static CFunction funcWriteString = {implWriteString, "writeString", 2, 0, argsStrings};
 
 static ubool implWriteBytes(i16 argCount, Value *args, Value *out) {
   String *fileName = AS_STRING(args[0]);
@@ -114,30 +113,29 @@ static ubool implWriteBytes(i16 argCount, Value *args, Value *out) {
 }
 
 static TypePattern argsWriteBytes[] = {
-  { TYPE_PATTERN_STRING },
-  { TYPE_PATTERN_BUFFER },
+    {TYPE_PATTERN_STRING},
+    {TYPE_PATTERN_BUFFER},
 };
 
 static CFunction funcWriteBytes = {
-  implWriteBytes, "writeBytes", 2, 0, argsWriteBytes
-};
+    implWriteBytes, "writeBytes", 2, 0, argsWriteBytes};
 
 static ubool implIsFile(i16 argCount, Value *args, Value *out) {
   *out = BOOL_VAL(isFile(AS_STRING(args[0])->chars));
   return UTRUE;
 }
 
-static CFunction funcIsFile = { implIsFile, "isFile", 1, 0, argsStrings };
+static CFunction funcIsFile = {implIsFile, "isFile", 1, 0, argsStrings};
 
 static ubool implIsDir(i16 argCount, Value *args, Value *out) {
   *out = BOOL_VAL(isDirectory(AS_STRING(args[0])->chars));
   return UTRUE;
 }
 
-static CFunction funcIsDir = { implIsDir, "isDir", 1, 0, argsStrings };
+static CFunction funcIsDir = {implIsDir, "isDir", 1, 0, argsStrings};
 
 static ubool implListCallback(void *listPtr, const char *fileName) {
-  ObjList *list = (ObjList*)listPtr;
+  ObjList *list = (ObjList *)listPtr;
   String *name;
   if (strcmp(fileName, ".") == 0 || strcmp(fileName, "..") == 0) {
     /* Exclude '.' and '..' */
@@ -163,7 +161,7 @@ static ubool implList(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcList = { implList, "list", 0, 1, argsStrings };
+static CFunction funcList = {implList, "list", 0, 1, argsStrings};
 
 static ubool implMkdir(i16 argc, Value *args, Value *out) {
   const char *dirpath = AS_STRING(args[0])->chars;
@@ -172,11 +170,11 @@ static ubool implMkdir(i16 argc, Value *args, Value *out) {
 }
 
 static TypePattern argsMkdir[] = {
-  { TYPE_PATTERN_STRING },
-  { TYPE_PATTERN_BOOL },
+    {TYPE_PATTERN_STRING},
+    {TYPE_PATTERN_BOOL},
 };
 
-static CFunction funcMkdir = { implMkdir, "mkdir", 1, 2, argsMkdir };
+static CFunction funcMkdir = {implMkdir, "mkdir", 1, 2, argsMkdir};
 
 /* TODO: For now, this is basically just a simple join, but in
  * the future, this function will have to evolve to match the
@@ -208,10 +206,10 @@ static ubool implJoin(i16 argCount, Value *args, Value *out) {
 }
 
 static TypePattern argsJoin[] = {
-  { TYPE_PATTERN_LIST },
+    {TYPE_PATTERN_LIST},
 };
 
-static CFunction funcJoin = { implJoin, "join", 1, 0, argsJoin };
+static CFunction funcJoin = {implJoin, "join", 1, 0, argsJoin};
 
 static ubool implDirname(i16 argCount, Value *args, Value *out) {
   String *string = AS_STRING(args[0]);
@@ -230,7 +228,7 @@ static ubool implDirname(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcDirname = { implDirname, "dirname", 1, 0, argsStrings };
+static CFunction funcDirname = {implDirname, "dirname", 1, 0, argsStrings};
 
 static ubool implBasename(i16 argCount, Value *args, Value *out) {
   String *string = AS_STRING(args[0]);
@@ -254,18 +252,18 @@ static CFunction funcBasename = {implBasename, "basename", 1, 0, argsStrings};
 static ubool impl(i16 argCount, Value *args, Value *out) {
   ObjModule *module = AS_MODULE(args[0]);
   CFunction *functions[] = {
-    &funcReadString,
-    &funcReadBytes,
-    &funcWriteString,
-    &funcWriteBytes,
-    &funcIsFile,
-    &funcIsDir,
-    &funcList,
-    &funcMkdir,
-    &funcJoin,
-    &funcDirname,
-    &funcBasename,
-    NULL,
+      &funcReadString,
+      &funcReadBytes,
+      &funcWriteString,
+      &funcWriteBytes,
+      &funcIsFile,
+      &funcIsDir,
+      &funcList,
+      &funcMkdir,
+      &funcJoin,
+      &funcDirname,
+      &funcBasename,
+      NULL,
   };
 
   moduleAddFunctions(module, functions);
@@ -274,7 +272,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction func = { impl, "fs", 1 };
+static CFunction func = {impl, "fs", 1};
 
 void addNativeModuleFs(void) {
   addNativeModule(&func);

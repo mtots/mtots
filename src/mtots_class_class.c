@@ -9,17 +9,16 @@ static ubool implClassGetName(i16 argCount, Value *args, Value *out) {
 }
 
 static TypePattern argsClassGetName[] = {
-  {TYPE_PATTERN_CLASS },
+    {TYPE_PATTERN_CLASS},
 };
 
 static CFunction funcClassGetName = {
-  implClassGetName, "getName", 1, 0, argsClassGetName
-};
+    implClassGetName, "getName", 1, 0, argsClassGetName};
 
 void initClassClass(void) {
   CFunction *staticMethods[] = {
-    &funcClassGetName,
-    NULL,
+      &funcClassGetName,
+      NULL,
   };
   newBuiltinClass("Class", &vm.classClass, TYPE_PATTERN_CLASS, NULL, staticMethods);
 }

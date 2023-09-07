@@ -11,4 +11,4 @@ ubool readBufferFromBundle(const char *src, const char *path, Buffer *out);
  * and retrieve its contents as a `String` */
 ubool readStringFromBundle(const char *src, const char *path, String **out);
 
-#endif/*mtots_bundl_h*/
+#endif /*mtots_bundl_h*/

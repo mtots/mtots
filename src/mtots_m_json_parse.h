@@ -1,10 +1,10 @@
 #ifndef mtots_m_json_parse_h
 #define mtots_m_json_parse_h
 
-#include "mtots_vm.h"
-
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include "mtots_vm.h"
 
 /* Quick and dirty JSON parser based on the state machine
  * diagram here: https://www.json.org/json-en.html
@@ -126,16 +126,16 @@ static ubool scanString(JSONParseState *s, size_t *outNBytes, char *out) {
               interpHexDigit(s->ptr[2]) == -1 ||
               interpHexDigit(s->ptr[3]) == -1) {
             runtimeError(
-              "while parsing JSON, invalid hex digit "
-              "on line %lu column %lu",
-              (unsigned long) s->line, (unsigned long) s->col);
+                "while parsing JSON, invalid hex digit "
+                "on line %lu column %lu",
+                (unsigned long)s->line, (unsigned long)s->col);
             return UFALSE;
           }
           codePoint =
-            (u32)interpHexDigit(s->ptr[0]) << 24 |
-            (u32)interpHexDigit(s->ptr[1]) << 16 |
-            (u32)interpHexDigit(s->ptr[2]) << 8 |
-            (u32)interpHexDigit(s->ptr[3]);
+              (u32)interpHexDigit(s->ptr[0]) << 24 |
+              (u32)interpHexDigit(s->ptr[1]) << 16 |
+              (u32)interpHexDigit(s->ptr[2]) << 8 |
+              (u32)interpHexDigit(s->ptr[3]);
           charBytes = encodeUTF8Char(codePoint, p);
           if (p) p += charBytes;
           nbytes += charBytes;
@@ -147,10 +147,10 @@ static ubool scanString(JSONParseState *s, size_t *outNBytes, char *out) {
         }
         default:
           runtimeError(
-            "while parsing JSON, invalid string escape '%c' (%d) "
-            "on line %lu column %lu",
-            peek(s), (int)(peek(s)),
-            (unsigned long) s->line, (unsigned long) s->col);
+              "while parsing JSON, invalid string escape '%c' (%d) "
+              "on line %lu column %lu",
+              peek(s), (int)(peek(s)),
+              (unsigned long)s->line, (unsigned long)s->col);
           return UFALSE;
       }
     } else {
@@ -178,8 +178,8 @@ static ubool parseString(JSONParseState *s) {
 
   if (peek(s) != '"') {
     runtimeError(
-      "while parsing JSON, expected '\"' on line %lu column %lu",
-      (unsigned long) s->line, (unsigned long) s->col);
+        "while parsing JSON, expected '\"' on line %lu column %lu",
+        (unsigned long)s->line, (unsigned long)s->col);
     return UFALSE;
   }
   incr(s); /* starting '"' */
@@ -201,8 +201,8 @@ static ubool parseString(JSONParseState *s) {
 
   if (peek(s) != '"') {
     runtimeError(
-      "while parsing JSON, missing matching quote for quote on line %lu column %lu",
-      (unsigned long) savedState.line, (unsigned long) (savedState.col - 1));
+        "while parsing JSON, missing matching quote for quote on line %lu column %lu",
+        (unsigned long)savedState.line, (unsigned long)(savedState.col - 1));
     return UFALSE;
   }
 
@@ -217,8 +217,8 @@ static ubool parseObject(JSONParseState *s) {
   ObjDict *dict;
   if (peek(s) != '{') {
     runtimeError(
-      "while parsing JSON, expected '{' on line %lu column %lu",
-      (unsigned long) s->line, (unsigned long) s->col);
+        "while parsing JSON, expected '{' on line %lu column %lu",
+        (unsigned long)s->line, (unsigned long)s->col);
     return UFALSE;
   }
   incr(s); /* '{' */
@@ -229,8 +229,8 @@ static ubool parseObject(JSONParseState *s) {
     skipWhitespace(s);
     if (peek(s) != ':') {
       runtimeError(
-        "while parsing JSON, expected ':' on line %lu column %lu",
-        (unsigned long) s->line, (unsigned long) s->col);
+          "while parsing JSON, expected ':' on line %lu column %lu",
+          (unsigned long)s->line, (unsigned long)s->col);
       return UFALSE;
     }
     incr(s); /* ':' */
@@ -245,15 +245,15 @@ static ubool parseObject(JSONParseState *s) {
   }
   if (peek(s) != '}') {
     runtimeError(
-      "while parsing JSON, expected '}' but got '%c' on line %lu column %lu",
-      peek(s), (unsigned long) s->line, (unsigned long) s->col);
+        "while parsing JSON, expected '}' but got '%c' on line %lu column %lu",
+        peek(s), (unsigned long)s->line, (unsigned long)s->col);
     return UFALSE;
   }
   incr(s); /* '}' */
   dict = newDict();
   push(DICT_VAL(dict));
   for (i = 0; i < count; i++) {
-    Value key   = vm.stackTop[-(2 * (i32)count) - 1 + 2 * i];
+    Value key = vm.stackTop[-(2 * (i32)count) - 1 + 2 * i];
     Value value = vm.stackTop[-(2 * (i32)count) - 1 + 2 * i + 1];
     mapSet(&dict->map, key, value);
   }
@@ -268,8 +268,8 @@ static ubool parseArray(JSONParseState *s) {
   ObjList *list;
   if (peek(s) != '[') {
     runtimeError(
-      "while parsing JSON, expected '[' on line %lu column %lu",
-      (unsigned long) s->line, (unsigned long) s->col);
+        "while parsing JSON, expected '[' on line %lu column %lu",
+        (unsigned long)s->line, (unsigned long)s->col);
     return UFALSE;
   }
   incr(s); /* '{' */
@@ -286,8 +286,8 @@ static ubool parseArray(JSONParseState *s) {
   }
   if (peek(s) != ']') {
     runtimeError(
-      "while parsing JSON, expected ']' on line %lu column %lu",
-      (unsigned long) s->line, (unsigned long) s->col);
+        "while parsing JSON, expected ']' on line %lu column %lu",
+        (unsigned long)s->line, (unsigned long)s->col);
     return UFALSE;
   }
   incr(s); /* ']' */
@@ -311,8 +311,8 @@ static ubool parseNumber(JSONParseState *s) {
   }
   if (!isDigit(peek(s))) {
     runtimeError(
-      "while parsing JSON, expected digit on line %lu column %lu",
-      (unsigned long) s->line, (unsigned long) s->col);
+        "while parsing JSON, expected digit on line %lu column %lu",
+        (unsigned long)s->line, (unsigned long)s->col);
     return UFALSE;
   }
   while (isDigit(peek(s))) {
@@ -345,9 +345,12 @@ static ubool parseOneBlob(JSONParseState *s) {
     return parseNumber(s);
   }
   switch (c) {
-    case '{': return parseObject(s);
-    case '[': return parseArray(s);
-    case '"': return parseString(s);
+    case '{':
+      return parseObject(s);
+    case '[':
+      return parseArray(s);
+    case '"':
+      return parseString(s);
     case 'f':
       if (startsWith(s, "false")) {
         size_t i, len = strlen("false");
@@ -380,8 +383,8 @@ static ubool parseOneBlob(JSONParseState *s) {
       break;
   }
   runtimeError(
-    "while parsing JSON, unrecognized char '%c' (%d) on line %lu column %lu",
-    c, (int) c, (unsigned long) s->line, (unsigned long) s->col);
+      "while parsing JSON, unrecognized char '%c' (%d) on line %lu column %lu",
+      c, (int)c, (unsigned long)s->line, (unsigned long)s->col);
   return UFALSE;
 }
 
@@ -393,11 +396,11 @@ static ubool parseJSON(JSONParseState *s) {
   if (peek(s) != '\0') {
     char c = peek(s);
     runtimeError(
-      "while parsing JSON, extra data '%c' (%d) on line %lu column %lu",
-      c, (int) c, (unsigned long) s->line, (unsigned long) s->col);
+        "while parsing JSON, extra data '%c' (%d) on line %lu column %lu",
+        c, (int)c, (unsigned long)s->line, (unsigned long)s->col);
     return UFALSE;
   }
   return UTRUE;
 }
 
-#endif/*mtots_m_json_parse_h*/
+#endif /*mtots_m_json_parse_h*/

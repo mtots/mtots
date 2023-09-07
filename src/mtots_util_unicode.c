@@ -29,19 +29,19 @@ int encodeUTF8Char(u32 codePoint, char *outBytes) {
         outBytes[0] = (char)(u8)codePoint;
         break;
       case 2:
-        outBytes[0] = (char)(u8)(0xC0|(codePoint>>6));
-        outBytes[1] = (char)(u8)(0x80|(codePoint&0x3F));
+        outBytes[0] = (char)(u8)(0xC0 | (codePoint >> 6));
+        outBytes[1] = (char)(u8)(0x80 | (codePoint & 0x3F));
         break;
       case 3:
-        outBytes[0] = (char)(u8)(0xE0|(codePoint>>12));
-        outBytes[1] = (char)(u8)(0x80|((codePoint>>6)&0x3F));
-        outBytes[2] = (char)(u8)(0x80|(codePoint&0x3F));
+        outBytes[0] = (char)(u8)(0xE0 | (codePoint >> 12));
+        outBytes[1] = (char)(u8)(0x80 | ((codePoint >> 6) & 0x3F));
+        outBytes[2] = (char)(u8)(0x80 | (codePoint & 0x3F));
         break;
       case 4:
-        outBytes[0] = (char)(u8)(0xF0|(codePoint>>18));
-        outBytes[1] = (char)(u8)(0x80|((codePoint>>12)&0x3F));
-        outBytes[2] = (char)(u8)(0x80|((codePoint>>6)&0x3F));
-        outBytes[3] = (char)(u8)(0x80|(codePoint&0x3F));
+        outBytes[0] = (char)(u8)(0xF0 | (codePoint >> 18));
+        outBytes[1] = (char)(u8)(0x80 | ((codePoint >> 12) & 0x3F));
+        outBytes[2] = (char)(u8)(0x80 | ((codePoint >> 6) & 0x3F));
+        outBytes[3] = (char)(u8)(0x80 | (codePoint & 0x3F));
         break;
     }
   }
@@ -103,26 +103,26 @@ int decodeUTF8Char(const char *bytes, const char *limit, u32 *outCodePoint) {
       case 2:
         byte2 = (u32)(u8)bytes[1];
         *outCodePoint =
-          ((byte1 & 0x1F) << 6) |
-          (byte2 & 0x3F);
+            ((byte1 & 0x1F) << 6) |
+            (byte2 & 0x3F);
         break;
       case 3:
         byte2 = (u32)(u8)bytes[1];
         byte3 = (u32)(u8)bytes[2];
         *outCodePoint =
-          ((byte1 & 0x0F) << 12) |
-          ((byte2 & 0x3F) << 6) |
-          (byte3 & 0x3F);
+            ((byte1 & 0x0F) << 12) |
+            ((byte2 & 0x3F) << 6) |
+            (byte3 & 0x3F);
         break;
       case 4:
         byte2 = (u32)(u8)bytes[1];
         byte3 = (u32)(u8)bytes[2];
         byte4 = (u32)(u8)bytes[3];
         *outCodePoint =
-          ((byte1 & 0x07) << 18) |
-          ((byte2 & 0x3F) << 12) |
-          ((byte3 & 0x3F) << 6) |
-          (byte4 & 0x3F);
+            ((byte1 & 0x07) << 18) |
+            ((byte2 & 0x3F) << 12) |
+            ((byte3 & 0x3F) << 6) |
+            (byte4 & 0x3F);
         break;
     }
   }

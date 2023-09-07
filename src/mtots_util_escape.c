@@ -1,11 +1,11 @@
 #include "mtots_util_escape.h"
 
-#include "mtots_util_error.h"
-#include "mtots_util_unicode.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "mtots_util_error.h"
+#include "mtots_util_unicode.h"
 
 #define INVALID_HEX 24
 
@@ -37,8 +37,10 @@ ubool escapeString2(
   size_t pos = 0;
   StringEscapeOptions opts;
 
-  if (givenOpts) opts = *givenOpts;
-  else initStringEscapeOptions(&opts);
+  if (givenOpts)
+    opts = *givenOpts;
+  else
+    initStringEscapeOptions(&opts);
 
   while (pos < length) {
     int charlen;
@@ -69,29 +71,41 @@ ubool escapeString2(
       /* Characters that must be escaped */
       bputchar(out, '\\');
       bputchar(out, codePoint);
-    } else if (opts.shorthandControlCodes && (
-        (!opts.jsonSafe && codePoint == '\0') ||
-        codePoint == '\b' ||
-        codePoint == '\f' ||
-        codePoint == '\n' ||
-        codePoint == '\r' ||
-        codePoint == '\t')) {
+    } else if (opts.shorthandControlCodes && ((!opts.jsonSafe && codePoint == '\0') ||
+                                              codePoint == '\b' ||
+                                              codePoint == '\f' ||
+                                              codePoint == '\n' ||
+                                              codePoint == '\r' ||
+                                              codePoint == '\t')) {
       /* Characters with shortcut escapes */
       bputchar(out, '\\');
       switch (codePoint) {
-        case '\0': bputchar(out, '0'); break;
-        case '\b': bputchar(out, 'b'); break;
-        case '\f': bputchar(out, 'f'); break;
-        case '\n': bputchar(out, 'n'); break;
-        case '\r': bputchar(out, 'r'); break;
-        case '\t': bputchar(out, 't'); break;
-        default: abort();
+        case '\0':
+          bputchar(out, '0');
+          break;
+        case '\b':
+          bputchar(out, 'b');
+          break;
+        case '\f':
+          bputchar(out, 'f');
+          break;
+        case '\n':
+          bputchar(out, 'n');
+          break;
+        case '\r':
+          bputchar(out, 'r');
+          break;
+        case '\t':
+          bputchar(out, 't');
+          break;
+        default:
+          abort();
       }
     } else if (codePoint >= 0x20 && codePoint < 0x7F) {
       /* Printable ASCII */
       if (charlen != 1) abort();
       bputchar(out, codePoint);
-    } else if ((opts.jsonSafe||opts.tryUnicode) && codePoint <= 0xFFFF) {
+    } else if ((opts.jsonSafe || opts.tryUnicode) && codePoint <= 0xFFFF) {
       /* Escapable unicode in 16-bit range
        * Unconditionally escape them */
       bputchar(out, '\\');
@@ -119,7 +133,7 @@ ubool escapeString2(
       bputchar(out, 'x');
       bputchar(out, toHexChar(((u8)codePoint >> 4) % 16));
       bputchar(out, toHexChar(((u8)codePoint) % 16));
-    } else if ((opts.jsonSafe||opts.tryUnicode) && codePoint <= 0x10FFFF) {
+    } else if ((opts.jsonSafe || opts.tryUnicode) && codePoint <= 0x10FFFF) {
       /* Other escapable unicode
        * However, these are out of the 16-bit range, so we
        * use a different syntax for them */
@@ -136,7 +150,7 @@ ubool escapeString2(
     } else if (opts.jsonSafe) {
       /* At this point, the codepoint is not valid, so we can't be json safe */
       runtimeError("invalid unicode codepoint %lu at %lu",
-        (unsigned long)codePoint, (unsigned long)pos);
+                   (unsigned long)codePoint, (unsigned long)pos);
       return UFALSE;
     } else {
       /* Arbitrary bytes, and we don't have to worry about being jsonSafe */
@@ -167,8 +181,10 @@ ubool escapeString(
   char *p = outBytes;
   StringEscapeOptions opts;
 
-  if (givenOpts) opts = *givenOpts;
-  else initStringEscapeOptions(&opts);
+  if (givenOpts)
+    opts = *givenOpts;
+  else
+    initStringEscapeOptions(&opts);
 
   while (pos < length) {
     int charlen;
@@ -205,25 +221,37 @@ ubool escapeString(
         *p++ = '\\';
         *p++ = codePoint;
       }
-    } else if (opts.shorthandControlCodes && (
-        (!opts.jsonSafe && codePoint == '\0') ||
-        codePoint == '\b' ||
-        codePoint == '\f' ||
-        codePoint == '\n' ||
-        codePoint == '\r' ||
-        codePoint == '\t')) {
+    } else if (opts.shorthandControlCodes && ((!opts.jsonSafe && codePoint == '\0') ||
+                                              codePoint == '\b' ||
+                                              codePoint == '\f' ||
+                                              codePoint == '\n' ||
+                                              codePoint == '\r' ||
+                                              codePoint == '\t')) {
       /* Characters with shortcut escapes */
       len += 2;
       if (p) {
         *p++ = '\\';
         switch (codePoint) {
-          case '\0': *p++ = '0'; break;
-          case '\b': *p++ = 'b'; break;
-          case '\f': *p++ = 'f'; break;
-          case '\n': *p++ = 'n'; break;
-          case '\r': *p++ = 'r'; break;
-          case '\t': *p++ = 't'; break;
-          default: abort();
+          case '\0':
+            *p++ = '0';
+            break;
+          case '\b':
+            *p++ = 'b';
+            break;
+          case '\f':
+            *p++ = 'f';
+            break;
+          case '\n':
+            *p++ = 'n';
+            break;
+          case '\r':
+            *p++ = 'r';
+            break;
+          case '\t':
+            *p++ = 't';
+            break;
+          default:
+            abort();
         }
       }
     } else if (codePoint >= 0x20 && codePoint < 0x7F) {
@@ -231,7 +259,7 @@ ubool escapeString(
       if (charlen != 1) abort();
       len++;
       if (p) *p++ = codePoint;
-    } else if ((opts.jsonSafe||opts.tryUnicode) && codePoint <= 0xFFFF) {
+    } else if ((opts.jsonSafe || opts.tryUnicode) && codePoint <= 0xFFFF) {
       /* Escapable unicode in 16-bit range
        * Unconditionally escape them */
       len += 6;
@@ -265,7 +293,7 @@ ubool escapeString(
         *p++ = toHexChar(((u8)codePoint >> 4) % 16);
         *p++ = toHexChar(((u8)codePoint) % 16);
       }
-    } else if ((opts.jsonSafe||opts.tryUnicode) && codePoint <= 0x10FFFF) {
+    } else if ((opts.jsonSafe || opts.tryUnicode) && codePoint <= 0x10FFFF) {
       /* Other escapable unicode
        * However, these are out of the 16-bit range, so we
        * use a different syntax for them */
@@ -285,7 +313,7 @@ ubool escapeString(
     } else if (opts.jsonSafe) {
       /* At this point, the codepoint is not valid, so we can't be json safe */
       runtimeError("invalid unicode codepoint %lu at %lu",
-        (unsigned long) codePoint, (unsigned long)pos);
+                   (unsigned long)codePoint, (unsigned long)pos);
       return UFALSE;
     } else {
       /* Arbitrary bytes, and we don't have to worry about being jsonSafe */
@@ -317,16 +345,46 @@ ubool unescapeString2(
     if (*str == '\\') {
       str++;
       switch (*str) {
-        case '"': str++; bputchar(out, '\"'); break;
-        case '\'': str++; bputchar(out, '\''); break;
-        case '\\': str++; bputchar(out, '\\'); break;
-        case '/': str++; bputchar(out, '/'); break;
-        case 'b': str++; bputchar(out, '\b'); break;
-        case 'f': str++; bputchar(out, '\f'); break;
-        case 'n': str++; bputchar(out, '\n'); break;
-        case 'r': str++; bputchar(out, '\r'); break;
-        case 't': str++; bputchar(out, '\t'); break;
-        case '0': str++; bputchar(out, '\0'); break;
+        case '"':
+          str++;
+          bputchar(out, '\"');
+          break;
+        case '\'':
+          str++;
+          bputchar(out, '\'');
+          break;
+        case '\\':
+          str++;
+          bputchar(out, '\\');
+          break;
+        case '/':
+          str++;
+          bputchar(out, '/');
+          break;
+        case 'b':
+          str++;
+          bputchar(out, '\b');
+          break;
+        case 'f':
+          str++;
+          bputchar(out, '\f');
+          break;
+        case 'n':
+          str++;
+          bputchar(out, '\n');
+          break;
+        case 'r':
+          str++;
+          bputchar(out, '\r');
+          break;
+        case 't':
+          str++;
+          bputchar(out, '\t');
+          break;
+        case '0':
+          str++;
+          bputchar(out, '\0');
+          break;
         case 'x': {
           u32 byte;
           str++;
@@ -352,17 +410,17 @@ ubool unescapeString2(
               evalHex(str[2]) == INVALID_HEX ||
               evalHex(str[3]) == INVALID_HEX) {
             char invalid =
-              evalHex(str[0]) == INVALID_HEX ? str[0] :
-              evalHex(str[1]) == INVALID_HEX ? str[1] :
-              evalHex(str[2]) == INVALID_HEX ? str[2] : str[3];
+                evalHex(str[0]) == INVALID_HEX ? str[0] : evalHex(str[1]) == INVALID_HEX ? str[1]
+                                                      : evalHex(str[2]) == INVALID_HEX   ? str[2]
+                                                                                         : str[3];
             runtimeError("in string unescape, invalid hex digit '%c'", invalid);
             return UFALSE;
           }
           codePoint =
-            evalHex(str[0]) << 12 |
-            evalHex(str[1]) << 8 |
-            evalHex(str[2]) << 4 |
-            evalHex(str[3]);
+              evalHex(str[0]) << 12 |
+              evalHex(str[1]) << 8 |
+              evalHex(str[2]) << 4 |
+              evalHex(str[3]);
           charBytes = encodeUTF8Char(codePoint, charStr);
           bputstrlen(out, charStr, charBytes);
           str += 4;
@@ -370,8 +428,8 @@ ubool unescapeString2(
         }
         default:
           runtimeError(
-            "in string unescape, invalid escape '%c' (%d)",
-            *str, (int)*str);
+              "in string unescape, invalid escape '%c' (%d)",
+              *str, (int)*str);
           return UFALSE;
       }
     } else {

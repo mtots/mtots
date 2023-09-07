@@ -1,10 +1,10 @@
 #ifndef mtots_m_json_write_h
 #define mtots_m_json_write_h
 
-#include "mtots_vm.h"
-
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
+
+#include "mtots_vm.h"
 
 static ubool writeJSON(Value value, size_t *outLen, char *out) {
   if (IS_NIL(value)) {
@@ -69,7 +69,8 @@ static ubool writeJSON(Value value, size_t *outLen, char *out) {
   if (IS_LIST(value)) {
     ObjList *list = AS_LIST(value);
     size_t i, len = 0;
-    len++; if (out) *out++ = '[';
+    len++;
+    if (out) *out++ = '[';
     for (i = 0; i < list->length; i++) {
       size_t itemLen;
       if (i > 0) {
@@ -83,7 +84,8 @@ static ubool writeJSON(Value value, size_t *outLen, char *out) {
       len += itemLen;
       if (out) out += itemLen;
     }
-    len++; if (out) *out++ = ']';
+    len++;
+    if (out) *out++ = ']';
     if (outLen) *outLen = len;
     return UTRUE;
   }
@@ -93,25 +95,31 @@ static ubool writeJSON(Value value, size_t *outLen, char *out) {
     MapIterator di;
     MapEntry *entry;
     ubool first = UTRUE;
-    len++; if (out) *out++ = '{';
+    len++;
+    if (out) *out++ = '{';
     initMapIterator(&di, &dict->map);
     while (mapIteratorNext(&di, &entry)) {
       size_t keyLen, valueLen;
       if (!first) {
-        len++; if (out) *out++ = ',';
+        len++;
+        if (out) *out++ = ',';
       }
       first = UFALSE;
       if (!writeJSON(entry->key, &keyLen, out)) {
         return UFALSE;
       }
-      len += keyLen; if (out) out += keyLen;
-      len++; if (out) *out++ = ':';
+      len += keyLen;
+      if (out) out += keyLen;
+      len++;
+      if (out) *out++ = ':';
       if (!writeJSON(entry->value, &valueLen, out)) {
         return UFALSE;
       }
-      len += valueLen; if (out) out += valueLen;
+      len += valueLen;
+      if (out) out += valueLen;
     }
-    len++; if (out) *out++ = '}';
+    len++;
+    if (out) *out++ = '}';
     if (outLen) *outLen = len;
     return UTRUE;
   }
@@ -119,4 +127,4 @@ static ubool writeJSON(Value value, size_t *outLen, char *out) {
   return UFALSE;
 }
 
-#endif/*mtots_m_json_write_h*/
+#endif /*mtots_m_json_write_h*/

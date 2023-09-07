@@ -7,7 +7,7 @@
 
 #define N 624
 #define M 397
-#define MATRIX_A   0x9908b0df
+#define MATRIX_A 0x9908b0df
 #define UPPER_MASK 0x80000000
 #define LOWER_MASK 0x7fffffff
 
@@ -16,7 +16,7 @@ void initRandom(Random *random, u32 seed) {
   u32 *mt = random->state;
   mt[0] = seed;
   for (i = 1; i < N; i++) {
-    mt[i] = 1812433253UL * (mt[i-1] ^ (mt[i-1] >> 30)) + i;
+    mt[i] = 1812433253UL * (mt[i - 1] ^ (mt[i - 1] >> 30)) + i;
   }
   random->index = N;
 }

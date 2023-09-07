@@ -23,14 +23,14 @@ static ubool implIsArchiveScript(i16 argc, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcIsArchiveScript = { implIsArchiveScript, "isArchiveScript" };
+static CFunction funcIsArchiveScript = {implIsArchiveScript, "isArchiveScript"};
 
 static ubool implGetMallocCount(i16 argc, Value *args, Value *out) {
   *out = NUMBER_VAL(vm.memory.mallocCount);
   return UTRUE;
 }
 
-static CFunction funcGetMallocCount = { implGetMallocCount, "getMallocCount" };
+static CFunction funcGetMallocCount = {implGetMallocCount, "getMallocCount"};
 
 static ubool implEnableGCLogs(i16 argc, Value *args, Value *out) {
   vm.enableGCLogs = AS_BOOL(args[0]);
@@ -38,10 +38,10 @@ static ubool implEnableGCLogs(i16 argc, Value *args, Value *out) {
 }
 
 static TypePattern argsEnableGCLogs[] = {
-  { TYPE_PATTERN_BOOL },
+    {TYPE_PATTERN_BOOL},
 };
 
-static CFunction funcEnableGCLogs = { implEnableGCLogs, "enableGCLogs", 1, 0, argsEnableGCLogs };
+static CFunction funcEnableGCLogs = {implEnableGCLogs, "enableGCLogs", 1, 0, argsEnableGCLogs};
 
 static ubool implEnableMallocFreeLogs(i16 argc, Value *args, Value *out) {
   vm.enableMallocFreeLogs = AS_BOOL(args[0]);
@@ -49,12 +49,11 @@ static ubool implEnableMallocFreeLogs(i16 argc, Value *args, Value *out) {
 }
 
 static TypePattern argsEnableMallocFreeLogs[] = {
-  { TYPE_PATTERN_BOOL },
+    {TYPE_PATTERN_BOOL},
 };
 
 static CFunction funcEnableMallocFreeLogs = {
-  implEnableMallocFreeLogs, "enableMallocFreeLogs", 1, 0, argsEnableMallocFreeLogs
-};
+    implEnableMallocFreeLogs, "enableMallocFreeLogs", 1, 0, argsEnableMallocFreeLogs};
 
 static ubool implEnableLogOnGC(i16 argc, Value *args, Value *out) {
   vm.enableLogOnGC = AS_BOOL(args[0]);
@@ -62,20 +61,20 @@ static ubool implEnableLogOnGC(i16 argc, Value *args, Value *out) {
 }
 
 static TypePattern argsEnableLogOnGC[] = {
-  { TYPE_PATTERN_BOOL },
+    {TYPE_PATTERN_BOOL},
 };
 
-static CFunction funcEnableLogOnGC = { implEnableLogOnGC, "enableLogOnGC", 1, 0, argsEnableLogOnGC };
+static CFunction funcEnableLogOnGC = {implEnableLogOnGC, "enableLogOnGC", 1, 0, argsEnableLogOnGC};
 
 static ubool impl(i16 argc, Value *args, Value *out) {
   ObjModule *module = AS_MODULE(args[0]);
   CFunction *functions[] = {
-    &funcIsArchiveScript,
-    &funcGetMallocCount,
-    &funcEnableGCLogs,
-    &funcEnableMallocFreeLogs,
-    &funcEnableLogOnGC,
-    NULL,
+      &funcIsArchiveScript,
+      &funcGetMallocCount,
+      &funcEnableGCLogs,
+      &funcEnableMallocFreeLogs,
+      &funcEnableLogOnGC,
+      NULL,
   };
   CFunction **function;
 
@@ -92,7 +91,7 @@ static ubool impl(i16 argc, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction func = { impl, "sys", 1 };
+static CFunction func = {impl, "sys", 1};
 
 void addNativeModuleSys(void) {
   addNativeModule(&func);

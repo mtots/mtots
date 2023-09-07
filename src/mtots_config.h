@@ -1,19 +1,16 @@
 #ifndef mtots_config_h
 #define mtots_config_h
 
-
 #if defined(MTOTS_RELEASE) && MTOTS_RELEASE
-#define DEBUG_STRESS_GC        0
+#define DEBUG_STRESS_GC 0
 #else
-#define DEBUG_STRESS_GC        1
+#define DEBUG_STRESS_GC 1
 #endif
 
-
-#define MAX_PATH_LENGTH        4096
-#define MAX_ELIF_CHAIN_COUNT     64
-#define MAX_IDENTIFIER_LENGTH   128
-#define FREAD_BUFFER_SIZE      8192
-
+#define MAX_PATH_LENGTH 4096
+#define MAX_ELIF_CHAIN_COUNT 64
+#define MAX_IDENTIFIER_LENGTH 128
+#define FREAD_BUFFER_SIZE 8192
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 #define _CRT_SECURE_NO_WARNINGS
@@ -31,14 +28,13 @@
 #define MTOTS_FILE_EXTENSION ".mtots"
 #define MTOTS_PATH_VARIABLE_NAME "MTOTSPATH"
 
-
 /****************************************************************
  * Language version
  ****************************************************************/
 
 /* #if __cplusplus >= 201103L || (defined(_MSC_VER) && _MSC_VER >= 1900) */
 #if __cplusplus >= 201103L /* C++11 and above */
-#define NORETURN [[ noreturn ]]
+#define NORETURN [[noreturn]]
 #elif __STDC_VERSION__ >= 201112L /* C11 and above  */
 #define NORETURN _Noreturn
 #elif __GNUC__
@@ -87,9 +83,9 @@
  ****************************************************************/
 
 #ifdef __GNUC__
-#define MTOTS_PRINTFLIKE(n,m) __attribute__((format(printf,n,m)))
+#define MTOTS_PRINTFLIKE(n, m) __attribute__((format(printf, n, m)))
 #else
-#define MTOTS_PRINTFLIKE(n,m)
+#define MTOTS_PRINTFLIKE(n, m)
 #endif /* __GNUC__ */
 
 #ifdef __GNUC__
@@ -106,4 +102,4 @@
 #define NODISCARD
 #endif /* __cplusplus */
 
-#endif/*mtots_config_h*/
+#endif /*mtots_config_h*/

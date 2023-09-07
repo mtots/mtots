@@ -1,4 +1,5 @@
 #include "mtots_class_number.h"
+
 #include "mtots_vm.h"
 
 static ubool implNumberToU32(i16 argCount, Value *args, Value *out) {
@@ -14,7 +15,8 @@ static ubool implNumberToU32(i16 argCount, Value *args, Value *out) {
 }
 
 static CFunction funcNumberToU32 = {
-  implNumberToU32, "toU32",
+    implNumberToU32,
+    "toU32",
 };
 
 static ubool implNumberBase(i16 argCount, Value *args, Value *out) {
@@ -54,18 +56,18 @@ static ubool implNumberBase(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcNumberBase = { implNumberBase, "base", 1, 0, argsNumbers };
+static CFunction funcNumberBase = {implNumberBase, "base", 1, 0, argsNumbers};
 
 void initNumberClass(void) {
   CFunction *methods[] = {
-    &funcNumberToU32,
-    &funcNumberBase,
-    NULL,
+      &funcNumberToU32,
+      &funcNumberBase,
+      NULL,
   };
   newBuiltinClass(
-    "Number",
-    &vm.numberClass,
-    TYPE_PATTERN_NUMBER,
-    methods,
-    NULL);
+      "Number",
+      &vm.numberClass,
+      TYPE_PATTERN_NUMBER,
+      methods,
+      NULL);
 }

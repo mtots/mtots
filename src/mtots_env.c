@@ -1,11 +1,12 @@
 #include "mtots_env.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "mtots_common.h"
 #include "mtots_util_buffer.h"
 #include "mtots_util_error.h"
-
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
 
 #if MTOTS_ASSUME_WINDOWS
 #include <Windows.h>
@@ -47,9 +48,9 @@ static ubool testPrefix(size_t prefixLen) {
   size_t totalLen;
 
   /* Try `module/path/__init__.mtots` */
-  totalLen = prefixLen + strlen(PATH_SEP_STR "__init__"  MTOTS_FILE_EXTENSION);
+  totalLen = prefixLen + strlen(PATH_SEP_STR "__init__" MTOTS_FILE_EXTENSION);
   if (totalLen + 1 < PATH_LIMIT) {
-    strcpy(pathBuffer + prefixLen, PATH_SEP_STR "__init__"  MTOTS_FILE_EXTENSION);
+    strcpy(pathBuffer + prefixLen, PATH_SEP_STR "__init__" MTOTS_FILE_EXTENSION);
     if (canOpen(pathBuffer)) {
       return UTRUE;
     }
@@ -233,7 +234,8 @@ void registerMtotsMainScriptPath(const char *scriptPath) {
     return; /* too long */
   }
   strcpy(scriptBuf, scriptPath);
-  for (rootLen = scriptPathLen; rootLen > 0 && scriptBuf[rootLen - 1] != PATH_SEP; rootLen--);
+  for (rootLen = scriptPathLen; rootLen > 0 && scriptBuf[rootLen - 1] != PATH_SEP; rootLen--)
+    ;
   if (strcmp(scriptBuf + rootLen, "main.mtots") == 0) {
     /* If the name of the script is 'main.mtots', we need the parent of the
      * enclosing directory */
@@ -270,7 +272,7 @@ ubool openMtotsArchive(const char *filePath) {
   }
   {
     size_t filePathLen = strlen(filePath);
-    archivePath = (char*)malloc(filePathLen + 1);
+    archivePath = (char *)malloc(filePathLen + 1);
     archivePath[filePathLen] = '\0';
     strcpy(archivePath, filePath);
   }
@@ -314,15 +316,15 @@ ubool readMtotsModuleFromArchive(const char *moduleName, char **data, char **dat
     return minizErr(&archive, "mz_zip_reader_file_stat");
   }
   bufferSize = stat.m_uncomp_size + 1; /* extra byte for the null terminator */
-  buffer = (char*)malloc(bufferSize);
+  buffer = (char *)malloc(bufferSize);
   if (!mz_zip_reader_extract_to_mem(&archive, fileIndex, buffer, bufferSize, 0)) {
-    free((void*)buffer);
+    free((void *)buffer);
     return minizErr(&archive, "mz_zip_reader_extract_to_mem");
   }
   buffer[bufferSize - 1] = '\0';
 
   fullPathLen = strlen(archivePath) + 1 + strlen(path) + 1;
-  fullPath = (char*)malloc(fullPathLen);
+  fullPath = (char *)malloc(fullPathLen);
   strcpy(fullPath, archivePath);
   strcpy(fullPath + strlen(fullPath), "!");
   strcpy(fullPath + strlen(fullPath), path);
@@ -342,7 +344,7 @@ ubool readFileFromMtotsArchive(const char *path, char **data, size_t *dataSize) 
     return UFALSE;
   }
 
-  *data = (char*)mz_zip_reader_extract_to_heap(&archive, fileIndex, dataSize, 0);
+  *data = (char *)mz_zip_reader_extract_to_heap(&archive, fileIndex, dataSize, 0);
   if (!*data) {
     return minizErr(&archive, "mz_zip_reader_extract_to_heap");
   }

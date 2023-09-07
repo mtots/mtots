@@ -6,14 +6,14 @@
 #define MAX_FOREVER_VALUE_COUNT 128
 
 #define ALLOCATE(type, count) \
-    (type*)reallocate(NULL, 0, sizeof(type) * (count))
+  (type *)reallocate(NULL, 0, sizeof(type) * (count))
 
 #define GROW_CAPACITY(capacity) \
-  ((capacity) < 8 ? 8 : (capacity) * 2)
+  ((capacity) < 8 ? 8 : (capacity)*2)
 
-#define GROW_ARRAY(type, pointer, oldCount, newCount) \
-  (type*)reallocate(pointer, sizeof(type) * (oldCount), \
-    sizeof(type) * (newCount))
+#define GROW_ARRAY(type, pointer, oldCount, newCount)    \
+  (type *)reallocate(pointer, sizeof(type) * (oldCount), \
+                     sizeof(type) * (newCount))
 
 #define FREE_ARRAY(type, pointer, oldCount) \
   reallocate(pointer, sizeof(type) * (oldCount), 0)
@@ -42,4 +42,4 @@ void markValue(Value value);
 void collectGarbage(void);
 void freeObjects(void);
 
-#endif/*mtots_memory_h*/
+#endif /*mtots_memory_h*/
