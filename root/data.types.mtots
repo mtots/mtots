@@ -31,20 +31,20 @@ def fromFile(filePath String) DataSource:
   """
 
 
-def fromBundle(src String, path String) DataSource:
-  """
-  Convenience function equivalent to `DataSource.fromBundle`
+# def fromBundle(src String, path String) DataSource:
+#   """
+#   Convenience function equivalent to `DataSource.fromBundle`
 
-  Returns a `DataSource` that represents the contents
-  of a bundled file.
+#   Returns a `DataSource` that represents the contents
+#   of a bundled file.
 
-  `src` should be the `__file__` value of the module
-  the resource was bundled with.
+#   `src` should be the `__file__` value of the module
+#   the resource was bundled with.
 
-  `path` should be the relative path (using '/' as the path
-  component separator) to the file from the script's
-  directory.
-  """
+#   `path` should be the relative path (using '/' as the path
+#   component separator) to the file from the script's
+#   directory.
+#   """
 
 
 def toBuffer(buffer Buffer) DataSink:
@@ -93,18 +93,18 @@ class DataSource:
     of a file specified by the given `filePath`
     """
 
-  static def fromBundle(src String, path String) DataSource:
-    """
-    Returns a `DataSource` that represents the contents
-    of a bundled file.
+  # static def fromBundle(src String, path String) DataSource:
+  #   """
+  #   Returns a `DataSource` that represents the contents
+  #   of a bundled file.
 
-    `src` should be the `__file__` value of the module
-    the resource was bundled with.
+  #   `src` should be the `__file__` value of the module
+  #   the resource was bundled with.
 
-    `path` should be the relative path (using '/' as the path
-    component separator) to the file from the script's
-    directory.
-    """
+  #   `path` should be the relative path (using '/' as the path
+  #   component separator) to the file from the script's
+  #   directory.
+  #   """
 
   def read(out Buffer) nil:
     """

@@ -214,12 +214,6 @@ class Compiler:
             # Include the stb_image library
             "-Ilib/stbimage/include",
 
-            # Include the miniz library
-            "-Ilib/miniz/src",
-            "-Isrc/extensions/zip",
-            # "-DMTOTS_ENABLE_ZIP=1",
-            *getExtensionSources('zip'),
-
             # Include the FreeType library
             "-Ilib/freetype/include",
 

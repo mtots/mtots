@@ -7,8 +7,6 @@
 
 void registerArgs(int argc, const char **argv);
 
-void setIsArchiveScript(ubool value);
-
 void addNativeModuleSys(void);
 
-#endif/*mtots_m_sys_h*/
+#endif /*mtots_m_sys_h*/

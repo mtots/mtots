@@ -15,8 +15,7 @@
 typedef enum DataSourceType {
   DATA_SOURCE_BUFFER,
   DATA_SOURCE_STRING,
-  DATA_SOURCE_FILE,
-  DATA_SOURCE_BUNDLE
+  DATA_SOURCE_FILE
 } DataSourceType;
 
 typedef struct ObjDataSource {
@@ -28,10 +27,6 @@ typedef struct ObjDataSource {
     struct {
       String *path;
     } file;
-    struct {
-      String *src;
-      String *path;
-    } bundle;
   } as;
 } ObjDataSource;
 
@@ -60,7 +55,6 @@ Value DATA_SINK_VAL(ObjDataSink *ds);
 ObjDataSource *newDataSourceFromBuffer(ObjBuffer *buffer);
 ObjDataSource *newDataSourceFromString(String *string);
 ObjDataSource *newDataSourceFromFile(String *filePath);
-ObjDataSource *newDataSourceFromBundle(String *src, String *path);
 ubool dataSourceInitBuffer(ObjDataSource *ds, Buffer *out);
 ubool dataSourceReadIntoBuffer(ObjDataSource *ds, Buffer *out);
 ubool dataSourceReadToString(ObjDataSource *ds, String **out);

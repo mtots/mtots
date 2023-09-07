@@ -34,31 +34,4 @@ void registerMtotsExecutablePath(const char *argv0);
  */
 void registerMtotsMainScriptPath(const char *scriptPath);
 
-/*
- * Opens and loads an mtots archive (mtar) file
- */
-ubool openMtotsArchive(const char *filePath);
-
-/*
- * Try to load a module from an archive.
- *
- * If such a file exists, memory is allocated on the heap.
- *
- * Returns false if there is no archive open.
- *
- * When (*data) is true, both (*data) and (*dataPath) must be freed
- * by the caller.
- */
-ubool readMtotsModuleFromArchive(const char *moduleName, char **data, char **dataPath);
-
-/*
- * Read file from the archive and store the contents in space allocated on the heap.
- */
-ubool readFileFromMtotsArchive(const char *path, char **data, size_t *dataSize);
-
-/*
- * Read file from the archive and append the contents to the given Buffer.
- */
-ubool readBufferFromMtotsArchive(const char *path, Buffer *out);
-
 #endif /*mtots_env_h*/

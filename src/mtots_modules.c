@@ -26,10 +26,6 @@
 #include "mtots_m_canvas.h"
 #endif
 
-#if MTOTS_ENABLE_ZIP
-#include "mtots_m_zip.h"
-#endif
-
 #if MTOTS_ENABLE_FONT
 #include "mtots_m_font.h"
 #endif
@@ -67,10 +63,6 @@ void addNativeModules(void) {
 
 #if MTOTS_ENABLE_CANVAS
   addNativeModuleMediaCanvas();
-#endif
-
-#if MTOTS_ENABLE_ZIP
-  addNativeModuleZip();
 #endif
 
 #if MTOTS_ENABLE_FONT

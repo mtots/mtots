@@ -1,6 +1,5 @@
 #include "mtots_m_data.h"
 
-#include "mtots_bundle.h"
 #include "mtots_vm.h"
 
 static void blackenDataSource(ObjNative *n) {
@@ -14,10 +13,6 @@ static void blackenDataSource(ObjNative *n) {
       break;
     case DATA_SOURCE_FILE:
       markString(dataSource->as.file.path);
-      break;
-    case DATA_SOURCE_BUNDLE:
-      markString(dataSource->as.bundle.src);
-      markString(dataSource->as.bundle.path);
       break;
     default:
       panic("Invalid DataSourceType %d", dataSource->type);
@@ -81,14 +76,6 @@ ObjDataSource *newDataSourceFromFile(String *filePath) {
   return ds;
 }
 
-ObjDataSource *newDataSourceFromBundle(String *src, String *path) {
-  ObjDataSource *ds = NEW_NATIVE(ObjDataSource, &descriptorDataSource);
-  ds->type = DATA_SOURCE_BUNDLE;
-  ds->as.bundle.src = src;
-  ds->as.bundle.path = path;
-  return ds;
-}
-
 /*
  * Like 'dataSourceReadIntoBuffer', but
  *   - initializes the out Buffer (so the Buffer argument should be uninitialized), and
@@ -126,8 +113,6 @@ ubool dataSourceReadIntoBuffer(ObjDataSource *ds, Buffer *out) {
       return UTRUE;
     case DATA_SOURCE_FILE:
       return readFileIntoBuffer(ds->as.file.path->chars, out);
-    case DATA_SOURCE_BUNDLE:
-      return readBufferFromBundle(ds->as.bundle.src->chars, ds->as.bundle.path->chars, out);
     default:
       break;
   }
@@ -143,8 +128,6 @@ ubool dataSourceReadToString(ObjDataSource *ds, String **out) {
     case DATA_SOURCE_STRING:
       *out = ds->as.string;
       return UTRUE;
-    case DATA_SOURCE_BUNDLE:
-      return readStringFromBundle(ds->as.bundle.src->chars, ds->as.bundle.path->chars, out);
     default:
       break;
   }
@@ -253,16 +236,6 @@ static ubool implFromFile(i16 argc, Value *args, Value *out) {
 static CFunction funcFromFile = {
     implFromFile, "fromFile", 1, 0, argsStrings};
 
-static ubool implFromBundle(i16 argc, Value *args, Value *out) {
-  String *src = AS_STRING(args[0]);
-  String *path = AS_STRING(args[1]);
-  *out = DATA_SOURCE_VAL(newDataSourceFromBundle(src, path));
-  return UTRUE;
-}
-
-static CFunction funcFromBundle = {
-    implFromBundle, "fromBundle", 2, 0, argsStrings};
-
 static ubool implToBuffer(i16 argc, Value *args, Value *out) {
   ObjBuffer *buffer = AS_BUFFER(args[0]);
   *out = DATA_SINK_VAL(newDataSinkFromBuffer(buffer));
@@ -357,7 +330,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
       &funcFromBuffer,
       &funcFromString,
       &funcFromFile,
-      &funcFromBundle,
       &funcToBuffer,
       &funcToFile,
       NULL,
@@ -366,7 +338,6 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
       &funcFromBuffer,
       &funcFromString,
       &funcFromFile,
-      &funcFromBundle,
       NULL,
   };
   CFunction *dataSourceMethods[] = {

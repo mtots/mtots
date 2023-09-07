@@ -3,7 +3,6 @@
 #include "mtots_vm.h"
 
 static ObjList *programArgs;
-static ubool isArchiveScript;
 
 void registerArgs(int argc, const char **argv) {
   int i;
@@ -13,17 +12,6 @@ void registerArgs(int argc, const char **argv) {
     programArgs->buffer[i] = STRING_VAL(internCString(argv[i]));
   }
 }
-
-void setIsArchiveScript(ubool value) {
-  isArchiveScript = value;
-}
-
-static ubool implIsArchiveScript(i16 argc, Value *args, Value *out) {
-  *out = BOOL_VAL(isArchiveScript);
-  return UTRUE;
-}
-
-static CFunction funcIsArchiveScript = {implIsArchiveScript, "isArchiveScript"};
 
 static ubool implGetMallocCount(i16 argc, Value *args, Value *out) {
   *out = NUMBER_VAL(vm.memory.mallocCount);
@@ -69,7 +57,6 @@ static CFunction funcEnableLogOnGC = {implEnableLogOnGC, "enableLogOnGC", 1, 0, 
 static ubool impl(i16 argc, Value *args, Value *out) {
   ObjModule *module = AS_MODULE(args[0]);
   CFunction *functions[] = {
-      &funcIsArchiveScript,
       &funcGetMallocCount,
       &funcEnableGCLogs,
       &funcEnableMallocFreeLogs,

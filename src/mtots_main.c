@@ -12,72 +12,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-static ubool endsWith(const char *string, const char *suffix) {
-  size_t stringLen = strlen(string), suffixLen = strlen(suffix);
-  if (suffixLen > stringLen) {
-    return UFALSE;
-  }
-  return strcmp(string + (stringLen - suffixLen), suffix) == 0;
-}
-
-static ubool getModuleNameFromArchivePath(const char *path, char **out) {
-  size_t start = strlen(path), end = start;
-  char *moduleName;
-
-  for (; start > 0 && path[start - 1] != PATH_SEP; start--)
-    ;
-  for (; end > 0 && path[end - 1] != '.'; end--)
-    ;
-
-  if (end == 0) {
-    runtimeError("Could not infer module name from archive name");
-    return UFALSE;
-  }
-
-  end--;
-  moduleName = (char *)malloc(end - start + strlen(".main") + 1);
-  memcpy(moduleName, path + start, end - start);
-  strcpy(moduleName + (end - start), ".main");
-  *out = moduleName;
-  return UTRUE;
-}
-
 static ubool runMainModule(int argc, const char **argv) {
   String *mainModuleName;
   registerArgs(argc - 1, argv + 1);
   mainModuleName = internCString("__main__");
   push(STRING_VAL(mainModuleName));
 
-  if (endsWith(argv[1], ".zip") || endsWith(argv[1], ".mtar")) {
-    /* We want to execute an mtots zip archive */
-    char *data, *dataPath, *moduleNameCString;
-
-    if (!openMtotsArchive(argv[1])) {
-      return UFALSE;
-    }
-
-    if (!getModuleNameFromArchivePath(argv[1], &moduleNameCString)) {
-      return UFALSE;
-    }
-
-    if (!readMtotsModuleFromArchive(moduleNameCString, &data, &dataPath)) {
-      free(moduleNameCString);
-      return UFALSE;
-    }
-    if (!data) {
-      runtimeError(
-          "File module %s not found in archive (%s)",
-          moduleNameCString, argv[1]);
-      free(moduleNameCString);
-      return UFALSE;
-    }
-    free(moduleNameCString);
-
-    setIsArchiveScript(UTRUE);
-    if (!importModuleWithPathAndSource(mainModuleName, dataPath, data, dataPath, data)) {
-      return UFALSE;
-    }
-  } else if (!importModuleWithPath(mainModuleName, argv[1])) {
+  if (!importModuleWithPath(mainModuleName, argv[1])) {
     return UFALSE;
   }
 

@@ -116,16 +116,6 @@ static ubool importModuleNoCache(String *moduleName) {
     return UTRUE;
   }
 
-#if MTOTS_ENABLE_ZIP
-  {
-    /* Check for a script in the archive */
-    char *moduleData, *path;
-    if (readMtotsModuleFromArchive(moduleName->chars, &moduleData, &path) && moduleData) {
-      return importModuleWithPathAndSource(moduleName, path, moduleData, path, moduleData);
-    }
-  }
-#endif
-
   {
     /* Otherwise, we're working with a script */
     const char *path = findMtotsModulePath(moduleName->chars);
