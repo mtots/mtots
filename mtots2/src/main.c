@@ -4,6 +4,7 @@
 #include "mtots1err.h"
 #include "mtots3parser.h"
 #include "mtots4eval.h"
+#include "mtots4globals.h"
 #include "mtots4readfile.h"
 
 int main(int argc, const char *argv[]) {
@@ -14,20 +15,24 @@ int main(int argc, const char *argv[]) {
     const char *path = argv[1];
     Ast *ast;
     char *source = readFileAsString(path);
+    Map *globals = newGlobals();
+    Map *scope = newMapWithParent(globals);
+    releaseMap(globals);
     if (!parse(source, &ast)) {
       free(source);
       panic("%s", getErrorString());
     }
     free(source);
-    if (!evalAst(ast)) {
+    if (!evalAst(ast, scope)) {
       freeAst(ast);
       panic("%s", getErrorString());
     }
     freeAst(ast);
-    freeGlobals();
+    mapClear(scope);
+    releaseMap(scope);
   }
 #if MTOTS_DEBUG_MEMORY_LEAK
-  freeAllClasses();
+  freeAllClassData();
   {
     size_t objectCount = printLeakedObjects();
     size_t astCount = printLeakedAsts();

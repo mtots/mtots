@@ -78,6 +78,7 @@ struct Class {
   ubool initialized;
 
 #if MTOTS_DEBUG_MEMORY_LEAK
+  ubool heapAllocated;
   Class *next;
 #endif
 };
@@ -176,7 +177,7 @@ void classAddInstanceMethod(Class *cls, Symbol *name, Value method);
 void initStaticClass(Class *cls);
 
 #if MTOTS_DEBUG_MEMORY_LEAK
-void freeAllClasses(void);
+void freeAllClassData(void);
 #endif
 
 #endif /*mtots2value_h*/

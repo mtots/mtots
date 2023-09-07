@@ -165,9 +165,10 @@ size_t printLeakedObjects(void) {
   size_t leakCount = 0;
   for (object = allObjects; object; object = object->next) {
     leakCount++;
-    printf("[DEBUGDEBUG] LEAKED OBJECT %s at %p (",
+    printf("[DEBUGDEBUG] LEAKED OBJECT %s at %p (refcnt = %lu, ",
            getObjectTypeName(object->type),
-           (void *)object);
+           (void *)object,
+           (unsigned long)object->refcnt);
     printReprValue(objectValue(object));
     printf(")\n");
   }

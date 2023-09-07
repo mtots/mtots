@@ -558,6 +558,7 @@ Class *newClass(const char *name) {
   cls->name = name;
   cls->initialized = UTRUE;
 #if MTOTS_DEBUG_MEMORY_LEAK
+  cls->heapAllocated = UTRUE;
   cls->next = allClasses;
   allClasses = cls;
 #endif
@@ -616,16 +617,19 @@ void initStaticClass(Class *cls) {
 
 #if MTOTS_DEBUG_MEMORY_LEAK
 
-static void freeClass(Class *cls) {
+static void freeClassData(Class *cls) {
   if (cls) {
-    freeClass(cls->next);
+    freeClassData(cls->next);
     releaseMap(cls->staticMethods);
     releaseMap(cls->instanceMethods);
+    if (cls->heapAllocated) {
+      free(cls);
+    }
   }
 }
 
-void freeAllClasses(void) {
-  freeClass(allClasses);
+void freeAllClassData(void) {
+  freeClassData(allClasses);
 }
 
 #endif

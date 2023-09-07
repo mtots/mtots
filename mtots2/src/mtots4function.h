@@ -12,7 +12,7 @@ Value functionValue(Function *function);
 ubool isFunction(Value value);
 Function *asFunction(Value value);
 
-Function *newFunction(AstFunction *ast);
+Function *newFunction(AstFunction *ast, Map *scope);
 
 Class *getFunctionClass(void);
 

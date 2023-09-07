@@ -1,6 +1,7 @@
 #include "mtots4function.h"
 
 #include "mtots1err.h"
+#include "mtots2map.h"
 #include "mtots2native.h"
 #include "mtots2string.h"
 #include "mtots3ast.h"
@@ -10,9 +11,13 @@ struct Function {
   Native native;
   Symbol *name;
   AstFunction *ast;
+  Map *scope;
 };
 
-static void freeFunction(Object *object) {}
+static void freeFunction(Object *object) {
+  Function *func = (Function *)object;
+  releaseMap(func->scope);
+}
 
 void retainFunction(Function *function) {
   retainObject((Object *)function);
@@ -37,35 +42,53 @@ Function *asFunction(Value value) {
   return (Function *)value.as.object;
 }
 
-Function *newFunction(AstFunction *ast) {
+Function *newFunction(AstFunction *ast, Map *scope) {
   Function *function = NEW_NATIVE(Function, getFunctionClass());
   function->name = ast->name;
   function->ast = ast;
+  function->scope = scope;
+  retainMap(scope);
   return function;
 }
 
-static Status functionCallImpl(i16 argc, Value *argv, Value *out) {
+static Status implCall(i16 argc, Value *argv, Value *out) {
   Function *func = asFunction(argv[-1]);
+  Map *scope = newMapWithParent(func->scope);
+  Parameter *param;
+  i16 i = 0;
   checkArity(argc, func->ast->arity, func->ast->maxArity);
-  /* TODO: new function call frame */
-  return evalAst(func->ast->body);
+  for ((void)(i = 0), param = func->ast->parameters; param; param = param->next, i++) {
+    if (i < argc) {
+      mapSet(scope, symbolValue(param->name), argv[i]);
+    } else if (isSentinel(param->defaultValue)) {
+      panic("param->defaultValue is a sentinel when it should not be");
+    } else {
+      mapSet(scope, symbolValue(param->name), param->defaultValue);
+    }
+  }
+  if (!evalAst(func->ast->body, scope)) {
+    releaseMap(scope);
+    return STATUS_ERR;
+  }
+  releaseMap(scope);
+  return STATUS_OK;
 }
 
-static CFunction functionCall = {"__call__", 0, I16_MAX, &functionCallImpl};
+static CFunction funcCall = {"__call__", 0, I16_MAX, &implCall};
 
-static Status functionReprImpl(i16 argc, Value *argv, Value *out) {
+static Status implRepr(i16 argc, Value *argv, Value *out) {
   Function *func = asFunction(argv[-1]);
   String *str = newString("");
-  msprintf(str, "<function %s>", symbolChars(func->name));
+  msprintf(str, "<function %s (scope=%p)>", symbolChars(func->name), (void *)func->scope);
   *out = stringValue(str);
   return STATUS_OK;
 }
 
-static CFunction functionRepr = {"__repr__", 0, 0, &functionReprImpl};
+static CFunction funcRepr = {"__repr__", 0, 0, &implRepr};
 
 static CFunction *methods[] = {
-    &functionCall,
-    &functionRepr,
+    &funcCall,
+    &funcRepr,
     NULL,
 };
 

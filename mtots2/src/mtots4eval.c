@@ -5,7 +5,6 @@
 #include "mtots1err.h"
 #include "mtots2map.h"
 #include "mtots4function.h"
-#include "mtots4globals.h"
 
 #define FRAME_STACK_SIZE 1024
 #define EVAL_STACK_SIZE 1024
@@ -18,21 +17,6 @@ static Value evalStack[EVAL_STACK_SIZE];
 static Frame frameStack[FRAME_STACK_SIZE];
 static u16 evalStackSize;
 static u16 frameStackSize;
-static Map *globals;
-
-void freeGlobals(void) {
-  if (globals) {
-    releaseMap(globals);
-    globals = NULL;
-  }
-}
-
-static Map *getGlobals(void) {
-  if (!globals) {
-    globals = newGlobals();
-  }
-  return globals;
-}
 
 /** NOTE: Retain/release not done automatically */
 static void evalStackPush(Value value, ubool retain) {
@@ -72,14 +56,14 @@ static void popFrame(void) {
   }
 }
 
-Status evalAst(Ast *node) {
+Status evalAst(Ast *node, Map *scope) {
   switch (node->type) {
     case AST_MODULE: {
       AstModule *block = (AstModule *)node;
       Ast *child;
       pushFrame();
       for (child = block->first; child; child = child->next) {
-        if (!evalAst(child)) {
+        if (!evalAst(child, scope)) {
           return STATUS_ERR;
         }
         evalStackPop(UTRUE);
@@ -94,12 +78,11 @@ Status evalAst(Ast *node) {
       return STATUS_OK;
     case AST_GET_VAR: {
       Symbol *symbol = ((AstGetVar *)node)->symbol;
-      Value value = mapGet(getGlobals(), symbolValue(symbol));
+      Value value = mapGet(scope, symbolValue(symbol));
       if (isSentinel(value)) {
-        printValue(mapValue(getGlobals()));
-        runtimeError("Variable '%s' not found",
-                     symbolChars(symbol));
-        return STATUS_ERR;
+        printValue(mapValue(scope));
+        panic("Variable '%s' not found",
+              symbolChars(symbol));
       }
       evalStackPush(value, UTRUE);
       return STATUS_OK;
@@ -107,10 +90,10 @@ Status evalAst(Ast *node) {
     case AST_SET_VAR: {
       AstSetVar *setVar = (AstSetVar *)node;
       Symbol *symbol = setVar->symbol;
-      if (!evalAst(setVar->value)) {
+      if (!evalAst(setVar->value, scope)) {
         return STATUS_ERR;
       }
-      mapSet(getGlobals(), symbolValue(symbol), evalStack[evalStackSize - 1]);
+      mapSet(scope, symbolValue(symbol), evalStack[evalStackSize - 1]);
       return STATUS_OK;
     }
     case AST_BLOCK: {
@@ -118,7 +101,7 @@ Status evalAst(Ast *node) {
       AstBlock *block = (AstBlock *)node;
       Ast *child;
       for (child = block->first; child; child = child->next) {
-        if (!evalAst(child)) {
+        if (!evalAst(child, scope)) {
           return STATUS_ERR;
         }
         evalStackPop(UTRUE);
@@ -129,7 +112,7 @@ Status evalAst(Ast *node) {
     case AST_UNOP: {
       AstUnop *op = (AstUnop *)node;
       Value arg, *ret;
-      if (!evalAst(op->arg)) {
+      if (!evalAst(op->arg, scope)) {
         return STATUS_ERR;
       }
       arg = evalStack[evalStackSize - 1];
@@ -147,10 +130,10 @@ Status evalAst(Ast *node) {
     case AST_BINOP: {
       AstBinop *op = (AstBinop *)node;
       Value lhs, rhs, *ret;
-      if (!evalAst(op->args)) {
+      if (!evalAst(op->args, scope)) {
         return STATUS_ERR;
       }
-      if (!evalAst(op->args->next)) {
+      if (!evalAst(op->args->next, scope)) {
         return STATUS_ERR;
       }
       lhs = evalStack[evalStackSize - 2];
@@ -186,7 +169,7 @@ Status evalAst(Ast *node) {
       switch (op->type) {
         case LOGICAL_NOT: {
           ubool result;
-          if (!evalAst(op->args)) {
+          if (!evalAst(op->args, scope)) {
             return STATUS_ERR;
           }
           result = !testValue(evalStack[evalStackSize - 1]);
@@ -195,31 +178,31 @@ Status evalAst(Ast *node) {
           return STATUS_OK;
         }
         case LOGICAL_OR:
-          if (!evalAst(op->args)) {
+          if (!evalAst(op->args, scope)) {
             return STATUS_ERR;
           }
           if (!testValue(evalStack[evalStackSize - 1])) {
             evalStackPop(UTRUE);
-            return evalAst(op->args->next);
+            return evalAst(op->args->next, scope);
           }
           return STATUS_OK;
         case LOGICAL_AND:
-          if (!evalAst(op->args)) {
+          if (!evalAst(op->args, scope)) {
             return STATUS_ERR;
           }
           if (testValue(evalStack[evalStackSize - 1])) {
             evalStackPop(UTRUE);
-            return evalAst(op->args->next);
+            return evalAst(op->args->next, scope);
           }
           return STATUS_OK;
         case LOGICAL_IF: {
           ubool condition;
-          if (!evalAst(op->args)) {
+          if (!evalAst(op->args, scope)) {
             return STATUS_ERR;
           }
           condition = testValue(evalStack[evalStackSize - 1]);
           evalStackPop(UTRUE);
-          return evalAst(condition ? op->args->next : op->args->next->next);
+          return evalAst(condition ? op->args->next : op->args->next->next, scope);
         }
       }
       panic("INVALID LOGICAL OPERATOR %d", op->type);
@@ -234,7 +217,7 @@ Status evalAst(Ast *node) {
       argc = -1; /* account for the func/receiver */
       for (argAst = call->funcAndArgs; argAst; argAst = argAst->next) {
         argc++;
-        if (!evalAst(argAst)) {
+        if (!evalAst(argAst, scope)) {
           return STATUS_ERR;
         }
       }
@@ -259,7 +242,7 @@ Status evalAst(Ast *node) {
       return STATUS_OK;
     }
     case AST_FUNCTION:
-      evalStackPush(functionValue(newFunction((AstFunction *)node)), UFALSE);
+      evalStackPush(functionValue(newFunction((AstFunction *)node, scope)), UFALSE);
       return STATUS_OK;
   }
   panic("Unrecognized AST type %d", node->type);

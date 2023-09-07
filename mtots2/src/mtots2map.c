@@ -29,6 +29,7 @@ struct Map {
   MapEntry *entries;
   MapEntry *first;
   MapEntry *last;
+  Map *parent;
   u32 hash;
   ubool frozen;
 };
@@ -36,6 +37,7 @@ struct Map {
 static void freeMap(Object *object) {
   Map *map = (Map *)object;
   MapEntry *entry;
+  releaseMap(map->parent);
   for (entry = map->first; entry; entry = entry->next) {
     releaseValue(entry->key);
     releaseValue(entry->value);
@@ -76,6 +78,9 @@ Map *asMap(Value value) {
 void reprMap(String *out, Map *map) {
   MapEntry *entry;
   msputc('{', out);
+  if (map->parent) {
+    msprintf(out, "parent=%p|", (void *)map->parent);
+  }
   for (entry = map->first; entry; entry = entry->next) {
     if (entry != map->first) {
       msputs(", ", out);
@@ -92,7 +97,7 @@ ubool eqMap(Map *a, Map *b) {
   if (a == b) {
     return UTRUE;
   }
-  if (a->size != b->size) {
+  if (a->size != b->size || a->parent != b->parent) {
     return UFALSE;
   }
   for (entry = a->first; entry; entry = entry->next) {
@@ -126,10 +131,15 @@ size_t lenMap(Map *map) {
   return map->size;
 }
 
-NODISCARD Map *newMap(void) {
+NODISCARD Map *newMapWithParent(Map *parent) {
   Map *map = NEW_OBJECT(Map, OBJECT_MAP);
-  map->object.type = OBJECT_MAP;
+  map->parent = parent;
+  retainMap(parent);
   return map;
+}
+
+NODISCARD Map *newMap(void) {
+  return newMapWithParent(NULL);
 }
 
 /* NOTE: capacity should always be non-zero.
@@ -200,15 +210,20 @@ static void adjustCapacity(Map *map, size_t capacity) {
 
 /** Retrieves an entry in the Map.
  * If the given key is not found, the sentinel value is returned.
+ * Will check parent Maps if not found in the current one.
  * NOTE: Returned value is NOT retained, since the Map holds a reference
  * to the values itself */
 Value mapGet(Map *map, Value key) {
-  MapEntry *entry;
-  if (map->size == 0) {
-    return sentinelValue();
+  for (; map; map = map->parent) {
+    if (map->size != 0) {
+      MapEntry *entry;
+      entry = findEntry(map->entries, map->capacity, key);
+      if (!isSentinel(entry->key) && !isSentinel(entry->value)) {
+        return entry->value;
+      }
+    }
   }
-  entry = findEntry(map->entries, map->capacity, key);
-  return entry->key.type == VALUE_SENTINEL ? sentinelValue() : entry->value;
+  return sentinelValue();
 }
 
 /** Overrides the mapping for the given key.
@@ -301,4 +316,15 @@ NODISCARD Value mapPop(Map *map, Value key) {
   entry->value = boolValue(UTRUE);
   map->size--;
   return ret;
+}
+
+void mapClear(Map *map) {
+  if (map->frozen) {
+    panic("Tried to clear a frozen Map");
+  }
+  releaseMap(map->parent);
+  map->parent = NULL;
+  while (map->first) {
+    releaseValue(mapPop(map, map->first->key));
+  }
 }

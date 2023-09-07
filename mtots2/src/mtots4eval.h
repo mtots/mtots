@@ -6,6 +6,6 @@
 void freeGlobals(void);
 
 /** Evaluates an AST node and pushes the result on to the stack */
-Status evalAst(Ast *node);
+Status evalAst(Ast *node, Map *scope);
 
 #endif /*mtots4eval_h*/
