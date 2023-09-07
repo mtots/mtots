@@ -176,6 +176,9 @@ void classAddInstanceMethod(Class *cls, Symbol *name, Value method);
 /** Populates the method `Map`s with the native CFunctions */
 void initStaticClass(Class *cls);
 
+/** Initializes all builtin class data */
+void initClassData(void);
+
 #if MTOTS_DEBUG_MEMORY_LEAK
 void freeAllClassData(void);
 #endif

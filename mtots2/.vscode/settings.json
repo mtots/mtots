@@ -41,7 +41,8 @@
         "__node_handle": "c",
         "mtots1err.h": "c",
         "mtots2map.h": "c",
-        "mtots3ast.h": "c"
+        "mtots3ast.h": "c",
+        "mtots.h": "c"
     },
     "C_Cpp.default.defines": [
         "MTOTS_DEBUG_MEMORY_LEAK=1"

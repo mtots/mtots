@@ -62,6 +62,7 @@ Class CLASS_CLASS = {
 
 #if MTOTS_DEBUG_MEMORY_LEAK
 static Class *allClasses;
+static size_t classDataRefcnt;
 #endif
 
 const char *getValueTypeName(ValueType type) {
@@ -615,6 +616,12 @@ void initStaticClass(Class *cls) {
   }
 }
 
+void initClassData(void) {
+#if MTOTS_DEBUG_MEMORY_LEAK
+  classDataRefcnt++;
+#endif
+}
+
 #if MTOTS_DEBUG_MEMORY_LEAK
 
 static void freeClassData(Class *cls) {
@@ -624,12 +631,21 @@ static void freeClassData(Class *cls) {
     releaseMap(cls->instanceMethods);
     if (cls->heapAllocated) {
       free(cls);
+    } else {
+      cls->staticMethods = NULL;
+      cls->instanceMethods = NULL;
+      cls->initialized = UFALSE;
     }
   }
 }
 
 void freeAllClassData(void) {
-  freeClassData(allClasses);
+  if (classDataRefcnt == 0) {
+    panic("freeAllClassData on zero refcnt");
+  }
+  classDataRefcnt--;
+  if (classDataRefcnt == 0) {
+    freeClassData(allClasses);
+  }
 }
-
 #endif
