@@ -245,9 +245,8 @@ const char *getKindName(Value value) {
           return AS_NATIVE_UNSAFE(value)->descriptor->name;
         case OBJ_UPVALUE:
           return "upvalue";
-        default:
-          return "<unrecognized-object>";
       }
+      return "<unrecognized-object>";
   }
   return "<unrecognized-value>";
 }

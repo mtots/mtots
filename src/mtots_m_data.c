@@ -7,16 +7,15 @@ static void blackenDataSource(ObjNative *n) {
   switch (dataSource->type) {
     case DATA_SOURCE_BUFFER:
       markObject((Obj *)dataSource->as.buffer);
-      break;
+      return;
     case DATA_SOURCE_STRING:
       markString(dataSource->as.string);
-      break;
+      return;
     case DATA_SOURCE_FILE:
       markString(dataSource->as.file.path);
-      break;
-    default:
-      panic("Invalid DataSourceType %d", dataSource->type);
+      return;
   }
+  panic("Invalid DataSourceType %d", dataSource->type);
 }
 
 static void blackenDataSink(ObjNative *n) {
@@ -24,13 +23,12 @@ static void blackenDataSink(ObjNative *n) {
   switch (dataSink->type) {
     case DATA_SINK_BUFFER:
       markObject((Obj *)dataSink->as.buffer);
-      break;
+      return;
     case DATA_SINK_FILE:
       markString(dataSink->as.file.path);
-      break;
-    default:
-      panic("Invalid DataSinkType %d", dataSink->type);
+      return;
   }
+  panic("Invalid DataSinkType %d", dataSink->type);
 }
 
 NativeObjectDescriptor descriptorDataSource = {
@@ -127,8 +125,6 @@ ubool dataSourceReadIntoBuffer(ObjDataSource *ds, Buffer *out) {
       return UTRUE;
     case DATA_SOURCE_FILE:
       return readFileIntoBuffer(ds->as.file.path->chars, out);
-    default:
-      break;
   }
   panic("Invalid DataSourceType %d", ds->type);
   return UFALSE; /* unreachable */
@@ -182,8 +178,6 @@ ubool dataSinkWriteBytes(ObjDataSink *ds, const u8 *data, size_t dataLen) {
       return UTRUE;
     case DATA_SINK_FILE:
       return writeFile((const void *)data, dataLen, ds->as.file.path->chars);
-    default:
-      break;
   }
   runtimeError("dataSinkWriteBytes: invalid data sink type %d", ds->type);
   return UFALSE;

@@ -58,7 +58,6 @@ u32 hashval(Value value) {
       }
   }
   panic("%s values are not hashable", getKindName(value));
-  return 0;
 }
 
 /* NOTE: capacity should always be non-zero.

@@ -52,6 +52,12 @@
     "cmake.configureOnOpen": false,
     "C_Cpp.default.mergeConfigurations": false,
     "C_Cpp.default.enableConfigurationSquiggles": true,
+    "[python]": {
+        "editor.formatOnSave": true,
+        "diffEditor.ignoreTrimWhitespace": false,
+        "editor.formatOnType": true,
+        "editor.wordBasedSuggestions": false
+    },
     "[c]": {
         "editor.formatOnSave": true,
         "editor.wordBasedSuggestions": false,

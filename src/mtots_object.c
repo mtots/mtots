@@ -655,42 +655,41 @@ void printObject(Value value) {
       } else {
         printf("<class %s>", AS_CLASS_UNSAFE(value)->name->chars);
       }
-      break;
+      return;
     case OBJ_CLOSURE:
       printFunction(AS_CLOSURE_UNSAFE(value)->thunk);
-      break;
+      return;
     case OBJ_THUNK:
       printFunction(AS_THUNK_UNSAFE(value));
-      break;
+      return;
     case OBJ_INSTANCE:
       printf("<%s instance>", AS_INSTANCE_UNSAFE(value)->klass->name->chars);
-      break;
+      return;
     case OBJ_BUFFER:
       printf("<buffer %lu>", (unsigned long)AS_BUFFER_UNSAFE(value)->handle.length);
-      break;
+      return;
     case OBJ_LIST:
       printf("<list %lu items>", (unsigned long)AS_LIST_UNSAFE(value)->length);
-      break;
+      return;
     case OBJ_FROZEN_LIST:
       printf("<frozenList %lu items>", (unsigned long)AS_FROZEN_LIST_UNSAFE(value)->length);
-      break;
+      return;
     case OBJ_DICT:
       printf("<dict>");
-      break;
+      return;
     case OBJ_FROZEN_DICT:
       printf("<frozendict>");
-      break;
+      return;
     case OBJ_NATIVE:
       printf(
           "<native-object %s>",
           AS_NATIVE_UNSAFE(value)->descriptor->klass->name->chars);
-      break;
+      return;
     case OBJ_UPVALUE:
       printf("<upvalue>");
-      break;
-    default:
-      abort();
+      return;
   }
+  abort();
 }
 
 const char *getObjectTypeName(ObjType type) {

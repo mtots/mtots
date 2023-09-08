@@ -106,7 +106,7 @@ static void blackenObject(Obj *object) {
       markString(klass->name);
       markMap(&klass->methods);
       markMap(&klass->staticMethods);
-      break;
+      return;
     }
     case OBJ_CLOSURE: {
       i16 i;
@@ -116,7 +116,7 @@ static void blackenObject(Obj *object) {
       for (i = 0; i < closure->upvalueCount; i++) {
         markObject((Obj *)closure->upvalues[i]);
       }
-      break;
+      return;
     }
     case OBJ_THUNK: {
       ObjThunk *thunk = (ObjThunk *)object;
@@ -127,28 +127,28 @@ static void blackenObject(Obj *object) {
       for (i = 0; i < thunk->defaultArgsCount; i++) {
         markValue(thunk->defaultArgs[i]);
       }
-      break;
+      return;
     }
     case OBJ_INSTANCE: {
       ObjInstance *instance = (ObjInstance *)object;
       markObject((Obj *)instance->klass);
       markMap(&instance->fields);
       markObject((Obj *)instance->retainList);
-      break;
+      return;
     }
     case OBJ_UPVALUE:
       markValue(((ObjUpvalue *)object)->closed);
-      break;
+      return;
     case OBJ_BUFFER:
       markValue(((ObjBuffer *)object)->memoryRegionOwner);
-      break;
+      return;
     case OBJ_LIST: {
       ObjList *list = (ObjList *)object;
       size_t i;
       for (i = 0; i < list->length; i++) {
         markValue(list->buffer[i]);
       }
-      break;
+      return;
     }
     case OBJ_FROZEN_LIST: {
       ObjFrozenList *frozenList = (ObjFrozenList *)object;
@@ -156,26 +156,25 @@ static void blackenObject(Obj *object) {
       for (i = 0; i < frozenList->length; i++) {
         markValue(frozenList->buffer[i]);
       }
-      break;
+      return;
     }
     case OBJ_DICT: {
       ObjDict *dict = (ObjDict *)object;
       markMap(&dict->map);
-      break;
+      return;
     }
     case OBJ_FROZEN_DICT: {
       ObjFrozenDict *dict = (ObjFrozenDict *)object;
       markMap(&dict->map);
-      break;
+      return;
     }
     case OBJ_NATIVE: {
       ObjNative *n = (ObjNative *)object;
       n->descriptor->blacken(n);
-      break;
+      return;
     }
-    default:
-      abort();
   }
+  abort();
 }
 
 static void freeObject(Obj *object) {
@@ -191,69 +190,68 @@ static void freeObject(Obj *object) {
       freeMap(&klass->methods);
       freeMap(&klass->staticMethods);
       FREE(ObjClass, object);
-      break;
+      return;
     }
     case OBJ_CLOSURE: {
       ObjClosure *closure = (ObjClosure *)object;
       FREE_ARRAY(ObjUpvalue *, closure->upvalues, closure->upvalueCount);
       FREE(ObjClosure, object);
-      break;
+      return;
     }
     case OBJ_THUNK: {
       ObjThunk *thunk = (ObjThunk *)object;
       freeChunk(&thunk->chunk);
       FREE_ARRAY(Value, thunk->defaultArgs, thunk->defaultArgsCount);
       FREE(ObjThunk, object);
-      break;
+      return;
     }
     case OBJ_INSTANCE: {
       ObjInstance *instance = (ObjInstance *)object;
       freeMap(&instance->fields);
       FREE(ObjInstance, object);
-      break;
+      return;
     }
     case OBJ_BUFFER: {
       ObjBuffer *buffer = (ObjBuffer *)object;
       freeBuffer(&buffer->handle);
       FREE(ObjBuffer, object);
-      break;
+      return;
     }
     case OBJ_LIST: {
       ObjList *list = (ObjList *)object;
       FREE_ARRAY(Value, list->buffer, list->capacity);
       FREE(ObjList, object);
-      break;
+      return;
     }
     case OBJ_FROZEN_LIST: {
       ObjFrozenList *frozenList = (ObjFrozenList *)object;
       FREE_ARRAY(Value, frozenList->buffer, frozenList->length);
       FREE(ObjFrozenList, object);
-      break;
+      return;
     }
     case OBJ_DICT: {
       ObjDict *dict = (ObjDict *)object;
       freeMap(&dict->map);
       FREE(ObjDict, object);
-      break;
+      return;
     }
     case OBJ_FROZEN_DICT: {
       ObjFrozenDict *dict = (ObjFrozenDict *)object;
       freeMap(&dict->map);
       FREE(ObjFrozenDict, object);
-      break;
+      return;
     }
     case OBJ_NATIVE: {
       ObjNative *n = (ObjNative *)object;
       n->descriptor->free(n);
       reallocate(object, n->descriptor->objectSize, 0);
-      break;
+      return;
     }
     case OBJ_UPVALUE:
       FREE(ObjUpvalue, object);
-      break;
-    default:
-      abort();
+      return;
   }
+  abort();
 }
 
 static void markRoots(void) {

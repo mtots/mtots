@@ -1,34 +1,138 @@
 """
-Test runner requires Python3
+Build mtots
 """
-import os, sys, subprocess
+import argparse
+import os
+import platform
+import subprocess
+import sys
+import typing
+
+REPO_DIR = os.path.dirname(os.path.realpath(__file__))
+
+if REPO_DIR != os.getcwd():
+    raise Exception(
+        "This make script is intended to be run from the repo directory")
+
+SYSTEM_WINDOWS = "Windows"
+SYSTEM_MACOS = "Darwin"
+SYSTEM_LINUX = "Linux"
+SYSTEM = platform.system()
+
+CLANG_BASE_FLAGS = [
+    # WARNINGS
+    "-Wall", "-Werror", "-Wpedantic", "-Weverything",
+    "-Wno-poison-system-directories", "-Wno-undef", "-Wno-unused-parameter",
+    "-Wno-padded", "-Wno-cast-align", "-Wno-float-equal", "-Wno-missing-field-initializers",
+    "-Wno-switch-enum",
+
+    # flags I want to eventually remove
+    "-Wno-implicit-int-conversion",
+    "-Wno-shorten-64-to-32",
+    "-Wno-sign-conversion",
+    "-Wno-float-conversion",
+    "-Wno-implicit-float-conversion",
+    "-Wno-double-promotion",
+    "-Wno-sign-compare",
+    "-Wno-conditional-uninitialized",
+    "-Wno-unused-macros",
+
+    # math library (not needed on clang, but gcc on Linux often needs it)
+    "-lm",
+
+    # language standard
+    "-std=c89",
+]
+
+CLANG_DEBUG_FLAGS = [
+    "-g", "-fsanitize=address", "-O0",
+]
+
+CLANG_RELEASE_FLAGS = [
+    "-O3", "-flto",
+    "-DMTOTS_RELEASE=1",
+]
+
+aparser = argparse.ArgumentParser()
+aparser.add_argument('--verbose', '-v', default=False, action='store_true')
+aparser.add_argument('--release', '-r', default=False, action='store_true')
+aparser.add_argument('--no-compile', dest='compile', default=True, action='store_false')
+aparser.add_argument('--test', '-t', default=False, action='store_true')
+args = aparser.parse_args()
+
+VERBOSE: bool = args.verbose
+RELEASE: bool = args.release
+COMPILE: bool = args.compile
+TEST: bool = args.test
 
 
-def main():
-    plat = (
-            'win' if os.name == 'nt' # windows
-            else '')
+def c_sources() -> typing.List[str]:
+    srcs: typing.List[str] = []
+    for filename in sorted(os.listdir("src")):
+        if filename.endswith('.c'):
+            srcs.append(os.path.join("src", filename))
+    return srcs
+
+
+def compile(release: bool):
+    """
+    Compile Mtots for the current platform and produces the binary at `mtots`
+    """
+    if VERBOSE:
+        print("COMPILING mtots")
+        print(f"  release = {release}")
+    args: typing.List[str] = []
+    if SYSTEM == SYSTEM_WINDOWS:
+        raise Exception("TODO: compile for Windows")
+    elif SYSTEM == SYSTEM_MACOS:
+        args.extend([
+            # using 'gcc' to access clang adds additional
+            # compatibility checks
+            "gcc",
+            *CLANG_BASE_FLAGS,
+            *(CLANG_RELEASE_FLAGS if release else CLANG_DEBUG_FLAGS),
+            *c_sources(),
+            "-omtots",
+        ])
+    elif SYSTEM == SYSTEM_LINUX:
+        raise Exception("TODO: compile for Linux")
+    else:
+        # Assume other UNIX
+        args.extend(["cc", *c_sources(), "-omtots"])
+    if VERBOSE:
+        print(f"  COMPILING-ARGS: ")
+        print(f"    {args[0]}")
+        for arg in args[1:]:
+            print(f"      {arg}")
+    subprocess.run(args, check=True)
+
+
+def test():
+    """
+    Test the `mtots` binary
+    """
+    plat = 'win' if os.name == 'nt' else ''
     ansiRed = '\033[31m'
     ansiGreen = '\033[32m'
     ansiReset = '\033[0m'
 
-    repoDir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    testDir = os.path.join(repoDir, 'test')
-    mtotsPath = os.path.join(repoDir, 'out', 'desktop', 'mtots')
+    testDir = os.path.join(REPO_DIR, 'test')
+    mtotsPath = os.path.join(REPO_DIR, 'mtots')
 
     dirnames = sorted(os.listdir(testDir))
 
     testSetCount = len(dirnames)
     testCount = passCount = 0
 
-    print(f'Found {testSetCount} test set(s)')
+    print("TESTING mtots")
+    print(f'  Found {testSetCount} test set(s)')
 
     for testSet in dirnames:
         testSetDir = os.path.join(testDir, testSet)
         filenames = sorted(os.listdir(testSetDir))
         scriptFilenames = [fn for fn in filenames if fn.endswith('.mtots')]
 
-        print(f'  {testSet}')
+        print(f'    {testSet}')
 
         for sfn in scriptFilenames:
             base = sfn[:-len('.mtots')]
@@ -67,13 +171,13 @@ def main():
                 with open(expectErrFn) as f:
                     expectErr = f.read()
 
-            sys.stdout.write(f'    testing {base}... ')
+            sys.stdout.write(f'      testing {base}... ')
 
             proc = subprocess.run(
-                [mtotsPath, os.path.relpath(scriptPath, repoDir)],
+                [mtotsPath, os.path.relpath(scriptPath, REPO_DIR)],
                 capture_output=True,
                 text=True,
-                cwd=repoDir)
+                cwd=REPO_DIR)
 
             if expectExit is not None and proc.returncode != expectExit:
                 print(ansiRed)
@@ -121,14 +225,19 @@ def main():
             testCount += 1
 
     if passCount == testCount:
-        print("ALL TESTS PASS")
+        print("  ALL TESTS PASS")
     else:
-        print(f"Some tests {ansiRed}failed{ansiReset}:")
-        print(f"  {passCount} / {testCount}")
-        print(f"  {testCount - passCount} test(s) failed")
+        print(f"  Some tests {ansiRed}failed{ansiReset}:")
+        print(f"    {passCount} / {testCount}")
+        print(f"    {testCount - passCount} test(s) failed")
+
 
     exit(0 if passCount == testCount else 1)
 
 
-if __name__ == '__main__':
-    main()
+
+if __name__ == "__main__":
+    if COMPILE:
+        compile(RELEASE)
+    if TEST:
+        test()
