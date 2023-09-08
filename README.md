@@ -27,155 +27,34 @@ The source for the extension is in this repository [here](vscode/).
 
 Currently, the main way to install Mtots is by building from source.
 
-## MacOS
+The build a minimal version of `mtots`, you should be able to simply compile all
+C files in `src` with any C89 compliant C compiler. For example, with `gcc`, you can
+simply run `gcc src/*.c` and `a.out` should be the interpreter.
 
-### Requirements
-* Xcode command line tools (specifically, `clang` should be available)
-* Python3 (system Python might work, but builds are tested with Python3.11)
+-------
 
-### Build and Installation Steps
-
-To build `mtots`, run the following command from the root of this repository:
-
-```
-python3 scripts/make-macos.py --verbose --release
-```
-
-If the command finishes successfully, it should produce the `mtots` binary at
-`out/desktop/mtots`.
-
-To test the `mtots` command you just built, run the following command:
+However to run `mtots` with all optimizations and features enabled,
+run the following command from the root of this repository:
 
 ```
-python3 scripts/run-tests.py
+python3 make.py --verbose --release --test
 ```
 
-To install the binary you just built and tested, run:
+If the command finishes successfully, it should have produced the `mtots` binary
+at the root of this repository.
 
-```
-echo "export PATH=\"\$PATH:$PWD/out/desktop\"" >> ~/.zshrc
-```
+To install the binary you just built and tested, you just need to add this repository
+to your `PATH`.
 
-or add the output directory to your `PATH` in some way.
+To do so,
 
-Now you should be able to use the `mtots` command to run Mtots scripts from the command line.
-
-## Windows
-
-### Requirements
-* Visual Studio 2022 (other versions of VS may work, but are not tested)
-* Python 3
-
-### Build and Installation Steps
-
-To build `mtots`, run the following command from the root of this repository:
-
-```
-python scripts\make-windows.py --verbose --release
-```
-
-If the command finishes successfully, it should produce the `mtots` binary at
-`out\desktop\mtots`.
-
-To test the `mtots` command you just built, run the following command:
-
-```
-python scripts\run-tests.py
-```
-
-To install the binary you just built and tested, add the folder containing the `mtots`
-executable you just created to the `PATH`.
-
-If you are not sure how to add a directory to the `PATH`, see
+* on **MacOS**, run
+  ```
+  echo "export PATH=\"\$PATH:$PWD\"" >> ~/.zshrc
+  ```
+* on **Linux**, run
+  ```
+  echo "export PATH=\"\$PATH:$PWD\"" >> ~/.bashrc
+  ```
+* on **Windows**, if you are not sure how to add a directory to the `PATH`, see
 https://learn.microsoft.com/en-us/previous-versions/office/developer/sharepoint-2010/ee537574(v=office.14)
-
-or seek help on a search engine
-
-## Linux
-
-### Requirements
-* `gcc` (On Debian/Ubuntu distros: `apt install gcc`)
-* `python3` (On Debian/Ubutnu distros: should come preinstalled)
-* SDL2-dev (On Debian/Ubuntu distros: `apt install libsdl2-dev`)
-  * SDL2 version must be at least `2.0.18` - version `2.26.5` and above is recommended
-    since the Windows and MacOS builds are fixed at version `2.26.5`.
-
-### Build and Installation Steps
-
-To build `mtots`, run the following command from the root of this repository:
-
-```
-python3 scripts/make-linux.py --verbose --release
-```
-
-If the command finishes successfully, it should produce the `mtots` binary at
-`out/desktop/mtots`.
-
-To test the `mtots` command you just built, run the following command:
-
-```
-python3 scripts/run-tests.py
-```
-
-To install the binary you just built and tested, add `$PWD/out/desktop` to the `PATH`
-in some way.
-
-If you are using `bash`, you can run the following command:
-
-```
-echo "export PATH=\"\$PATH:$PWD/out/desktop\"" >> ~/.bashrc
-```
-
-Now you should be able to use the `mtots` command to run Mtots scripts from the command line.
-
-## Webassembly and itch.io
-
-### Requirements
-* Emscripten (`emcc` needs to be on the path when `make-webgame.py` is called)
-* Python 3
-
-### Build and Installation Steps
-
-If you have made a game with Mtots and would like to share with your friends on itch.io,
-you can run the the `make-webgame.py` script to easily create a zip file you can upload
-that will let your friends play the game directly from the browser.
-
-Your game should be a directory containing at least a `main.mtots` file containing
-the entrypoint to your game.
-
-Then to create your zip file, run:
-
-```
-python3 scripts/make-webgame.py path/to/your/game/directory
-```
-
-And if the command runs successfully, you should have a file
-
-```
-out/webgame.zip
-```
-
-that you can upload to itch.io.
-
-For example, to package `ggdemo` for itch.io, you would run
-
-```
-python3 scripts/make-webgame.py apps/ggdemo
-```
-
-## C89 and manual builds
-
-You may have a bespoke environment not listed in any of the platforms above.
-
-Compiling all C files directly under `src` should produce a binary that runs
-the interpreter without any extensions.
-
-To include the extensions, you will want to look at each of the directories
-in `src/extensions` and add them one by one and enabling certain macro flags.
-Many of them will also require that you build 3rd party C libraries available
-in the `lib` directory.
-
-All of the 3rd party libraries in `lib` should be very straightfward to
-install except for SDL. SDL might be a bit hairy, but if you already have
-a development installation of SDL (that is, you can build SDL2 programs with
-C or C++), that should be enough.
