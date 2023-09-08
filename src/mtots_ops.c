@@ -639,7 +639,7 @@ ubool valueFastIterNext(Value *iterator, Value *out) {
 ubool valueGetItem(Value owner, Value key, Value *out) {
   if (IS_LIST(owner) && IS_NUMBER(key)) {
     ObjList *list = AS_LIST(owner);
-    size_t i = AS_INDEX(key, list->length);
+    size_t i = asIndex(key, list->length);
     *out = list->buffer[i];
     return UTRUE;
   }
@@ -655,7 +655,7 @@ ubool valueGetItem(Value owner, Value key, Value *out) {
 ubool valueSetItem(Value owner, Value key, Value value) {
   if (IS_LIST(owner) && IS_NUMBER(key)) {
     ObjList *list = AS_LIST(owner);
-    size_t i = AS_INDEX(key, list->length);
+    size_t i = asIndex(key, list->length);
     list->buffer[i] = value;
     return UTRUE;
   }

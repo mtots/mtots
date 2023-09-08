@@ -98,17 +98,14 @@ typedef struct ValueArray {
 #define IS_OBJ(value) ((value).type == VAL_OBJ)
 #define AS_OBJ(value) ((value).as.obj)
 
-size_t AS_SIZE(Value value);
-u32 AS_U32_BITS(Value value);
-u32 AS_U32(Value value);
-i32 AS_I32(Value value);
-u16 AS_U16(Value value);
-i16 AS_I16(Value value);
-u8 AS_U8(Value value);
-u8 AS_U8_CLAMP(Value value);
-size_t AS_INDEX(Value value, size_t length);
-size_t AS_INDEX_LOWER(Value value, size_t length);
-size_t AS_INDEX_UPPER(Value value, size_t length);
+size_t asSize(Value value);
+u32 asU32Bits(Value value);
+u32 asU32(Value value);
+i32 asI32(Value value);
+u8 asU8(Value value);
+size_t asIndex(Value value, size_t length);
+size_t asIndexLower(Value value, size_t length);
+size_t asIndexUpper(Value value, size_t length);
 
 ubool asBool(Value value);
 double asNumber(Value value);

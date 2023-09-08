@@ -20,8 +20,8 @@ static CFunction funcNumberToU32 = {
 };
 
 static ubool implNumberBase(i16 argCount, Value *args, Value *out) {
-  i32 value = AS_I32(args[-1]);
-  i32 base = AS_I32(args[0]);
+  i32 value = asI32(args[-1]);
+  i32 base = asI32(args[0]);
   Buffer buf;
   size_t start, end;
   if (base > 36 || base < 2) {

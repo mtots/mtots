@@ -51,7 +51,7 @@ static NativeObjectDescriptor descriptorFrozenListIterator = {
 static ubool implFrozenListMul(i16 argCount, Value *args, Value *out) {
   Value *buffer;
   ObjFrozenList *frozenList = AS_FROZEN_LIST(args[-1]);
-  size_t r, rep = AS_U32(args[0]);
+  size_t r, rep = asU32(args[0]);
   buffer = malloc(sizeof(Value) * frozenList->length * rep);
   for (r = 0; r < rep; r++) {
     size_t i;
@@ -74,7 +74,7 @@ static ubool implFrozenListGetItem(i16 argCount, Value *args, Value *out) {
     runtimeError("Expcted FrozenList index to be a number");
     return UFALSE;
   }
-  index = AS_I32(args[0]);
+  index = asI32(args[0]);
   if (index < 0) {
     index += frozenList->length;
   }

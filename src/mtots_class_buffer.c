@@ -61,7 +61,7 @@ static CFunction funcBufferLen = {implBufferLen, "__len__"};
 
 static ubool implBufferGetitem(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
-  size_t i = AS_INDEX(args[0], bo->handle.length);
+  size_t i = asIndex(args[0], bo->handle.length);
   *out = NUMBER_VAL(bo->handle.data[i]);
   return UTRUE;
 }
@@ -70,8 +70,8 @@ static CFunction funcBufferGetitem = {implBufferGetitem, "__getitem__", 1, 0, ar
 
 static ubool implBufferSetitem(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
-  size_t i = AS_INDEX(args[0], bo->handle.length);
-  u8 value = AS_U8(args[1]);
+  size_t i = asIndex(args[0], bo->handle.length);
+  u8 value = asU8(args[1]);
   bo->handle.data[i] = value;
   return UTRUE;
 }
@@ -80,9 +80,9 @@ static CFunction funcBufferSetitem = {implBufferSetitem, "__setitem__", 2, 0, ar
 
 static ubool implBufferMemset(i16 argc, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
-  u8 value = (u8)AS_U32_BITS(args[0]);
-  size_t start = argc > 1 && !IS_NIL(args[1]) ? AS_INDEX(args[1], bo->handle.length) : 0;
-  size_t end = argc > 2 && !IS_NIL(args[2]) ? AS_INDEX(args[2], bo->handle.length) : bo->handle.length;
+  u8 value = (u8)asU32Bits(args[0]);
+  size_t start = argc > 1 && !IS_NIL(args[1]) ? asIndex(args[1], bo->handle.length) : 0;
+  size_t end = argc > 2 && !IS_NIL(args[2]) ? asIndex(args[2], bo->handle.length) : bo->handle.length;
   if (start < end) {
     memset(bo->handle.data + start, value, end - start);
   }
@@ -117,8 +117,8 @@ static CFunction funcBufferUseBigEndian = {implBufferUseBigEndian, "useBigEndian
 static ubool implBufferView(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
   ObjBuffer *newBuffer;
-  size_t start = AS_INDEX(args[0], bo->handle.length);
-  size_t end = argCount > 1 && !IS_NIL(args[1]) ? AS_INDEX_UPPER(args[1], bo->handle.length) : bo->handle.length;
+  size_t start = asIndex(args[0], bo->handle.length);
+  size_t end = argCount > 1 && !IS_NIL(args[1]) ? asIndexUpper(args[1], bo->handle.length) : bo->handle.length;
   if (end < start) {
     runtimeError(
         "Buffer.view() start cannot come after end "
@@ -532,10 +532,10 @@ static CFunction funcBufferSetF64 = {
 
 static ubool implBufferMemcpy(i16 argCount, Value *args, Value *out) {
   ObjBuffer *buffer = asBuffer(args[-1]);
-  size_t dstIndex = AS_INDEX(args[0], buffer->handle.length);
+  size_t dstIndex = asIndex(args[0], buffer->handle.length);
   ObjBuffer *src = asBuffer(args[1]);
-  size_t start = argCount > 2 ? AS_INDEX(args[2], src->handle.length) : 0;
-  size_t end = argCount > 3 ? AS_INDEX_UPPER(args[3], src->handle.length) : src->handle.length;
+  size_t start = argCount > 2 ? asIndex(args[2], src->handle.length) : 0;
+  size_t end = argCount > 3 ? asIndexUpper(args[3], src->handle.length) : src->handle.length;
   if (start < end) {
     size_t len = end - start;
     if (start + len > src->handle.length) {
@@ -562,7 +562,7 @@ static CFunction funcBufferMemcpy = {
 };
 
 static ubool implBufferStaticFromSize(i16 argCount, Value *args, Value *out) {
-  size_t size = AS_U32(args[0]);
+  size_t size = asU32(args[0]);
   ObjBuffer *bo = newBuffer();
   push(BUFFER_VAL(bo));
   bufferSetLength(&bo->handle, size);

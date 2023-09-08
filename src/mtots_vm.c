@@ -491,8 +491,8 @@ static ubool run(void) {
       RETURN_RUNTIME_ERROR();                                  \
     }                                                          \
     {                                                          \
-      u32 b = AS_U32_BITS(pop());                              \
-      u32 a = AS_U32_BITS(pop());                              \
+      u32 b = asU32Bits(pop());                                \
+      u32 a = asU32Bits(pop());                                \
       push(NUMBER_VAL(a op b));                                \
     }                                                          \
   } while (0)
@@ -738,7 +738,7 @@ static ubool run(void) {
           runtimeError("Operand must be a number");
           RETURN_RUNTIME_ERROR();
         }
-        x = AS_U32_BITS(pop());
+        x = asU32Bits(pop());
         push(NUMBER_VAL(~x));
         break;
       }

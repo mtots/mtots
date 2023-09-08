@@ -204,7 +204,7 @@ static ubool implChr(i16 argCount, Value *args, Value *out) {
                  getKindName(args[0]));
     return UFALSE;
   }
-  c = (char)AS_I32(args[0]);
+  c = (char)asI32(args[0]);
   *out = STRING_VAL(internString(&c, 1));
   return UTRUE;
 }
@@ -414,7 +414,7 @@ static ubool implInt(i16 argCount, Value *args, Value *out) {
   }
   if (IS_STRING(arg)) {
     String *str = (String *)arg.as.obj;
-    i32 base = argCount > 1 ? AS_I32(args[1]) : 10;
+    i32 base = argCount > 1 ? asI32(args[1]) : 10;
     const char *ptr = str->chars;
     double value = 0, sign = 1;
     if (base < 2) {

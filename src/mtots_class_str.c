@@ -62,7 +62,7 @@ static CFunction funcStrGetByteLength = {implStrGetByteLength, "getByteLength"};
 
 static ubool implStrGetItem(i16 argCount, Value *args, Value *out) {
   String *str = asString(args[-1]);
-  size_t index = AS_INDEX(args[0], str->codePointCount);
+  size_t index = asIndex(args[0], str->codePointCount);
   if (str->utf32) {
     u32 codePoint = str->utf32[index];
     char buffer[5];
@@ -81,8 +81,8 @@ static CFunction funcStrGetItem = {implStrGetItem, "__getitem__", 1, 0, argsNumb
 
 static ubool implStrSlice(i16 argCount, Value *args, Value *out) {
   String *str = asString(args[-1]), *slicedStr;
-  i32 lower = IS_NIL(args[0]) ? 0 : AS_INDEX_LOWER(args[0], str->codePointCount);
-  i32 upper = IS_NIL(args[1]) ? str->codePointCount : AS_INDEX_UPPER(args[1], str->codePointCount);
+  i32 lower = IS_NIL(args[0]) ? 0 : asIndexLower(args[0], str->codePointCount);
+  i32 upper = IS_NIL(args[1]) ? str->codePointCount : asIndexUpper(args[1], str->codePointCount);
   if (!sliceString(str, lower, upper, &slicedStr)) {
     return UFALSE;
   }
@@ -345,7 +345,7 @@ static ubool padStringImpl(
 
 static ubool implStringPadX(ubool padStart, i16 argCount, Value *args, Value *out) {
   String *string = asString(args[-1]);
-  size_t width = AS_SIZE(args[0]);
+  size_t width = asSize(args[0]);
   String *padString = argCount > 1 ? asString(args[1]) : internCString(" ");
   Buffer buf;
   if (string->codePointCount >= width) {

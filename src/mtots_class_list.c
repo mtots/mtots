@@ -91,7 +91,7 @@ static CFunction funcListExtend = {implListExtend, "extend", 1};
 
 static ubool implListPop(i16 argCount, Value *args, Value *out) {
   ObjList *list = AS_LIST(args[-1]);
-  size_t index = argCount > 0 && !IS_NIL(args[0]) ? AS_INDEX(args[0], list->length) : list->length - 1;
+  size_t index = argCount > 0 && !IS_NIL(args[0]) ? asIndex(args[0], list->length) : list->length - 1;
   *out = list->buffer[index];
   for (; index + 1 < list->length; index++) {
     list->buffer[index] = list->buffer[index + 1];
@@ -108,7 +108,7 @@ static CFunction funcListPop = {implListPop, "pop", 0, 1, argsListPop};
 
 static ubool implListInsert(i16 argCount, Value *args, Value *out) {
   ObjList *list = AS_LIST(args[-1]);
-  size_t index = AS_INDEX(args[0], list->length + 1), i;
+  size_t index = asIndex(args[0], list->length + 1), i;
   Value value = args[1];
   listAppend(list, NIL_VAL());
   for (i = list->length - 1; i > index; i--) {
@@ -150,7 +150,7 @@ static CFunction funcListAdd = {
 static ubool implListMul(i16 argCount, Value *args, Value *out) {
   ObjList *list = AS_LIST(args[-1]);
   ObjList *result;
-  size_t r, rep = AS_U32(args[0]);
+  size_t r, rep = asU32(args[0]);
   result = newList(list->length * rep);
   for (r = 0; r < rep; r++) {
     size_t i;
@@ -172,7 +172,7 @@ static CFunction funcListMul = {
 
 static ubool implListGetItem(i16 argCount, Value *args, Value *out) {
   ObjList *list = AS_LIST(args[-1]);
-  i32 index = AS_INDEX(args[0], list->length);
+  i32 index = asIndex(args[0], list->length);
   *out = list->buffer[index];
   return UTRUE;
 }
@@ -187,7 +187,7 @@ static CFunction funcListGetItem = {
 
 static ubool implListSetItem(i16 argCount, Value *args, Value *out) {
   ObjList *list = AS_LIST(args[-1]);
-  i32 index = AS_INDEX(args[0], list->length);
+  i32 index = asIndex(args[0], list->length);
   list->buffer[index] = args[1];
   return UTRUE;
 }
@@ -202,8 +202,8 @@ static CFunction funcListSetItem = {
 
 static ubool implListSlice(i16 argCount, Value *args, Value *out) {
   ObjList *list = AS_LIST(args[-1]);
-  size_t start = IS_NIL(args[0]) ? 0 : AS_INDEX_LOWER(args[0], list->length);
-  size_t end = IS_NIL(args[1]) ? list->length : AS_INDEX_UPPER(args[1], list->length);
+  size_t start = IS_NIL(args[0]) ? 0 : asIndexLower(args[0], list->length);
+  size_t end = IS_NIL(args[1]) ? list->length : asIndexUpper(args[1], list->length);
   if (start > end) {
     runtimeError(
         "List.__slice__ start > end (%lu > %lu)",

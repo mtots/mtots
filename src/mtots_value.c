@@ -4,7 +4,7 @@
 
 #include "mtots_object.h"
 
-size_t AS_SIZE(Value value) {
+size_t asSize(Value value) {
   double x = asNumber(value);
 
   /* There are actually some size_t values that cannot fit into
@@ -19,7 +19,7 @@ size_t AS_SIZE(Value value) {
   return (size_t)x;
 }
 
-u32 AS_U32_BITS(Value value) {
+u32 asU32Bits(Value value) {
   double x = asNumber(value);
   if (x < 0) {
     /* In this case, we may be generous and allow interpretation
@@ -35,7 +35,7 @@ u32 AS_U32_BITS(Value value) {
   return (u32)x;
 }
 
-u32 AS_U32(Value value) {
+u32 asU32(Value value) {
   double x = asNumber(value);
   if (x < 0) {
     panic("Expected u32, but value is less than zero (%f)", x);
@@ -46,7 +46,7 @@ u32 AS_U32(Value value) {
   return (u32)x;
 }
 
-i32 AS_I32(Value value) {
+i32 asI32(Value value) {
   double x = asNumber(value);
   if (x < (double)I32_MIN) {
     i32 v = I32_MIN;
@@ -59,29 +59,7 @@ i32 AS_I32(Value value) {
   return (i32)x;
 }
 
-u16 AS_U16(Value value) {
-  double x = asNumber(value);
-  if (x < 0) {
-    panic("Expected u16, but value is less than zero (%f)", x);
-  }
-  if (x > U16_MAX) {
-    panic("Expected u16, but value is greater than U16_MAX (%f)", x);
-  }
-  return (u16)x;
-}
-
-i16 AS_I16(Value value) {
-  double x = asNumber(value);
-  if (x < I16_MIN) {
-    panic("Expected i16, but value is less than I16_MIN (%f)", x);
-  }
-  if (x > I16_MAX) {
-    panic("Expected i16, but value is greater than I16_MAX (%f)", x);
-  }
-  return (i16)x;
-}
-
-u8 AS_U8(Value value) {
+u8 asU8(Value value) {
   double x = asNumber(value);
   if (x < 0) {
     panic("Expected u8, but value is less than zero (%f)", x);
@@ -92,18 +70,7 @@ u8 AS_U8(Value value) {
   return (u8)x;
 }
 
-u8 AS_U8_CLAMP(Value value) {
-  double x = asNumber(value);
-  if (x < 0) {
-    return 0;
-  }
-  if (x > U8_MAX) {
-    return U8_MAX;
-  }
-  return (u8)x;
-}
-
-size_t AS_INDEX(Value value, size_t length) {
+size_t asIndex(Value value, size_t length) {
   double x = asNumber(value);
   if (x < 0) {
     x += length;
@@ -114,7 +81,7 @@ size_t AS_INDEX(Value value, size_t length) {
   return (size_t)x;
 }
 
-size_t AS_INDEX_LOWER(Value value, size_t length) {
+size_t asIndexLower(Value value, size_t length) {
   double x = asNumber(value);
   if (x < 0) {
     x += length;
@@ -127,7 +94,7 @@ size_t AS_INDEX_LOWER(Value value, size_t length) {
   return (size_t)x;
 }
 
-size_t AS_INDEX_UPPER(Value value, size_t length) {
+size_t asIndexUpper(Value value, size_t length) {
   double x = asNumber(value);
   if (x < 0) {
     x += length;
