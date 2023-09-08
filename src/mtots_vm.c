@@ -79,7 +79,7 @@ void addNativeModule(CFunction *func) {
 }
 
 static void initNoMethodClass(ObjClass **clsptr, const char *name) {
-  newBuiltinClass(name, clsptr, TYPE_PATTERN_ANY, NULL, NULL);
+  newBuiltinClass(name, clsptr, NULL, NULL);
 }
 
 void initVM(void) {
@@ -249,29 +249,6 @@ static ubool callCFunction(CFunction *cfunc, i16 argCount) {
     }
   }
   argsStart = vm.stackTop - argCount;
-  /* NOTE: Every call always has a value in the receiver slot -
-   * In particular, normal function calls will have the function
-   * itself in the receiver slot */
-  if (!typePatternMatch(cfunc->receiverType, argsStart[-1])) {
-    runtimeError(
-        "Invalid receiver passed to method %s() (expected %s, but got %s)",
-        cfunc->name,
-        getTypePatternName(cfunc->receiverType),
-        getKindName(argsStart[-1]));
-    return UFALSE;
-  }
-  if (cfunc->argTypes != NULL) {
-    size_t i;
-    for (i = 0; i < argCount; i++) {
-      if (!typePatternMatch(cfunc->argTypes[i], argsStart[i])) {
-        runtimeError(
-            "%s() expects %s for argument %d, but got %s",
-            cfunc->name, getTypePatternName(cfunc->argTypes[i]),
-            (int)i, getKindName(argsStart[i]));
-        return UFALSE;
-      }
-    }
-  }
   status = cfunc->body(argCount, argsStart, &result);
   if (!status) {
     return UFALSE;

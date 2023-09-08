@@ -145,7 +145,6 @@ void initFrozenListClass(void) {
     newBuiltinClass(
         "FrozenList",
         &vm.frozenListClass,
-        TYPE_PATTERN_FROZEN_LIST,
         methods,
         staticMethods);
   }

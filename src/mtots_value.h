@@ -6,33 +6,6 @@
 typedef struct CFunction CFunction;
 typedef struct Obj Obj;
 
-typedef enum TypePatternType {
-  TYPE_PATTERN_ANY = 0,
-  TYPE_PATTERN_STRING_OR_NIL,
-  TYPE_PATTERN_STRING,
-  TYPE_PATTERN_BUFFER_OR_NIL,
-  TYPE_PATTERN_BUFFER,
-  TYPE_PATTERN_BOOL,
-  TYPE_PATTERN_NUMBER_OR_NIL,
-  TYPE_PATTERN_NUMBER,
-  TYPE_PATTERN_LIST_OR_NIL,
-  TYPE_PATTERN_LIST,
-  TYPE_PATTERN_LIST_NUMBER_OR_NIL,
-  TYPE_PATTERN_LIST_NUMBER,
-  TYPE_PATTERN_LIST_LIST_NUMBER, /* List of List of Number */
-  TYPE_PATTERN_FROZEN_LIST,
-  TYPE_PATTERN_DICT,
-  TYPE_PATTERN_FROZEN_DICT,
-  TYPE_PATTERN_CLASS,
-  TYPE_PATTERN_NATIVE_OR_NIL,
-  TYPE_PATTERN_NATIVE
-} TypePatternType;
-
-typedef struct TypePattern {
-  TypePatternType type;
-  void *nativeTypeDescriptor;
-} TypePattern;
-
 typedef enum Sentinel {
   SentinelStopIteration,
   SentinelEmptyKey /* Used internally in Map */
@@ -78,8 +51,6 @@ struct CFunction {
   const char *name;
   i16 arity;
   i16 maxArity;
-  TypePattern *argTypes;
-  TypePattern receiverType;
 };
 
 typedef struct ValueArray {
@@ -136,9 +107,6 @@ void initValueArray(ValueArray *array);
 void writeValueArray(ValueArray *array, Value value);
 void freeValueArray(ValueArray *array);
 const char *getKindName(Value value);
-
-ubool typePatternMatch(TypePattern pattern, Value value);
-const char *getTypePatternName(TypePattern pattern);
 
 /* Just a convenience function to check that a Value is
  * equal to the given C-string */

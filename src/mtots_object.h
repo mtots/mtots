@@ -224,7 +224,6 @@ ObjClass *newNativeClass(
 ObjClass *newBuiltinClass(
     const char *name,
     ObjClass **slot,
-    TypePatternType typePatternType,
     CFunction **methods,
     CFunction **staticMethods);
 ObjClosure *newClosure(ObjThunk *function, ObjModule *module);

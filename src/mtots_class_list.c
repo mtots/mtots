@@ -100,11 +100,7 @@ static ubool implListPop(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static TypePattern argsListPop[] = {
-    {TYPE_PATTERN_NUMBER_OR_NIL},
-};
-
-static CFunction funcListPop = {implListPop, "pop", 0, 1, argsListPop};
+static CFunction funcListPop = {implListPop, "pop", 0, 1};
 
 static ubool implListInsert(i16 argCount, Value *args, Value *out) {
   ObjList *list = asList(args[-1]);
@@ -118,12 +114,7 @@ static ubool implListInsert(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static TypePattern argsListInsert[] = {
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_ANY},
-};
-
-static CFunction funcListInsert = {implListInsert, "insert", 2, 0, argsListInsert};
+static CFunction funcListInsert = {implListInsert, "insert", 2};
 
 static ubool implListAdd(i16 argCount, Value *args, Value *out) {
   ObjList *list = asList(args[-1]);
@@ -275,7 +266,7 @@ void initListClass(void) {
                   &funcInstantiateList,
                   NULL,
               };
-    newBuiltinClass("List", &vm.listClass, TYPE_PATTERN_LIST, methods, staticMethods);
+    newBuiltinClass("List", &vm.listClass, methods, staticMethods);
   }
 
   {

@@ -67,7 +67,6 @@ void initNumberClass(void) {
   newBuiltinClass(
       "Number",
       &vm.numberClass,
-      TYPE_PATTERN_NUMBER,
       methods,
       NULL);
 }

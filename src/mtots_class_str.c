@@ -90,12 +90,7 @@ static ubool implStrSlice(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static TypePattern argsStrSlice[] = {
-    {TYPE_PATTERN_NUMBER_OR_NIL},
-    {TYPE_PATTERN_NUMBER_OR_NIL},
-};
-
-static CFunction funcStrSlice = {implStrSlice, "__slice__", 2, 0, argsStrSlice};
+static CFunction funcStrSlice = {implStrSlice, "__slice__", 2};
 
 static ubool implStrMod(i16 argCount, Value *args, Value *out) {
   const char *fmt = asString(args[-1])->chars;
@@ -353,34 +348,17 @@ static ubool implStringPadX(ubool padStart, i16 argCount, Value *args, Value *ou
   return UTRUE;
 }
 
-static TypePattern argsStringPadX[] = {
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_STRING},
-};
-
 static ubool implStringPadStart(i16 argCount, Value *args, Value *out) {
   return implStringPadX(UTRUE, argCount, args, out);
 }
 
-static CFunction funcStringPadStart = {
-    implStringPadStart,
-    "padStart",
-    1,
-    2,
-    argsStringPadX,
-};
+static CFunction funcStringPadStart = {implStringPadStart, "padStart", 1, 2};
 
 static ubool implStringPadEnd(i16 argCount, Value *args, Value *out) {
   return implStringPadX(UFALSE, argCount, args, out);
 }
 
-static CFunction funcStringPadEnd = {
-    implStringPadEnd,
-    "padEnd",
-    1,
-    2,
-    argsStringPadX,
-};
+static CFunction funcStringPadEnd = {implStringPadEnd, "padEnd", 1, 2};
 
 static ubool implStringStaticFromUTF8(i16 argc, Value *args, Value *out) {
   ObjBuffer *buffer = asBuffer(args[0]);
@@ -417,7 +395,6 @@ void initStringClass(void) {
     newBuiltinClass(
         "String",
         &vm.stringClass,
-        TYPE_PATTERN_STRING,
         methods,
         staticMethods);
   }

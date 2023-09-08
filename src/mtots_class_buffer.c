@@ -89,14 +89,7 @@ static ubool implBufferMemset(i16 argc, Value *args, Value *out) {
   return UTRUE;
 }
 
-static TypePattern argsBufferMemset[] = {
-    {TYPE_PATTERN_NUMBER_OR_NIL},
-    {TYPE_PATTERN_NUMBER_OR_NIL},
-    {TYPE_PATTERN_NUMBER},
-};
-
-static CFunction funcBufferMemset = {
-    implBufferMemset, "memset", 1, 3, argsBufferMemset};
+static CFunction funcBufferMemset = {implBufferMemset, "memset", 1, 3};
 
 static ubool implBufferUseLittleEndian(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -288,18 +281,7 @@ static ubool implBufferSetI8(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static TypePattern argsBufferSetI8[] = {
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_NUMBER},
-};
-
-static CFunction funcBufferSetI8 = {
-    implBufferSetI8,
-    "setI8",
-    2,
-    0,
-    argsBufferSetI8,
-};
+static CFunction funcBufferSetI8 = {implBufferSetI8, "setI8", 2};
 
 static ubool implBufferSetU8(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -307,18 +289,7 @@ static ubool implBufferSetU8(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static TypePattern argsBufferSetU8[] = {
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_NUMBER},
-};
-
-static CFunction funcBufferSetU8 = {
-    implBufferSetU8,
-    "setU8",
-    2,
-    0,
-    argsBufferSetU8,
-};
+static CFunction funcBufferSetU8 = {implBufferSetU8, "setU8", 2};
 
 static ubool implBufferSetI16(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -326,18 +297,7 @@ static ubool implBufferSetI16(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static TypePattern argsBufferSetI16[] = {
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_NUMBER},
-};
-
-static CFunction funcBufferSetI16 = {
-    implBufferSetI16,
-    "setI16",
-    2,
-    0,
-    argsBufferSetI16,
-};
+static CFunction funcBufferSetI16 = {implBufferSetI16, "setI16", 2};
 
 static ubool implBufferSetU16(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -345,18 +305,7 @@ static ubool implBufferSetU16(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static TypePattern argsBufferSetU16[] = {
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_NUMBER},
-};
-
-static CFunction funcBufferSetU16 = {
-    implBufferSetU16,
-    "setU16",
-    2,
-    0,
-    argsBufferSetU16,
-};
+static CFunction funcBufferSetU16 = {implBufferSetU16, "setU16", 2};
 
 static ubool implBufferSetI32(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -364,18 +313,7 @@ static ubool implBufferSetI32(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static TypePattern argsBufferSetI32[] = {
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_NUMBER},
-};
-
-static CFunction funcBufferSetI32 = {
-    implBufferSetI32,
-    "setI32",
-    2,
-    0,
-    argsBufferSetI32,
-};
+static CFunction funcBufferSetI32 = {implBufferSetI32, "setI32", 2};
 
 static ubool implBufferSetU32(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -383,18 +321,7 @@ static ubool implBufferSetU32(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static TypePattern argsBufferSetU32[] = {
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_NUMBER},
-};
-
-static CFunction funcBufferSetU32 = {
-    implBufferSetU32,
-    "setU32",
-    2,
-    0,
-    argsBufferSetU32,
-};
+static CFunction funcBufferSetU32 = {implBufferSetU32, "setU32", 2};
 
 static ubool implBufferSetF32(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -402,18 +329,7 @@ static ubool implBufferSetF32(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static TypePattern argsBufferSetF32[] = {
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_NUMBER},
-};
-
-static CFunction funcBufferSetF32 = {
-    implBufferSetF32,
-    "setF32",
-    2,
-    0,
-    argsBufferSetF32,
-};
+static CFunction funcBufferSetF32 = {implBufferSetF32, "setF32", 2};
 
 static ubool implBufferSetF64(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -421,18 +337,7 @@ static ubool implBufferSetF64(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static TypePattern argsBufferSetF64[] = {
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_NUMBER},
-};
-
-static CFunction funcBufferSetF64 = {
-    implBufferSetF64,
-    "setF64",
-    2,
-    0,
-    argsBufferSetF64,
-};
+static CFunction funcBufferSetF64 = {implBufferSetF64, "setF64", 2};
 
 static ubool implBufferMemcpy(i16 argCount, Value *args, Value *out) {
   ObjBuffer *buffer = asBuffer(args[-1]);
@@ -450,20 +355,7 @@ static ubool implBufferMemcpy(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static TypePattern argsBufferMemcpy[] = {
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_BUFFER},
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_NUMBER},
-};
-
-static CFunction funcBufferMemcpy = {
-    implBufferMemcpy,
-    "memcpy",
-    2,
-    4,
-    argsBufferMemcpy,
-};
+static CFunction funcBufferMemcpy = {implBufferMemcpy, "memcpy", 2, 4};
 
 static ubool implBufferStaticFromSize(i16 argCount, Value *args, Value *out) {
   size_t size = asU32(args[0]);
@@ -562,5 +454,5 @@ void initBufferClass(void) {
       &funcInstantiateBuffer,
       NULL,
   };
-  newBuiltinClass("Buffer", &vm.bufferClass, TYPE_PATTERN_BUFFER, methods, staticMethods);
+  newBuiltinClass("Buffer", &vm.bufferClass, methods, staticMethods);
 }

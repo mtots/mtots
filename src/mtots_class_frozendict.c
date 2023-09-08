@@ -111,7 +111,7 @@ void initFrozenDictClass(void) {
         NULL,
     };
     newBuiltinClass(
-        "FrozenDict", &vm.frozenDictClass, TYPE_PATTERN_FROZEN_DICT, methods, NULL);
+        "FrozenDict", &vm.frozenDictClass, methods, NULL);
   }
 
   {

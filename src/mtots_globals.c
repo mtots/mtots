@@ -462,12 +462,7 @@ static ubool implInt(i16 argCount, Value *args, Value *out) {
   return UFALSE;
 }
 
-static TypePattern argsInt[] = {
-    {TYPE_PATTERN_ANY},
-    {TYPE_PATTERN_NUMBER},
-};
-
-static CFunction funcInt = {implInt, "int", 1, 2, argsInt};
+static CFunction funcInt = {implInt, "int", 1, 2};
 
 static ubool implIsClose(i16 argc, Value *args, Value *out) {
   Value a = args[0];
@@ -484,14 +479,7 @@ static ubool implIsClose(i16 argc, Value *args, Value *out) {
   return UFALSE;
 }
 
-static TypePattern argsIsClose[] = {
-    {TYPE_PATTERN_ANY},
-    {TYPE_PATTERN_ANY},
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_NUMBER},
-};
-
-static CFunction funcIsClose = {implIsClose, "isClose", 2, 4, argsIsClose};
+static CFunction funcIsClose = {implIsClose, "isClose", 2, 4};
 
 static ubool implSin(i16 argCount, Value *args, Value *out) {
   *out = NUMBER_VAL(sin(asNumber(args[0])));

@@ -192,7 +192,7 @@ void initDictClass(void) {
                   &funcDictStaticFromPairs,
                   NULL,
               };
-    newBuiltinClass("Dict", &vm.dictClass, TYPE_PATTERN_DICT, methods, staticMethods);
+    newBuiltinClass("Dict", &vm.dictClass, methods, staticMethods);
   }
 
   {

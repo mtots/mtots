@@ -208,7 +208,6 @@ ObjClass *newClassForModule(ObjModule *module, const char *name) {
 
 static void addMethodsToNativeOrBuiltinClass(
     ObjClass *cls,
-    TypePatternType typePatternType,
     NativeObjectDescriptor *descriptor,
     CFunction **methods,
     CFunction **staticMethods) {
@@ -218,8 +217,6 @@ static void addMethodsToNativeOrBuiltinClass(
     for (function = methods; *function; function++) {
       String *name = internCString((*function)->name);
       push(STRING_VAL(name));
-      (*function)->receiverType.type = typePatternType;
-      (*function)->receiverType.nativeTypeDescriptor = descriptor;
       if (name == vm.callString) {
         cls->call = *function;
       } else if (name == vm.getattrString) {
@@ -254,21 +251,20 @@ ObjClass *newNativeClass(
   ObjClass *cls = descriptor->klass = module ? newClassForModule(module, descriptor->name) : newForeverClassFromCString(descriptor->name);
   cls->descriptor = descriptor;
   addMethodsToNativeOrBuiltinClass(
-      cls, TYPE_PATTERN_NATIVE, descriptor, methods, staticMethods);
+      cls, descriptor, methods, staticMethods);
   return cls;
 }
 
 ObjClass *newBuiltinClass(
     const char *name,
     ObjClass **slot,
-    TypePatternType typePatternType,
     CFunction **methods,
     CFunction **staticMethods) {
   ObjClass *cls = newForeverClassFromCString(name);
   *slot = cls;
   cls->isBuiltinClass = UTRUE;
   addMethodsToNativeOrBuiltinClass(
-      cls, typePatternType, NULL, methods, staticMethods);
+      cls, NULL, methods, staticMethods);
   return cls;
 }
 
