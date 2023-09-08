@@ -11,6 +11,8 @@ typedef struct ObjStringBuilder {
   Buffer buf;
 } ObjStringBuilder;
 
+ObjStringBuilder *asStringBuilder(Value value);
+
 void initStringBuilderClass(void);
 
 ObjStringBuilder *newStringBuilder(void);

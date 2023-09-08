@@ -89,7 +89,7 @@ static ubool importModuleNoCache(String *moduleName) {
     if (IS_CFUNCTION(nativeModuleThunkValue)) {
       Value result = NIL_VAL(), *stackStart;
       CFunction *nativeModuleThunk;
-      nativeModuleThunk = AS_CFUNCTION(nativeModuleThunkValue);
+      nativeModuleThunk = nativeModuleThunkValue.as.cfunction;
       module = newModule(moduleName, UFALSE);
       moduleValue = MODULE_VAL(module);
       push(MODULE_VAL(module));

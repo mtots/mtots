@@ -36,13 +36,12 @@ static CFunction funcStringBuilderClear = {
 
 static ubool implStringBuilderAdd(i16 argCount, Value *args, Value *out) {
   ObjStringBuilder *sb = AS_STRING_BUILDER(args[-1]);
-  String *string = AS_STRING(args[0]);
+  String *string = asString(args[0]);
   bputstrlen(&sb->buf, string->chars, string->byteLength);
   return UTRUE;
 }
 
-static CFunction funcStringBuilderAdd = {
-    implStringBuilderAdd, "add", 1, 0, argsStrings};
+static CFunction funcStringBuilderAdd = {implStringBuilderAdd, "add", 1, 0};
 
 static ubool implStringBuilderAddBase64(i16 argCount, Value *args, Value *out) {
   ObjStringBuilder *sb = AS_STRING_BUILDER(args[-1]);
@@ -72,6 +71,13 @@ static ubool implStringBuilderBuild(i16 argCount, Value *args, Value *out) {
 }
 
 static CFunction funcStringBuilderBuild = {implStringBuilderBuild, "build"};
+
+ObjStringBuilder *asStringBuilder(Value value) {
+  if (!IS_STRING_BUILDER(value)) {
+    panic("Expected StringBuilder but got %s", getKindName(value));
+  }
+  return (ObjStringBuilder *)value.as.obj;
+}
 
 void initStringBuilderClass(void) {
   CFunction *methods[] = {

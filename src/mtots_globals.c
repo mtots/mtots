@@ -213,12 +213,7 @@ static CFunction cfunctionChr = {implChr, "chr", 1};
 
 static ubool implOrd(i16 argCount, Value *args, Value *out) {
   String *str;
-  if (!IS_STRING(args[0])) {
-    runtimeError("ord() requires a string but got %s",
-                 getKindName(args[0]));
-    return UFALSE;
-  }
-  str = AS_STRING(args[0]);
+  str = asString(args[0]);
   if (str->byteLength != 1) {
     runtimeError(
         "ord() requires a string of length 1 but got a string of length %lu",
@@ -320,11 +315,7 @@ static ubool implPrint(i16 argCount, Value *args, Value *out) {
   if (!implStr(argCount, args, &strVal)) {
     return UFALSE;
   }
-  if (!IS_STRING(strVal)) {
-    runtimeError("'str' returned a non-string value");
-    return UFALSE;
-  }
-  oprintln("%s", AS_STRING(strVal)->chars);
+  oprintln("%s", asString(strVal)->chars);
   return UTRUE;
 }
 
@@ -370,7 +361,7 @@ static ubool implFloat(i16 argCount, Value *args, Value *out) {
     return UTRUE;
   }
   if (IS_STRING(arg)) {
-    String *str = AS_STRING(arg);
+    String *str = (String *)arg.as.obj;
     const char *ptr = str->chars;
     ubool decimalPoint = UFALSE;
     if (*ptr == '-' || *ptr == '+') {
@@ -422,7 +413,7 @@ static ubool implInt(i16 argCount, Value *args, Value *out) {
     return UTRUE;
   }
   if (IS_STRING(arg)) {
-    String *str = AS_STRING(arg);
+    String *str = (String *)arg.as.obj;
     i32 base = argCount > 1 ? AS_I32(args[1]) : 10;
     const char *ptr = str->chars;
     double value = 0, sign = 1;

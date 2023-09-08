@@ -42,7 +42,7 @@ static NativeObjectDescriptor descriptorStringIterator = {
 };
 
 static ubool implStringIter(i16 argCount, Value *args, Value *out) {
-  String *string = AS_STRING(args[-1]);
+  String *string = asString(args[-1]);
   ObjStringIterator *iterator = NEW_NATIVE(ObjStringIterator, &descriptorStringIterator);
   iterator->string = string;
   iterator->i = 0;
@@ -53,7 +53,7 @@ static ubool implStringIter(i16 argCount, Value *args, Value *out) {
 static CFunction funcStringIter = {implStringIter, "__iter__"};
 
 static ubool implStrGetByteLength(i16 argCount, Value *args, Value *out) {
-  String *str = AS_STRING(args[-1]);
+  String *str = asString(args[-1]);
   *out = NUMBER_VAL(str->byteLength);
   return UTRUE;
 }
@@ -61,7 +61,7 @@ static ubool implStrGetByteLength(i16 argCount, Value *args, Value *out) {
 static CFunction funcStrGetByteLength = {implStrGetByteLength, "getByteLength"};
 
 static ubool implStrGetItem(i16 argCount, Value *args, Value *out) {
-  String *str = AS_STRING(args[-1]);
+  String *str = asString(args[-1]);
   size_t index = AS_INDEX(args[0], str->codePointCount);
   if (str->utf32) {
     u32 codePoint = str->utf32[index];
@@ -80,7 +80,7 @@ static ubool implStrGetItem(i16 argCount, Value *args, Value *out) {
 static CFunction funcStrGetItem = {implStrGetItem, "__getitem__", 1, 0, argsNumbers};
 
 static ubool implStrSlice(i16 argCount, Value *args, Value *out) {
-  String *str = AS_STRING(args[-1]), *slicedStr;
+  String *str = asString(args[-1]), *slicedStr;
   i32 lower = IS_NIL(args[0]) ? 0 : AS_INDEX_LOWER(args[0], str->codePointCount);
   i32 upper = IS_NIL(args[1]) ? str->codePointCount : AS_INDEX_UPPER(args[1], str->codePointCount);
   if (!sliceString(str, lower, upper, &slicedStr)) {
@@ -98,8 +98,8 @@ static TypePattern argsStrSlice[] = {
 static CFunction funcStrSlice = {implStrSlice, "__slice__", 2, 0, argsStrSlice};
 
 static ubool implStrMod(i16 argCount, Value *args, Value *out) {
-  const char *fmt = AS_CSTRING(args[-1]);
-  ObjList *arglist = AS_LIST(args[0]);
+  const char *fmt = asString(args[-1])->chars;
+  ObjList *arglist = asList(args[0]);
   Buffer buf;
 
   initBuffer(&buf);
@@ -114,11 +114,7 @@ static ubool implStrMod(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static TypePattern argsStrMod[] = {
-    {TYPE_PATTERN_LIST},
-};
-
-static CFunction funcStrMod = {implStrMod, "__mod__", 1, 0, argsStrMod};
+static CFunction funcStrMod = {implStrMod, "__mod__", 1, 0};
 
 static char DEFAULT_STRIP_SET[] = " \t\r\n";
 
@@ -132,12 +128,12 @@ static ubool containsChar(const char *charSet, char ch) {
 }
 
 static ubool implStrStrip(i16 argCount, Value *args, Value *out) {
-  String *str = AS_STRING(args[-1]);
+  String *str = asString(args[-1]);
   const char *stripSet = DEFAULT_STRIP_SET;
   const char *start = str->chars;
   const char *end = str->chars + str->byteLength;
   if (argCount > 0) {
-    stripSet = AS_STRING(args[0])->chars;
+    stripSet = asString(args[0])->chars;
   }
   while (start < end && containsChar(stripSet, start[0])) {
     start++;
@@ -175,9 +171,9 @@ static size_t cStrReplace(
 }
 
 static ubool implStrReplace(i16 argCount, Value *args, Value *out) {
-  String *orig = AS_STRING(args[-1]);
-  String *oldstr = AS_STRING(args[0]);
-  String *newstr = AS_STRING(args[1]);
+  String *orig = asString(args[-1]);
+  String *oldstr = asString(args[0]);
+  String *newstr = asString(args[1]);
   size_t len = cStrReplace(orig->chars, oldstr->chars, newstr->chars, NULL);
   char *chars = malloc(sizeof(char) * (len + 1));
   cStrReplace(orig->chars, oldstr->chars, newstr->chars, chars);
@@ -190,7 +186,7 @@ static CFunction funcStrReplace = {implStrReplace, "replace", 2, 0,
                                    argsStrings};
 
 static ubool implStrJoin(i16 argCount, Value *args, Value *out) {
-  String *sep = AS_STRING(args[-1]);
+  String *sep = asString(args[-1]);
   ObjList *list = AS_LIST(args[0]);
   size_t i, len = (list->length - 1) * sep->byteLength;
   char *chars, *p;
@@ -201,11 +197,11 @@ static ubool implStrJoin(i16 argCount, Value *args, Value *out) {
           getKindName(list->buffer[i]));
       return UFALSE;
     }
-    len += AS_STRING(list->buffer[i])->byteLength;
+    len += asString(list->buffer[i])->byteLength;
   }
   chars = p = malloc(sizeof(char) * (len + 1));
   for (i = 0; i < list->length; i++) {
-    String *item = AS_STRING(list->buffer[i]);
+    String *item = asString(list->buffer[i]);
     if (i > 0) {
       memcpy(p, sep->chars, sep->byteLength);
       p += sep->byteLength;
@@ -237,7 +233,7 @@ static ubool implStringUpper(i16 argc, Value *args, Value *out) {
   /* Simple uppercase algorithm - converts ASCII lower case characters to their
    * corresponding uppercase characters */
   /* TODO: Consider uppercasing more generally with unicode as Python does. */
-  String *string = AS_STRING(args[-1]);
+  String *string = asString(args[-1]);
   if (string->utf32) {
     /* TODO: */
     runtimeError("String.upper() not yet supported for non-ASCII strings");
@@ -267,7 +263,7 @@ static ubool implStringLower(i16 argc, Value *args, Value *out) {
   /* Simple lowercase algorithm - converts ASCII lower case characters to their
    * corresponding lowercase characters */
   /* TODO: Consider lowercasing more generally with unicode as Python does. */
-  String *string = AS_STRING(args[-1]);
+  String *string = asString(args[-1]);
   if (string->utf32) {
     /* TODO: */
     runtimeError("String.lower() not yet supported for non-ASCII strings");
@@ -294,8 +290,8 @@ static ubool implStringLower(i16 argc, Value *args, Value *out) {
 static CFunction funcStringLower = {implStringLower, "lower"};
 
 static ubool implStringStartsWith(i16 argc, Value *args, Value *out) {
-  String *string = AS_STRING(args[-1]);
-  String *prefix = AS_STRING(args[0]);
+  String *string = asString(args[-1]);
+  String *prefix = asString(args[0]);
   *out = BOOL_VAL(
       string->byteLength >= prefix->byteLength &&
       memcmp(string->chars, prefix->chars, prefix->byteLength) == 0);
@@ -305,8 +301,8 @@ static ubool implStringStartsWith(i16 argc, Value *args, Value *out) {
 static CFunction funcStringStartsWith = {implStringStartsWith, "startsWith", 1, 0, argsStrings};
 
 static ubool implStringEndsWith(i16 argc, Value *args, Value *out) {
-  String *string = AS_STRING(args[-1]);
-  String *suffix = AS_STRING(args[0]);
+  String *string = asString(args[-1]);
+  String *suffix = asString(args[0]);
   *out = BOOL_VAL(
       string->byteLength >= suffix->byteLength &&
       memcmp(
@@ -348,9 +344,9 @@ static ubool padStringImpl(
 }
 
 static ubool implStringPadX(ubool padStart, i16 argCount, Value *args, Value *out) {
-  String *string = AS_STRING(args[-1]);
+  String *string = asString(args[-1]);
   size_t width = AS_SIZE(args[0]);
-  String *padString = argCount > 1 ? AS_STRING(args[1]) : internCString(" ");
+  String *padString = argCount > 1 ? asString(args[1]) : internCString(" ");
   Buffer buf;
   if (string->codePointCount >= width) {
     *out = STRING_VAL(string);

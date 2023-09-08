@@ -24,7 +24,7 @@ u32 hashval(Value value) {
     case VAL_NIL:
       return 17;
     case VAL_BOOL:
-      return AS_BOOL(value) ? 1231 : 1237;
+      return value.as.boolean ? 1231 : 1237;
     case VAL_NUMBER: {
       double x = value.as.number;
       union {
@@ -42,11 +42,11 @@ u32 hashval(Value value) {
     case VAL_SYMBOL:
       return getSymbolHash(value.as.symbol);
     case VAL_STRING:
-      return AS_STRING(value)->hash;
+      return value.as.string->hash;
     case VAL_CFUNCTION:
       break;
     case VAL_SENTINEL:
-      return (u32)AS_SENTINEL(value);
+      return (u32)value.as.sentinel;
     case VAL_OBJ:
       switch (AS_OBJ(value)->type) {
         case OBJ_FROZEN_LIST:

@@ -206,63 +206,48 @@ ubool dataSinkWrite(ObjDataSink *sink, ObjDataSource *src) {
 }
 
 static ubool implFromBuffer(i16 argc, Value *args, Value *out) {
-  ObjBuffer *buffer = AS_BUFFER(args[0]);
+  ObjBuffer *buffer = asBuffer(args[0]);
   *out = DATA_SOURCE_VAL(newDataSourceFromBuffer(buffer));
   return UTRUE;
 }
 
-static TypePattern argsFromBuffer[] = {
-    {TYPE_PATTERN_BUFFER},
-};
-
-static CFunction funcFromBuffer = {
-    implFromBuffer, "fromBuffer", 1, 0, argsFromBuffer};
+static CFunction funcFromBuffer = {implFromBuffer, "fromBuffer", 1, 0};
 
 static ubool implFromString(i16 argc, Value *args, Value *out) {
-  String *path = AS_STRING(args[0]);
+  String *path = asString(args[0]);
   *out = DATA_SOURCE_VAL(newDataSourceFromString(path));
   return UTRUE;
 }
 
-static CFunction funcFromString = {
-    implFromString, "fromString", 1, 0, argsStrings};
+static CFunction funcFromString = {implFromString, "fromString", 1, 0};
 
 static ubool implFromFile(i16 argc, Value *args, Value *out) {
-  String *path = AS_STRING(args[0]);
+  String *path = asString(args[0]);
   *out = DATA_SOURCE_VAL(newDataSourceFromFile(path));
   return UTRUE;
 }
 
-static CFunction funcFromFile = {
-    implFromFile, "fromFile", 1, 0, argsStrings};
+static CFunction funcFromFile = {implFromFile, "fromFile", 1, 0};
 
 static ubool implToBuffer(i16 argc, Value *args, Value *out) {
-  ObjBuffer *buffer = AS_BUFFER(args[0]);
+  ObjBuffer *buffer = asBuffer(args[0]);
   *out = DATA_SINK_VAL(newDataSinkFromBuffer(buffer));
   return UTRUE;
 }
 
-static TypePattern argsToBuffer[] = {
-    {TYPE_PATTERN_BUFFER},
-};
+static CFunction funcToBuffer = {implToBuffer, "toBuffer", 1, 0};
 
-static CFunction funcToBuffer = {
-    implToBuffer, "toBuffer", 1, 0, argsToBuffer};
-
-static CFunction funcDataSinkStaticFromBuffer = {
-    implToBuffer, "fromBuffer", 1, 0, argsToBuffer};
+static CFunction funcDataSinkStaticFromBuffer = {implToBuffer, "fromBuffer", 1, 0};
 
 static ubool implToFile(i16 argc, Value *args, Value *out) {
-  String *filePath = AS_STRING(args[0]);
+  String *filePath = asString(args[0]);
   *out = DATA_SINK_VAL(newDataSinkFromFile(filePath));
   return UTRUE;
 }
 
-static CFunction funcToFile = {
-    implToFile, "toFile", 1, 0, argsStrings};
+static CFunction funcToFile = {implToFile, "toFile", 1, 0};
 
-static CFunction funcDataSinkStaticFromFile = {
-    implToFile, "fromFile", 1, 0, argsStrings};
+static CFunction funcDataSinkStaticFromFile = {implToFile, "fromFile", 1, 0};
 
 static ubool implDataSourceRead(i16 argc, Value *args, Value *out) {
   ObjDataSource *ds = AS_DATA_SOURCE(args[-1]);

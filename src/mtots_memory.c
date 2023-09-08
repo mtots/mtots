@@ -82,10 +82,10 @@ void markString(String *string) {
 void markValue(Value value) {
   switch (value.type) {
     case VAL_STRING:
-      markString(AS_STRING(value));
+      markString(value.as.string);
       break;
     case VAL_OBJ:
-      markObject(AS_OBJ(value));
+      markObject(value.as.obj);
       break;
     default:
       break;

@@ -21,38 +21,26 @@ static ubool implGetMallocCount(i16 argc, Value *args, Value *out) {
 static CFunction funcGetMallocCount = {implGetMallocCount, "getMallocCount"};
 
 static ubool implEnableGCLogs(i16 argc, Value *args, Value *out) {
-  vm.enableGCLogs = AS_BOOL(args[0]);
+  vm.enableGCLogs = asBool(args[0]);
   return UTRUE;
 }
 
-static TypePattern argsEnableGCLogs[] = {
-    {TYPE_PATTERN_BOOL},
-};
-
-static CFunction funcEnableGCLogs = {implEnableGCLogs, "enableGCLogs", 1, 0, argsEnableGCLogs};
+static CFunction funcEnableGCLogs = {implEnableGCLogs, "enableGCLogs", 1, 0};
 
 static ubool implEnableMallocFreeLogs(i16 argc, Value *args, Value *out) {
-  vm.enableMallocFreeLogs = AS_BOOL(args[0]);
+  vm.enableMallocFreeLogs = asBool(args[0]);
   return UTRUE;
 }
-
-static TypePattern argsEnableMallocFreeLogs[] = {
-    {TYPE_PATTERN_BOOL},
-};
 
 static CFunction funcEnableMallocFreeLogs = {
-    implEnableMallocFreeLogs, "enableMallocFreeLogs", 1, 0, argsEnableMallocFreeLogs};
+    implEnableMallocFreeLogs, "enableMallocFreeLogs", 1, 0};
 
 static ubool implEnableLogOnGC(i16 argc, Value *args, Value *out) {
-  vm.enableLogOnGC = AS_BOOL(args[0]);
+  vm.enableLogOnGC = asBool(args[0]);
   return UTRUE;
 }
 
-static TypePattern argsEnableLogOnGC[] = {
-    {TYPE_PATTERN_BOOL},
-};
-
-static CFunction funcEnableLogOnGC = {implEnableLogOnGC, "enableLogOnGC", 1, 0, argsEnableLogOnGC};
+static CFunction funcEnableLogOnGC = {implEnableLogOnGC, "enableLogOnGC", 1, 0};
 
 static ubool impl(i16 argc, Value *args, Value *out) {
   ObjModule *module = AS_MODULE(args[0]);

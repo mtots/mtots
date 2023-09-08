@@ -13,19 +13,19 @@ ubool valuesIs(Value a, Value b) {
     case VAL_NIL:
       return UTRUE;
     case VAL_BOOL:
-      return AS_BOOL(a) == AS_BOOL(b);
+      return a.as.boolean == b.as.boolean;
     case VAL_NUMBER:
       return a.as.number == b.as.number;
     case VAL_SYMBOL:
       return a.as.symbol == b.as.symbol;
     case VAL_STRING:
-      return AS_STRING(a) == AS_STRING(b);
+      return a.as.string == b.as.string;
     case VAL_CFUNCTION:
-      return AS_CFUNCTION(a) == AS_CFUNCTION(b);
+      return a.as.cfunction == b.as.cfunction;
     case VAL_SENTINEL:
-      return AS_SENTINEL(a) == AS_SENTINEL(b);
+      return a.as.sentinel == b.as.sentinel;
     case VAL_OBJ:
-      return AS_OBJ(a) == AS_OBJ(b);
+      return a.as.obj == b.as.obj;
   }
   abort();
   return UFALSE; /* Unreachable */
@@ -61,20 +61,20 @@ ubool valuesEqual(Value a, Value b) {
     case VAL_NIL:
       return UTRUE;
     case VAL_BOOL:
-      return AS_BOOL(a) == AS_BOOL(b);
+      return a.as.boolean == b.as.boolean;
     case VAL_NUMBER:
       return a.as.number == b.as.number;
     case VAL_SYMBOL:
       return a.as.symbol == b.as.symbol;
     case VAL_STRING:
-      return AS_STRING(a) == AS_STRING(b);
+      return a.as.string == b.as.string;
     case VAL_CFUNCTION:
-      return AS_CFUNCTION(a) == AS_CFUNCTION(b);
+      return a.as.cfunction == b.as.cfunction;
     case VAL_SENTINEL:
-      return AS_SENTINEL(a) == AS_SENTINEL(b);
+      return a.as.sentinel == b.as.sentinel;
     case VAL_OBJ: {
-      Obj *objA = AS_OBJ(a);
-      Obj *objB = AS_OBJ(b);
+      Obj *objA = a.as.obj;
+      Obj *objB = b.as.obj;
       if (objA->type != objB->type) {
         return UFALSE;
       }
@@ -134,7 +134,7 @@ ubool valueLessThan(Value a, Value b) {
     case VAL_NIL:
       return UFALSE;
     case VAL_BOOL:
-      return AS_BOOL(a) < AS_BOOL(b);
+      return a.as.boolean < b.as.boolean;
     case VAL_NUMBER:
       return a.as.number < b.as.number;
     case VAL_SYMBOL: {
@@ -148,8 +148,8 @@ ubool valueLessThan(Value a, Value b) {
     case VAL_STRING: {
       /* Use u8 instead of char when comparing to ensure that
        * larger code points compare larger */
-      String *strA = AS_STRING(a);
-      String *strB = AS_STRING(b);
+      String *strA = a.as.string;
+      String *strB = b.as.string;
       size_t lenA = strA->byteLength;
       size_t lenB = strB->byteLength;
       size_t len = lenA < lenB ? lenA : lenB;
@@ -345,7 +345,7 @@ ubool valueRepr(Buffer *out, Value value) {
       bprintf(out, "nil");
       return UTRUE;
     case VAL_BOOL:
-      bprintf(out, AS_BOOL(value) ? "true" : "false");
+      bprintf(out, value.as.boolean ? "true" : "false");
       return UTRUE;
     case VAL_NUMBER:
       bputnumber(out, value.as.number);
@@ -354,7 +354,7 @@ ubool valueRepr(Buffer *out, Value value) {
       bprintf(out, "<Symbol %s>", getSymbolChars(value.as.symbol));
       return UTRUE;
     case VAL_STRING: {
-      String *str = AS_STRING(value);
+      String *str = value.as.string;
       bputchar(out, '"');
       if (!escapeString2(out, str->chars, str->byteLength, NULL)) {
         return UFALSE;
@@ -363,10 +363,10 @@ ubool valueRepr(Buffer *out, Value value) {
       return UTRUE;
     }
     case VAL_CFUNCTION:
-      bprintf(out, "<function %s>", AS_CFUNCTION(value)->name);
+      bprintf(out, "<function %s>", value.as.cfunction->name);
       return UTRUE;
     case VAL_SENTINEL:
-      bprintf(out, "<sentinel %d>", AS_SENTINEL(value));
+      bprintf(out, "<sentinel %d>", value.as.sentinel);
       return UTRUE;
     case VAL_OBJ: {
       Obj *obj = AS_OBJ(value);
@@ -399,7 +399,7 @@ ubool valueRepr(Buffer *out, Value value) {
                   getKindName(resultValue));
               return UFALSE;
             }
-            resultString = AS_STRING(resultValue);
+            resultString = resultValue.as.string;
             bputstrlen(out, resultString->chars, resultString->byteLength);
           } else {
             bprintf(out, "<%s instance>", AS_INSTANCE(value)->klass->name->chars);
@@ -476,7 +476,7 @@ ubool valueRepr(Buffer *out, Value value) {
                   getKindName(resultValue));
               return UFALSE;
             }
-            resultString = AS_STRING(resultValue);
+            resultString = resultValue.as.string;
             bputstrlen(out, resultString->chars, resultString->byteLength);
           } else {
             bprintf(out, "<%s native-instance>",
@@ -495,7 +495,7 @@ ubool valueRepr(Buffer *out, Value value) {
 
 ubool valueStr(Buffer *out, Value value) {
   if (IS_STRING(value)) {
-    String *string = AS_STRING(value);
+    String *string = value.as.string;
     bputstrlen(out, string->chars, string->byteLength);
     return UTRUE;
   }
@@ -547,7 +547,7 @@ ubool strMod(Buffer *out, const char *format, ObjList *args) {
 
 ubool valueLen(Value recv, size_t *out) {
   if (IS_STRING(recv)) {
-    *out = AS_STRING(recv)->codePointCount;
+    *out = recv.as.string->codePointCount;
     return UTRUE;
   } else if (IS_OBJ(recv)) {
     switch (AS_OBJ(recv)->type) {

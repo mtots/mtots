@@ -33,13 +33,10 @@ static ubool implGetcwd(i16 argCount, Value *args, Value *out) {
 #endif
 }
 
-static CFunction funcGetcwd = {
-    implGetcwd,
-    "getcwd",
-};
+static CFunction funcGetcwd = {implGetcwd, "getcwd"};
 
 static ubool implGetenv(i16 argCount, Value *args, Value *out) {
-  String *name = AS_STRING(args[0]);
+  String *name = asString(args[0]);
   const char *value = getenv(name->chars);
   if (value) {
     *out = STRING_VAL(internCString(value));
@@ -47,13 +44,7 @@ static ubool implGetenv(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcGetenv = {
-    implGetenv,
-    "getenv",
-    1,
-    0,
-    argsStrings,
-};
+static CFunction funcGetenv = {implGetenv, "getenv", 1, 0};
 
 static ubool implIsMacOS(i16 argCount, Value *args, Value *out) {
   *out = BOOL_VAL(

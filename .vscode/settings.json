@@ -45,7 +45,9 @@
         "random": "cpp",
         "ostream": "c",
         "cstdlib": "cpp",
-        "sstream": "c"
+        "sstream": "c",
+        "compare": "c",
+        "variant": "c"
     },
     "cmake.configureOnOpen": false,
     "C_Cpp.default.mergeConfigurations": false,

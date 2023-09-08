@@ -43,6 +43,27 @@ ubool IS_MODULE(Value value) {
   return IS_INSTANCE(value) && AS_INSTANCE(value)->klass->isModuleClass;
 }
 
+ObjModule *asModule(Value value) {
+  if (!IS_MODULE(value)) {
+    panic("Expected Module but got %s", getKindName(value));
+  }
+  return (ObjModule *)value.as.obj;
+}
+
+ObjBuffer *asBuffer(Value value) {
+  if (!IS_BUFFER(value)) {
+    panic("Expected Buffer but got %s", getKindName(value));
+  }
+  return (ObjBuffer *)value.as.obj;
+}
+
+ObjList *asList(Value value) {
+  if (!IS_LIST(value)) {
+    panic("Expected List but got %s", getKindName(value));
+  }
+  return (ObjList *)value.as.obj;
+}
+
 ObjModule *newModule(String *name, ubool includeGlobals) {
   ObjClass *klass;
   ObjModule *instance;

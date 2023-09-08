@@ -59,7 +59,7 @@ static void printStackToStringBuffer(Buffer *out) {
 void defineGlobal(const char *name, Value value) {
   push(STRING_VAL(internString(name, strlen(name))));
   push(value);
-  mapSetStr(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
+  mapSetStr(&vm.globals, vm.stack[0].as.string, vm.stack[1]);
   pop();
   pop();
 }
@@ -420,8 +420,8 @@ static ubool isFalsey(Value value) {
 
 static void concatenate(void) {
   String *result;
-  String *b = AS_STRING(peek(0));
-  String *a = AS_STRING(peek(1));
+  String *b = peek(0).as.string;
+  String *a = peek(1).as.string;
   size_t length = a->byteLength + b->byteLength;
   char *chars = malloc(sizeof(char) * (length + 1));
   memcpy(chars, a->chars, a->byteLength);
@@ -443,7 +443,7 @@ static ubool run(void) {
   (frame->ip += 2, (u16)((frame->ip[-2] << 8) | frame->ip[-1]))
 #define READ_CONSTANT() \
   (frame->closure->thunk->chunk.constants.values[READ_SHORT()])
-#define READ_STRING() AS_STRING(READ_CONSTANT())
+#define READ_STRING() (READ_CONSTANT().as.string)
 #define RETURN_RUNTIME_ERROR()                                          \
   do {                                                                  \
     TrySnapshot *snap;                                                  \
@@ -812,7 +812,7 @@ static ubool run(void) {
         if (!IS_STRING(peek(0))) {
           panic("Only strings can be raised right now");
         }
-        runtimeError("%s", AS_STRING(peek(0))->chars);
+        runtimeError("%s", peek(0).as.string->chars);
         RETURN_RUNTIME_ERROR();
       }
       case OP_GET_ITER: {
@@ -1002,7 +1002,7 @@ ubool interpret(const char *source, ObjModule *module) {
 }
 
 ubool valueIsCString(Value value, const char *string) {
-  return IS_STRING(value) && strcmp(AS_STRING(value)->chars, string) == 0;
+  return IS_STRING(value) && strcmp(value.as.string->chars, string) == 0;
 }
 
 void listAppend(ObjList *list, Value value) {
@@ -1076,7 +1076,7 @@ ubool callClosure(ObjClosure *closure, i16 argCount) {
  */
 static ubool callFunctionOrMethod(Value callable, i16 argCount, ubool consummate) {
   if (IS_CFUNCTION(callable)) {
-    CFunction *cfunc = AS_CFUNCTION(callable);
+    CFunction *cfunc = callable.as.cfunction;
     return callCFunction(cfunc, argCount);
   } else if (IS_OBJ(callable)) {
     switch (OBJ_TYPE(callable)) {

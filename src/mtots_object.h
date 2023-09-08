@@ -198,6 +198,10 @@ struct ObjInstance {
 
 ubool IS_MODULE(Value value);
 
+ObjModule *asModule(Value value);
+ObjBuffer *asBuffer(Value value);
+ObjList *asList(Value value);
+
 ObjModule *newModule(String *name, ubool includeGlobals);
 ObjModule *newModuleFromCString(const char *name, ubool includeGlobals);
 void moduleAddFunctions(ObjModule *module, CFunction **functions);

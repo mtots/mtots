@@ -54,7 +54,7 @@ static CFunction funcDump = {
     implDump, "dump", 2, 0, argsDump};
 
 static ubool implLoads(i16 argCount, Value *args, Value *out) {
-  String *str = AS_STRING(args[0]);
+  String *str = asString(args[0]);
   JSONParseState state;
   initJSONParseState(&state, str->chars);
   if (!parseJSON(&state)) {
@@ -64,7 +64,7 @@ static ubool implLoads(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcLoads = {implLoads, "loads", 1, 0, argsStrings};
+static CFunction funcLoads = {implLoads, "loads", 1, 0};
 
 static ubool implDumps(i16 argCount, Value *args, Value *out) {
   size_t len;

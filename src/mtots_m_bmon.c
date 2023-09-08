@@ -170,7 +170,7 @@ ubool bmonDump(Value value, Buffer *out) {
       bufferAddU8(out, TAG_NIL);
       return UTRUE;
     case VAL_BOOL:
-      bufferAddU8(out, AS_BOOL(value) ? TAG_TRUE : TAG_FALSE);
+      bufferAddU8(out, value.as.boolean ? TAG_TRUE : TAG_FALSE);
       return UTRUE;
     case VAL_NUMBER: {
       union {
@@ -184,7 +184,7 @@ ubool bmonDump(Value value, Buffer *out) {
       return UTRUE;
     }
     case VAL_STRING: {
-      String *string = AS_STRING(value);
+      String *string = (String *)value.as.obj;
       bufferAddU8(out, TAG_STRING);
       bufferAddU32(out, string->byteLength);
       bufferAddBytes(out, string->chars, string->byteLength);
