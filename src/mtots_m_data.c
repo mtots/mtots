@@ -55,6 +55,20 @@ Value DATA_SINK_VAL(ObjDataSink *ds) {
   return OBJ_VAL_EXPLICIT((Obj *)ds);
 }
 
+ObjDataSource *asDataSource(Value value) {
+  if (!IS_DATA_SOURCE(value)) {
+    panic("Expected DataSource but got %s", getKindName(value));
+  }
+  return (ObjDataSource *)value.as.obj;
+}
+
+ObjDataSink *asDataSink(Value value) {
+  if (!IS_DATA_SINK(value)) {
+    panic("Expected DataSink but got %s", getKindName(value));
+  }
+  return (ObjDataSink *)value.as.obj;
+}
+
 ObjDataSource *newDataSourceFromBuffer(ObjBuffer *buffer) {
   ObjDataSource *ds = NEW_NATIVE(ObjDataSource, &descriptorDataSource);
   ds->type = DATA_SOURCE_BUFFER;
@@ -250,20 +264,15 @@ static CFunction funcToFile = {implToFile, "toFile", 1, 0};
 static CFunction funcDataSinkStaticFromFile = {implToFile, "fromFile", 1, 0};
 
 static ubool implDataSourceRead(i16 argc, Value *args, Value *out) {
-  ObjDataSource *ds = AS_DATA_SOURCE(args[-1]);
-  ObjBuffer *buf = AS_BUFFER(args[0]);
+  ObjDataSource *ds = asDataSource(args[-1]);
+  ObjBuffer *buf = asBuffer(args[0]);
   return dataSourceReadIntoBuffer(ds, &buf->handle);
 }
 
-static TypePattern argsDataSourceRead[] = {
-    {TYPE_PATTERN_BUFFER},
-};
-
-static CFunction funcDataSourceRead = {
-    implDataSourceRead, "read", 1, 0, argsDataSourceRead};
+static CFunction funcDataSourceRead = {implDataSourceRead, "read", 1, 0};
 
 static ubool implDataSourceToBuffer(i16 argc, Value *args, Value *out) {
-  ObjDataSource *ds = AS_DATA_SOURCE(args[-1]);
+  ObjDataSource *ds = asDataSource(args[-1]);
   ObjBuffer *buf = newBuffer();
   ubool gcPause;
 
@@ -283,7 +292,7 @@ static ubool implDataSourceToBuffer(i16 argc, Value *args, Value *out) {
 static CFunction funcDataSourceToBuffer = {implDataSourceToBuffer, "toBuffer"};
 
 static ubool implDataSourceToString(i16 argc, Value *args, Value *out) {
-  ObjDataSource *ds = AS_DATA_SOURCE(args[-1]);
+  ObjDataSource *ds = asDataSource(args[-1]);
   String *string;
 
   if (!dataSourceReadToString(ds, &string)) {
@@ -297,20 +306,15 @@ static ubool implDataSourceToString(i16 argc, Value *args, Value *out) {
 static CFunction funcDataSourceToString = {implDataSourceToString, "toString"};
 
 static ubool implDataSinkWrite(i16 argc, Value *args, Value *out) {
-  ObjDataSink *sink = AS_DATA_SINK(args[-1]);
-  ObjDataSource *src = AS_DATA_SOURCE(args[0]);
+  ObjDataSink *sink = asDataSink(args[-1]);
+  ObjDataSource *src = asDataSource(args[0]);
   return dataSinkWrite(sink, src);
 }
 
-static TypePattern argsDataSinkWrite[] = {
-    {TYPE_PATTERN_NATIVE, &descriptorDataSource},
-};
-
-static CFunction funcDataSinkWrite = {
-    implDataSinkWrite, "write", 1, 0, argsDataSinkWrite};
+static CFunction funcDataSinkWrite = {implDataSinkWrite, "write", 1, 0};
 
 static ubool impl(i16 argCount, Value *args, Value *out) {
-  ObjModule *module = AS_MODULE(args[0]);
+  ObjModule *module = asModule(args[0]);
   CFunction *functions[] = {
       &funcFromBuffer,
       &funcFromString,

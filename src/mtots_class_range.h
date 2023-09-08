@@ -3,10 +3,7 @@
 
 #include "mtots_object.h"
 
-#define AS_RANGE(value) ((ObjRange *)AS_OBJ(value))
 #define IS_RANGE(value) (getNativeObjectDescriptor(value) == &descriptorRange)
-
-#define AS_RANGE_ITERATOR(value) ((ObjRangeIterator *)AS_OBJ(value))
 #define IS_RANGE_ITERATOR(value) (getNativeObjectDescriptor(value) == &descriptorRangeIterator)
 
 typedef struct ObjRange {
@@ -22,6 +19,9 @@ typedef struct ObjRangeIterator {
   double stop;
   double step;
 } ObjRangeIterator;
+
+ObjRange *asRange(Value value);
+ObjRangeIterator *asRangeIterator(Value value);
 
 void initRangeClass(void);
 void initRangeIteratorClass(void);

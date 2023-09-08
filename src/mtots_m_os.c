@@ -60,7 +60,7 @@ static ubool implIsMacOS(i16 argCount, Value *args, Value *out) {
 static CFunction funcIsMacOS = {implIsMacOS, "isMacOS"};
 
 static ubool impl(i16 argCount, Value *args, Value *out) {
-  ObjModule *module = AS_MODULE(args[0]);
+  ObjModule *module = asModule(args[0]);
   CFunction *cfunctions[] = {
       &funcGetcwd,
       &funcGetenv,

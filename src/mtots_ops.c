@@ -171,8 +171,8 @@ ubool valueLessThan(Value a, Value b) {
     case VAL_SENTINEL:
       break;
     case VAL_OBJ: {
-      Obj *objA = AS_OBJ(a);
-      Obj *objB = AS_OBJ(b);
+      Obj *objA = AS_OBJ_UNSAFE(a);
+      Obj *objB = AS_OBJ_UNSAFE(b);
       if (objA->type != objB->type) {
         panic(
             "'<' requires values of the same type but got %s and %s",
@@ -369,20 +369,20 @@ ubool valueRepr(Buffer *out, Value value) {
       bprintf(out, "<sentinel %d>", value.as.sentinel);
       return UTRUE;
     case VAL_OBJ: {
-      Obj *obj = AS_OBJ(value);
+      Obj *obj = AS_OBJ_UNSAFE(value);
       switch (obj->type) {
         case OBJ_CLASS:
-          bprintf(out, "<class %s>", AS_CLASS(value)->name->chars);
+          bprintf(out, "<class %s>", AS_CLASS_UNSAFE(value)->name->chars);
           return UTRUE;
         case OBJ_CLOSURE:
-          bprintf(out, "<function %s>", AS_CLOSURE(value)->thunk->name->chars);
+          bprintf(out, "<function %s>", AS_CLOSURE_UNSAFE(value)->thunk->name->chars);
           return UTRUE;
         case OBJ_THUNK:
-          bprintf(out, "<thunk %s>", AS_THUNK(value)->name->chars);
+          bprintf(out, "<thunk %s>", AS_THUNK_UNSAFE(value)->name->chars);
           return UTRUE;
         case OBJ_INSTANCE:
-          if (AS_INSTANCE(value)->klass->isModuleClass) {
-            bprintf(out, "<module %s>", AS_INSTANCE(value)->klass->name->chars);
+          if (AS_INSTANCE_UNSAFE(value)->klass->isModuleClass) {
+            bprintf(out, "<module %s>", AS_INSTANCE_UNSAFE(value)->klass->name->chars);
           } else if (classHasMethod(getClassOfValue(value), vm.reprString)) {
             Value resultValue;
             String *resultString;
@@ -402,11 +402,11 @@ ubool valueRepr(Buffer *out, Value value) {
             resultString = resultValue.as.string;
             bputstrlen(out, resultString->chars, resultString->byteLength);
           } else {
-            bprintf(out, "<%s instance>", AS_INSTANCE(value)->klass->name->chars);
+            bprintf(out, "<%s instance>", AS_INSTANCE_UNSAFE(value)->klass->name->chars);
           }
           return UTRUE;
         case OBJ_BUFFER: {
-          ObjBuffer *bufObj = AS_BUFFER(value);
+          ObjBuffer *bufObj = AS_BUFFER_UNSAFE(value);
           Buffer *buf = &bufObj->handle;
           StringEscapeOptions opts;
           initStringEscapeOptions(&opts);
@@ -419,7 +419,7 @@ ubool valueRepr(Buffer *out, Value value) {
           return UTRUE;
         }
         case OBJ_LIST: {
-          ObjList *list = AS_LIST(value);
+          ObjList *list = AS_LIST_UNSAFE(value);
           size_t i, len = list->length;
           bputchar(out, '[');
           for (i = 0; i < len; i++) {
@@ -435,7 +435,7 @@ ubool valueRepr(Buffer *out, Value value) {
           return UTRUE;
         }
         case OBJ_FROZEN_LIST: {
-          ObjFrozenList *frozenList = AS_FROZEN_LIST(value);
+          ObjFrozenList *frozenList = AS_FROZEN_LIST_UNSAFE(value);
           size_t i, len = frozenList->length;
           bputchar(out, '(');
           for (i = 0; i < len; i++) {
@@ -451,11 +451,11 @@ ubool valueRepr(Buffer *out, Value value) {
           return UTRUE;
         }
         case OBJ_DICT: {
-          ObjDict *dict = AS_DICT(value);
+          ObjDict *dict = AS_DICT_UNSAFE(value);
           return mapRepr(out, &dict->map);
         }
         case OBJ_FROZEN_DICT: {
-          ObjFrozenDict *dict = AS_FROZEN_DICT(value);
+          ObjFrozenDict *dict = AS_FROZEN_DICT_UNSAFE(value);
           bputstr(out, "final");
           return mapRepr(out, &dict->map);
         }
@@ -480,7 +480,7 @@ ubool valueRepr(Buffer *out, Value value) {
             bputstrlen(out, resultString->chars, resultString->byteLength);
           } else {
             bprintf(out, "<%s native-instance>",
-                    AS_NATIVE(value)->descriptor->klass->name->chars);
+                    AS_NATIVE_UNSAFE(value)->descriptor->klass->name->chars);
           }
           return UTRUE;
         case OBJ_UPVALUE:
@@ -550,21 +550,21 @@ ubool valueLen(Value recv, size_t *out) {
     *out = recv.as.string->codePointCount;
     return UTRUE;
   } else if (IS_OBJ(recv)) {
-    switch (AS_OBJ(recv)->type) {
+    switch (AS_OBJ_UNSAFE(recv)->type) {
       case OBJ_BUFFER:
-        *out = AS_BUFFER(recv)->handle.length;
+        *out = AS_BUFFER_UNSAFE(recv)->handle.length;
         return UTRUE;
       case OBJ_LIST:
-        *out = AS_LIST(recv)->length;
+        *out = AS_LIST_UNSAFE(recv)->length;
         return UTRUE;
       case OBJ_FROZEN_LIST:
-        *out = AS_FROZEN_LIST(recv)->length;
+        *out = AS_FROZEN_LIST_UNSAFE(recv)->length;
         return UTRUE;
       case OBJ_DICT:
-        *out = AS_DICT(recv)->map.size;
+        *out = AS_DICT_UNSAFE(recv)->map.size;
         return UTRUE;
       case OBJ_FROZEN_DICT:
-        *out = AS_FROZEN_DICT(recv)->map.size;
+        *out = AS_FROZEN_DICT_UNSAFE(recv)->map.size;
         return UTRUE;
       default: {
         Value value;
@@ -592,11 +592,11 @@ ubool valueLen(Value recv, size_t *out) {
 
 static ubool isIterator(Value value) {
   if (IS_OBJ(value)) {
-    switch (AS_OBJ(value)->type) {
+    switch (AS_OBJ_UNSAFE(value)->type) {
       case OBJ_CLOSURE:
-        return AS_CLOSURE(value)->thunk->arity == 0;
+        return AS_CLOSURE_UNSAFE(value)->thunk->arity == 0;
       case OBJ_NATIVE: {
-        CFunction *call = AS_NATIVE(value)->descriptor->klass->call;
+        CFunction *call = AS_NATIVE_UNSAFE(value)->descriptor->klass->call;
         return call && call->arity == 0;
       }
       default:
@@ -638,7 +638,7 @@ ubool valueFastIterNext(Value *iterator, Value *out) {
 
 ubool valueGetItem(Value owner, Value key, Value *out) {
   if (IS_LIST(owner) && IS_NUMBER(key)) {
-    ObjList *list = AS_LIST(owner);
+    ObjList *list = AS_LIST_UNSAFE(owner);
     size_t i = asIndex(key, list->length);
     *out = list->buffer[i];
     return UTRUE;
@@ -654,7 +654,7 @@ ubool valueGetItem(Value owner, Value key, Value *out) {
 
 ubool valueSetItem(Value owner, Value key, Value value) {
   if (IS_LIST(owner) && IS_NUMBER(key)) {
-    ObjList *list = AS_LIST(owner);
+    ObjList *list = AS_LIST_UNSAFE(owner);
     size_t i = asIndex(key, list->length);
     list->buffer[i] = value;
     return UTRUE;

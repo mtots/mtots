@@ -142,7 +142,7 @@ static ubool load(u8 *buffer, size_t limit, size_t *pos, Value *out) {
 }
 
 static ubool implLoads(i16 argCount, Value *args, Value *out) {
-  ObjBuffer *buffer = AS_BUFFER(args[0]);
+  ObjBuffer *buffer = asBuffer(args[0]);
   size_t pos = 0;
   if (!load(buffer->handle.data, buffer->handle.length, &pos, out)) {
     return UFALSE;
@@ -157,12 +157,7 @@ static ubool implLoads(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static TypePattern argsLoads[] = {
-    {TYPE_PATTERN_BUFFER},
-};
-
-static CFunction funcLoads = {
-    implLoads, "loads", 1, 0, argsLoads};
+static CFunction funcLoads = {implLoads, "loads", 1};
 
 ubool bmonDump(Value value, Buffer *out) {
   switch (value.type) {
@@ -191,10 +186,10 @@ ubool bmonDump(Value value, Buffer *out) {
       return UTRUE;
     }
     case VAL_OBJ: {
-      Obj *obj = AS_OBJ(value);
+      Obj *obj = AS_OBJ_UNSAFE(value);
       switch (obj->type) {
         case OBJ_LIST: {
-          ObjList *list = AS_LIST(value);
+          ObjList *list = AS_LIST_UNSAFE(value);
           u32 i, len;
           if (list->length > (size_t)U32_MAX) {
             runtimeError(
@@ -213,7 +208,7 @@ ubool bmonDump(Value value, Buffer *out) {
           return UTRUE;
         }
         case OBJ_DICT: {
-          ObjDict *dict = AS_DICT(value);
+          ObjDict *dict = AS_DICT_UNSAFE(value);
           MapIterator it;
           MapEntry *entry;
           size_t count = 0, declaredSize = dict->map.size;
@@ -278,7 +273,7 @@ static CFunction funcDumps = {
     implDumps, "dumps", 1};
 
 static ubool impl(i16 argCount, Value *args, Value *out) {
-  ObjModule *module = AS_MODULE(args[0]);
+  ObjModule *module = asModule(args[0]);
   CFunction *functions[] = {
       &funcLoads,
       &funcDumps,

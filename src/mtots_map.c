@@ -48,11 +48,11 @@ u32 hashval(Value value) {
     case VAL_SENTINEL:
       return (u32)value.as.sentinel;
     case VAL_OBJ:
-      switch (AS_OBJ(value)->type) {
+      switch (AS_OBJ_UNSAFE(value)->type) {
         case OBJ_FROZEN_LIST:
-          return AS_FROZEN_LIST(value)->hash;
+          return AS_FROZEN_LIST_UNSAFE(value)->hash;
         case OBJ_FROZEN_DICT:
-          return AS_FROZEN_DICT(value)->hash;
+          return AS_FROZEN_DICT_UNSAFE(value)->hash;
         default:
           break;
       }
@@ -288,7 +288,7 @@ ObjFrozenList *mapFindFrozenList(
         return NULL;
       }
     } else if (IS_FROZEN_LIST(entry->key)) {
-      ObjFrozenList *key = AS_FROZEN_LIST(entry->key);
+      ObjFrozenList *key = AS_FROZEN_LIST_UNSAFE(entry->key);
       if (key->length == length && key->hash == hash) {
         size_t i;
         ubool equal = UTRUE;
@@ -326,7 +326,7 @@ ObjFrozenDict *mapFindFrozenDict(
         return NULL;
       }
     } else if (IS_FROZEN_DICT(entry->key)) {
-      ObjFrozenDict *key = AS_FROZEN_DICT(entry->key);
+      ObjFrozenDict *key = AS_FROZEN_DICT_UNSAFE(entry->key);
       if (key->hash == hash && mapsEqual(frozenDictMap, &key->map)) {
         return key; /* We found it */
       }
@@ -342,7 +342,7 @@ void mapRemoveWhite(Map *map) {
     MapEntry *entry = &map->entries[i];
     if (!IS_EMPTY_KEY(entry->key) &&
         IS_OBJ(entry->key) &&
-        !AS_OBJ(entry->key)->isMarked) {
+        !AS_OBJ_UNSAFE(entry->key)->isMarked) {
       mapDelete(map, entry->key);
     }
   }

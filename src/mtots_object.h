@@ -8,7 +8,7 @@
 #include "mtots_map.h"
 #include "mtots_memory.h"
 
-#define OBJ_TYPE(value) (AS_OBJ(value)->type)
+#define OBJ_TYPE(value) (AS_OBJ_UNSAFE(value)->type)
 
 #define IS_CLASS(value) isObjType(value, OBJ_CLASS)
 #define IS_CLOSURE(value) isObjType(value, OBJ_CLOSURE)
@@ -21,17 +21,17 @@
 #define IS_FROZEN_DICT(value) isObjType(value, OBJ_FROZEN_DICT)
 #define IS_NATIVE(value) isObjType(value, OBJ_NATIVE)
 
-#define AS_CLASS(value) ((ObjClass *)AS_OBJ(value))
-#define AS_CLOSURE(value) ((ObjClosure *)AS_OBJ(value))
-#define AS_THUNK(value) ((ObjThunk *)AS_OBJ(value))
-#define AS_INSTANCE(value) ((ObjInstance *)AS_OBJ(value))
-#define AS_MODULE(value) ((ObjModule *)AS_OBJ(value))
-#define AS_BUFFER(value) ((ObjBuffer *)AS_OBJ(value))
-#define AS_LIST(value) ((ObjList *)AS_OBJ(value))
-#define AS_FROZEN_LIST(value) ((ObjFrozenList *)AS_OBJ(value))
-#define AS_DICT(value) ((ObjDict *)AS_OBJ(value))
-#define AS_FROZEN_DICT(value) ((ObjFrozenDict *)AS_OBJ(value))
-#define AS_NATIVE(value) ((ObjNative *)AS_OBJ(value))
+#define AS_CLASS_UNSAFE(value) ((ObjClass *)AS_OBJ_UNSAFE(value))
+#define AS_CLOSURE_UNSAFE(value) ((ObjClosure *)AS_OBJ_UNSAFE(value))
+#define AS_THUNK_UNSAFE(value) ((ObjThunk *)AS_OBJ_UNSAFE(value))
+#define AS_INSTANCE_UNSAFE(value) ((ObjInstance *)AS_OBJ_UNSAFE(value))
+#define AS_MODULE_UNSAFE(value) ((ObjModule *)AS_OBJ_UNSAFE(value))
+#define AS_BUFFER_UNSAFE(value) ((ObjBuffer *)AS_OBJ_UNSAFE(value))
+#define AS_LIST_UNSAFE(value) ((ObjList *)AS_OBJ_UNSAFE(value))
+#define AS_FROZEN_LIST_UNSAFE(value) ((ObjFrozenList *)AS_OBJ_UNSAFE(value))
+#define AS_DICT_UNSAFE(value) ((ObjDict *)AS_OBJ_UNSAFE(value))
+#define AS_FROZEN_DICT_UNSAFE(value) ((ObjFrozenDict *)AS_OBJ_UNSAFE(value))
+#define AS_NATIVE_UNSAFE(value) ((ObjNative *)AS_OBJ_UNSAFE(value))
 
 #define NEW_NATIVE(type, descriptor) \
   ((type *)newNative(descriptor, sizeof(type)))
@@ -198,9 +198,13 @@ struct ObjInstance {
 
 ubool IS_MODULE(Value value);
 
+ObjClass *asClass(Value value);
 ObjModule *asModule(Value value);
 ObjBuffer *asBuffer(Value value);
 ObjList *asList(Value value);
+ObjFrozenList *asFrozenList(Value value);
+ObjDict *asDict(Value value);
+ObjFrozenDict *asFrozenDict(Value value);
 
 ObjModule *newModule(String *name, ubool includeGlobals);
 ObjModule *newModuleFromCString(const char *name, ubool includeGlobals);

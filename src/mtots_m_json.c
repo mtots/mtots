@@ -5,7 +5,7 @@
 #include "mtots_m_json_write.h"
 
 static ubool implLoad(i16 argc, Value *args, Value *out) {
-  ObjDataSource *src = AS_DATA_SOURCE(args[0]);
+  ObjDataSource *src = asDataSource(args[0]);
   String *str;
   JSONParseState state;
   if (!dataSourceReadToString(src, &str)) {
@@ -20,15 +20,10 @@ static ubool implLoad(i16 argc, Value *args, Value *out) {
   return UTRUE;
 }
 
-static TypePattern argsLoad[] = {
-    {TYPE_PATTERN_NATIVE, &descriptorDataSource},
-};
-
-static CFunction funcLoad = {
-    implLoad, "load", 1, 0, argsLoad};
+static CFunction funcLoad = {implLoad, "load", 1, 0};
 
 static ubool implDump(i16 argc, Value *args, Value *out) {
-  ObjDataSink *sink = AS_DATA_SINK(args[0]);
+  ObjDataSink *sink = asDataSink(args[0]);
   size_t len;
   char *chars;
   ubool status;
@@ -45,13 +40,7 @@ static ubool implDump(i16 argc, Value *args, Value *out) {
   return status;
 }
 
-static TypePattern argsDump[] = {
-    {TYPE_PATTERN_ANY},
-    {TYPE_PATTERN_NATIVE, &descriptorDataSink},
-};
-
-static CFunction funcDump = {
-    implDump, "dump", 2, 0, argsDump};
+static CFunction funcDump = {implDump, "dump", 2, 0};
 
 static ubool implLoads(i16 argCount, Value *args, Value *out) {
   String *str = asString(args[0]);
@@ -84,7 +73,7 @@ static ubool implDumps(i16 argCount, Value *args, Value *out) {
 static CFunction funcDumps = {implDumps, "dumps", 1};
 
 static ubool impl(i16 argCount, Value *args, Value *out) {
-  ObjModule *module = AS_MODULE(args[0]);
+  ObjModule *module = asModule(args[0]);
   CFunction *functions[] = {
       &funcLoad,
       &funcDump,

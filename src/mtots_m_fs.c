@@ -155,7 +155,7 @@ static ubool implList(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcList = {implList, "list", 0, 1, argsStrings};
+static CFunction funcList = {implList, "list", 0, 1};
 
 static ubool implMkdir(i16 argc, Value *args, Value *out) {
   const char *dirpath = asString(args[0])->chars;
@@ -232,7 +232,7 @@ static ubool implBasename(i16 argCount, Value *args, Value *out) {
 static CFunction funcBasename = {implBasename, "basename", 1, 0};
 
 static ubool impl(i16 argCount, Value *args, Value *out) {
-  ObjModule *module = AS_MODULE(args[0]);
+  ObjModule *module = asModule(args[0]);
   CFunction *functions[] = {
       &funcReadString,
       &funcReadBytes,

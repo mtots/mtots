@@ -96,7 +96,7 @@ typedef struct ValueArray {
 #define IS_CFUNCTION(value) ((value).type == VAL_CFUNCTION)
 #define IS_SENTINEL(value) ((value).type == VAL_SENTINEL)
 #define IS_OBJ(value) ((value).type == VAL_OBJ)
-#define AS_OBJ(value) ((value).as.obj)
+#define AS_OBJ_UNSAFE(value) ((value).as.obj)
 
 size_t asSize(Value value);
 u32 asU32Bits(Value value);
@@ -143,11 +143,5 @@ const char *getTypePatternName(TypePattern pattern);
 /* Just a convenience function to check that a Value is
  * equal to the given C-string */
 ubool valueIsCString(Value value, const char *string);
-
-/* Common TypePattern arrays */
-
-extern TypePattern argsNumbers[12];
-extern TypePattern argsStrings[12];
-extern TypePattern argsSetattr[2];
 
 #endif /*mtots_value_h*/

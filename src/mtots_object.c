@@ -9,14 +9,14 @@
   (type *)allocateObject(sizeof(type), objectType, NULL)
 
 /* should-be-inline */ ubool isObjType(Value value, ObjType type) {
-  return IS_OBJ(value) && AS_OBJ(value)->type == type;
+  return IS_OBJ(value) && AS_OBJ_UNSAFE(value)->type == type;
 }
 
 /* Returns the value's native object descriptor if the value is a
  * native value. Otherwise returns NULL. */
 NativeObjectDescriptor *getNativeObjectDescriptor(Value value) {
   if (IS_NATIVE(value)) {
-    return AS_NATIVE(value)->descriptor;
+    return AS_NATIVE_UNSAFE(value)->descriptor;
   }
   return NULL;
 }
@@ -40,7 +40,14 @@ static Obj *allocateObject(size_t size, ObjType type, const char *typeName) {
 }
 
 ubool IS_MODULE(Value value) {
-  return IS_INSTANCE(value) && AS_INSTANCE(value)->klass->isModuleClass;
+  return IS_INSTANCE(value) && AS_INSTANCE_UNSAFE(value)->klass->isModuleClass;
+}
+
+ObjClass *asClass(Value value) {
+  if (!IS_CLASS(value)) {
+    panic("Expected Class but got %s", getKindName(value));
+  }
+  return (ObjClass *)value.as.obj;
 }
 
 ObjModule *asModule(Value value) {
@@ -62,6 +69,27 @@ ObjList *asList(Value value) {
     panic("Expected List but got %s", getKindName(value));
   }
   return (ObjList *)value.as.obj;
+}
+
+ObjFrozenList *asFrozenList(Value value) {
+  if (!IS_FROZEN_LIST(value)) {
+    panic("Expected FrozenList but got %s", getKindName(value));
+  }
+  return (ObjFrozenList *)value.as.obj;
+}
+
+ObjDict *asDict(Value value) {
+  if (!IS_DICT(value)) {
+    panic("Expected Dict but got %s", getKindName(value));
+  }
+  return (ObjDict *)value.as.obj;
+}
+
+ObjFrozenDict *asFrozenDict(Value value) {
+  if (!IS_FROZEN_DICT(value)) {
+    panic("Expected FrozenDict but got %s", getKindName(value));
+  }
+  return (ObjFrozenDict *)value.as.obj;
 }
 
 ObjModule *newModule(String *name, ubool includeGlobals) {
@@ -348,12 +376,12 @@ ubool newListFromIterable(Value iterable, ObjList **out) {
   Value iterator, item;
   ObjList *list;
   if (IS_LIST(iterable)) {
-    ObjList *other = AS_LIST(iterable);
+    ObjList *other = AS_LIST_UNSAFE(iterable);
     *out = newListFromArray(other->buffer, other->length);
     return UTRUE;
   }
   if (IS_FROZEN_LIST(iterable)) {
-    ObjFrozenList *other = AS_FROZEN_LIST(iterable);
+    ObjFrozenList *other = AS_FROZEN_LIST_UNSAFE(iterable);
     *out = newListFromArray(other->buffer, other->length);
     return UTRUE;
   }
@@ -405,11 +433,11 @@ ObjFrozenList *copyFrozenList(Value *buffer, size_t length) {
 ubool newFrozenListFromIterable(Value iterable, ObjFrozenList **out) {
   ObjList *list;
   if (IS_FROZEN_LIST(iterable)) {
-    *out = AS_FROZEN_LIST(iterable);
+    *out = AS_FROZEN_LIST_UNSAFE(iterable);
     return UTRUE;
   }
   if (IS_LIST(iterable)) {
-    list = AS_LIST(iterable);
+    list = AS_LIST_UNSAFE(iterable);
     *out = copyFrozenList(list->buffer, list->length);
     return UTRUE;
   }
@@ -579,7 +607,7 @@ ObjClass *getClassOfValue(Value value) {
     case VAL_SENTINEL:
       return vm.sentinelClass;
     case VAL_OBJ: {
-      switch (AS_OBJ(value)->type) {
+      switch (AS_OBJ_UNSAFE(value)->type) {
         case OBJ_CLASS:
           return vm.classClass;
         case OBJ_CLOSURE:
@@ -587,7 +615,7 @@ ObjClass *getClassOfValue(Value value) {
         case OBJ_THUNK:
           panic("thunk kinds do not have classes");
         case OBJ_INSTANCE:
-          return AS_INSTANCE(value)->klass;
+          return AS_INSTANCE_UNSAFE(value)->klass;
         case OBJ_BUFFER:
           return vm.bufferClass;
         case OBJ_LIST:
@@ -599,7 +627,7 @@ ObjClass *getClassOfValue(Value value) {
         case OBJ_FROZEN_DICT:
           return vm.frozenDictClass;
         case OBJ_NATIVE:
-          return AS_NATIVE(value)->descriptor->klass;
+          return AS_NATIVE_UNSAFE(value)->descriptor->klass;
         case OBJ_UPVALUE:
           panic("upvalue kinds do not have classes");
       }
@@ -626,29 +654,29 @@ static void printFunction(ObjThunk *function) {
 void printObject(Value value) {
   switch (OBJ_TYPE(value)) {
     case OBJ_CLASS:
-      if (AS_CLASS(value)->isModuleClass) {
-        printf("<module %s>", AS_CLASS(value)->name->chars);
+      if (AS_CLASS_UNSAFE(value)->isModuleClass) {
+        printf("<module %s>", AS_CLASS_UNSAFE(value)->name->chars);
       } else {
-        printf("<class %s>", AS_CLASS(value)->name->chars);
+        printf("<class %s>", AS_CLASS_UNSAFE(value)->name->chars);
       }
       break;
     case OBJ_CLOSURE:
-      printFunction(AS_CLOSURE(value)->thunk);
+      printFunction(AS_CLOSURE_UNSAFE(value)->thunk);
       break;
     case OBJ_THUNK:
-      printFunction(AS_THUNK(value));
+      printFunction(AS_THUNK_UNSAFE(value));
       break;
     case OBJ_INSTANCE:
-      printf("<%s instance>", AS_INSTANCE(value)->klass->name->chars);
+      printf("<%s instance>", AS_INSTANCE_UNSAFE(value)->klass->name->chars);
       break;
     case OBJ_BUFFER:
-      printf("<buffer %lu>", (unsigned long)AS_BUFFER(value)->handle.length);
+      printf("<buffer %lu>", (unsigned long)AS_BUFFER_UNSAFE(value)->handle.length);
       break;
     case OBJ_LIST:
-      printf("<list %lu items>", (unsigned long)AS_LIST(value)->length);
+      printf("<list %lu items>", (unsigned long)AS_LIST_UNSAFE(value)->length);
       break;
     case OBJ_FROZEN_LIST:
-      printf("<frozenList %lu items>", (unsigned long)AS_FROZEN_LIST(value)->length);
+      printf("<frozenList %lu items>", (unsigned long)AS_FROZEN_LIST_UNSAFE(value)->length);
       break;
     case OBJ_DICT:
       printf("<dict>");
@@ -659,7 +687,7 @@ void printObject(Value value) {
     case OBJ_NATIVE:
       printf(
           "<native-object %s>",
-          AS_NATIVE(value)->descriptor->klass->name->chars);
+          AS_NATIVE_UNSAFE(value)->descriptor->klass->name->chars);
       break;
     case OBJ_UPVALUE:
       printf("<upvalue>");
@@ -698,7 +726,7 @@ const char *getObjectTypeName(ObjType type) {
 }
 
 ubool isNative(Value value, NativeObjectDescriptor *descriptor) {
-  return IS_NATIVE(value) && AS_NATIVE(value)->descriptor == descriptor;
+  return IS_NATIVE(value) && AS_NATIVE_UNSAFE(value)->descriptor == descriptor;
 }
 
 Value LIST_VAL(ObjList *list) {

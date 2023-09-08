@@ -66,7 +66,7 @@ static ubool implBufferGetitem(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcBufferGetitem = {implBufferGetitem, "__getitem__", 1, 0, argsNumbers};
+static CFunction funcBufferGetitem = {implBufferGetitem, "__getitem__", 1};
 
 static ubool implBufferSetitem(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -76,7 +76,7 @@ static ubool implBufferSetitem(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcBufferSetitem = {implBufferSetitem, "__setitem__", 2, 0, argsNumbers};
+static CFunction funcBufferSetitem = {implBufferSetitem, "__setitem__", 2};
 
 static ubool implBufferMemset(i16 argc, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -136,7 +136,7 @@ static ubool implBufferView(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcBufferView = {implBufferView, "view", 1, 2, argsNumbers};
+static CFunction funcBufferView = {implBufferView, "view", 1, 2};
 
 static ubool implBufferAddI8(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -144,13 +144,7 @@ static ubool implBufferAddI8(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcBufferAddI8 = {
-    implBufferAddI8,
-    "addI8",
-    1,
-    0,
-    argsNumbers,
-};
+static CFunction funcBufferAddI8 = {implBufferAddI8, "addI8", 1};
 
 static ubool implBufferAddU8(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -158,13 +152,7 @@ static ubool implBufferAddU8(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcBufferAddU8 = {
-    implBufferAddU8,
-    "addU8",
-    1,
-    0,
-    argsNumbers,
-};
+static CFunction funcBufferAddU8 = {implBufferAddU8, "addU8", 1};
 
 static ubool implBufferAddI16(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -172,13 +160,7 @@ static ubool implBufferAddI16(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcBufferAddI16 = {
-    implBufferAddI16,
-    "addI16",
-    1,
-    0,
-    argsNumbers,
-};
+static CFunction funcBufferAddI16 = {implBufferAddI16, "addI16", 1};
 
 static ubool implBufferAddU16(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -186,13 +168,7 @@ static ubool implBufferAddU16(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcBufferAddU16 = {
-    implBufferAddU16,
-    "addU16",
-    1,
-    0,
-    argsNumbers,
-};
+static CFunction funcBufferAddU16 = {implBufferAddU16, "addU16", 1};
 
 static ubool implBufferAddI32(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -200,13 +176,7 @@ static ubool implBufferAddI32(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcBufferAddI32 = {
-    implBufferAddI32,
-    "addI32",
-    1,
-    0,
-    argsNumbers,
-};
+static CFunction funcBufferAddI32 = {implBufferAddI32, "addI32", 1};
 
 static ubool implBufferAddU32(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -214,13 +184,7 @@ static ubool implBufferAddU32(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcBufferAddU32 = {
-    implBufferAddU32,
-    "addU32",
-    1,
-    0,
-    argsNumbers,
-};
+static CFunction funcBufferAddU32 = {implBufferAddU32, "addU32", 1};
 
 static ubool implBufferAddF32(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -228,13 +192,7 @@ static ubool implBufferAddF32(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcBufferAddF32 = {
-    implBufferAddF32,
-    "addF32",
-    1,
-    0,
-    argsNumbers,
-};
+static CFunction funcBufferAddF32 = {implBufferAddF32, "addF32", 1};
 
 static ubool implBufferAddF64(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -242,13 +200,7 @@ static ubool implBufferAddF64(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcBufferAddF64 = {
-    implBufferAddF64,
-    "addF64",
-    1,
-    0,
-    argsNumbers,
-};
+static CFunction funcBufferAddF64 = {implBufferAddF64, "addF64", 1};
 
 static ubool implBufferAddBase64(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -272,13 +224,7 @@ static ubool implBufferGetI8(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcBufferGetI8 = {
-    implBufferGetI8,
-    "getI8",
-    1,
-    0,
-    argsNumbers,
-};
+static CFunction funcBufferGetI8 = {implBufferGetI8, "getI8", 1};
 
 static ubool implBufferGetU8(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -286,13 +232,7 @@ static ubool implBufferGetU8(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcBufferGetU8 = {
-    implBufferGetU8,
-    "getU8",
-    1,
-    0,
-    argsNumbers,
-};
+static CFunction funcBufferGetU8 = {implBufferGetU8, "getU8", 1};
 
 static ubool implBufferGetI16(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -300,13 +240,7 @@ static ubool implBufferGetI16(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcBufferGetI16 = {
-    implBufferGetI16,
-    "getI16",
-    1,
-    0,
-    argsNumbers,
-};
+static CFunction funcBufferGetI16 = {implBufferGetI16, "getI16", 1};
 
 static ubool implBufferGetU16(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -314,13 +248,7 @@ static ubool implBufferGetU16(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcBufferGetU16 = {
-    implBufferGetU16,
-    "getU16",
-    1,
-    0,
-    argsNumbers,
-};
+static CFunction funcBufferGetU16 = {implBufferGetU16, "getU16", 1};
 
 static ubool implBufferGetI32(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -328,13 +256,7 @@ static ubool implBufferGetI32(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcBufferGetI32 = {
-    implBufferGetI32,
-    "getI32",
-    1,
-    0,
-    argsNumbers,
-};
+static CFunction funcBufferGetI32 = {implBufferGetI32, "getI32", 1};
 
 static ubool implBufferGetU32(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -342,13 +264,7 @@ static ubool implBufferGetU32(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcBufferGetU32 = {
-    implBufferGetU32,
-    "getU32",
-    1,
-    0,
-    argsNumbers,
-};
+static CFunction funcBufferGetU32 = {implBufferGetU32, "getU32", 1};
 
 static ubool implBufferGetF32(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -356,13 +272,7 @@ static ubool implBufferGetF32(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcBufferGetF32 = {
-    implBufferGetF32,
-    "getF32",
-    1,
-    0,
-    argsNumbers,
-};
+static CFunction funcBufferGetF32 = {implBufferGetF32, "getF32", 1};
 
 static ubool implBufferGetF64(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -370,13 +280,7 @@ static ubool implBufferGetF64(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcBufferGetF64 = {
-    implBufferGetF64,
-    "getF64",
-    1,
-    0,
-    argsNumbers,
-};
+static CFunction funcBufferGetF64 = {implBufferGetF64, "getF64", 1};
 
 static ubool implBufferSetI8(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
@@ -586,7 +490,7 @@ static ubool implBufferStaticFromString(i16 argCount, Value *args, Value *out) {
 static CFunction funcBufferStaticFromString = {implBufferStaticFromString, "fromString", 1, 0};
 
 static ubool implBufferStaticFromList(i16 argCount, Value *args, Value *out) {
-  ObjList *list = AS_LIST(args[0]);
+  ObjList *list = asList(args[0]);
   ObjBuffer *bo = newBuffer();
   size_t i;
   push(BUFFER_VAL(bo));
@@ -608,17 +512,7 @@ static ubool implBufferStaticFromList(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static TypePattern argsBufferStaticFromList[] = {
-    {TYPE_PATTERN_LIST},
-};
-
-static CFunction funcBufferStaticFromList = {
-    implBufferStaticFromList,
-    "fromList",
-    1,
-    0,
-    argsBufferStaticFromList,
-};
+static CFunction funcBufferStaticFromList = {implBufferStaticFromList, "fromList", 1};
 
 void initBufferClass(void) {
   CFunction *methods[] = {

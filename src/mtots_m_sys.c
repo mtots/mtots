@@ -43,7 +43,7 @@ static ubool implEnableLogOnGC(i16 argc, Value *args, Value *out) {
 static CFunction funcEnableLogOnGC = {implEnableLogOnGC, "enableLogOnGC", 1, 0};
 
 static ubool impl(i16 argc, Value *args, Value *out) {
-  ObjModule *module = AS_MODULE(args[0]);
+  ObjModule *module = asModule(args[0]);
   CFunction *functions[] = {
       &funcGetMallocCount,
       &funcEnableGCLogs,

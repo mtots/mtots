@@ -67,7 +67,7 @@ static ubool writeJSON(Value value, size_t *outLen, char *out) {
     return UTRUE;
   }
   if (IS_LIST(value)) {
-    ObjList *list = AS_LIST(value);
+    ObjList *list = AS_LIST_UNSAFE(value);
     size_t i, len = 0;
     len++;
     if (out) *out++ = '[';
@@ -90,7 +90,7 @@ static ubool writeJSON(Value value, size_t *outLen, char *out) {
     return UTRUE;
   }
   if (IS_DICT(value)) {
-    ObjDict *dict = AS_DICT(value);
+    ObjDict *dict = AS_DICT_UNSAFE(value);
     size_t len = 0;
     MapIterator di;
     MapEntry *entry;

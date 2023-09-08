@@ -242,7 +242,7 @@ const char *getKindName(Value value) {
         case OBJ_FROZEN_DICT:
           return "frozendict";
         case OBJ_NATIVE:
-          return AS_NATIVE(value)->descriptor->name;
+          return AS_NATIVE_UNSAFE(value)->descriptor->name;
         case OBJ_UPVALUE:
           return "upvalue";
         default:
@@ -295,7 +295,7 @@ ubool typePatternMatch(TypePattern pattern, Value value) {
       if (!IS_LIST(value)) {
         return UFALSE;
       }
-      list = AS_LIST(value);
+      list = AS_LIST_UNSAFE(value);
       for (i = 0; i < list->length; i++) {
         if (!IS_NUMBER(list->buffer[i])) {
           return UFALSE;
@@ -310,14 +310,14 @@ ubool typePatternMatch(TypePattern pattern, Value value) {
       if (!IS_LIST(value)) {
         return UFALSE;
       }
-      outerList = AS_LIST(value);
+      outerList = AS_LIST_UNSAFE(value);
       for (i = 0; i < outerList->length; i++) {
         size_t j;
         ObjList *innerList;
         if (!IS_LIST(outerList->buffer[i])) {
           return UFALSE;
         }
-        innerList = AS_LIST(outerList->buffer[i]);
+        innerList = AS_LIST_UNSAFE(outerList->buffer[i]);
         for (j = 0; j < innerList->length; j++) {
           if (!IS_NUMBER(innerList->buffer[j])) {
             return UFALSE;
@@ -341,7 +341,7 @@ ubool typePatternMatch(TypePattern pattern, Value value) {
       /* fallthrough */
     case TYPE_PATTERN_NATIVE:
       return IS_NATIVE(value) && (pattern.nativeTypeDescriptor == NULL ||
-                                  AS_NATIVE(value)->descriptor == pattern.nativeTypeDescriptor);
+                                  AS_NATIVE_UNSAFE(value)->descriptor == pattern.nativeTypeDescriptor);
   }
   panic("Unrecognized TypePattern type %d", pattern.type);
   return UFALSE;
@@ -391,38 +391,3 @@ const char *getTypePatternName(TypePattern pattern) {
   panic("Unrecognized TypePattern type %d", pattern.type);
   return UFALSE;
 }
-
-TypePattern argsNumbers[12] = {
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_NUMBER},
-};
-
-TypePattern argsStrings[12] = {
-    {TYPE_PATTERN_STRING},
-    {TYPE_PATTERN_STRING},
-    {TYPE_PATTERN_STRING},
-    {TYPE_PATTERN_STRING},
-    {TYPE_PATTERN_STRING},
-    {TYPE_PATTERN_STRING},
-    {TYPE_PATTERN_STRING},
-    {TYPE_PATTERN_STRING},
-    {TYPE_PATTERN_STRING},
-    {TYPE_PATTERN_STRING},
-    {TYPE_PATTERN_STRING},
-    {TYPE_PATTERN_STRING},
-};
-
-TypePattern argsSetattr[2] = {
-    {TYPE_PATTERN_STRING},
-    {TYPE_PATTERN_ANY},
-};

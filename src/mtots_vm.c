@@ -206,11 +206,11 @@ static Value peek(int distance) {
 
 static ubool isIterator(Value value) {
   if (IS_OBJ(value)) {
-    switch (AS_OBJ(value)->type) {
+    switch (AS_OBJ_UNSAFE(value)->type) {
       case OBJ_CLOSURE:
-        return AS_CLOSURE(value)->thunk->arity == 0;
+        return AS_CLOSURE_UNSAFE(value)->thunk->arity == 0;
       case OBJ_NATIVE: {
-        CFunction *call = AS_NATIVE(value)->descriptor->klass->call;
+        CFunction *call = AS_NATIVE_UNSAFE(value)->descriptor->klass->call;
         return call && call->arity == 0;
       }
       default:
@@ -350,7 +350,7 @@ static ubool invoke(String *name, i16 argCount) {
     if (!IS_CLASS(receiver)) {
       panic("Class instance is not a Class (%s)", getKindName(receiver));
     }
-    cls = AS_CLASS(receiver);
+    cls = AS_CLASS_UNSAFE(receiver);
     if (!mapGetStr(&cls->staticMethods, name, &method)) {
       runtimeError(
           "Static method '%s' not found in '%s'",
@@ -400,14 +400,14 @@ void closeUpvalues(Value *last) {
 
 static void defineMethod(String *name) {
   Value method = peek(0);
-  ObjClass *klass = AS_CLASS(peek(1));
+  ObjClass *klass = AS_CLASS_UNSAFE(peek(1));
   mapSetStr(&klass->methods, name, method);
   pop();
 }
 
 static void defineStaticMethod(String *name) {
   Value method = peek(0);
-  ObjClass *klass = AS_CLASS(peek(1));
+  ObjClass *klass = AS_CLASS_UNSAFE(peek(1));
   mapSetStr(&klass->staticMethods, name, method);
   pop();
 }
@@ -569,7 +569,7 @@ static ubool run(void) {
 
         if (IS_INSTANCE(peek(0))) {
           ObjInstance *instance;
-          instance = AS_INSTANCE(peek(0));
+          instance = AS_INSTANCE_UNSAFE(peek(0));
           name = READ_STRING();
           if (mapGetStr(&instance->fields, name, &value)) {
             pop(); /* Instance */
@@ -583,7 +583,7 @@ static ubool run(void) {
         }
 
         if (IS_DICT(peek(0))) {
-          ObjDict *d = AS_DICT(peek(0));
+          ObjDict *d = AS_DICT_UNSAFE(peek(0));
           name = READ_STRING();
           if (mapGet(&d->map, STRING_VAL(name), &value)) {
             pop(); /* Instance */
@@ -595,7 +595,7 @@ static ubool run(void) {
         }
 
         if (IS_FROZEN_DICT(peek(0))) {
-          ObjFrozenDict *d = AS_FROZEN_DICT(peek(0));
+          ObjFrozenDict *d = AS_FROZEN_DICT_UNSAFE(peek(0));
           name = READ_STRING();
           if (mapGet(&d->map, STRING_VAL(name), &value)) {
             pop(); /* Instance */
@@ -626,7 +626,7 @@ static ubool run(void) {
 
         if (IS_INSTANCE(peek(1))) {
           ObjInstance *instance;
-          instance = AS_INSTANCE(peek(1));
+          instance = AS_INSTANCE_UNSAFE(peek(1));
           mapSetStr(&instance->fields, READ_STRING(), peek(0));
           value = pop();
           pop();
@@ -635,7 +635,7 @@ static ubool run(void) {
         }
 
         if (IS_DICT(peek(1))) {
-          ObjDict *d = AS_DICT(peek(1));
+          ObjDict *d = AS_DICT_UNSAFE(peek(1));
           mapSet(&d->map, STRING_VAL(READ_STRING()), peek(0));
           value = pop();
           pop();
@@ -744,7 +744,7 @@ static ubool run(void) {
       }
       case OP_IN: {
         if (IS_CLASS(peek(0))) {
-          ObjClass *cls = AS_CLASS(pop());
+          ObjClass *cls = AS_CLASS_UNSAFE(pop());
           push(BOOL_VAL(cls == getClassOfValue(pop())));
         } else {
           Value b = pop();
@@ -846,7 +846,7 @@ static ubool run(void) {
       case OP_SUPER_INVOKE: {
         String *method = READ_STRING();
         i16 argCount = READ_BYTE();
-        ObjClass *superclass = AS_CLASS(pop());
+        ObjClass *superclass = AS_CLASS_UNSAFE(pop());
         if (!invokeFromClass(superclass, method, argCount)) {
           RETURN_RUNTIME_ERROR();
         }
@@ -854,7 +854,7 @@ static ubool run(void) {
         break;
       }
       case OP_CLOSURE: {
-        ObjThunk *thunk = AS_THUNK(READ_CONSTANT());
+        ObjThunk *thunk = AS_THUNK_UNSAFE(READ_CONSTANT());
         ObjClosure *closure = newClosure(thunk, frame->closure->module);
         i16 i;
         push(CLOSURE_VAL(closure));
@@ -960,8 +960,8 @@ static ubool run(void) {
           RETURN_RUNTIME_ERROR();
         }
 
-        subclass = AS_CLASS(peek(0));
-        mapAddAll(&AS_CLASS(superclass)->methods, &subclass->methods);
+        subclass = AS_CLASS_UNSAFE(peek(0));
+        mapAddAll(&AS_CLASS_UNSAFE(superclass)->methods, &subclass->methods);
         pop(); /* subclass */
         break;
       }
@@ -1038,7 +1038,7 @@ static ubool callClass(ObjClass *klass, i16 argCount, ubool consummate) {
     /* normal classes */
     vm.stackTop[-argCount - 1] = INSTANCE_VAL(newInstance(klass));
     if (mapGetStr(&klass->methods, vm.initString, &initializer)) {
-      if (!setupCallClosure(AS_CLOSURE(initializer), argCount)) {
+      if (!setupCallClosure(AS_CLOSURE_UNSAFE(initializer), argCount)) {
         return UFALSE;
       }
       if (consummate) {
@@ -1081,11 +1081,11 @@ static ubool callFunctionOrMethod(Value callable, i16 argCount, ubool consummate
   } else if (IS_OBJ(callable)) {
     switch (OBJ_TYPE(callable)) {
       case OBJ_CLASS:
-        return callClass(AS_CLASS(callable), argCount, consummate);
+        return callClass(AS_CLASS_UNSAFE(callable), argCount, consummate);
       case OBJ_CLOSURE:
-        return callClosure(AS_CLOSURE(callable), argCount);
+        return callClosure(AS_CLOSURE_UNSAFE(callable), argCount);
       case OBJ_NATIVE: {
-        ObjNative *n = AS_NATIVE(callable);
+        ObjNative *n = AS_NATIVE_UNSAFE(callable);
         if (n->descriptor->klass->call) {
           return callCFunction(n->descriptor->klass->call, argCount);
         }
@@ -1116,7 +1116,7 @@ static ubool callMethodHelper(String *name, i16 argCount, ubool consummate) {
     if (!IS_CLASS(receiver)) {
       panic("Class instance is not a Class (%s)", getKindName(receiver));
     }
-    cls = AS_CLASS(receiver);
+    cls = AS_CLASS_UNSAFE(receiver);
     if (!mapGetStr(&cls->staticMethods, name, &method)) {
       runtimeError(
           "Static method '%s' not found in '%s'",

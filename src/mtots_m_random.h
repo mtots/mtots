@@ -6,7 +6,6 @@
 #include "mtots_object.h"
 
 #define IS_RANDOM(value) (getNativeObjectDescriptor(value) == &descriptorRandom)
-#define AS_RANDOM(value) ((ObjRandom*)AS_OBJ(value))
 
 typedef struct ObjRandom {
   ObjNative obj;
@@ -14,6 +13,8 @@ typedef struct ObjRandom {
 } ObjRandom;
 
 extern NativeObjectDescriptor descriptorRandom;
+
+ObjRandom *asRandom(Value value);
 
 void addNativeModuleRandom(void);
 

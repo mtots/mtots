@@ -9,8 +9,6 @@
 
 #define IS_DATA_SOURCE(v) (getNativeObjectDescriptor(v) == &descriptorDataSource)
 #define IS_DATA_SINK(v) (getNativeObjectDescriptor(v) == &descriptorDataSink)
-#define AS_DATA_SOURCE(v) ((ObjDataSource *)AS_OBJ(v))
-#define AS_DATA_SINK(v) ((ObjDataSink *)AS_OBJ(v))
 
 typedef enum DataSourceType {
   DATA_SOURCE_BUFFER,
@@ -51,6 +49,9 @@ extern NativeObjectDescriptor descriptorDataSink;
 
 Value DATA_SOURCE_VAL(ObjDataSource *ds);
 Value DATA_SINK_VAL(ObjDataSink *ds);
+
+ObjDataSource *asDataSource(Value value);
+ObjDataSink *asDataSink(Value value);
 
 ObjDataSource *newDataSourceFromBuffer(ObjBuffer *buffer);
 ObjDataSource *newDataSourceFromString(String *string);

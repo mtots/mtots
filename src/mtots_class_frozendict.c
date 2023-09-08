@@ -14,7 +14,7 @@ static void blackenFrozenDictIterator(ObjNative *n) {
 }
 
 static ubool implFrozenDictIteratorCall(i16 argCount, Value *args, Value *out) {
-  ObjFrozenDictIterator *iter = (ObjFrozenDictIterator *)AS_OBJ(args[-1]);
+  ObjFrozenDictIterator *iter = (ObjFrozenDictIterator *)AS_OBJ_UNSAFE(args[-1]);
   if (mapIteratorNextKey(&iter->di, out)) {
     return UTRUE;
   }
@@ -22,10 +22,7 @@ static ubool implFrozenDictIteratorCall(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcFrozenDictIteratorCall = {
-    implFrozenDictIteratorCall,
-    "__call__",
-};
+static CFunction funcFrozenDictIteratorCall = {implFrozenDictIteratorCall, "__call__"};
 
 static NativeObjectDescriptor descriptorFrozenDictIterator = {
     blackenFrozenDictIterator,
@@ -35,7 +32,7 @@ static NativeObjectDescriptor descriptorFrozenDictIterator = {
 };
 
 static ubool implFrozenDictGetItem(i16 argCount, Value *args, Value *out) {
-  ObjFrozenDict *dict = AS_FROZEN_DICT(args[-1]);
+  ObjFrozenDict *dict = asFrozenDict(args[-1]);
   if (!mapGet(&dict->map, args[0], out)) {
     runtimeError("Key not found in dict");
     return UFALSE;
@@ -47,7 +44,7 @@ static CFunction funcFrozenDictGetItem = {implFrozenDictGetItem, "__getitem__", 
 
 static ubool implFrozenDictContains(i16 argCount, Value *args, Value *out) {
   Value dummy;
-  ObjFrozenDict *dict = AS_FROZEN_DICT(args[-1]);
+  ObjFrozenDict *dict = asFrozenDict(args[-1]);
   *out = BOOL_VAL(mapGet(&dict->map, args[0], &dummy));
   return UTRUE;
 }
@@ -55,7 +52,7 @@ static ubool implFrozenDictContains(i16 argCount, Value *args, Value *out) {
 static CFunction funcFrozenDictContains = {implFrozenDictContains, "__contains__", 1};
 
 static ubool implFrozenDictIter(i16 argCount, Value *args, Value *out) {
-  ObjFrozenDict *dict = AS_FROZEN_DICT(args[-1]);
+  ObjFrozenDict *dict = asFrozenDict(args[-1]);
   ObjFrozenDictIterator *iter = NEW_NATIVE(ObjFrozenDictIterator, &descriptorFrozenDictIterator);
   iter->dict = dict;
   initMapIterator(&iter->di, &dict->map);
@@ -77,7 +74,7 @@ static CFunction funcFrozenDictIter = {implFrozenDictIter, "__iter__", 0};
  * is still handy sometimes.
  */
 static ubool implFrozenDictRget(i16 argCount, Value *args, Value *out) {
-  ObjFrozenDict *dict = AS_FROZEN_DICT(args[-1]);
+  ObjFrozenDict *dict = asFrozenDict(args[-1]);
   Value value = args[0];
   MapIterator di;
   MapEntry *entry;

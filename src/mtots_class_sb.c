@@ -24,7 +24,7 @@ static CFunction funcInstantiateStringBuilder = {
 };
 
 static ubool implStringBuilderClear(i16 argCount, Value *args, Value *out) {
-  ObjStringBuilder *sb = AS_STRING_BUILDER(args[-1]);
+  ObjStringBuilder *sb = asStringBuilder(args[-1]);
   bufferClear(&sb->buf);
   return UTRUE;
 }
@@ -35,7 +35,7 @@ static CFunction funcStringBuilderClear = {
 };
 
 static ubool implStringBuilderAdd(i16 argCount, Value *args, Value *out) {
-  ObjStringBuilder *sb = AS_STRING_BUILDER(args[-1]);
+  ObjStringBuilder *sb = asStringBuilder(args[-1]);
   String *string = asString(args[0]);
   bputstrlen(&sb->buf, string->chars, string->byteLength);
   return UTRUE;
@@ -44,28 +44,18 @@ static ubool implStringBuilderAdd(i16 argCount, Value *args, Value *out) {
 static CFunction funcStringBuilderAdd = {implStringBuilderAdd, "add", 1, 0};
 
 static ubool implStringBuilderAddBase64(i16 argCount, Value *args, Value *out) {
-  ObjStringBuilder *sb = AS_STRING_BUILDER(args[-1]);
-  ObjBuffer *buffer = AS_BUFFER(args[0]);
+  ObjStringBuilder *sb = asStringBuilder(args[-1]);
+  ObjBuffer *buffer = asBuffer(args[0]);
   if (!encodeBase64(buffer->handle.data, buffer->handle.length, &sb->buf)) {
     return UFALSE;
   }
   return UTRUE;
 }
 
-static TypePattern argsStringBuilderAddBase64 = {
-    TYPE_PATTERN_BUFFER,
-};
-
-static CFunction funcSringBuilderAddBase64 = {
-    implStringBuilderAddBase64,
-    "addBase64",
-    1,
-    0,
-    &argsStringBuilderAddBase64,
-};
+static CFunction funcSringBuilderAddBase64 = {implStringBuilderAddBase64, "addBase64", 1};
 
 static ubool implStringBuilderBuild(i16 argCount, Value *args, Value *out) {
-  ObjStringBuilder *sb = (ObjStringBuilder *)AS_OBJ(args[-1]);
+  ObjStringBuilder *sb = (ObjStringBuilder *)AS_OBJ_UNSAFE(args[-1]);
   *out = STRING_VAL(bufferToString(&sb->buf));
   return UTRUE;
 }

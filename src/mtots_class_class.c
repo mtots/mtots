@@ -3,7 +3,7 @@
 #include "mtots_vm.h"
 
 static ubool implClassGetName(i16 argCount, Value *args, Value *out) {
-  ObjClass *cls = AS_CLASS(args[0]);
+  ObjClass *cls = asClass(args[0]);
   *out = STRING_VAL(cls->name);
   return UTRUE;
 }

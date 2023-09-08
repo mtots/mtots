@@ -17,7 +17,7 @@ static void blackenStringIterator(ObjNative *n) {
 }
 
 static ubool implStringIteratorCall(i16 argCount, Value *args, Value *out) {
-  ObjStringIterator *si = (ObjStringIterator *)AS_OBJ(args[-1]);
+  ObjStringIterator *si = (ObjStringIterator *)AS_OBJ_UNSAFE(args[-1]);
   if (si->i >= si->string->codePointCount) {
     *out = STOP_ITERATION_VAL();
   } else if (si->string->utf32) {
@@ -77,7 +77,7 @@ static ubool implStrGetItem(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcStrGetItem = {implStrGetItem, "__getitem__", 1, 0, argsNumbers};
+static CFunction funcStrGetItem = {implStrGetItem, "__getitem__", 1};
 
 static ubool implStrSlice(i16 argCount, Value *args, Value *out) {
   String *str = asString(args[-1]), *slicedStr;
@@ -145,7 +145,7 @@ static ubool implStrStrip(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcStrStrip = {implStrStrip, "strip", 0, 1, argsStrings};
+static CFunction funcStrStrip = {implStrStrip, "strip", 0, 1};
 
 static size_t cStrReplace(
     const char *s, const char *oldstr, const char *newstr, char *out) {
@@ -182,12 +182,11 @@ static ubool implStrReplace(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcStrReplace = {implStrReplace, "replace", 2, 0,
-                                   argsStrings};
+static CFunction funcStrReplace = {implStrReplace, "replace", 2};
 
 static ubool implStrJoin(i16 argCount, Value *args, Value *out) {
   String *sep = asString(args[-1]);
-  ObjList *list = AS_LIST(args[0]);
+  ObjList *list = asList(args[0]);
   size_t i, len = (list->length - 1) * sep->byteLength;
   char *chars, *p;
   for (i = 0; i < list->length; i++) {
@@ -217,17 +216,7 @@ static ubool implStrJoin(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static TypePattern argsStrJoin[] = {
-    {TYPE_PATTERN_LIST},
-};
-
-static CFunction funcStrJoin = {
-    implStrJoin,
-    "join",
-    1,
-    0,
-    argsStrJoin,
-};
+static CFunction funcStrJoin = {implStrJoin, "join", 1};
 
 static ubool implStringUpper(i16 argc, Value *args, Value *out) {
   /* Simple uppercase algorithm - converts ASCII lower case characters to their
@@ -298,7 +287,7 @@ static ubool implStringStartsWith(i16 argc, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcStringStartsWith = {implStringStartsWith, "startsWith", 1, 0, argsStrings};
+static CFunction funcStringStartsWith = {implStringStartsWith, "startsWith", 1};
 
 static ubool implStringEndsWith(i16 argc, Value *args, Value *out) {
   String *string = asString(args[-1]);
@@ -312,7 +301,7 @@ static ubool implStringEndsWith(i16 argc, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcStringEndsWith = {implStringEndsWith, "endsWith", 1, 0, argsStrings};
+static CFunction funcStringEndsWith = {implStringEndsWith, "endsWith", 1};
 
 static ubool padStringImpl(
     String *string,
@@ -394,23 +383,13 @@ static CFunction funcStringPadEnd = {
 };
 
 static ubool implStringStaticFromUTF8(i16 argc, Value *args, Value *out) {
-  ObjBuffer *buffer = AS_BUFFER(args[0]);
+  ObjBuffer *buffer = asBuffer(args[0]);
   String *string = internString((char *)buffer->handle.data, buffer->handle.length);
   *out = STRING_VAL(string);
   return UTRUE;
 }
 
-static TypePattern argsStringStaticFromUTF8[] = {
-    {TYPE_PATTERN_BUFFER},
-};
-
-static CFunction funcStringStaticFromUTF8 = {
-    implStringStaticFromUTF8,
-    "fromUTF8",
-    1,
-    0,
-    argsStringStaticFromUTF8,
-};
+static CFunction funcStringStaticFromUTF8 = {implStringStaticFromUTF8, "fromUTF8", 1};
 
 void initStringClass(void) {
   {

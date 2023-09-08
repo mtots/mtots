@@ -27,7 +27,7 @@ static void blackenListIterator(ObjNative *n) {
 }
 
 static ubool implListIteratorCall(i16 argCount, Value *args, Value *out) {
-  ObjListIterator *iter = (ObjListIterator *)AS_OBJ(args[-1]);
+  ObjListIterator *iter = (ObjListIterator *)AS_OBJ_UNSAFE(args[-1]);
   if (iter->index < iter->list->length) {
     *out = iter->list->buffer[iter->index++];
   } else {
@@ -49,7 +49,7 @@ static NativeObjectDescriptor descriptorListIterator = {
 };
 
 static ubool implListClear(i16 argCount, Value *args, Value *out) {
-  ObjList *list = AS_LIST(args[-1]);
+  ObjList *list = asList(args[-1]);
   list->length = 0;
   return UTRUE;
 }
@@ -57,7 +57,7 @@ static ubool implListClear(i16 argCount, Value *args, Value *out) {
 static CFunction funcListClear = {implListClear, "clear"};
 
 static ubool implListAppend(i16 argCount, Value *args, Value *out) {
-  ObjList *list = AS_LIST(args[-1]);
+  ObjList *list = asList(args[-1]);
   listAppend(list, args[0]);
   return UTRUE;
 }
@@ -65,7 +65,7 @@ static ubool implListAppend(i16 argCount, Value *args, Value *out) {
 static CFunction funcListAppend = {implListAppend, "append", 1};
 
 static ubool implListExtend(i16 argCount, Value *args, Value *out) {
-  ObjList *list = AS_LIST(args[-1]);
+  ObjList *list = asList(args[-1]);
   Value iterable = args[0], iterator;
   if (!valueFastIter(iterable, &iterator)) {
     return UFALSE;
@@ -90,7 +90,7 @@ static ubool implListExtend(i16 argCount, Value *args, Value *out) {
 static CFunction funcListExtend = {implListExtend, "extend", 1};
 
 static ubool implListPop(i16 argCount, Value *args, Value *out) {
-  ObjList *list = AS_LIST(args[-1]);
+  ObjList *list = asList(args[-1]);
   size_t index = argCount > 0 && !IS_NIL(args[0]) ? asIndex(args[0], list->length) : list->length - 1;
   *out = list->buffer[index];
   for (; index + 1 < list->length; index++) {
@@ -107,7 +107,7 @@ static TypePattern argsListPop[] = {
 static CFunction funcListPop = {implListPop, "pop", 0, 1, argsListPop};
 
 static ubool implListInsert(i16 argCount, Value *args, Value *out) {
-  ObjList *list = AS_LIST(args[-1]);
+  ObjList *list = asList(args[-1]);
   size_t index = asIndex(args[0], list->length + 1), i;
   Value value = args[1];
   listAppend(list, NIL_VAL());
@@ -126,8 +126,8 @@ static TypePattern argsListInsert[] = {
 static CFunction funcListInsert = {implListInsert, "insert", 2, 0, argsListInsert};
 
 static ubool implListAdd(i16 argCount, Value *args, Value *out) {
-  ObjList *list = AS_LIST(args[-1]);
-  ObjList *other = AS_LIST(args[0]);
+  ObjList *list = asList(args[-1]);
+  ObjList *other = asList(args[0]);
   ObjList *result = newList(list->length + other->length);
   memcpy(result->buffer, list->buffer, sizeof(Value) * list->length);
   memcpy(result->buffer + list->length, other->buffer, sizeof(Value) * other->length);
@@ -135,20 +135,10 @@ static ubool implListAdd(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static TypePattern argsListAdd[] = {
-    {TYPE_PATTERN_LIST},
-};
-
-static CFunction funcListAdd = {
-    implListAdd,
-    "__add__",
-    1,
-    0,
-    argsListAdd,
-};
+static CFunction funcListAdd = {implListAdd, "__add__", 1};
 
 static ubool implListMul(i16 argCount, Value *args, Value *out) {
-  ObjList *list = AS_LIST(args[-1]);
+  ObjList *list = asList(args[-1]);
   ObjList *result;
   size_t r, rep = asU32(args[0]);
   result = newList(list->length * rep);
@@ -162,46 +152,28 @@ static ubool implListMul(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcListMul = {
-    implListMul,
-    "__mul__",
-    1,
-    0,
-    argsNumbers,
-};
+static CFunction funcListMul = {implListMul, "__mul__", 1};
 
 static ubool implListGetItem(i16 argCount, Value *args, Value *out) {
-  ObjList *list = AS_LIST(args[-1]);
+  ObjList *list = asList(args[-1]);
   i32 index = asIndex(args[0], list->length);
   *out = list->buffer[index];
   return UTRUE;
 }
 
-static CFunction funcListGetItem = {
-    implListGetItem,
-    "__getitem__",
-    1,
-    0,
-    argsNumbers,
-};
+static CFunction funcListGetItem = {implListGetItem, "__getitem__", 1};
 
 static ubool implListSetItem(i16 argCount, Value *args, Value *out) {
-  ObjList *list = AS_LIST(args[-1]);
+  ObjList *list = asList(args[-1]);
   i32 index = asIndex(args[0], list->length);
   list->buffer[index] = args[1];
   return UTRUE;
 }
 
-static TypePattern argsListSetItem[] = {
-    {TYPE_PATTERN_NUMBER},
-    {TYPE_PATTERN_ANY},
-};
-
-static CFunction funcListSetItem = {
-    implListSetItem, "__setitem__", 2, 0, argsListSetItem};
+static CFunction funcListSetItem = {implListSetItem, "__setitem__", 2};
 
 static ubool implListSlice(i16 argCount, Value *args, Value *out) {
-  ObjList *list = AS_LIST(args[-1]);
+  ObjList *list = asList(args[-1]);
   size_t start = IS_NIL(args[0]) ? 0 : asIndexLower(args[0], list->length);
   size_t end = IS_NIL(args[1]) ? list->length : asIndexUpper(args[1], list->length);
   if (start > end) {
@@ -215,16 +187,10 @@ static ubool implListSlice(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static TypePattern argsListSlice[] = {
-    {TYPE_PATTERN_NUMBER_OR_NIL},
-    {TYPE_PATTERN_NUMBER_OR_NIL},
-};
-
-static CFunction funcListSlice = {
-    implListSlice, "__slice__", 2, 0, argsListSlice};
+static CFunction funcListSlice = {implListSlice, "__slice__", 2};
 
 static ubool implListReverse(i16 argCount, Value *args, Value *out) {
-  ObjList *list = AS_LIST(args[-1]);
+  ObjList *list = asList(args[-1]);
   size_t i = 0, j = list->length;
   for (; i + 1 < j; i++, j--) {
     Value tmp = list->buffer[i];
@@ -237,14 +203,14 @@ static ubool implListReverse(i16 argCount, Value *args, Value *out) {
 static CFunction funcListReverse = {implListReverse, "reverse"};
 
 static ubool implListSort(i16 argCount, Value *args, Value *out) {
-  ObjList *list = AS_LIST(args[-1]);
+  ObjList *list = asList(args[-1]);
   return sortListWithKeyFunc(list, argCount > 0 ? args[0] : NIL_VAL());
 }
 
 static CFunction funcListSort = {implListSort, "sort", 0, 1};
 
 static ubool implListFlatten(i16 argCount, Value *args, Value *out) {
-  ObjList *list = AS_LIST(args[-1]);
+  ObjList *list = asList(args[-1]);
   ObjList *result = newList(0);
   size_t i;
   push(LIST_VAL(result));
@@ -275,7 +241,7 @@ static ubool implListFlatten(i16 argCount, Value *args, Value *out) {
 static CFunction funcListFlatten = {implListFlatten, "flatten"};
 
 static ubool implListIter(i16 argCount, Value *args, Value *out) {
-  ObjList *list = AS_LIST(args[-1]);
+  ObjList *list = asList(args[-1]);
   ObjListIterator *iter;
   iter = NEW_NATIVE(ObjListIterator, &descriptorListIterator);
   iter->list = list;

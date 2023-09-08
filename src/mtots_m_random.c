@@ -8,6 +8,13 @@
 
 static Random defaultInstance;
 
+ObjRandom *asRandom(Value value) {
+  if (!IS_RANDOM(value)) {
+    panic("Expected Random but got %s", getKindName(value));
+  }
+  return (ObjRandom *)AS_OBJ_UNSAFE(value);
+}
+
 static ubool implRandom(i16 argc, Value *args, Value *out) {
   *out = NUMBER_VAL(randomFloat(&defaultInstance));
   return UTRUE;
@@ -23,8 +30,7 @@ static ubool implInstantiateRandom(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcInstantiateRandom = {
-    implInstantiateRandom, "__call__", 0, 1, argsNumbers};
+static CFunction funcInstantiateRandom = {implInstantiateRandom, "__call__", 0, 1};
 
 NativeObjectDescriptor descriptorRandom = {
     nopBlacken,
@@ -34,22 +40,16 @@ NativeObjectDescriptor descriptorRandom = {
 };
 
 static ubool implRandomSeed(i16 argCount, Value *args, Value *out) {
-  ObjRandom *random = AS_RANDOM(args[-1]);
+  ObjRandom *random = asRandom(args[-1]);
   u32 seed = asU32(args[0]);
   initRandom(&random->handle, seed);
   return UTRUE;
 }
 
-static CFunction funcRandomSeed = {
-    implRandomSeed,
-    "seed",
-    1,
-    0,
-    argsNumbers,
-};
+static CFunction funcRandomSeed = {implRandomSeed, "seed", 1};
 
 static ubool implRandomNext(i16 argCount, Value *args, Value *out) {
-  ObjRandom *random = AS_RANDOM(args[-1]);
+  ObjRandom *random = asRandom(args[-1]);
   u32 value = randomNext(&random->handle);
   *out = NUMBER_VAL(value);
   return UTRUE;
@@ -58,7 +58,7 @@ static ubool implRandomNext(i16 argCount, Value *args, Value *out) {
 static CFunction funcRandomNext = {implRandomNext, "next"};
 
 static ubool implRandomNumber(i16 argCount, Value *args, Value *out) {
-  ObjRandom *random = AS_RANDOM(args[-1]);
+  ObjRandom *random = asRandom(args[-1]);
   double value = randomFloat(&random->handle);
   *out = NUMBER_VAL(value);
   return UTRUE;
@@ -70,7 +70,7 @@ static CFunction funcRandomNumber = {
 };
 
 static ubool implRandomInt(i16 argCount, Value *args, Value *out) {
-  ObjRandom *random = AS_RANDOM(args[-1]);
+  ObjRandom *random = asRandom(args[-1]);
   i32 low, high;
   if (argCount > 1) {
     low = asI32(args[0]);
@@ -93,7 +93,7 @@ static ubool implRandomInt(i16 argCount, Value *args, Value *out) {
 static CFunction funcRandomInt = {implRandomInt, "int", 1, 2};
 
 static ubool implRandomRange(i16 argCount, Value *args, Value *out) {
-  ObjRandom *random = AS_RANDOM(args[-1]);
+  ObjRandom *random = asRandom(args[-1]);
   i32 start = 0, end;
   if (argCount > 1) {
     start = asI32(args[0]);
@@ -112,16 +112,10 @@ static ubool implRandomRange(i16 argCount, Value *args, Value *out) {
   return UTRUE;
 }
 
-static CFunction funcRandomRange = {
-    implRandomRange,
-    "range",
-    1,
-    2,
-    argsNumbers,
-};
+static CFunction funcRandomRange = {implRandomRange, "range", 1, 2};
 
 static ubool impl(i16 argCount, Value *args, Value *out) {
-  ObjModule *module = AS_MODULE(args[0]);
+  ObjModule *module = asModule(args[0]);
   CFunction *functions[] = {
       &funcRandom,
       NULL,
