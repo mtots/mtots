@@ -16,8 +16,6 @@ ubool valuesIs(Value a, Value b) {
       return a.as.boolean == b.as.boolean;
     case VAL_NUMBER:
       return a.as.number == b.as.number;
-    case VAL_SYMBOL:
-      return a.as.symbol == b.as.symbol;
     case VAL_STRING:
       return a.as.string == b.as.string;
     case VAL_CFUNCTION:
@@ -64,8 +62,6 @@ ubool valuesEqual(Value a, Value b) {
       return a.as.boolean == b.as.boolean;
     case VAL_NUMBER:
       return a.as.number == b.as.number;
-    case VAL_SYMBOL:
-      return a.as.symbol == b.as.symbol;
     case VAL_STRING:
       return a.as.string == b.as.string;
     case VAL_CFUNCTION:
@@ -137,14 +133,6 @@ ubool valueLessThan(Value a, Value b) {
       return a.as.boolean < b.as.boolean;
     case VAL_NUMBER:
       return a.as.number < b.as.number;
-    case VAL_SYMBOL: {
-      Symbol *sa = a.as.symbol;
-      Symbol *sb = b.as.symbol;
-      if (sa == sb) {
-        return UFALSE;
-      }
-      return strcmp(getSymbolChars(sa), getSymbolChars(sb)) < 0;
-    }
     case VAL_STRING: {
       /* Use u8 instead of char when comparing to ensure that
        * larger code points compare larger */
@@ -349,9 +337,6 @@ ubool valueRepr(Buffer *out, Value value) {
       return UTRUE;
     case VAL_NUMBER:
       bputnumber(out, value.as.number);
-      return UTRUE;
-    case VAL_SYMBOL:
-      bprintf(out, "<Symbol %s>", getSymbolChars(value.as.symbol));
       return UTRUE;
     case VAL_STRING: {
       String *str = value.as.string;

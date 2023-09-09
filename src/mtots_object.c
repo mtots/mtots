@@ -594,8 +594,6 @@ ObjClass *getClassOfValue(Value value) {
       return vm.boolClass;
     case VAL_NUMBER:
       return vm.numberClass;
-    case VAL_SYMBOL:
-      return vm.symbolClass;
     case VAL_STRING:
       return vm.stringClass;
     case VAL_CFUNCTION:

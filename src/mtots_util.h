@@ -15,7 +15,6 @@
 #include "mtots_util_random.h"
 #include "mtots_util_readfile.h"
 #include "mtots_util_string.h"
-#include "mtots_util_symbol.h"
 #include "mtots_util_unicode.h"
 #include "mtots_util_writefile.h"
 

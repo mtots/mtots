@@ -15,7 +15,6 @@ typedef enum ValueType {
   VAL_NIL,
   VAL_BOOL,
   VAL_NUMBER,
-  VAL_SYMBOL,
   VAL_STRING,
   VAL_CFUNCTION,
   VAL_SENTINEL,
@@ -38,7 +37,6 @@ typedef struct Value {
   union {
     ubool boolean;
     double number;
-    Symbol *symbol;
     String *string;
     CFunction *cfunction;
     Sentinel sentinel;
@@ -62,7 +60,6 @@ typedef struct ValueArray {
 #define IS_NIL(value) ((value).type == VAL_NIL)
 #define IS_BOOL(value) ((value).type == VAL_BOOL)
 #define IS_NUMBER(value) ((value).type == VAL_NUMBER)
-#define IS_SYMBOL(value) ((value).type == VAL_SYMBOL)
 #define IS_STRING(value) ((value).type == VAL_STRING)
 #define IS_CFUNCTION(value) ((value).type == VAL_CFUNCTION)
 #define IS_SENTINEL(value) ((value).type == VAL_SENTINEL)
@@ -80,7 +77,6 @@ size_t asIndexUpper(Value value, size_t length);
 
 ubool asBool(Value value);
 double asNumber(Value value);
-Symbol *asSymbol(Value value);
 String *asString(Value value);
 CFunction *asCFunction(Value value);
 Obj *asObj(Value value);

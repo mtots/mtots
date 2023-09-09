@@ -119,12 +119,6 @@ double asNumber(Value value) {
   }
   return value.as.number;
 }
-Symbol *asSymbol(Value value) {
-  if (!IS_SYMBOL(value)) {
-    panic("Expected Symbol but got %s", getKindName(value));
-  }
-  return value.as.symbol;
-}
 String *asString(Value value) {
   if (!IS_STRING(value)) {
     panic("Expected String but got %s", getKindName(value));
@@ -213,8 +207,6 @@ const char *getKindName(Value value) {
       return "bool";
     case VAL_NUMBER:
       return "number";
-    case VAL_SYMBOL:
-      return "symbol";
     case VAL_STRING:
       return "string";
     case VAL_CFUNCTION:

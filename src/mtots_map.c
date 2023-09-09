@@ -39,8 +39,6 @@ u32 hashval(Value value) {
       /* TODO: smarter hashing */
       return pun.parts[0] ^ pun.parts[1];
     }
-    case VAL_SYMBOL:
-      return getSymbolHash(value.as.symbol);
     case VAL_STRING:
       return value.as.string->hash;
     case VAL_CFUNCTION:

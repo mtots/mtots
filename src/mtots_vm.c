@@ -157,7 +157,6 @@ void initVM(void) {
   initNoMethodClass(&vm.nilClass, "Nil");
   initNoMethodClass(&vm.boolClass, "Bool");
   initNumberClass();
-  initNoMethodClass(&vm.symbolClass, "Symbol");
   initStringClass();
   initBufferClass();
   initListClass();
