@@ -13,36 +13,36 @@ void registerArgs(int argc, const char **argv) {
   }
 }
 
-static ubool implGetMallocCount(i16 argc, Value *args, Value *out) {
+static Status implGetMallocCount(i16 argc, Value *args, Value *out) {
   *out = NUMBER_VAL(vm.memory.mallocCount);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcGetMallocCount = {implGetMallocCount, "getMallocCount"};
 
-static ubool implEnableGCLogs(i16 argc, Value *args, Value *out) {
+static Status implEnableGCLogs(i16 argc, Value *args, Value *out) {
   vm.enableGCLogs = asBool(args[0]);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcEnableGCLogs = {implEnableGCLogs, "enableGCLogs", 1, 0};
 
-static ubool implEnableMallocFreeLogs(i16 argc, Value *args, Value *out) {
+static Status implEnableMallocFreeLogs(i16 argc, Value *args, Value *out) {
   vm.enableMallocFreeLogs = asBool(args[0]);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcEnableMallocFreeLogs = {
     implEnableMallocFreeLogs, "enableMallocFreeLogs", 1, 0};
 
-static ubool implEnableLogOnGC(i16 argc, Value *args, Value *out) {
+static Status implEnableLogOnGC(i16 argc, Value *args, Value *out) {
   vm.enableLogOnGC = asBool(args[0]);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcEnableLogOnGC = {implEnableLogOnGC, "enableLogOnGC", 1, 0};
 
-static ubool impl(i16 argc, Value *args, Value *out) {
+static Status impl(i16 argc, Value *args, Value *out) {
   ObjModule *module = asModule(args[0]);
   CFunction *functions[] = {
       &funcGetMallocCount,
@@ -63,7 +63,7 @@ static ubool impl(i16 argc, Value *args, Value *out) {
     mapSetN(&module->fields, (*function)->name, CFUNCTION_VAL(*function));
   }
 
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction func = {impl, "sys", 1};

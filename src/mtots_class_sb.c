@@ -13,9 +13,9 @@ ObjStringBuilder *newStringBuilder(void) {
   return sb;
 }
 
-static ubool implInstantiateStringBuilder(i16 argCount, Value *args, Value *out) {
+static Status implInstantiateStringBuilder(i16 argCount, Value *args, Value *out) {
   *out = OBJ_VAL_EXPLICIT((Obj *)newStringBuilder());
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcInstantiateStringBuilder = {
@@ -23,10 +23,10 @@ static CFunction funcInstantiateStringBuilder = {
     "__call__",
 };
 
-static ubool implStringBuilderClear(i16 argCount, Value *args, Value *out) {
+static Status implStringBuilderClear(i16 argCount, Value *args, Value *out) {
   ObjStringBuilder *sb = asStringBuilder(args[-1]);
   bufferClear(&sb->buf);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcStringBuilderClear = {
@@ -34,30 +34,30 @@ static CFunction funcStringBuilderClear = {
     "clear",
 };
 
-static ubool implStringBuilderAdd(i16 argCount, Value *args, Value *out) {
+static Status implStringBuilderAdd(i16 argCount, Value *args, Value *out) {
   ObjStringBuilder *sb = asStringBuilder(args[-1]);
   String *string = asString(args[0]);
   bputstrlen(&sb->buf, string->chars, string->byteLength);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcStringBuilderAdd = {implStringBuilderAdd, "add", 1, 0};
 
-static ubool implStringBuilderAddBase64(i16 argCount, Value *args, Value *out) {
+static Status implStringBuilderAddBase64(i16 argCount, Value *args, Value *out) {
   ObjStringBuilder *sb = asStringBuilder(args[-1]);
   ObjBuffer *buffer = asBuffer(args[0]);
   if (!encodeBase64(buffer->handle.data, buffer->handle.length, &sb->buf)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcSringBuilderAddBase64 = {implStringBuilderAddBase64, "addBase64", 1};
 
-static ubool implStringBuilderBuild(i16 argCount, Value *args, Value *out) {
+static Status implStringBuilderBuild(i16 argCount, Value *args, Value *out) {
   ObjStringBuilder *sb = (ObjStringBuilder *)AS_OBJ_UNSAFE(args[-1]);
   *out = STRING_VAL(bufferToString(&sb->buf));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcStringBuilderBuild = {implStringBuilderBuild, "build"};

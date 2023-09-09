@@ -374,22 +374,22 @@ ubool newListFromIterable(Value iterable, ObjList **out) {
   if (IS_LIST(iterable)) {
     ObjList *other = AS_LIST_UNSAFE(iterable);
     *out = newListFromArray(other->buffer, other->length);
-    return UTRUE;
+    return STATUS_OK;
   }
   if (IS_FROZEN_LIST(iterable)) {
     ObjFrozenList *other = AS_FROZEN_LIST_UNSAFE(iterable);
     *out = newListFromArray(other->buffer, other->length);
-    return UTRUE;
+    return STATUS_OK;
   }
   if (!valueFastIter(iterable, &iterator)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   push(iterator);
   *out = list = newList(0);
   push(LIST_VAL(list));
   while (1) {
     if (!valueFastIterNext(&iterator, &item)) {
-      return UFALSE;
+      return STATUS_ERROR;
     }
     if (IS_STOP_ITERATION(item)) {
       break;
@@ -398,7 +398,7 @@ ubool newListFromIterable(Value iterable, ObjList **out) {
   }
   pop(); /* list */
   pop(); /* iterator */
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ObjFrozenList *allocateFrozenList(Value *buffer, int length, u32 hash) {
@@ -430,20 +430,20 @@ ubool newFrozenListFromIterable(Value iterable, ObjFrozenList **out) {
   ObjList *list;
   if (IS_FROZEN_LIST(iterable)) {
     *out = AS_FROZEN_LIST_UNSAFE(iterable);
-    return UTRUE;
+    return STATUS_OK;
   }
   if (IS_LIST(iterable)) {
     list = AS_LIST_UNSAFE(iterable);
     *out = copyFrozenList(list->buffer, list->length);
-    return UTRUE;
+    return STATUS_OK;
   }
   if (!newListFromIterable(iterable, &list)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   push(LIST_VAL(list));
   *out = copyFrozenList(list->buffer, list->length);
   pop(); /* list */
-  return UTRUE;
+  return STATUS_OK;
 }
 
 ObjDict *newDict(void) {
@@ -458,23 +458,23 @@ ubool newDictFromMap(Value map, ObjDict **out) {
   ubool gcPause;
   LOCAL_GC_PAUSE(gcPause);
   if (!valueFastIter(map, &iterator)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   for (;;) {
     if (!valueFastIterNext(&iterator, &key)) {
-      return UFALSE;
+      return STATUS_ERROR;
     }
     if (IS_STOP_ITERATION(key)) {
       break;
     }
     if (!valueGetItem(map, key, &value)) {
-      return UFALSE;
+      return STATUS_ERROR;
     }
     mapSet(&dict->map, key, value);
   }
   LOCAL_GC_UNPAUSE(gcPause);
   *out = dict;
-  return UTRUE;
+  return STATUS_OK;
 }
 
 ubool newDictFromPairs(Value iterable, ObjDict **out) {
@@ -482,43 +482,43 @@ ubool newDictFromPairs(Value iterable, ObjDict **out) {
   Value iterator;
   push(DICT_VAL(dict));
   if (!valueFastIter(iterable, &iterator)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   push(iterator);
   for (;;) {
     Value pair, pairIterator, first, second, third;
     if (!valueFastIterNext(&iterator, &pair)) {
-      return UFALSE;
+      return STATUS_ERROR;
     }
     if (IS_STOP_ITERATION(pair)) {
       break;
     }
     push(pair);
     if (!valueFastIter(pair, &pairIterator)) {
-      return UFALSE;
+      return STATUS_ERROR;
     }
     if (!valueFastIterNext(&pairIterator, &first)) {
-      return UFALSE;
+      return STATUS_ERROR;
     }
     if (IS_STOP_ITERATION(first)) {
       runtimeError("dict(): a pair is missing first item");
-      return UFALSE;
+      return STATUS_ERROR;
     }
     push(first);
     if (!valueFastIterNext(&pairIterator, &second)) {
-      return UFALSE;
+      return STATUS_ERROR;
     }
     if (IS_STOP_ITERATION(second)) {
       runtimeError("dict(): a pair is missing second item");
-      return UFALSE;
+      return STATUS_ERROR;
     }
     push(second);
     if (!valueFastIterNext(&pairIterator, &third)) {
-      return UFALSE;
+      return STATUS_ERROR;
     }
     if (!IS_STOP_ITERATION(third)) {
       runtimeError("dict(): a pair has more than two values");
-      return UFALSE;
+      return STATUS_ERROR;
     }
     mapSet(&dict->map, first, second);
     pop(); /* second */
@@ -528,7 +528,7 @@ ubool newDictFromPairs(Value iterable, ObjDict **out) {
   pop(); /* iterator */
   pop(); /* dict */
   *out = dict;
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ObjFrozenDict *newFrozenDictWithHash(Map *map, u32 hash) {

@@ -16,27 +16,27 @@
 #include "mtots_util_fs.h"
 #include "mtots_util_string.h"
 
-ubool getFileSize(const char *path, size_t *out) {
+Status getFileSize(const char *path, size_t *out) {
 #if MTOTS_ASSUME_POSIX
   struct stat st;
   if (stat(path, &st) != 0) {
     runtimeError("Failed to stat file %s", path);
-    return UFALSE;
+    return STATUS_ERROR;
   }
   *out = st.st_size;
-  return UTRUE;
+  return STATUS_OK;
 #else
   /* Use stdio hack
    * TODO: for windows, use GetFileSizeEx */
   FILE *file = fopen(path, "rb");
   if (!file) {
     runtimeError("Failed to open file %s", path);
-    return UFALSE;
+    return STATUS_ERROR;
   }
   fseek(file, 0, SEEK_END);
   *out = ftell(file);
   fclose(file);
-  return UTRUE;
+  return STATUS_OK;
 #endif
 }
 
@@ -70,14 +70,14 @@ ubool isDirectory(const char *path) {
   panic(
       "isDirectory(): Checking if a path is a directory on "
       "the current platform is not yet supported");
-  return UFALSE;
+  return STATUS_ERROR;
 #endif
 }
 
-ubool listDirectory(
+Status listDirectory(
     const char *dirpath,
     void *userData,
-    ubool (*callback)(void *userData, const char *fileName)) {
+    Status (*callback)(void *userData, const char *fileName)) {
 #if MTOTS_ASSUME_POSIX
   DIR *dir;
   struct dirent *ent;
@@ -85,15 +85,15 @@ ubool listDirectory(
     while ((ent = readdir(dir)) != NULL) {
       if (!callback(userData, ent->d_name)) {
         closedir(dir);
-        return UFALSE;
+        return STATUS_ERROR;
       }
     }
     closedir(dir);
   } else {
     runtimeError("Could not open path as a directory: %s", dirpath);
-    return UFALSE;
+    return STATUS_ERROR;
   }
-  return UTRUE;
+  return STATUS_OK;
 #elif MTOTS_ASSUME_WINDOWS
   HANDLE hFind;
   WIN32_FIND_DATAA entry;
@@ -104,28 +104,28 @@ ubool listDirectory(
   if (hFind == INVALID_HANDLE_VALUE) {
     freeBuffer(&query);
     runtimeError("Could not open path as a directory: %s", dirpath);
-    return UFALSE;
+    return STATUS_ERROR;
   }
   do {
     if (!callback(userData, entry.cFileName)) {
       freeBuffer(&query);
       FindClose(hFind);
-      return UFALSE;
+      return STATUS_ERROR;
     }
   } while (FindNextFileA(hFind, &entry));
   if (GetLastError() != ERROR_NO_MORE_FILES) {
     freeBuffer(&query);
     FindClose(hFind);
     runtimeError("Error while listing directory");
-    return UFALSE;
+    return STATUS_ERROR;
   }
   freeBuffer(&query);
   FindClose(hFind);
-  return UTRUE;
+  return STATUS_OK;
 #else
   runtimeError(
       "Listing directories on the current platform is not yet supported");
-  return UFALSE;
+  return STATUS_ERROR;
 #endif
 }
 
@@ -138,10 +138,10 @@ ubool makeDirectory(const char *dirpath, ubool existOK) {
       /* ignore error in this case */
     } else {
       runtimeError("makeDirectory: %s", strerror(err));
-      return UFALSE;
+      return STATUS_ERROR;
     }
   }
-  return UTRUE;
+  return STATUS_OK;
 #elif MTOTS_ASSUME_WINDOWS
   if (!CreateDirectoryA(dirpath, NULL)) {
     DWORD err = GetLastError();
@@ -150,19 +150,19 @@ ubool makeDirectory(const char *dirpath, ubool existOK) {
         /* ignore error in this case */
       } else {
         runtimeError("makeDirectory: already exists");
-        return UFALSE;
+        return STATUS_ERROR;
       }
     } else if (err == ERROR_PATH_NOT_FOUND) {
       runtimeError("makeDirectory: path not found");
-      return UFALSE;
+      return STATUS_ERROR;
     } else {
       runtimeError("makeDirectory: unknown error %d", err);
-      return UFALSE;
+      return STATUS_ERROR;
     }
   }
-  return UTRUE;
+  return STATUS_OK;
 #else
   runtimeError("makeDirectory on the current platform is not yet supported");
-  return UFALSE;
+  return STATUS_ERROR;
 #endif
 }

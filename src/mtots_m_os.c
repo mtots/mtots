@@ -16,37 +16,37 @@
 #include <dirent.h>
 #endif
 
-static ubool implGetcwd(i16 argCount, Value *args, Value *out) {
+static Status implGetcwd(i16 argCount, Value *args, Value *out) {
 #if MTOTS_USE_DIRENT
   char buffer[MAX_PATH_LENGTH];
   String *path;
   if (getcwd(buffer, MAX_PATH_LENGTH) == NULL) {
     runtimeError("getcwd max path exceeded");
-    return UFALSE;
+    return STATUS_ERROR;
   }
   path = internCString(buffer);
   *out = STRING_VAL(path);
-  return UTRUE;
+  return STATUS_OK;
 #else
   runtimeError("Unsupported platfom (os.getcwd())");
-  return UFALSE;
+  return STATUS_ERROR;
 #endif
 }
 
 static CFunction funcGetcwd = {implGetcwd, "getcwd"};
 
-static ubool implGetenv(i16 argCount, Value *args, Value *out) {
+static Status implGetenv(i16 argCount, Value *args, Value *out) {
   String *name = asString(args[0]);
   const char *value = getenv(name->chars);
   if (value) {
     *out = STRING_VAL(internCString(value));
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcGetenv = {implGetenv, "getenv", 1, 0};
 
-static ubool implIsMacOS(i16 argCount, Value *args, Value *out) {
+static Status implIsMacOS(i16 argCount, Value *args, Value *out) {
   *out = BOOL_VAL(
 #if MTOTS_ASSUME_MACOS
       UTRUE
@@ -54,12 +54,12 @@ static ubool implIsMacOS(i16 argCount, Value *args, Value *out) {
       UFALSE
 #endif
   );
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcIsMacOS = {implIsMacOS, "isMacOS"};
 
-static ubool impl(i16 argCount, Value *args, Value *out) {
+static Status impl(i16 argCount, Value *args, Value *out) {
   ObjModule *module = asModule(args[0]);
   CFunction *cfunctions[] = {
       &funcGetcwd,
@@ -75,7 +75,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
   mapSetN(&module->fields, "name", STRING_VAL(internCString(OS_NAME)));
   mapSetN(&module->fields, "sep", STRING_VAL(internCString(PATH_SEP_STR)));
 
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction func = {impl, "os", 1};

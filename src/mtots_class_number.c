@@ -2,7 +2,7 @@
 
 #include "mtots_vm.h"
 
-static ubool implNumberToU32(i16 argCount, Value *args, Value *out) {
+static Status implNumberToU32(i16 argCount, Value *args, Value *out) {
   double value = asNumber(args[-1]);
   if (value < 0) {
     *out = NUMBER_VAL(0);
@@ -11,7 +11,7 @@ static ubool implNumberToU32(i16 argCount, Value *args, Value *out) {
   } else {
     *out = NUMBER_VAL((u32)value);
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcNumberToU32 = {
@@ -19,18 +19,18 @@ static CFunction funcNumberToU32 = {
     "toU32",
 };
 
-static ubool implNumberBase(i16 argCount, Value *args, Value *out) {
+static Status implNumberBase(i16 argCount, Value *args, Value *out) {
   i32 value = asI32(args[-1]);
   i32 base = asI32(args[0]);
   Buffer buf;
   size_t start, end;
   if (base > 36 || base < 2) {
     runtimeError("base > 36 and base < 2 are not supported (got %d)", (int)base);
-    return UFALSE;
+    return STATUS_ERROR;
   }
   if (value == 0) {
     *out = STRING_VAL(internCString("0"));
-    return UTRUE;
+    return STATUS_OK;
   }
   initBuffer(&buf);
   if (value < 0) {
@@ -53,7 +53,7 @@ static ubool implNumberBase(i16 argCount, Value *args, Value *out) {
   }
   *out = STRING_VAL(bufferToString(&buf));
   freeBuffer(&buf);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcNumberBase = {implNumberBase, "base", 1};

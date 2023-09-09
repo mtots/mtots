@@ -8,78 +8,77 @@
 
 #include "mtots_vm.h"
 
-static ubool implClock(i16 argCount, Value *args, Value *out) {
+static Status implClock(i16 argCount, Value *args, Value *out) {
   *out = NUMBER_VAL(clock() / (double)CLOCKS_PER_SEC);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction cfunctionClock = {implClock, "clock"};
 
-static ubool implExit(i16 argCount, Value *args, Value *out) {
+static Status implExit(i16 argCount, Value *args, Value *out) {
   int exitCode = 0;
   if (argCount > 0) {
     exitCode = asNumber(args[0]);
   }
   exit(exitCode);
-  return UTRUE;
 }
 
 static CFunction cfuncExit = {implExit, "exit", 0, 1};
 
-static ubool implGetErrorString(i16 argCount, Value *args, Value *out) {
+static Status implGetErrorString(i16 argCount, Value *args, Value *out) {
   const char *errorString = getSavedErrorString();
   if (errorString == NULL) {
     runtimeError("No error string found");
-    return UFALSE;
+    return STATUS_ERROR;
   }
   *out = STRING_VAL(internCString(errorString));
   clearSavedErrorString();
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction cfuncGetErrorString = {implGetErrorString, "getErrorString"};
 
-static ubool implLen(i16 argCount, Value *args, Value *out) {
+static Status implLen(i16 argCount, Value *args, Value *out) {
   Value recv = args[0];
   size_t len;
   if (!valueLen(recv, &len)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   *out = NUMBER_VAL(len);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction cfuncLen = {implLen, "len", 1};
 
-static ubool implSum(i16 argCount, Value *args, Value *out) {
+static Status implSum(i16 argCount, Value *args, Value *out) {
   Value iterable = args[0];
   Value iterator, item;
   double total = 0;
   if (!valueFastIter(iterable, &iterator)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   push(iterator);
   for (;;) {
     if (!valueFastIterNext(&iterator, &item)) {
-      return UFALSE;
+      return STATUS_ERROR;
     }
     if (IS_STOP_ITERATION(item)) {
       break;
     }
     if (!IS_NUMBER(item)) {
       runtimeError("Expected number but got %s", getKindName(item));
-      return UFALSE;
+      return STATUS_ERROR;
     }
     total += asNumber(item);
   }
   pop(); /* iterator */
   *out = NUMBER_VAL(total);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction cfuncSum = {implSum, "sum", 1};
 
-static ubool implHex(i16 argCount, Value *args, Value *out) {
+static Status implHex(i16 argCount, Value *args, Value *out) {
   double rawValue = asNumber(args[0]);
   size_t start, end, value;
   Buffer buf;
@@ -116,12 +115,12 @@ static ubool implHex(i16 argCount, Value *args, Value *out) {
 
   *out = STRING_VAL(bufferToString(&buf));
   freeBuffer(&buf);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcHex = {implHex, "hex", 1};
 
-static ubool implBin(i16 argCount, Value *args, Value *out) {
+static Status implBin(i16 argCount, Value *args, Value *out) {
   double rawValue = asNumber(args[0]);
   size_t start, end, value;
   Buffer buf;
@@ -153,80 +152,80 @@ static ubool implBin(i16 argCount, Value *args, Value *out) {
 
   *out = STRING_VAL(bufferToString(&buf));
   freeBuffer(&buf);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcBin = {implBin, "bin", 1};
 
-static ubool implRound(i16 argCount, Value *args, Value *out) {
+static Status implRound(i16 argCount, Value *args, Value *out) {
   double number = asNumber(args[0]);
   *out = NUMBER_VAL((long)(number + 0.5));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction cfuncRound = {implRound, "round", 0, 1};
 
-static ubool implType(i16 argCount, Value *args, Value *out) {
+static Status implType(i16 argCount, Value *args, Value *out) {
   *out = CLASS_VAL(getClassOfValue(args[0]));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction cfuncType = {implType, "type", 1};
 
-static ubool implRepr(i16 argCount, Value *args, Value *out) {
+static Status implRepr(i16 argCount, Value *args, Value *out) {
   Buffer buf;
   initBuffer(&buf);
   if (!valueRepr(&buf, args[0])) {
     freeBuffer(&buf);
-    return UFALSE;
+    return STATUS_ERROR;
   }
   *out = STRING_VAL(bufferToString(&buf));
   freeBuffer(&buf);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction cfunctionRepr = {implRepr, "repr", 1};
 
-static ubool implStr(i16 argCount, Value *args, Value *out) {
+static Status implStr(i16 argCount, Value *args, Value *out) {
   if (IS_STRING(*args)) {
     *out = *args;
-    return UTRUE;
+    return STATUS_OK;
   }
   return implRepr(argCount, args, out);
 }
 
 static CFunction cfunctionStr = {implStr, "str", 1};
 
-static ubool implChr(i16 argCount, Value *args, Value *out) {
+static Status implChr(i16 argCount, Value *args, Value *out) {
   char c;
   if (!IS_NUMBER(args[0])) {
     runtimeError("chr() requires a number but got %s",
                  getKindName(args[0]));
-    return UFALSE;
+    return STATUS_ERROR;
   }
   c = (char)asI32(args[0]);
   *out = STRING_VAL(internString(&c, 1));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction cfunctionChr = {implChr, "chr", 1};
 
-static ubool implOrd(i16 argCount, Value *args, Value *out) {
+static Status implOrd(i16 argCount, Value *args, Value *out) {
   String *str;
   str = asString(args[0]);
   if (str->byteLength != 1) {
     runtimeError(
         "ord() requires a string of length 1 but got a string of length %lu",
         (long)str->byteLength);
-    return UFALSE;
+    return STATUS_ERROR;
   }
   *out = NUMBER_VAL((u8)str->chars[0]);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction cfunctionOrd = {implOrd, "ord", 1};
 
-static ubool implMin(i16 argCount, Value *args, Value *out) {
+static Status implMin(i16 argCount, Value *args, Value *out) {
   Value best = args[0];
   i16 i;
   for (i = 1; i < argCount; i++) {
@@ -238,12 +237,12 @@ static ubool implMin(i16 argCount, Value *args, Value *out) {
     }
   }
   *out = best;
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction cfunctionMin = {implMin, "min", 1, MAX_ARG_COUNT};
 
-static ubool implMax(i16 argCount, Value *args, Value *out) {
+static Status implMax(i16 argCount, Value *args, Value *out) {
   Value best = args[0];
   i16 i;
   for (i = 1; i < argCount; i++) {
@@ -255,38 +254,38 @@ static ubool implMax(i16 argCount, Value *args, Value *out) {
     }
   }
   *out = best;
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction cfunctionMax = {implMax, "max", 1, MAX_ARG_COUNT};
 
-static ubool implSorted(i16 argCount, Value *args, Value *out) {
+static Status implSorted(i16 argCount, Value *args, Value *out) {
   ObjList *list;
   if (!newListFromIterable(args[0], &list)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   push(LIST_VAL(list));
   if (!sortListWithKeyFunc(list, argCount > 1 ? args[1] : NIL_VAL())) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   *out = pop(); /* list */
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction cfunctionSorted = {implSorted, "sorted", 1, 2};
 
-static ubool implSet(i16 argCount, Value *args, Value *out) {
+static Status implSet(i16 argCount, Value *args, Value *out) {
   ObjDict *dict = newDict();
   Value iterator;
   push(DICT_VAL(dict));
   if (!valueFastIter(args[0], &iterator)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   push(iterator);
   for (;;) {
     Value key;
     if (!valueFastIterNext(&iterator, &key)) {
-      return UFALSE;
+      return STATUS_ERROR;
     }
     if (IS_STOP_ITERATION(key)) {
       break;
@@ -297,31 +296,31 @@ static ubool implSet(i16 argCount, Value *args, Value *out) {
   }
   pop();        /* iterator */
   *out = pop(); /* dict */
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction cfunctionSet = {implSet, "Set", 1};
 
-static ubool implTuple(i16 argCount, Value *args, Value *out) {
+static Status implTuple(i16 argCount, Value *args, Value *out) {
   ObjFrozenList *frozenList = copyFrozenList(args, argCount);
   *out = FROZEN_LIST_VAL(frozenList);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction cfunctionTuple = {implTuple, "Tuple", 1, 4};
 
-static ubool implPrint(i16 argCount, Value *args, Value *out) {
+static Status implPrint(i16 argCount, Value *args, Value *out) {
   Value strVal;
   if (!implStr(argCount, args, &strVal)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   oprintln("%s", asString(strVal)->chars);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction cfunctionPrint = {implPrint, "print", 1};
 
-static ubool implRange(i16 argCount, Value *args, Value *out) {
+static Status implRange(i16 argCount, Value *args, Value *out) {
   double start = 0, stop, step = 1;
   i32 i = 0;
   for (i = 0; i < argCount; i++) {
@@ -346,19 +345,18 @@ static ubool implRange(i16 argCount, Value *args, Value *out) {
       break;
     default:
       panic("Invalid argc to range() (%d)", argCount);
-      return UFALSE;
   }
   *out = OBJ_VAL_EXPLICIT((Obj *)newRange(start, stop, step));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction cfunctionRange = {implRange, "range", 1, 3};
 
-static ubool implFloat(i16 argCount, Value *args, Value *out) {
+static Status implFloat(i16 argCount, Value *args, Value *out) {
   Value arg = args[0];
   if (IS_NUMBER(arg)) {
     *out = arg;
-    return UTRUE;
+    return STATUS_OK;
   }
   if (IS_STRING(arg)) {
     String *str = (String *)arg.as.obj;
@@ -394,23 +392,23 @@ static ubool implFloat(i16 argCount, Value *args, Value *out) {
       }
       if (*ptr == '\0') {
         *out = NUMBER_VAL(strtod(str->chars, NULL));
-        return UTRUE;
+        return STATUS_OK;
       }
     }
     runtimeError("Could not convert string to float: %s", str->chars);
-    return UFALSE;
+    return STATUS_ERROR;
   }
   runtimeError("%s is not convertible to float", getKindName(arg));
-  return UFALSE;
+  return STATUS_ERROR;
 }
 
 static CFunction funcFloat = {implFloat, "float", 1};
 
-static ubool implInt(i16 argCount, Value *args, Value *out) {
+static Status implInt(i16 argCount, Value *args, Value *out) {
   Value arg = args[0];
   if (IS_NUMBER(arg)) {
     *out = NUMBER_VAL(floor(asNumber(arg)));
-    return UTRUE;
+    return STATUS_OK;
   }
   if (IS_STRING(arg)) {
     String *str = (String *)arg.as.obj;
@@ -419,7 +417,7 @@ static ubool implInt(i16 argCount, Value *args, Value *out) {
     double value = 0, sign = 1;
     if (base < 2) {
       runtimeError("int(): unsupported base %d", (int)base);
-      return UFALSE;
+      return STATUS_ERROR;
     }
     if (*ptr == '-' || *ptr == '+') {
       sign = *ptr == '-' ? -1 : 1;
@@ -427,7 +425,7 @@ static ubool implInt(i16 argCount, Value *args, Value *out) {
     }
     if (*ptr == '\0') {
       runtimeError("int(): Expected digit, but got end of string");
-      return UFALSE;
+      return STATUS_ERROR;
     }
     while (('0' <= *ptr && *ptr <= '9') ||
            ('A' <= *ptr && *ptr <= 'Z') ||
@@ -447,113 +445,113 @@ static ubool implInt(i16 argCount, Value *args, Value *out) {
         runtimeError(
             "int(): digit value is too big for base (digit=%d, base=%d)",
             (int)digit, (int)base);
-        return UFALSE;
+        return STATUS_ERROR;
       }
       value = value * base + digit;
     }
     if (*ptr != '\0') {
       runtimeError("int(): Expected digit but got '%c'", *ptr);
-      return UFALSE;
+      return STATUS_ERROR;
     }
     *out = NUMBER_VAL(value * sign);
-    return UTRUE;
+    return STATUS_OK;
   }
   runtimeError("%s is not convertible to int", getKindName(arg));
-  return UFALSE;
+  return STATUS_ERROR;
 }
 
 static CFunction funcInt = {implInt, "int", 1, 2};
 
-static ubool implIsClose(i16 argc, Value *args, Value *out) {
+static Status implIsClose(i16 argc, Value *args, Value *out) {
   Value a = args[0];
   Value b = args[1];
   double relTol = argc > 2 ? asNumber(args[2]) : DEFAULT_RELATIVE_TOLERANCE;
   double absTol = argc > 3 ? asNumber(args[3]) : DEFAULT_ABSOLUTE_TOLERANCE;
   if (IS_NUMBER(args[0]) && IS_NUMBER(args[1])) {
     *out = BOOL_VAL(doubleIsCloseEx(asNumber(a), asNumber(b), relTol, absTol));
-    return UTRUE;
+    return STATUS_OK;
   }
   runtimeError(
       "Expectecd two Numbers, but got %s and %s",
       getKindName(a), getKindName(b));
-  return UFALSE;
+  return STATUS_ERROR;
 }
 
 static CFunction funcIsClose = {implIsClose, "isClose", 2, 4};
 
-static ubool implSin(i16 argCount, Value *args, Value *out) {
+static Status implSin(i16 argCount, Value *args, Value *out) {
   *out = NUMBER_VAL(sin(asNumber(args[0])));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcSin = {implSin, "sin", 1};
 
-static ubool implCos(i16 argCount, Value *args, Value *out) {
+static Status implCos(i16 argCount, Value *args, Value *out) {
   *out = NUMBER_VAL(cos(asNumber(args[0])));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcCos = {implCos, "cos", 1};
 
-static ubool implTan(i16 argCount, Value *args, Value *out) {
+static Status implTan(i16 argCount, Value *args, Value *out) {
   *out = NUMBER_VAL(tan(asNumber(args[0])));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcTan = {implTan, "tan", 1};
 
-static ubool implAbs(i16 argCount, Value *args, Value *out) {
+static Status implAbs(i16 argCount, Value *args, Value *out) {
   double value = asNumber(args[0]);
   *out = NUMBER_VAL(value < 0 ? -value : value);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcAbs = {implAbs, "abs", 1};
 
-static ubool implLog(i16 argCount, Value *args, Value *out) {
+static Status implLog(i16 argCount, Value *args, Value *out) {
   double value = asNumber(args[0]);
   if (!(value > 0)) { /* The '!' is to account for NaN */
     runtimeError("Argument to log() must be positive but got %f", value);
-    return UFALSE;
+    return STATUS_ERROR;
   }
   *out = NUMBER_VAL(log(value));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcLog = {implLog, "log", 1};
 
-static ubool implFlog2(i16 argCount, Value *args, Value *out) {
+static Status implFlog2(i16 argCount, Value *args, Value *out) {
   double value = asNumber(args[0]);
   i32 ret = 0;
   if (!(value > 0)) { /* The '!' is to account for NaN */
     runtimeError("Argument to flog2() must be positive but got %f", value);
-    return UFALSE;
+    return STATUS_ERROR;
   }
   while (value > 1) {
     value /= 2;
     ret++;
   }
   *out = NUMBER_VAL(ret);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcFlog2 = {implFlog2, "flog2", 1};
 
-static ubool implIsInstance(i16 argCount, Value *args, Value *out) {
+static Status implIsInstance(i16 argCount, Value *args, Value *out) {
   *out = BOOL_VAL(asClass(args[1]) == getClassOfValue(args[0]));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcIsInstance = {implIsInstance, "isinstance", 2};
 
-static ubool implSort(i16 argCount, Value *args, Value *out) {
+static Status implSort(i16 argCount, Value *args, Value *out) {
   ObjList *list = asList(args[0]);
   ObjList *keys =
       argCount < 2      ? NULL
       : IS_NIL(args[1]) ? NULL
                         : asList(args[1]);
   sortList(list, keys);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcSort = {implSort, "__sort__", 1, 2};

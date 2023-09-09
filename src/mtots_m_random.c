@@ -15,19 +15,19 @@ ObjRandom *asRandom(Value value) {
   return (ObjRandom *)AS_OBJ_UNSAFE(value);
 }
 
-static ubool implRandom(i16 argc, Value *args, Value *out) {
+static Status implRandom(i16 argc, Value *args, Value *out) {
   *out = NUMBER_VAL(randomFloat(&defaultInstance));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcRandom = {implRandom, "random"};
 
-static ubool implInstantiateRandom(i16 argCount, Value *args, Value *out) {
+static Status implInstantiateRandom(i16 argCount, Value *args, Value *out) {
   ObjRandom *random = NEW_NATIVE(ObjRandom, &descriptorRandom);
   u32 seed = argCount > 0 ? asU32(args[0]) : 19937 /* default seed */;
   initRandom(&random->handle, seed);
   *out = OBJ_VAL_EXPLICIT((Obj *)random);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcInstantiateRandom = {implInstantiateRandom, "__call__", 0, 1};
@@ -39,29 +39,29 @@ NativeObjectDescriptor descriptorRandom = {
     "Random",
 };
 
-static ubool implRandomSeed(i16 argCount, Value *args, Value *out) {
+static Status implRandomSeed(i16 argCount, Value *args, Value *out) {
   ObjRandom *random = asRandom(args[-1]);
   u32 seed = asU32(args[0]);
   initRandom(&random->handle, seed);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcRandomSeed = {implRandomSeed, "seed", 1};
 
-static ubool implRandomNext(i16 argCount, Value *args, Value *out) {
+static Status implRandomNext(i16 argCount, Value *args, Value *out) {
   ObjRandom *random = asRandom(args[-1]);
   u32 value = randomNext(&random->handle);
   *out = NUMBER_VAL(value);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcRandomNext = {implRandomNext, "next"};
 
-static ubool implRandomNumber(i16 argCount, Value *args, Value *out) {
+static Status implRandomNumber(i16 argCount, Value *args, Value *out) {
   ObjRandom *random = asRandom(args[-1]);
   double value = randomFloat(&random->handle);
   *out = NUMBER_VAL(value);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcRandomNumber = {
@@ -69,7 +69,7 @@ static CFunction funcRandomNumber = {
     "number",
 };
 
-static ubool implRandomInt(i16 argCount, Value *args, Value *out) {
+static Status implRandomInt(i16 argCount, Value *args, Value *out) {
   ObjRandom *random = asRandom(args[-1]);
   i32 low, high;
   if (argCount > 1) {
@@ -84,15 +84,15 @@ static ubool implRandomInt(i16 argCount, Value *args, Value *out) {
         "random.int() requires low <= high, but "
         "low = %ld, high = %ld",
         (long)low, (long)high);
-    return UFALSE;
+    return STATUS_ERROR;
   }
   *out = NUMBER_VAL(((double)low) + randomInt(&random->handle, high - low));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcRandomInt = {implRandomInt, "int", 1, 2};
 
-static ubool implRandomRange(i16 argCount, Value *args, Value *out) {
+static Status implRandomRange(i16 argCount, Value *args, Value *out) {
   ObjRandom *random = asRandom(args[-1]);
   i32 start = 0, end;
   if (argCount > 1) {
@@ -106,15 +106,15 @@ static ubool implRandomRange(i16 argCount, Value *args, Value *out) {
         "random.range() requires start < end but got "
         "start = %ld,  end = %ld",
         (long)start, (long)end);
-    return UFALSE;
+    return STATUS_ERROR;
   }
   *out = NUMBER_VAL(((double)start) + randomInt(&random->handle, end - start - 1));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcRandomRange = {implRandomRange, "range", 1, 2};
 
-static ubool impl(i16 argCount, Value *args, Value *out) {
+static Status impl(i16 argCount, Value *args, Value *out) {
   ObjModule *module = asModule(args[0]);
   CFunction *functions[] = {
       &funcRandom,
@@ -139,7 +139,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
 
   newNativeClass(module, &descriptorRandom, methods, staticMethods);
 
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction func = {impl, "random", 1};

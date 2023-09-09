@@ -7,11 +7,11 @@
 
 #define MAX_CONST_PER_THUNK 255
 #define AT(t) (atToken(parser, (t)))
-#define WRAP(e)      \
-  do {               \
-    if (!(e)) {      \
-      return UFALSE; \
-    }                \
+#define WRAP(e)            \
+  do {                     \
+    if (!(e)) {            \
+      return STATUS_ERROR; \
+    }                      \
   } while (0)
 #define EXPECT(t) WRAP(expectToken(parser, (t)))
 #define ADVANCE() WRAP(advance(parser))
@@ -33,7 +33,7 @@
 #define TODO(n)               \
   do {                        \
     runtimeError("TODO " #n); \
-    return UFALSE;            \
+    return STATUS_ERROR;      \
   } while (0)
 #define ENV (parser->env)
 #define THUNK (ENV->thunk)
@@ -213,13 +213,13 @@ static ubool newLocal(Parser *parser, StringSlice name, Local **out) {
         "[%s:%d] Too many local variables",
         MODULE_NAME_CHARS,
         PREVIOUS_LINE);
-    return UFALSE;
+    return STATUS_ERROR;
   }
   local = *out = &ENV->locals[ENV->localsCount++];
   local->isCaptured = UFALSE;
   local->name = name;
   local->scopeDepth = -1;
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool atToken(Parser *parser, TokenType type) {
@@ -243,7 +243,7 @@ static ubool expectToken(Parser *parser, TokenType type) {
         CURRENT_LINE,
         tokenTypeToName(type),
         tokenTypeToName(parser->current.type));
-    return UFALSE;
+    return STATUS_ERROR;
   }
   return advance(parser);
 }
@@ -254,25 +254,25 @@ static ubool expectStatementDelimiter(Parser *parser) {
   } else {
     EXPECT(TOKEN_SEMICOLON);
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool emit1(Parser *parser, u8 byte1) {
   writeChunk(&THUNK->chunk, byte1, PREVIOUS_LINE);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool emit2(Parser *parser, u8 byte1, u8 byte2) {
   EMIT1(byte1);
   EMIT1(byte2);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool emit3(Parser *parser, u8 byte1, u8 byte2, u8 byte3) {
   EMIT1(byte1);
   EMIT1(byte2);
   EMIT1(byte3);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool emitConstID(Parser *parser, ConstID id) {
@@ -311,18 +311,18 @@ static ubool emitLoop(Parser *parser, i32 loopStart) {
         "[%s:%d] Loop body too large",
         MODULE_NAME_CHARS,
         PREVIOUS_LINE);
-    return UFALSE;
+    return STATUS_ERROR;
   }
 
   EMIT1((offset >> 8) & 0xFF);
   EMIT1(offset & 0xFF);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool emitJump(Parser *parser, u8 instruction, i32 *jump) {
   EMIT3(instruction, 0xFF, 0xFF);
   *jump = CHUNK_POS - 2;
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool patchJump(Parser *parser, i32 offset) {
@@ -334,19 +334,19 @@ static ubool patchJump(Parser *parser, i32 offset) {
         "[%s:%d] Too much code to jump over",
         MODULE_NAME_CHARS,
         PREVIOUS_LINE);
-    return UFALSE;
+    return STATUS_ERROR;
   }
 
   THUNK->chunk.code[offset] = (jump >> 8) & 0xFF;
   THUNK->chunk.code[offset + 1] = jump & 0xFF;
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool emitConst(Parser *parser, Value value) {
   ConstID constID;
   ADD_CONST_VALUE(value, &constID);
   EMIT1C(OP_CONSTANT, constID);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 /* Add a new constant to the constant pool. The reference to the given value
@@ -359,10 +359,10 @@ static ubool addConstValue(Parser *parser, Value value, ConstID *ref) {
                  PREVIOUS_LINE,
                  (int)(id + 1),
                  (int)CONST_ID_MAX);
-    return UFALSE;
+    return STATUS_ERROR;
   }
   ref->value = (u16)id;
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool addConstSlice(Parser *parser, StringSlice slice, ConstID *ref) {
@@ -375,7 +375,7 @@ static ubool inGlobalScope(Parser *parser) {
 
 static ubool beginScope(Parser *parser) {
   ENV->scopeDepth++;
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool endScope(Parser *parser) {
@@ -390,7 +390,7 @@ static ubool endScope(Parser *parser) {
     }
     ENV->localsCount--;
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 /* Declare a variable to exist, without yet being ready for use.
@@ -413,7 +413,7 @@ static ubool declareVariable(
       MARK_LOCAL_READY(out->as.local);
     }
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 /* Initialize the declared variable the the value sitting at the top of the stack.
@@ -430,7 +430,7 @@ static ubool defineVariable(Parser *parser, VariableDeclaration *decl) {
   } else {
     EMIT1C(OP_DEFINE_GLOBAL, decl->as.global);
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseTypeExpression(Parser *parser) {
@@ -471,7 +471,7 @@ static ubool parseTypeExpression(Parser *parser) {
     }
     break;
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseTypeParameters(Parser *parser) {
@@ -491,7 +491,7 @@ static ubool parseTypeParameters(Parser *parser) {
     }
     EXPECT(TOKEN_RIGHT_BRACKET);
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseImportStatement(Parser *parser) {
@@ -544,7 +544,7 @@ static ubool parseImportStatement(Parser *parser) {
 
   EXPECT_STATEMENT_DELIMITER();
 
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseFieldDeclaration(Parser *parser) {
@@ -561,7 +561,7 @@ static ubool parseFieldDeclaration(Parser *parser) {
     ADVANCE();
   }
   EXPECT_STATEMENT_DELIMITER();
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseMethodDeclaration(Parser *parser) {
@@ -579,7 +579,7 @@ static ubool parseMethodDeclaration(Parser *parser) {
   ADD_CONST_SLICE(name, &nameID);
   CHECK2(parseFunctionCore, name, &thunkContext);
   EMIT1C(OP_METHOD, nameID);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseStaticMethodDeclaration(Parser *parser) {
@@ -594,7 +594,7 @@ static ubool parseStaticMethodDeclaration(Parser *parser) {
   ADD_CONST_SLICE(name, &nameID);
   CHECK2(parseFunctionCore, name, &thunkContext);
   EMIT1C(OP_STATIC_METHOD, nameID);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseClassDeclaration(Parser *parser) {
@@ -679,7 +679,7 @@ static ubool parseClassDeclaration(Parser *parser) {
 
   parser->classInfo = classInfo.enclosing;
 
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseTraitDeclaration(Parser *parser) {
@@ -705,7 +705,7 @@ static ubool parseTraitDeclaration(Parser *parser) {
       ADVANCE();
     }
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseDefaultArgument(Parser *parser, Value *out) {
@@ -713,39 +713,39 @@ static ubool parseDefaultArgument(Parser *parser, Value *out) {
     case TOKEN_NIL:
       ADVANCE();
       *out = NIL_VAL();
-      return UTRUE;
+      return STATUS_OK;
     case TOKEN_TRUE:
       ADVANCE();
       *out = BOOL_VAL(UTRUE);
-      return UTRUE;
+      return STATUS_OK;
     case TOKEN_FALSE:
       ADVANCE();
       *out = BOOL_VAL(UFALSE);
-      return UTRUE;
+      return STATUS_OK;
     case TOKEN_NUMBER:
       ADVANCE();
       *out = NUMBER_VAL(strtod(parser->previous.start, NULL));
-      return UTRUE;
+      return STATUS_OK;
     case TOKEN_MINUS:
       ADVANCE();
       if (AT(TOKEN_NUMBER)) {
         ADVANCE();
         *out = NUMBER_VAL(-strtod(parser->previous.start, NULL));
-        return UTRUE;
+        return STATUS_OK;
       } else {
         runtimeError(
             "[%s:%d] Expected number (for negation of) default argument expression but got %s",
             MODULE_NAME_CHARS,
             CURRENT_LINE,
             tokenTypeToName(parser->current.type));
-        return UFALSE;
+        return STATUS_ERROR;
       }
     case TOKEN_STRING: {
       String *str;
       ADVANCE();
       CHECK1(stringTokenToObjString, &str);
       *out = STRING_VAL(str);
-      return UTRUE;
+      return STATUS_OK;
     }
     default:
       break;
@@ -755,7 +755,7 @@ static ubool parseDefaultArgument(Parser *parser, Value *out) {
       MODULE_NAME_CHARS,
       CURRENT_LINE,
       tokenTypeToName(parser->current.type));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseParameterList(Parser *parser, i16 *argCount) {
@@ -780,7 +780,7 @@ static ubool parseParameterList(Parser *parser, i16 *argCount) {
           "[%s:%d] Non-optional arguments may not follow any optional arguments",
           MODULE_NAME_CHARS,
           PREVIOUS_LINE);
-      return UFALSE;
+      return STATUS_ERROR;
     }
     if (AT(TOKEN_EQUAL)) {
       ADVANCE();
@@ -797,7 +797,7 @@ static ubool parseParameterList(Parser *parser, i16 *argCount) {
   }
   EXPECT(TOKEN_RIGHT_PAREN);
   *argCount = argc;
-  return UTRUE;
+  return STATUS_OK;
 }
 
 /* Parses a function starting from the argument list and leaves a closure on the top of the satck */
@@ -860,7 +860,7 @@ static ubool parseFunctionCore(Parser *parser, StringSlice name, ThunkContext *t
     EMIT1(env.upvalues[i].index);
   }
 
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseDecoratorApplication(Parser *parser) {
@@ -885,7 +885,7 @@ static ubool parseDecoratorApplication(Parser *parser) {
     /* Otherwise, do a function call */
     EMIT2(OP_CALL, 1);
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseFunctionDeclaration(Parser *parser) {
@@ -903,7 +903,7 @@ static ubool parseFunctionDeclaration(Parser *parser) {
 
   CHECK1(defineVariable, &variable);
 
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseVariableDeclaration(Parser *parser) {
@@ -933,7 +933,7 @@ static ubool parseVariableDeclaration(Parser *parser) {
 
   CHECK1(defineVariable, &variable);
 
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ParseRule *getRule(TokenType type) {
@@ -949,7 +949,7 @@ static ubool parsePrec(Parser *parser, Precedence prec) {
         MODULE_NAME_CHARS,
         PREVIOUS_LINE,
         tokenTypeToName(parser->current.type));
-    return UFALSE;
+    return STATUS_ERROR;
   }
   CHECK(prefixRule);
 
@@ -959,7 +959,7 @@ static ubool parsePrec(Parser *parser, Precedence prec) {
     CHECK(infixRule);
   }
 
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseExpression(Parser *parser) {
@@ -981,7 +981,7 @@ static ubool parseRawStringLiteral(Parser *parser) {
           parser->previous.length - 3)));
     }
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool stringTokenToObjString(Parser *parser, String **out) {
@@ -1003,14 +1003,14 @@ static ubool stringTokenToObjString(Parser *parser, String **out) {
 
   initBuffer(&buf);
   if (!unescapeString2(&buf, parser->previous.start + quoteLen, quoteStr, quoteLen)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
 
   *out = bufferToString(&buf);
 
   freeBuffer(&buf);
 
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseStringLiteral(Parser *parser) {
@@ -1019,11 +1019,11 @@ static ubool parseStringLiteral(Parser *parser) {
   EXPECT(TOKEN_STRING);
 
   if (!stringTokenToObjString(parser, &str)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
 
   EMIT_CONST(STRING_VAL(str));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseNumber(Parser *parser) {
@@ -1031,7 +1031,7 @@ static ubool parseNumber(Parser *parser) {
   EXPECT(TOKEN_NUMBER);
   value = strtod(parser->previous.start, NULL);
   EMIT_CONST(NUMBER_VAL(value));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseNumberHex(Parser *parser) {
@@ -1050,11 +1050,11 @@ static ubool parseNumberHex(Parser *parser) {
       value += ch - 'a' + 10;
     } else {
       runtimeError("[%s:%d] Invalid hex digit %c", MODULE_NAME_CHARS, PREVIOUS_LINE, ch);
-      return UFALSE;
+      return STATUS_ERROR;
     }
   }
   EMIT_CONST(NUMBER_VAL(value));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseNumberBin(Parser *parser) {
@@ -1069,11 +1069,11 @@ static ubool parseNumberBin(Parser *parser) {
       value += ch - '0';
     } else {
       runtimeError("[%s:%d] Invalid binary digit %c", MODULE_NAME_CHARS, PREVIOUS_LINE, ch);
-      return UFALSE;
+      return STATUS_ERROR;
     }
   }
   EMIT_CONST(NUMBER_VAL(value));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool resolveLocalForEnv(
@@ -1088,14 +1088,14 @@ static ubool resolveLocalForEnv(
             "[%s:%d] Reading a local variable in its own initializer is not allowed",
             MODULE_NAME_CHARS,
             PREVIOUS_LINE);
-        return UFALSE;
+        return STATUS_ERROR;
       }
       *out = i;
-      return UTRUE;
+      return STATUS_OK;
     }
   }
   *out = -1;
-  return UTRUE;
+  return STATUS_OK;
 }
 
 /* Looks for a local variable matching the given name and returns the locals slot index.
@@ -1111,7 +1111,7 @@ static ubool addUpvalue(
     Upvalue *upvalue = &env->upvalues[i];
     if (upvalue->isLocal == isLocal && upvalue->index == enclosingIndex) {
       *upvalueIndex = i;
-      return UTRUE;
+      return STATUS_OK;
     }
   }
 
@@ -1119,13 +1119,13 @@ static ubool addUpvalue(
     runtimeError(
         "[%s:%d] Too many closure variables in thunk",
         MODULE_NAME_CHARS, PREVIOUS_LINE);
-    return UFALSE;
+    return STATUS_ERROR;
   }
 
   env->upvalues[upvalueCount].isLocal = isLocal;
   env->upvalues[upvalueCount].index = enclosingIndex;
   *upvalueIndex = env->thunk->upvalueCount++;
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool resolveUpvalueForEnv(
@@ -1133,7 +1133,7 @@ static ubool resolveUpvalueForEnv(
   i16 parentLocalIndex, parentUpvalueIndex;
   if (env->enclosing == NULL) {
     *outUpvalueIndex = -1;
-    return UTRUE;
+    return STATUS_OK;
   }
 
   /* Check if the upvalue we are looking for is a local variable in the
@@ -1142,7 +1142,7 @@ static ubool resolveUpvalueForEnv(
   if (parentLocalIndex != -1) {
     env->enclosing->locals[parentLocalIndex].isCaptured = UTRUE;
     CHECK4(addUpvalue, env, parentLocalIndex, UTRUE, outUpvalueIndex);
-    return UTRUE;
+    return STATUS_OK;
   }
 
   /* If it is not, extend the search to environments that enclose the environment that
@@ -1150,11 +1150,11 @@ static ubool resolveUpvalueForEnv(
   CHECK3(resolveUpvalueForEnv, env->enclosing, name, &parentUpvalueIndex);
   if (parentUpvalueIndex != -1) {
     CHECK4(addUpvalue, env, parentUpvalueIndex, UFALSE, outUpvalueIndex);
-    return UTRUE;
+    return STATUS_OK;
   }
 
   *outUpvalueIndex = -1;
-  return UTRUE;
+  return STATUS_OK;
 }
 
 /* Like resolveLocal, but will instead check the enclosing environment for an
@@ -1180,7 +1180,7 @@ static ubool loadVariableByName(Parser *parser, StringSlice name) {
       EMIT1C(OP_GET_GLOBAL, nameID);
     }
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 /* Emits opcode to pop TOS and store it in the variable */
@@ -1200,7 +1200,7 @@ static ubool storeVariableByName(Parser *parser, StringSlice name) {
       EMIT1C(OP_SET_GLOBAL, nameID);
     }
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseName(Parser *parser, ubool canAssign) {
@@ -1217,7 +1217,7 @@ static ubool parseName(Parser *parser, ubool canAssign) {
     CHECK1(loadVariableByName, name);
   }
 
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseNameWithAssignment(Parser *parser) {
@@ -1227,7 +1227,7 @@ static ubool parseNameWithAssignment(Parser *parser) {
 static ubool parseThis(Parser *parser) {
   EXPECT(TOKEN_THIS);
   CHECK1(loadVariableByName, newSlice("this", 4));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseSuper(Parser *parser) {
@@ -1236,7 +1236,7 @@ static ubool parseSuper(Parser *parser) {
   EXPECT(TOKEN_SUPER);
   if (!parser->classInfo || !parser->classInfo->hasSuperClass) {
     runtimeError("'super' cannot be used outside a class with a super class");
-    return UFALSE;
+    return STATUS_ERROR;
   }
   EXPECT(TOKEN_DOT);
   EXPECT(TOKEN_IDENTIFIER);
@@ -1245,7 +1245,7 @@ static ubool parseSuper(Parser *parser) {
   CHECK1(parseArgumentList, &argCount);
   CHECK1(loadVariableByName, newSlice("super", 5));
   EMIT1C1(OP_SUPER_INVOKE, methodNameID, argCount);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseLambda(Parser *parser) {
@@ -1254,7 +1254,7 @@ static ubool parseLambda(Parser *parser) {
   thunkContext.isLambda = UTRUE;
   EXPECT(TOKEN_DEF);
   CHECK2(parseFunctionCore, newSlice("<lambda>", 8), &thunkContext);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseTry(Parser *parser) {
@@ -1267,14 +1267,14 @@ static ubool parseTry(Parser *parser) {
   CHECK1(patchJump, startJump);
   CHECK(parseExpression);
   CHECK1(patchJump, endJump);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseRaise(Parser *parser) {
   EXPECT(TOKEN_RAISE);
   CHECK(parseExpression);
   EMIT1(OP_RAISE);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseLiteral(Parser *parser) {
@@ -1291,16 +1291,15 @@ static ubool parseLiteral(Parser *parser) {
       break;
     default:
       assertionError("parseLiteral");
-      return UFALSE; /* unreachable */
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseGrouping(Parser *parser) {
   EXPECT(TOKEN_LEFT_PAREN);
   CHECK(parseExpression);
   EXPECT(TOKEN_RIGHT_PAREN);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseUnary(Parser *parser) {
@@ -1323,10 +1322,9 @@ static ubool parseUnary(Parser *parser) {
       break;
     default:
       assertionError("parseUnary");
-      return UFALSE; /* Unreachable */
   }
 
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseListDisplayBody(Parser *parser, u8 *out) {
@@ -1342,7 +1340,7 @@ static ubool parseListDisplayBody(Parser *parser, u8 *out) {
           MODULE_NAME_CHARS,
           PREVIOUS_LINE,
           U8_MAX);
-      return UFALSE;
+      return STATUS_ERROR;
     }
     length++;
     if (AT(TOKEN_COMMA)) {
@@ -1352,7 +1350,7 @@ static ubool parseListDisplayBody(Parser *parser, u8 *out) {
     }
   }
   *out = length;
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseListDisplay(Parser *parser) {
@@ -1361,7 +1359,7 @@ static ubool parseListDisplay(Parser *parser) {
   CHECK1(parseListDisplayBody, &length);
   EXPECT(TOKEN_RIGHT_BRACKET);
   EMIT2(OP_NEW_LIST, length);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseMapDisplayBody(Parser *parser, u8 *out) {
@@ -1387,7 +1385,7 @@ static ubool parseMapDisplayBody(Parser *parser, u8 *out) {
           MODULE_NAME_CHARS,
           PREVIOUS_LINE,
           U8_MAX);
-      return UFALSE;
+      return STATUS_ERROR;
     }
     length++;
     if (AT(TOKEN_COMMA)) {
@@ -1398,7 +1396,7 @@ static ubool parseMapDisplayBody(Parser *parser, u8 *out) {
   }
 
   *out = length;
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseMapDisplay(Parser *parser) {
@@ -1407,7 +1405,7 @@ static ubool parseMapDisplay(Parser *parser) {
   CHECK1(parseMapDisplayBody, &length);
   EXPECT(TOKEN_RIGHT_BRACE);
   EMIT2(OP_NEW_DICT, length);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseFrozenDisplay(Parser *parser) {
@@ -1423,9 +1421,9 @@ static ubool parseFrozenDisplay(Parser *parser) {
     CHECK1(parseListDisplayBody, &length);
     EXPECT(TOKEN_RIGHT_BRACKET);
     EMIT2(OP_NEW_FROZEN_LIST, length);
-    return UTRUE;
+    return STATUS_OK;
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseArgumentList(Parser *parser, u8 *out) {
@@ -1440,7 +1438,7 @@ static ubool parseArgumentList(Parser *parser, u8 *out) {
           MODULE_NAME_CHARS,
           PREVIOUS_LINE,
           U8_MAX);
-      return UFALSE;
+      return STATUS_ERROR;
     }
     argCount++;
     if (AT(TOKEN_COMMA)) {
@@ -1452,14 +1450,14 @@ static ubool parseArgumentList(Parser *parser, u8 *out) {
   EXPECT(TOKEN_RIGHT_PAREN);
 
   *out = argCount;
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseFunctionCall(Parser *parser) {
   u8 argCount;
   CHECK1(parseArgumentList, &argCount);
   EMIT2(OP_CALL, argCount);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseSubscript(Parser *parser) {
@@ -1497,7 +1495,7 @@ static ubool parseSubscript(Parser *parser) {
     }
   }
 
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseAs(Parser *parser) {
@@ -1525,7 +1523,7 @@ static ubool parseDot(Parser *parser) {
     EMIT1C(OP_GET_FIELD, nameID);
   }
 
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseAnd(Parser *parser) {
@@ -1535,7 +1533,7 @@ static ubool parseAnd(Parser *parser) {
   EMIT1(OP_POP);
   CHECK1(parsePrec, PREC_AND);
   CHECK1(patchJump, endJump);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseOr(Parser *parser) {
@@ -1548,7 +1546,7 @@ static ubool parseOr(Parser *parser) {
   EMIT1(OP_POP);
   CHECK1(parsePrec, PREC_OR);
   CHECK1(patchJump, endJump);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseBinary(Parser *parser) {
@@ -1635,10 +1633,9 @@ static ubool parseBinary(Parser *parser) {
       break;
     default:
       assertionError("parseBinary");
-      return UFALSE; /* unreachable */
   }
 
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseConditional(Parser *parser) {
@@ -1662,7 +1659,7 @@ static ubool parseConditional(Parser *parser) {
   CHECK(parseExpression); /* evaluate right branch */
   CHECK1(patchJump, endJump);
 
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseBlock(Parser *parser, ubool newScope) {
@@ -1692,14 +1689,14 @@ static ubool parseBlock(Parser *parser, ubool newScope) {
         "[%s:%d] Blocks require at least one declaration, but got none",
         MODULE_NAME_CHARS,
         PREVIOUS_LINE);
-    return UFALSE;
+    return STATUS_ERROR;
   }
 
   if (newScope) {
     CHECK(endScope);
   }
 
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseForInStatement(Parser *parser) {
@@ -1735,7 +1732,7 @@ static ubool parseForInStatement(Parser *parser) {
   EMIT1(OP_POP); /* StopIteration */
 
   CHECK(endScope);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseIfStatement(Parser *parser) {
@@ -1763,7 +1760,7 @@ static ubool parseIfStatement(Parser *parser) {
       runtimeError(
           "[%s:%d] Too many chained 'elif' clauses",
           MODULE_NAME_CHARS, PREVIOUS_LINE);
-      return UFALSE;
+      return STATUS_ERROR;
     }
     CHECK2(emitJump, OP_JUMP, &endJumps[endJumpsCount++]);
     CHECK1(patchJump, thenJump);
@@ -1783,7 +1780,7 @@ static ubool parseIfStatement(Parser *parser) {
     }
   }
 
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseReturnStatement(Parser *parser) {
@@ -1803,7 +1800,7 @@ static ubool parseReturnStatement(Parser *parser) {
   EXPECT_STATEMENT_DELIMITER();
   EMIT1(OP_RETURN);
 
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseWhileStatement(Parser *parser) {
@@ -1826,14 +1823,14 @@ static ubool parseWhileStatement(Parser *parser) {
   CHECK1(patchJump, exitJump);
   EMIT1(OP_POP);
 
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseExpressionStatement(Parser *parser) {
   CHECK(parseExpression);
   EXPECT_STATEMENT_DELIMITER();
   EMIT1(OP_POP);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool parseStatement(Parser *parser) {
@@ -1852,11 +1849,11 @@ static ubool parseStatement(Parser *parser) {
     case TOKEN_NEWLINE:
     case TOKEN_SEMICOLON:
       ADVANCE();
-      return UTRUE;
+      return STATUS_OK;
     case TOKEN_PASS:
       ADVANCE();
       EXPECT_STATEMENT_DELIMITER();
-      return UTRUE;
+      return STATUS_OK;
     default:
       break;
   }
@@ -1903,22 +1900,22 @@ ubool parse(const char *source, String *moduleName, ObjThunk **out) {
   parser.defaultArgs = newList(0);
 
   if (!lexerNext(&lexer, &parser.current)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
 
   while (!atToken(&parser, TOKEN_EOF)) {
     if (!parseDeclaration(&parser)) {
-      return UFALSE;
+      return STATUS_ERROR;
     }
   }
 
   if (!emit2(&parser, OP_NIL, OP_RETURN)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
 
   activeParser = NULL;
   *out = thunk;
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ParseRule newRule(ParseFn prefix, ParseFn infix, Precedence prec) {

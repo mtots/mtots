@@ -216,7 +216,7 @@ static ubool isIterator(Value value) {
         break;
     }
   }
-  return UFALSE;
+  return STATUS_ERROR;
 }
 
 static ubool callCFunction(CFunction *cfunc, i16 argCount) {
@@ -231,12 +231,12 @@ static ubool callCFunction(CFunction *cfunc, i16 argCount) {
         runtimeError(
             "Function %s expects at least %d arguments but got %d",
             cfunc->name, cfunc->arity, argCount);
-        return UFALSE;
+        return STATUS_ERROR;
       } else if (argCount > cfunc->maxArity) {
         runtimeError(
             "Function %s expects at most %d arguments but got %d",
             cfunc->name, cfunc->maxArity, argCount);
-        return UFALSE;
+        return STATUS_ERROR;
       }
       /* At this point we have argCount between
        * cfunc->arity and cfunc->maxArity */
@@ -244,20 +244,20 @@ static ubool callCFunction(CFunction *cfunc, i16 argCount) {
       runtimeError(
           "Function %s expects %d arguments but got %d",
           cfunc->name, cfunc->arity, argCount);
-      return UFALSE;
+      return STATUS_ERROR;
     }
   }
   argsStart = vm.stackTop - argCount;
   status = cfunc->body(argCount, argsStart, &result);
   if (!status) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   vm.stackTop -= argCount + 1;
   push(result);
-  return UTRUE;
+  return STATUS_OK;
 }
 
-static ubool setupCallClosure(ObjClosure *closure, i16 argCount) {
+static Status setupCallClosure(ObjClosure *closure, i16 argCount) {
   CallFrame *frame;
 
   if (argCount < closure->thunk->arity &&
@@ -274,28 +274,28 @@ static ubool setupCallClosure(ObjClosure *closure, i16 argCount) {
     runtimeError(
         "Expected %d arguments but got %d",
         closure->thunk->arity, argCount);
-    return UFALSE;
+    return STATUS_ERROR;
   }
 
   if (vm.frameCount == FRAMES_MAX) {
     runtimeError("Stack overflow");
-    return UFALSE;
+    return STATUS_ERROR;
   }
 
   frame = &vm.frames[vm.frameCount++];
   frame->closure = closure;
   frame->ip = closure->thunk->chunk.code;
   frame->slots = vm.stackTop - argCount - 1;
-  return UTRUE;
+  return STATUS_OK;
 }
 
-static ubool callFunctionOrMethod(Value callable, i16 argCount, ubool consummate);
+static Status callFunctionOrMethod(Value callable, i16 argCount, ubool consummate);
 
-static ubool setupOrCallValue(Value callee, i16 argCount) {
+static Status setupOrCallValue(Value callee, i16 argCount) {
   return callFunctionOrMethod(callee, argCount, UFALSE);
 }
 
-static ubool invokeFromClass(
+static Status invokeFromClass(
     ObjClass *klass, String *name, i16 argCount) {
   Value method;
   if (!mapGetStr(&klass->methods, name, &method)) {
@@ -303,7 +303,7 @@ static ubool invokeFromClass(
         "Method '%s' not found in '%s'",
         name->chars,
         klass->name->chars);
-    return UFALSE;
+    return STATUS_ERROR;
   }
   return setupOrCallValue(method, argCount);
 }
@@ -317,7 +317,7 @@ static ubool invoke(String *name, i16 argCount) {
   if (klass == NULL) {
     runtimeError(
         "%s kind does not yet support method calls", getKindName(receiver));
-    return UFALSE;
+    return STATUS_ERROR;
   }
   if (klass == vm.classClass) {
     /* For classes, we invoke static methods */
@@ -332,7 +332,7 @@ static ubool invoke(String *name, i16 argCount) {
           "Static method '%s' not found in '%s'",
           name->chars,
           cls->name->chars);
-      return UFALSE;
+      return STATUS_ERROR;
     }
     return setupOrCallValue(method, argCount);
   }
@@ -409,7 +409,7 @@ static void concatenate(void) {
   push(STRING_VAL(result));
 }
 
-static ubool run(void) {
+static Status run(void) {
   i16 returnFrameCount = vm.frameCount - 1;
   CallFrame *frame = &vm.frames[vm.frameCount - 1];
   i16 trySnapShotCountAtStart = vm.trySnapshotsCount;
@@ -420,17 +420,17 @@ static ubool run(void) {
 #define READ_CONSTANT() \
   (frame->closure->thunk->chunk.constants.values[READ_SHORT()])
 #define READ_STRING() (READ_CONSTANT().as.string)
-#define RETURN_RUNTIME_ERROR()                                          \
-  do {                                                                  \
-    TrySnapshot *snap;                                                  \
-    if (vm.trySnapshotsCount <= trySnapShotCountAtStart) return UFALSE; \
-    snap = &vm.trySnapshots[--vm.trySnapshotsCount];                    \
-    vm.stackTop = snap->stackTop;                                       \
-    vm.frameCount = snap->frameCount;                                   \
-    frame = &vm.frames[vm.frameCount - 1];                              \
-    frame->ip = snap->ip;                                               \
-    saveCurrentErrorString();                                           \
-    goto loop;                                                          \
+#define RETURN_RUNTIME_ERROR()                                                \
+  do {                                                                        \
+    TrySnapshot *snap;                                                        \
+    if (vm.trySnapshotsCount <= trySnapShotCountAtStart) return STATUS_ERROR; \
+    snap = &vm.trySnapshots[--vm.trySnapshotsCount];                          \
+    vm.stackTop = snap->stackTop;                                             \
+    vm.frameCount = snap->frameCount;                                         \
+    frame = &vm.frames[vm.frameCount - 1];                                    \
+    frame->ip = snap->ip;                                                     \
+    saveCurrentErrorString();                                                 \
+    goto loop;                                                                \
   } while (0)
 #define INVOKE(methodName, argCount)       \
   do {                                     \
@@ -861,7 +861,7 @@ static ubool run(void) {
             frame = &vm.frames[vm.frameCount - 1];
           }
 
-          return UTRUE;
+          return STATUS_OK;
         }
 
         vm.stackTop = frame->slots;
@@ -961,12 +961,12 @@ static ubool run(void) {
 }
 
 /* Runs true on success, false otherwise */
-ubool interpret(const char *source, ObjModule *module) {
+Status interpret(const char *source, ObjModule *module) {
   ObjClosure *closure;
   ObjThunk *thunk;
 
   if (!parse(source, module->klass->name, &thunk)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
 
   push(THUNK_VAL(thunk));
@@ -991,7 +991,7 @@ void listAppend(ObjList *list, Value value) {
   list->buffer[list->length++] = value;
 }
 
-static ubool callClass(ObjClass *klass, i16 argCount, ubool consummate) {
+static Status callClass(ObjClass *klass, i16 argCount, ubool consummate) {
   Value initializer;
 
   if (klass->instantiate) {
@@ -1000,36 +1000,36 @@ static ubool callClass(ObjClass *klass, i16 argCount, ubool consummate) {
     /* builtin class */
     runtimeError("Builtin class %s does not support being called",
                  klass->name->chars);
-    return UFALSE;
+    return STATUS_ERROR;
   } else if (klass->descriptor) {
     /* native class */
     runtimeError("Native class %s does not support being called",
                  klass->name->chars);
-    return UFALSE;
+    return STATUS_ERROR;
   } else if (klass->isModuleClass) {
     /* module */
     runtimeError("Module classes cannot be instantiated");
-    return UFALSE;
+    return STATUS_ERROR;
   } else {
     /* normal classes */
     vm.stackTop[-argCount - 1] = INSTANCE_VAL(newInstance(klass));
     if (mapGetStr(&klass->methods, vm.initString, &initializer)) {
       if (!setupCallClosure(AS_CLOSURE_UNSAFE(initializer), argCount)) {
-        return UFALSE;
+        return STATUS_ERROR;
       }
       if (consummate) {
         return run();
       }
-      return UTRUE;
+      return STATUS_OK;
     } else if (argCount != 0) {
       runtimeError("Expected 0 arguments but got %d", argCount);
-      return UFALSE;
+      return STATUS_ERROR;
     }
-    return UTRUE;
+    return STATUS_OK;
   }
 }
 
-ubool callClosure(ObjClosure *closure, i16 argCount) {
+Status callClosure(ObjClosure *closure, i16 argCount) {
   return setupCallClosure(closure, argCount) && run();
 }
 
@@ -1050,7 +1050,7 @@ ubool callClosure(ObjClosure *closure, i16 argCount) {
  * set up the stack frame so that code in 'run' may resume from where it was
  * and it would still work.
  */
-static ubool callFunctionOrMethod(Value callable, i16 argCount, ubool consummate) {
+static Status callFunctionOrMethod(Value callable, i16 argCount, ubool consummate) {
   if (IS_CFUNCTION(callable)) {
     CFunction *cfunc = callable.as.cfunction;
     return callCFunction(cfunc, argCount);
@@ -1073,10 +1073,10 @@ static ubool callFunctionOrMethod(Value callable, i16 argCount, ubool consummate
   }
   runtimeError(
       "Can only call functions and classes but got %s", getKindName(callable));
-  return UFALSE;
+  return STATUS_ERROR;
 }
 
-static ubool callMethodHelper(String *name, i16 argCount, ubool consummate) {
+static Status callMethodHelper(String *name, i16 argCount, ubool consummate) {
   ObjClass *klass;
   Value receiver = peek(argCount);
   Value method;
@@ -1098,7 +1098,7 @@ static ubool callMethodHelper(String *name, i16 argCount, ubool consummate) {
           "Static method '%s' not found in '%s'",
           name->chars,
           cls->name->chars);
-      return UFALSE;
+      return STATUS_ERROR;
     }
     return callFunctionOrMethod(method, argCount, consummate);
   }
@@ -1108,15 +1108,15 @@ static ubool callMethodHelper(String *name, i16 argCount, ubool consummate) {
         "Method '%s' not found in '%s'",
         name->chars,
         klass->name->chars);
-    return UFALSE;
+    return STATUS_ERROR;
   }
   return callFunctionOrMethod(method, argCount, consummate);
 }
 
-ubool callFunction(i16 argCount) {
+Status callFunction(i16 argCount) {
   return callFunctionOrMethod(peek(argCount), argCount, UTRUE);
 }
 
-ubool callMethod(String *name, i16 argCount) {
+Status callMethod(String *name, i16 argCount) {
   return callMethodHelper(name, argCount, UTRUE);
 }

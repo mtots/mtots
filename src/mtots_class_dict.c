@@ -2,13 +2,13 @@
 
 #include "mtots_vm.h"
 
-static ubool implInstantiateDict(i16 argCount, Value *args, Value *out) {
+static Status implInstantiateDict(i16 argCount, Value *args, Value *out) {
   ObjDict *dict;
   if (!newDictFromMap(args[0], &dict)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   *out = DICT_VAL(dict);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcInstantiateDict = {implInstantiateDict, "__call__", 1};
@@ -24,13 +24,13 @@ static void blackenDictIterator(ObjNative *n) {
   markObject((Obj *)(di->dict));
 }
 
-static ubool implDictIteratorCall(i16 argCount, Value *args, Value *out) {
+static Status implDictIteratorCall(i16 argCount, Value *args, Value *out) {
   ObjDictIterator *iter = (ObjDictIterator *)AS_OBJ_UNSAFE(args[-1]);
   if (mapIteratorNextKey(&iter->di, out)) {
-    return UTRUE;
+    return STATUS_OK;
   }
   *out = STOP_ITERATION_VAL();
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcDictIteratorCall = {
@@ -45,70 +45,70 @@ static NativeObjectDescriptor descriptorDictIterator = {
     "DictIterator",
 };
 
-static ubool implDictGetOrNil(i16 argCount, Value *args, Value *out) {
+static Status implDictGetOrNil(i16 argCount, Value *args, Value *out) {
   ObjDict *dict = asDict(args[-1]);
   if (!mapGet(&dict->map, args[0], out)) {
     *out = NIL_VAL();
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcDictGetOrNil = {implDictGetOrNil, "get", 1};
 
-static ubool implDictGet(i16 argCount, Value *args, Value *out) {
+static Status implDictGet(i16 argCount, Value *args, Value *out) {
   ObjDict *dict = asDict(args[-1]);
   if (!mapGet(&dict->map, args[0], out)) {
     *out = args[1];
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcDictGet = {implDictGet, "get", 2};
 
-static ubool implDictGetItem(i16 argCount, Value *args, Value *out) {
+static Status implDictGetItem(i16 argCount, Value *args, Value *out) {
   ObjDict *dict = asDict(args[-1]);
   if (!mapGet(&dict->map, args[0], out)) {
     runtimeError("Key not found in dict");
-    return UFALSE;
+    return STATUS_ERROR;
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcDictGetItem = {implDictGetItem, "__getitem__", 1};
 
-static ubool implDictSetItem(i16 argCount, Value *args, Value *out) {
+static Status implDictSetItem(i16 argCount, Value *args, Value *out) {
   ObjDict *dict = asDict(args[-1]);
   *out = BOOL_VAL(mapSet(&dict->map, args[0], args[1]));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcDictSetItem = {implDictSetItem, "__setitem__", 2};
 
-static ubool implDictDelete(i16 argCount, Value *args, Value *out) {
+static Status implDictDelete(i16 argCount, Value *args, Value *out) {
   ObjDict *dict = asDict(args[-1]);
   *out = BOOL_VAL(mapDelete(&dict->map, args[0]));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcDictDelete = {implDictDelete, "delete", 1};
 
-static ubool implDictContains(i16 argCount, Value *args, Value *out) {
+static Status implDictContains(i16 argCount, Value *args, Value *out) {
   Value dummy;
   ObjDict *dict = asDict(args[-1]);
   *out = BOOL_VAL(mapGet(&dict->map, args[0], &dummy));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcDictContains = {implDictContains, "__contains__", 1};
 
-static ubool implDictIter(i16 argCount, Value *args, Value *out) {
+static Status implDictIter(i16 argCount, Value *args, Value *out) {
   ObjDict *dict = asDict(args[-1]);
   ObjDictIterator *iter;
   iter = NEW_NATIVE(ObjDictIterator, &descriptorDictIterator);
   iter->dict = dict;
   initMapIterator(&iter->di, &dict->map);
   *out = OBJ_VAL_EXPLICIT((Obj *)iter);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcDictIter = {implDictIter, "__iter__", 0};
@@ -124,7 +124,7 @@ static CFunction funcDictIter = {implDictIter, "__iter__", 0};
  * Implementation is a slow linear search, but a method like this
  * is still handy sometimes.
  */
-static ubool implDictRget(i16 argCount, Value *args, Value *out) {
+static Status implDictRget(i16 argCount, Value *args, Value *out) {
   ObjDict *dict = asDict(args[-1]);
   Value value = args[0];
   MapIterator di;
@@ -134,7 +134,7 @@ static ubool implDictRget(i16 argCount, Value *args, Value *out) {
   while (mapIteratorNext(&di, &entry)) {
     if (valuesEqual(entry->value, value)) {
       *out = entry->key;
-      return UTRUE;
+      return STATUS_OK;
     }
   }
 
@@ -142,32 +142,32 @@ static ubool implDictRget(i16 argCount, Value *args, Value *out) {
     /* If the optional second argument is provided, we return that
      * when a matching entry is not found */
     *out = args[1];
-    return UTRUE;
+    return STATUS_OK;
   }
   /* If no entry is found, and no optional argument is provided
    * we throw an error */
   runtimeError("No entry with given value found in Dict");
-  return UFALSE;
+  return STATUS_ERROR;
 }
 
 static CFunction funcDictRget = {implDictRget, "rget", 1, 2};
 
-static ubool implDictFreeze(i16 argCount, Value *args, Value *out) {
+static Status implDictFreeze(i16 argCount, Value *args, Value *out) {
   ObjDict *dict = asDict(args[-1]);
   ObjFrozenDict *fdict = newFrozenDict(&dict->map);
   *out = FROZEN_DICT_VAL(fdict);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcDictFreeze = {implDictFreeze, "freeze", 0};
 
-static ubool implDictStaticFromPairs(i16 argCount, Value *args, Value *out) {
+static Status implDictStaticFromPairs(i16 argCount, Value *args, Value *out) {
   ObjDict *dict;
   if (!newDictFromPairs(args[0], &dict)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   *out = DICT_VAL(dict);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcDictStaticFromPairs = {

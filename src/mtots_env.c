@@ -29,9 +29,9 @@ static ubool canOpen(const char *path) {
   FILE *file = fopen(path, "rb");
   if (file) {
     fclose(file);
-    return UTRUE;
+    return STATUS_OK;
   }
-  return UFALSE;
+  return STATUS_ERROR;
 }
 
 static ubool testPrefix(size_t prefixLen) {
@@ -42,7 +42,7 @@ static ubool testPrefix(size_t prefixLen) {
   if (totalLen + 1 < PATH_LIMIT) {
     strcpy(pathBuffer + prefixLen, PATH_SEP_STR "__init__" MTOTS_FILE_EXTENSION);
     if (canOpen(pathBuffer)) {
-      return UTRUE;
+      return STATUS_OK;
     }
   }
 
@@ -51,11 +51,11 @@ static ubool testPrefix(size_t prefixLen) {
   if (totalLen + 1 < PATH_LIMIT) {
     strcpy(pathBuffer + prefixLen, MTOTS_FILE_EXTENSION);
     if (canOpen(pathBuffer)) {
-      return UTRUE;
+      return STATUS_OK;
     }
   }
 
-  return UFALSE;
+  return STATUS_ERROR;
 }
 
 static ubool testRoot(size_t rootLen, const char *moduleName, size_t moduleNameLen) {
@@ -72,7 +72,7 @@ static ubool testRoot(size_t rootLen, const char *moduleName, size_t moduleNameL
     }
     return testPrefix(prefixLen);
   }
-  return UFALSE;
+  return STATUS_ERROR;
 }
 
 /*
@@ -87,7 +87,7 @@ static ubool testPartialRoot(
     strcpy(pathBuffer + rootPrefixLen, rootSuffix);
     return testRoot(rootLen, moduleName, moduleNameLen);
   }
-  return UFALSE;
+  return STATUS_ERROR;
 }
 */
 

@@ -2,10 +2,10 @@
 
 #include "mtots_vm.h"
 
-static ubool implClassGetName(i16 argCount, Value *args, Value *out) {
+static Status implClassGetName(i16 argCount, Value *args, Value *out) {
   ObjClass *cls = asClass(args[0]);
   *out = STRING_VAL(cls->name);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcClassGetName = {implClassGetName, "getName", 1};

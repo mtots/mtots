@@ -167,7 +167,7 @@ ubool encodeBase64(const u8 *input, size_t length, Buffer *out) {
     bputchar(out, base64Alphabet[(chunk >> 6) & 63]);
     bputchar(out, '=');
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool decodeBase64Char(char ch, u32 *out) {
@@ -175,11 +175,11 @@ static ubool decodeBase64Char(char ch, u32 *out) {
     u32 value = (u32)base64Rmap[(u8)ch];
     if (value != INVALID_CHAR) {
       *out = value;
-      return UTRUE;
+      return STATUS_OK;
     }
   }
   runtimeError("decodeBase64Char: Invalid char %c (%u)", ch, ch);
-  return UFALSE;
+  return STATUS_ERROR;
 }
 
 /* Decode a 4 char chunk from the input */
@@ -189,24 +189,24 @@ static ubool decodeBase64Chunk(const char *input, Buffer *out) {
   /* Validation */
   if (input[0] == '=' || input[1] == '=' || (input[2] == '=' && input[3] != '=')) {
     runtimeError("Invalid placement of '='");
-    return UFALSE;
+    return STATUS_ERROR;
   }
 
   /* compute chunk */
   if (!decodeBase64Char(input[0], &charVal)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   chunk |= charVal << 18;
   if (!decodeBase64Char(input[1], &charVal)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   chunk |= charVal << 12;
   if (!decodeBase64Char(input[2], &charVal)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   chunk |= charVal << 6;
   if (!decodeBase64Char(input[3], &charVal)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   chunk |= charVal;
 
@@ -222,7 +222,7 @@ static ubool decodeBase64Chunk(const char *input, Buffer *out) {
     bufferAddU8(out, (chunk >> 8) & 255);
     bufferAddU8(out, chunk & 255);
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 ubool decodeBase64(const char *input, size_t length, Buffer *out) {
@@ -232,12 +232,12 @@ ubool decodeBase64(const char *input, size_t length, Buffer *out) {
         "decodeBase64 requires input length that is a multiple of 4, "
         "but got length=%lu",
         (unsigned long)length);
-    return UFALSE;
+    return STATUS_ERROR;
   }
   for (i = 0; i < length; i += 4) {
     if (!decodeBase64Chunk(input + i, out)) {
-      return UFALSE;
+      return STATUS_ERROR;
     }
   }
-  return UTRUE;
+  return STATUS_OK;
 }

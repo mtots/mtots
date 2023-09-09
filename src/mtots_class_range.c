@@ -30,15 +30,15 @@ ObjRangeIterator *newRangeIterator(double next, double stop, double step) {
   return range;
 }
 
-static ubool implRangeIter(i16 argCount, Value *args, Value *out) {
+static Status implRangeIter(i16 argCount, Value *args, Value *out) {
   ObjRange *range = asRange(args[-1]);
   *out = OBJ_VAL_EXPLICIT((Obj *)newRangeIterator(range->start, range->stop, range->step));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcRangeIter = {implRangeIter, "__iter__"};
 
-static ubool implRangeRepr(i16 argCount, Value *args, Value *out) {
+static Status implRangeRepr(i16 argCount, Value *args, Value *out) {
   ObjRange *range = asRange(args[-1]);
   Buffer buf;
   initBuffer(&buf);
@@ -51,7 +51,7 @@ static ubool implRangeRepr(i16 argCount, Value *args, Value *out) {
   bputchar(&buf, ')');
   *out = STRING_VAL(bufferToString(&buf));
   freeBuffer(&buf);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcRangeRepr = {implRangeRepr, "__repr__"};
@@ -65,20 +65,20 @@ void initRangeClass(void) {
   newNativeClass(NULL, &descriptorRange, methods, NULL);
 }
 
-static ubool implRangeIteratorCall(i16 argCount, Value *args, Value *out) {
+static Status implRangeIteratorCall(i16 argCount, Value *args, Value *out) {
   ObjRangeIterator *iter = asRangeIterator(args[-1]);
   if (iter->step > 0) {
     if (iter->next >= iter->stop) {
       *out = STOP_ITERATION_VAL();
-      return UTRUE;
+      return STATUS_OK;
     }
   } else if (iter->next <= iter->stop) {
     *out = STOP_ITERATION_VAL();
-    return UTRUE;
+    return STATUS_OK;
   }
   *out = NUMBER_VAL(iter->next);
   iter->next += iter->step;
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcRangeIteratorCall = {implRangeIteratorCall, "__call__"};

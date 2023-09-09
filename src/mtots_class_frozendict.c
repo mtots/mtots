@@ -13,13 +13,13 @@ static void blackenFrozenDictIterator(ObjNative *n) {
   markObject((Obj *)(di->dict));
 }
 
-static ubool implFrozenDictIteratorCall(i16 argCount, Value *args, Value *out) {
+static Status implFrozenDictIteratorCall(i16 argCount, Value *args, Value *out) {
   ObjFrozenDictIterator *iter = (ObjFrozenDictIterator *)AS_OBJ_UNSAFE(args[-1]);
   if (mapIteratorNextKey(&iter->di, out)) {
-    return UTRUE;
+    return STATUS_OK;
   }
   *out = STOP_ITERATION_VAL();
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcFrozenDictIteratorCall = {implFrozenDictIteratorCall, "__call__"};
@@ -31,33 +31,33 @@ static NativeObjectDescriptor descriptorFrozenDictIterator = {
     "FrozenDictIterator",
 };
 
-static ubool implFrozenDictGetItem(i16 argCount, Value *args, Value *out) {
+static Status implFrozenDictGetItem(i16 argCount, Value *args, Value *out) {
   ObjFrozenDict *dict = asFrozenDict(args[-1]);
   if (!mapGet(&dict->map, args[0], out)) {
     runtimeError("Key not found in dict");
-    return UFALSE;
+    return STATUS_ERROR;
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcFrozenDictGetItem = {implFrozenDictGetItem, "__getitem__", 1};
 
-static ubool implFrozenDictContains(i16 argCount, Value *args, Value *out) {
+static Status implFrozenDictContains(i16 argCount, Value *args, Value *out) {
   Value dummy;
   ObjFrozenDict *dict = asFrozenDict(args[-1]);
   *out = BOOL_VAL(mapGet(&dict->map, args[0], &dummy));
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcFrozenDictContains = {implFrozenDictContains, "__contains__", 1};
 
-static ubool implFrozenDictIter(i16 argCount, Value *args, Value *out) {
+static Status implFrozenDictIter(i16 argCount, Value *args, Value *out) {
   ObjFrozenDict *dict = asFrozenDict(args[-1]);
   ObjFrozenDictIterator *iter = NEW_NATIVE(ObjFrozenDictIterator, &descriptorFrozenDictIterator);
   iter->dict = dict;
   initMapIterator(&iter->di, &dict->map);
   *out = OBJ_VAL_EXPLICIT((Obj *)iter);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcFrozenDictIter = {implFrozenDictIter, "__iter__", 0};
@@ -73,7 +73,7 @@ static CFunction funcFrozenDictIter = {implFrozenDictIter, "__iter__", 0};
  * Implementation is a slow linear search, but a method like this
  * is still handy sometimes.
  */
-static ubool implFrozenDictRget(i16 argCount, Value *args, Value *out) {
+static Status implFrozenDictRget(i16 argCount, Value *args, Value *out) {
   ObjFrozenDict *dict = asFrozenDict(args[-1]);
   Value value = args[0];
   MapIterator di;
@@ -83,7 +83,7 @@ static ubool implFrozenDictRget(i16 argCount, Value *args, Value *out) {
   while (mapIteratorNext(&di, &entry)) {
     if (valuesEqual(entry->value, value)) {
       *out = entry->key;
-      return UTRUE;
+      return STATUS_OK;
     }
   }
 
@@ -91,12 +91,12 @@ static ubool implFrozenDictRget(i16 argCount, Value *args, Value *out) {
     /* If the optional second argument is provided, we return that
      * when a matching entry is not found */
     *out = args[1];
-    return UTRUE;
+    return STATUS_OK;
   }
   /* If no entry is found, and no optional argument is provided
    * we throw an error */
   runtimeError("No entry with given value found in FrozenDict");
-  return UFALSE;
+  return STATUS_ERROR;
 }
 
 static CFunction funcFrozenDictRget = {implFrozenDictRget, "rget", 1, 2};

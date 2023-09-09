@@ -23,7 +23,7 @@ static ubool runtimeErrorUnexpectedEOF(size_t i, size_t len, size_t limit) {
       (unsigned long)i,
       (unsigned long)len,
       (unsigned long)limit);
-  return UFALSE;
+  return STATUS_ERROR;
 }
 
 static ubool load(u8 *buffer, size_t limit, size_t *pos, Value *out) {
@@ -93,7 +93,7 @@ static ubool load(u8 *buffer, size_t limit, size_t *pos, Value *out) {
       push(LIST_VAL(list));
       for (j = 0; j < len; j++) {
         if (!load(buffer, limit, &i, list->buffer + j)) {
-          return UFALSE;
+          return STATUS_ERROR;
         }
       }
       pop(); /* list */
@@ -118,11 +118,11 @@ static ubool load(u8 *buffer, size_t limit, size_t *pos, Value *out) {
       for (j = 0; j < len; j++) {
         Value key, value;
         if (!load(buffer, limit, &i, &key)) {
-          return UFALSE;
+          return STATUS_ERROR;
         }
         push(key);
         if (!load(buffer, limit, &i, &value)) {
-          return UFALSE;
+          return STATUS_ERROR;
         }
         push(value);
         mapSet(&dict->map, key, value);
@@ -135,26 +135,26 @@ static ubool load(u8 *buffer, size_t limit, size_t *pos, Value *out) {
     }
     default:
       runtimeError("Invalid BMON tag %d", header);
-      return UFALSE;
+      return STATUS_ERROR;
   }
   *pos = i;
-  return UTRUE;
+  return STATUS_OK;
 }
 
-static ubool implLoads(i16 argCount, Value *args, Value *out) {
+static Status implLoads(i16 argCount, Value *args, Value *out) {
   ObjBuffer *buffer = asBuffer(args[0]);
   size_t pos = 0;
   if (!load(buffer->handle.data, buffer->handle.length, &pos, out)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   if (pos < buffer->handle.length) {
     runtimeError(
         "Extra data when loading BMON (pos=%lu, length=%lu)",
         (unsigned long)pos,
         (unsigned long)buffer->handle.length);
-    return UFALSE;
+    return STATUS_ERROR;
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcLoads = {implLoads, "loads", 1};
@@ -163,10 +163,10 @@ ubool bmonDump(Value value, Buffer *out) {
   switch (value.type) {
     case VAL_NIL:
       bufferAddU8(out, TAG_NIL);
-      return UTRUE;
+      return STATUS_OK;
     case VAL_BOOL:
       bufferAddU8(out, value.as.boolean ? TAG_TRUE : TAG_FALSE);
-      return UTRUE;
+      return STATUS_OK;
     case VAL_NUMBER: {
       union {
         double x;
@@ -176,14 +176,14 @@ ubool bmonDump(Value value, Buffer *out) {
       bufferAddU8(out, TAG_NUMBER);
       bufferAddU32(out, u.arr[0]);
       bufferAddU32(out, u.arr[1]);
-      return UTRUE;
+      return STATUS_OK;
     }
     case VAL_STRING: {
       String *string = (String *)value.as.obj;
       bufferAddU8(out, TAG_STRING);
       bufferAddU32(out, string->byteLength);
       bufferAddBytes(out, string->chars, string->byteLength);
-      return UTRUE;
+      return STATUS_OK;
     }
     case VAL_OBJ: {
       Obj *obj = AS_OBJ_UNSAFE(value);
@@ -195,17 +195,17 @@ ubool bmonDump(Value value, Buffer *out) {
             runtimeError(
                 "list is too long to serialize in BMON (length=%lu)",
                 (unsigned long)list->length);
-            return UFALSE;
+            return STATUS_ERROR;
           }
           len = (u32)list->length;
           bufferAddU8(out, TAG_LIST);
           bufferAddU32(out, list->length);
           for (i = 0; i < len; i++) {
             if (!bmonDump(list->buffer[i], out)) {
-              return UFALSE;
+              return STATUS_ERROR;
             }
           }
-          return UTRUE;
+          return STATUS_OK;
         }
         case OBJ_DICT: {
           ObjDict *dict = AS_DICT_UNSAFE(value);
@@ -217,17 +217,17 @@ ubool bmonDump(Value value, Buffer *out) {
           initMapIterator(&it, &dict->map);
           while (mapIteratorNext(&it, &entry)) {
             if (!bmonDump(entry->key, out)) {
-              return UFALSE;
+              return STATUS_ERROR;
             }
             if (!bmonDump(entry->value, out)) {
-              return UFALSE;
+              return STATUS_ERROR;
             }
             count++;
           }
           if (count != declaredSize) {
             panic("Dict declared size does not match iterated size");
           }
-          return UTRUE;
+          return STATUS_OK;
         }
         case OBJ_NATIVE:
         case OBJ_INSTANCE: {
@@ -237,13 +237,13 @@ ubool bmonDump(Value value, Buffer *out) {
           if (mapContainsKey(&cls->methods, STRING_VAL(stringBmon))) {
             push(value);
             if (!callMethod(stringBmon, 0)) {
-              return UFALSE;
+              return STATUS_ERROR;
             }
             if (!bmonDump(vm.stackTop[-1], out)) {
-              return UFALSE;
+              return STATUS_ERROR;
             }
             pop(); /* the proxy value we just serialized */
-            return UTRUE;
+            return STATUS_OK;
           }
         }
         default:
@@ -254,25 +254,25 @@ ubool bmonDump(Value value, Buffer *out) {
       break;
   }
   runtimeError("Cannot serialize %s to BMON", getKindName(value));
-  return UFALSE;
+  return STATUS_ERROR;
 }
 
-static ubool implDumps(i16 argCount, Value *args, Value *out) {
+static Status implDumps(i16 argCount, Value *args, Value *out) {
   Value value = args[0];
   ObjBuffer *buffer = newBuffer();
   push(BUFFER_VAL(buffer));
   if (!bmonDump(value, &buffer->handle)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   pop(); /* buffer */
   *out = BUFFER_VAL(buffer);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcDumps = {
     implDumps, "dumps", 1};
 
-static ubool impl(i16 argCount, Value *args, Value *out) {
+static Status impl(i16 argCount, Value *args, Value *out) {
   ObjModule *module = asModule(args[0]);
   CFunction *functions[] = {
       &funcLoads,
@@ -286,7 +286,7 @@ static ubool impl(i16 argCount, Value *args, Value *out) {
     mapSetN(&module->fields, functions[i]->name, CFUNCTION_VAL(functions[i]));
   }
 
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction func = {impl, "bmon", 1};

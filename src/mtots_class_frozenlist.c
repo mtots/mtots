@@ -4,13 +4,13 @@
 
 #include "mtots_vm.h"
 
-static ubool implFrozenListInstantiate(i16 argCount, Value *args, Value *out) {
+static Status implFrozenListInstantiate(i16 argCount, Value *args, Value *out) {
   ObjFrozenList *frozenList;
   if (!newFrozenListFromIterable(args[0], &frozenList)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   *out = FROZEN_LIST_VAL(frozenList);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcFrozenListInstantiate = {implFrozenListInstantiate, "__call__", 1};
@@ -26,14 +26,14 @@ static void blackenFrozenListIterator(ObjNative *n) {
   markObject((Obj *)iter->frozenList);
 }
 
-static ubool implFrozenListIteratorCall(i16 argCount, Value *args, Value *out) {
+static Status implFrozenListIteratorCall(i16 argCount, Value *args, Value *out) {
   ObjFrozenListIterator *iter = (ObjFrozenListIterator *)AS_OBJ_UNSAFE(args[-1]);
   if (iter->index < iter->frozenList->length) {
     *out = iter->frozenList->buffer[iter->index++];
   } else {
     *out = STOP_ITERATION_VAL();
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcFrozenListIteratorCall = {
@@ -48,7 +48,7 @@ static NativeObjectDescriptor descriptorFrozenListIterator = {
     "FrozenListIterator",
 };
 
-static ubool implFrozenListMul(i16 argCount, Value *args, Value *out) {
+static Status implFrozenListMul(i16 argCount, Value *args, Value *out) {
   Value *buffer;
   ObjFrozenList *frozenList = asFrozenList(args[-1]);
   size_t r, rep = asU32(args[0]);
@@ -61,17 +61,17 @@ static ubool implFrozenListMul(i16 argCount, Value *args, Value *out) {
   }
   *out = FROZEN_LIST_VAL(copyFrozenList(buffer, frozenList->length * rep));
   free(buffer);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcFrozenListMul = {implFrozenListMul, "__mul__", 1, 0};
 
-static ubool implFrozenListGetItem(i16 argCount, Value *args, Value *out) {
+static Status implFrozenListGetItem(i16 argCount, Value *args, Value *out) {
   ObjFrozenList *frozenList = asFrozenList(args[-1]);
   i32 index;
   if (!IS_NUMBER(args[0])) {
     runtimeError("Expcted FrozenList index to be a number");
-    return UFALSE;
+    return STATUS_ERROR;
   }
   index = asI32(args[0]);
   if (index < 0) {
@@ -79,25 +79,25 @@ static ubool implFrozenListGetItem(i16 argCount, Value *args, Value *out) {
   }
   if (index < 0 || index >= frozenList->length) {
     runtimeError("FrozenList index out of bounds");
-    return UFALSE;
+    return STATUS_ERROR;
   }
   *out = frozenList->buffer[index];
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcFrozenListGetItem = {implFrozenListGetItem, "__getitem__", 1};
 
 #define NEW_FROZEN_LIST_CFUNC(index)                                             \
-  static ubool implFrozenListGet##index(i16 argCount, Value *args, Value *out) { \
+  static Status implFrozenListGet##index(i16 argCount, Value *args, Value *out) { \
     ObjFrozenList *frozenList = asFrozenList(args[-1]);                          \
     if (frozenList->length <= index) {                                           \
       runtimeError(                                                              \
           "FrozenList.get" #index "(): index out of bounds, length = %lu",       \
           (unsigned long)frozenList->length);                                    \
-      return UFALSE;                                                             \
+      return STATUS_ERROR;                                                             \
     }                                                                            \
     *out = frozenList->buffer[index];                                            \
-    return UTRUE;                                                                \
+    return STATUS_OK;                                                                \
   }                                                                              \
   static CFunction funcFrozenListGet##index = {implFrozenListGet##index, "get" #index};
 
@@ -108,20 +108,20 @@ NEW_FROZEN_LIST_CFUNC(3)
 
 #undef NEW_FROZEN_LIST_CFUNC
 
-static ubool implFrozenListIter(i16 argCount, Value *args, Value *out) {
+static Status implFrozenListIter(i16 argCount, Value *args, Value *out) {
   Value receiver = args[-1];
   ObjFrozenList *frozenList;
   ObjFrozenListIterator *iter;
   if (!IS_FROZEN_LIST(receiver)) {
     runtimeError("Expected frozenList as receiver to FrozenList.__iter__()");
-    return UFALSE;
+    return STATUS_ERROR;
   }
   frozenList = asFrozenList(receiver);
   iter = NEW_NATIVE(ObjFrozenListIterator, &descriptorFrozenListIterator);
   iter->frozenList = frozenList;
   iter->index = 0;
   *out = OBJ_VAL_EXPLICIT((Obj *)iter);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static CFunction funcFrozenListIter = {implFrozenListIter, "__iter__", 0};

@@ -117,7 +117,7 @@ extern VM vm;
 
 void initVM(void);
 void freeVM(void);
-ubool interpret(const char *source, ObjModule *module);
+Status interpret(const char *source, ObjModule *module);
 void defineGlobal(const char *name, Value value);
 void closeUpvalues(Value *last);
 
@@ -145,7 +145,7 @@ void listAppend(ObjList *list, Value value);
  * must container the receiver. Otherwise, the slot may contain
  * any value.
  */
-ubool callClosure(ObjClosure *closure, i16 argCount);
+Status callClosure(ObjClosure *closure, i16 argCount);
 
 /* Given that a function and its arguments are on the stack,
  * call the given function.
@@ -163,7 +163,7 @@ ubool callClosure(ObjClosure *closure, i16 argCount);
  * return value.
  *
  */
-ubool callFunction(i16 argCount);
+Status callFunction(i16 argCount);
 
 /* Given that a value and its method's arguments are on the stack,
  * call a method on the given value.
@@ -181,6 +181,6 @@ ubool callFunction(i16 argCount);
  * return value.
  *
  */
-ubool callMethod(String *methodName, i16 argCount);
+Status callMethod(String *methodName, i16 argCount);
 
 #endif /*mtots_vm_h*/

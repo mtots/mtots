@@ -7,11 +7,11 @@
 
 ubool valuesIs(Value a, Value b) {
   if (a.type != b.type) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   switch (a.type) {
     case VAL_NIL:
-      return UTRUE;
+      return STATUS_OK;
     case VAL_BOOL:
       return a.as.boolean == b.as.boolean;
     case VAL_NUMBER:
@@ -26,14 +26,13 @@ ubool valuesIs(Value a, Value b) {
       return a.as.obj == b.as.obj;
   }
   abort();
-  return UFALSE; /* Unreachable */
 }
 
 ubool mapsEqual(Map *a, Map *b) {
   MapIterator di;
   MapEntry *entry;
   if (a->size != b->size) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   initMapIterator(&di, a);
   while (mapIteratorNext(&di, &entry)) {
@@ -41,23 +40,23 @@ ubool mapsEqual(Map *a, Map *b) {
     if (!IS_EMPTY_KEY(key)) {
       Value value1 = entry->value, value2;
       if (!mapGet(b, key, &value2)) {
-        return UFALSE;
+        return STATUS_ERROR;
       }
       if (!valuesEqual(value1, value2)) {
-        return UFALSE;
+        return STATUS_ERROR;
       }
     }
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 ubool valuesEqual(Value a, Value b) {
   if (a.type != b.type) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   switch (a.type) {
     case VAL_NIL:
-      return UTRUE;
+      return STATUS_OK;
     case VAL_BOOL:
       return a.as.boolean == b.as.boolean;
     case VAL_NUMBER:
@@ -72,16 +71,16 @@ ubool valuesEqual(Value a, Value b) {
       Obj *objA = a.as.obj;
       Obj *objB = b.as.obj;
       if (objA->type != objB->type) {
-        return UFALSE;
+        return STATUS_ERROR;
       }
       if (objA == objB) {
-        return UTRUE;
+        return STATUS_OK;
       }
       switch (objA->type) {
         case OBJ_BUFFER: {
           ObjBuffer *bA = (ObjBuffer *)objA, *bB = (ObjBuffer *)objB;
           if (bA->handle.length != bB->handle.length) {
-            return UFALSE;
+            return STATUS_ERROR;
           }
           return memcmp(bA->handle.data, bB->handle.data, bA->handle.length) == 0;
         }
@@ -89,14 +88,14 @@ ubool valuesEqual(Value a, Value b) {
           ObjList *listA = (ObjList *)objA, *listB = (ObjList *)objB;
           size_t i;
           if (listA->length != listB->length) {
-            return UFALSE;
+            return STATUS_ERROR;
           }
           for (i = 0; i < listA->length; i++) {
             if (!valuesEqual(listA->buffer[i], listB->buffer[i])) {
-              return UFALSE;
+              return STATUS_ERROR;
             }
           }
-          return UTRUE;
+          return STATUS_OK;
         }
         case OBJ_DICT: {
           ObjDict *dictA = (ObjDict *)objA, *dictB = (ObjDict *)objB;
@@ -107,7 +106,7 @@ ubool valuesEqual(Value a, Value b) {
           ObjNative *na = (ObjNative *)objA;
           ObjNative *nb = (ObjNative *)objB;
           if (na->descriptor != nb->descriptor) {
-            return UFALSE;
+            return STATUS_ERROR;
           }
           return objA == objB;
         }
@@ -117,7 +116,6 @@ ubool valuesEqual(Value a, Value b) {
     }
   }
   abort();
-  return UFALSE; /* Unreachable */
 }
 
 ubool valueLessThan(Value a, Value b) {
@@ -128,7 +126,7 @@ ubool valueLessThan(Value a, Value b) {
   }
   switch (a.type) {
     case VAL_NIL:
-      return UFALSE;
+      return STATUS_ERROR;
     case VAL_BOOL:
       return a.as.boolean < b.as.boolean;
     case VAL_NUMBER:
@@ -145,7 +143,7 @@ ubool valueLessThan(Value a, Value b) {
       const u8 *charsA = (u8 *)strA->chars;
       const u8 *charsB = (u8 *)strB->chars;
       if (strA == strB) {
-        return UFALSE;
+        return STATUS_ERROR;
       }
       for (i = 0; i < len; i++) {
         if (charsA[i] != charsB[i]) {
@@ -177,7 +175,7 @@ ubool valueLessThan(Value a, Value b) {
           Value *bufA = listA->buffer;
           Value *bufB = listB->buffer;
           if (listA == listB) {
-            return UFALSE;
+            return STATUS_ERROR;
           }
           for (i = 0; i < len; i++) {
             if (!valuesEqual(bufA[i], bufB[i])) {
@@ -196,7 +194,7 @@ ubool valueLessThan(Value a, Value b) {
           Value *bufA = frozenListA->buffer;
           Value *bufB = frozenListB->buffer;
           if (frozenListA == frozenListB) {
-            return UFALSE;
+            return STATUS_ERROR;
           }
           for (i = 0; i < len; i++) {
             if (!valuesEqual(bufA[i], bufB[i])) {
@@ -212,7 +210,6 @@ ubool valueLessThan(Value a, Value b) {
     }
   }
   panic("%s does not support '<'", getKindName(a));
-  return UFALSE;
 }
 
 typedef struct SortEntry {
@@ -286,18 +283,18 @@ ubool sortListWithKeyFunc(ObjList *list, Value keyfunc) {
       push(keyfunc);
       push(list->buffer[i]);
       if (!callFunction(1)) {
-        return UFALSE;
+        return STATUS_ERROR;
       }
       keys->buffer[i] = pop();
     }
     sortList(list, keys);
     pop(); /* keys */
-    return UTRUE;
+    return STATUS_OK;
   }
 
   /* If keyfunc is nil, we can call sortList directly */
   sortList(list, NULL);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 static ubool mapRepr(Buffer *out, Map *map) {
@@ -313,58 +310,58 @@ static ubool mapRepr(Buffer *out, Map *map) {
       bputchar(out, ' ');
     }
     if (!valueRepr(out, entry->key)) {
-      return UFALSE;
+      return STATUS_ERROR;
     }
     if (!IS_NIL(entry->value)) {
       bputchar(out, ':');
       bputchar(out, ' ');
       if (!valueRepr(out, entry->value)) {
-        return UFALSE;
+        return STATUS_ERROR;
       }
     }
   }
   bputchar(out, '}');
-  return UTRUE;
+  return STATUS_OK;
 }
 
 ubool valueRepr(Buffer *out, Value value) {
   switch (value.type) {
     case VAL_NIL:
       bprintf(out, "nil");
-      return UTRUE;
+      return STATUS_OK;
     case VAL_BOOL:
       bprintf(out, value.as.boolean ? "true" : "false");
-      return UTRUE;
+      return STATUS_OK;
     case VAL_NUMBER:
       bputnumber(out, value.as.number);
-      return UTRUE;
+      return STATUS_OK;
     case VAL_STRING: {
       String *str = value.as.string;
       bputchar(out, '"');
       if (!escapeString2(out, str->chars, str->byteLength, NULL)) {
-        return UFALSE;
+        return STATUS_ERROR;
       }
       bputchar(out, '"');
-      return UTRUE;
+      return STATUS_OK;
     }
     case VAL_CFUNCTION:
       bprintf(out, "<function %s>", value.as.cfunction->name);
-      return UTRUE;
+      return STATUS_OK;
     case VAL_SENTINEL:
       bprintf(out, "<sentinel %d>", value.as.sentinel);
-      return UTRUE;
+      return STATUS_OK;
     case VAL_OBJ: {
       Obj *obj = AS_OBJ_UNSAFE(value);
       switch (obj->type) {
         case OBJ_CLASS:
           bprintf(out, "<class %s>", AS_CLASS_UNSAFE(value)->name->chars);
-          return UTRUE;
+          return STATUS_OK;
         case OBJ_CLOSURE:
           bprintf(out, "<function %s>", AS_CLOSURE_UNSAFE(value)->thunk->name->chars);
-          return UTRUE;
+          return STATUS_OK;
         case OBJ_THUNK:
           bprintf(out, "<thunk %s>", AS_THUNK_UNSAFE(value)->name->chars);
-          return UTRUE;
+          return STATUS_OK;
         case OBJ_INSTANCE:
           if (AS_INSTANCE_UNSAFE(value)->klass->isModuleClass) {
             bprintf(out, "<module %s>", AS_INSTANCE_UNSAFE(value)->klass->name->chars);
@@ -373,7 +370,7 @@ ubool valueRepr(Buffer *out, Value value) {
             String *resultString;
             push(value);
             if (!callMethod(vm.reprString, 0)) {
-              return UFALSE;
+              return STATUS_ERROR;
             }
             resultValue = pop();
             if (!IS_STRING(resultValue)) {
@@ -382,14 +379,14 @@ ubool valueRepr(Buffer *out, Value value) {
                   "%s.__repr__() must return a String but returned %s",
                   cls->name->chars,
                   getKindName(resultValue));
-              return UFALSE;
+              return STATUS_ERROR;
             }
             resultString = resultValue.as.string;
             bputstrlen(out, resultString->chars, resultString->byteLength);
           } else {
             bprintf(out, "<%s instance>", AS_INSTANCE_UNSAFE(value)->klass->name->chars);
           }
-          return UTRUE;
+          return STATUS_OK;
         case OBJ_BUFFER: {
           ObjBuffer *bufObj = AS_BUFFER_UNSAFE(value);
           Buffer *buf = &bufObj->handle;
@@ -401,7 +398,7 @@ ubool valueRepr(Buffer *out, Value value) {
           bputchar(out, '"');
           escapeString2(out, (const char *)buf->data, buf->length, &opts);
           bputchar(out, '"');
-          return UTRUE;
+          return STATUS_OK;
         }
         case OBJ_LIST: {
           ObjList *list = AS_LIST_UNSAFE(value);
@@ -413,11 +410,11 @@ ubool valueRepr(Buffer *out, Value value) {
               bputchar(out, ' ');
             }
             if (!valueRepr(out, list->buffer[i])) {
-              return UFALSE;
+              return STATUS_ERROR;
             }
           }
           bputchar(out, ']');
-          return UTRUE;
+          return STATUS_OK;
         }
         case OBJ_FROZEN_LIST: {
           ObjFrozenList *frozenList = AS_FROZEN_LIST_UNSAFE(value);
@@ -429,11 +426,11 @@ ubool valueRepr(Buffer *out, Value value) {
               bputchar(out, ' ');
             }
             if (!valueRepr(out, frozenList->buffer[i])) {
-              return UFALSE;
+              return STATUS_ERROR;
             }
           }
           bputchar(out, ')');
-          return UTRUE;
+          return STATUS_OK;
         }
         case OBJ_DICT: {
           ObjDict *dict = AS_DICT_UNSAFE(value);
@@ -450,7 +447,7 @@ ubool valueRepr(Buffer *out, Value value) {
             String *resultString;
             push(value);
             if (!callMethod(vm.reprString, 0)) {
-              return UFALSE;
+              return STATUS_ERROR;
             }
             resultValue = pop();
             if (!IS_STRING(resultValue)) {
@@ -459,7 +456,7 @@ ubool valueRepr(Buffer *out, Value value) {
                   "%s.__repr__() must return a String but returned %s",
                   cls->name->chars,
                   getKindName(resultValue));
-              return UFALSE;
+              return STATUS_ERROR;
             }
             resultString = resultValue.as.string;
             bputstrlen(out, resultString->chars, resultString->byteLength);
@@ -467,22 +464,21 @@ ubool valueRepr(Buffer *out, Value value) {
             bprintf(out, "<%s native-instance>",
                     AS_NATIVE_UNSAFE(value)->descriptor->klass->name->chars);
           }
-          return UTRUE;
+          return STATUS_OK;
         case OBJ_UPVALUE:
           bprintf(out, "<upvalue>");
-          return UTRUE;
+          return STATUS_OK;
       }
     }
   }
   panic("unrecognized value type %s", getKindName(value));
-  return UFALSE;
 }
 
 ubool valueStr(Buffer *out, Value value) {
   if (IS_STRING(value)) {
     String *string = value.as.string;
     bputstrlen(out, string->chars, string->byteLength);
-    return UTRUE;
+    return STATUS_OK;
   }
   return valueRepr(out, value);
 }
@@ -501,78 +497,78 @@ ubool strMod(Buffer *out, const char *format, ObjList *args) {
       }
       if (j >= args->length) {
         runtimeError("Not enough arguments for format string");
-        return UFALSE;
+        return STATUS_ERROR;
       }
       item = args->buffer[j++];
       switch (*p) {
         case 's':
           if (!valueStr(out, item)) {
-            return UFALSE;
+            return STATUS_ERROR;
           }
           break;
         case 'r':
           if (!valueRepr(out, item)) {
-            return UFALSE;
+            return STATUS_ERROR;
           }
           break;
         case '\0':
           runtimeError("missing format indicator");
-          return UFALSE;
+          return STATUS_ERROR;
         default:
           runtimeError("invalid format indicator '%%%c'", *p);
-          return UFALSE;
+          return STATUS_ERROR;
       }
     } else {
       bputchar(out, *p);
     }
   }
 
-  return UTRUE;
+  return STATUS_OK;
 }
 
 ubool valueLen(Value recv, size_t *out) {
   if (IS_STRING(recv)) {
     *out = recv.as.string->codePointCount;
-    return UTRUE;
+    return STATUS_OK;
   } else if (IS_OBJ(recv)) {
     switch (AS_OBJ_UNSAFE(recv)->type) {
       case OBJ_BUFFER:
         *out = AS_BUFFER_UNSAFE(recv)->handle.length;
-        return UTRUE;
+        return STATUS_OK;
       case OBJ_LIST:
         *out = AS_LIST_UNSAFE(recv)->length;
-        return UTRUE;
+        return STATUS_OK;
       case OBJ_FROZEN_LIST:
         *out = AS_FROZEN_LIST_UNSAFE(recv)->length;
-        return UTRUE;
+        return STATUS_OK;
       case OBJ_DICT:
         *out = AS_DICT_UNSAFE(recv)->map.size;
-        return UTRUE;
+        return STATUS_OK;
       case OBJ_FROZEN_DICT:
         *out = AS_FROZEN_DICT_UNSAFE(recv)->map.size;
-        return UTRUE;
+        return STATUS_OK;
       default: {
         Value value;
         push(recv);
         if (!callMethod(vm.lenString, 0)) {
-          return UFALSE;
+          return STATUS_ERROR;
         }
         value = pop();
         if (!IS_NUMBER(value)) {
           runtimeError(
               "__len__ did not return a number (got %s)",
               getKindName(value));
-          return UFALSE;
+          return STATUS_ERROR;
         }
         *out = value.as.number;
-        return UTRUE;
+        return STATUS_OK;
       }
     }
   }
   runtimeError(
       "object of kind '%s' has no len()",
       getKindName(recv));
-  return UFALSE;
+  return STATUS_ERROR;
 }
 
 static ubool isIterator(Value value) {
@@ -588,29 +584,29 @@ static ubool isIterator(Value value) {
         break;
     }
   }
-  return UFALSE;
+  return STATUS_ERROR;
 }
 
 ubool valueIter(Value iterable, Value *out) {
   if (isIterator(iterable)) {
     *out = iterable;
-    return UTRUE;
+    return STATUS_OK;
   }
   push(iterable);
   if (!callMethod(vm.iterString, 0)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   *out = pop();
-  return UTRUE;
+  return STATUS_OK;
 }
 
 ubool valueIterNext(Value iterator, Value *out) {
   push(iterator);
   if (!callFunction(0)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   *out = pop();
-  return UTRUE;
+  return STATUS_OK;
 }
 
 ubool valueFastIter(Value iterable, Value *out) {
@@ -626,15 +622,15 @@ ubool valueGetItem(Value owner, Value key, Value *out) {
     ObjList *list = AS_LIST_UNSAFE(owner);
     size_t i = asIndex(key, list->length);
     *out = list->buffer[i];
-    return UTRUE;
+    return STATUS_OK;
   }
   push(owner);
   push(key);
   if (!callMethod(vm.getitemString, 1)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   *out = pop();
-  return UTRUE;
+  return STATUS_OK;
 }
 
 ubool valueSetItem(Value owner, Value key, Value value) {
@@ -642,14 +638,14 @@ ubool valueSetItem(Value owner, Value key, Value value) {
     ObjList *list = AS_LIST_UNSAFE(owner);
     size_t i = asIndex(key, list->length);
     list->buffer[i] = value;
-    return UTRUE;
+    return STATUS_OK;
   }
   push(owner);
   push(key);
   push(value);
   if (!callMethod(vm.setitemString, 2)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   pop(); /* method call result */
-  return UTRUE;
+  return STATUS_OK;
 }

@@ -19,19 +19,19 @@ static ubool runMainModule(int argc, const char **argv) {
   push(STRING_VAL(mainModuleName));
 
   if (!importModuleWithPath(mainModuleName, argv[1])) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
 
   if (vm.runOnFinish) {
     push(CFUNCTION_VAL(vm.runOnFinish));
     if (!callFunction(0)) {
-      return UFALSE;
+      return STATUS_ERROR;
     }
     pop();
   }
 
   pop(); /* mainModuleName */
-  return UTRUE;
+  return STATUS_OK;
 }
 
 int mtotsMain(int argc, const char *argv[]) {

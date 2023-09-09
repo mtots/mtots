@@ -159,7 +159,7 @@ ubool internUTF32(const u32 *utf32, size_t codePointCount, String **out) {
     size_t charLength = encodeUTF8Char(utf32[i], NULL);
     if (charLength == 0) {
       runtimeError("internUTF32(): '%lu' is not a valid code point", (unsigned long)utf32[i]);
-      return UFALSE;
+      return STATUS_ERROR;
     }
     byteLength += charLength;
   }
@@ -172,7 +172,7 @@ ubool internUTF32(const u32 *utf32, size_t codePointCount, String **out) {
   }
   *out = internString(utf8, byteLength);
   free(utf8);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 ubool sliceString(String *string, size_t start, size_t end, String **out) {
@@ -181,12 +181,12 @@ ubool sliceString(String *string, size_t start, size_t end, String **out) {
   }
   if (end <= start) {
     *out = internString(NULL, 0);
-    return UTRUE;
+    return STATUS_OK;
   }
   if (string->codePointCount == string->byteLength) {
     /* ASCII */
     *out = internString(string->chars + start, end - start);
-    return UTRUE;
+    return STATUS_OK;
   }
   /* non-ASCII */
   return internUTF32(string->utf32 + start, end - start, out);

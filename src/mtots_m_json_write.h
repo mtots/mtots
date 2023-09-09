@@ -10,7 +10,7 @@ static ubool writeJSON(Value value, size_t *outLen, char *out) {
   if (IS_NIL(value)) {
     if (outLen) *outLen = strlen("null");
     if (out) strcpy(out, "null");
-    return UTRUE;
+    return STATUS_OK;
   }
   if (IS_BOOL(value)) {
     if (value.as.boolean) {
@@ -20,7 +20,7 @@ static ubool writeJSON(Value value, size_t *outLen, char *out) {
       if (outLen) *outLen = strlen("false");
       if (out) strcpy(out, "false");
     }
-    return UTRUE;
+    return STATUS_OK;
   }
   if (IS_NUMBER(value)) {
     double x = value.as.number;
@@ -47,7 +47,7 @@ static ubool writeJSON(Value value, size_t *outLen, char *out) {
     }
     if (outLen) *outLen = len;
     if (out) memcpy(out, buffer, len);
-    return UTRUE;
+    return STATUS_OK;
   }
   if (IS_STRING(value)) {
     String *str = value.as.string;
@@ -56,7 +56,7 @@ static ubool writeJSON(Value value, size_t *outLen, char *out) {
     initStringEscapeOptions(&opts);
     opts.jsonSafe = UTRUE;
     if (!escapeString(str->chars, str->byteLength, &opts, &len, out ? out + 1 : NULL)) {
-      return UFALSE;
+      return STATUS_ERROR;
     }
     if (outLen) *outLen = len + 2; /* open and close quotes */
     if (out) {
@@ -64,7 +64,7 @@ static ubool writeJSON(Value value, size_t *outLen, char *out) {
       out[len + 1] = '"';
       out[len + 2] = '\0';
     }
-    return UTRUE;
+    return STATUS_OK;
   }
   if (IS_LIST(value)) {
     ObjList *list = AS_LIST_UNSAFE(value);
@@ -79,7 +79,7 @@ static ubool writeJSON(Value value, size_t *outLen, char *out) {
       }
       if (!writeJSON(list->buffer[i], &itemLen, out)) {
         if (outLen) *outLen = itemLen;
-        return UFALSE;
+        return STATUS_ERROR;
       }
       len += itemLen;
       if (out) out += itemLen;
@@ -87,7 +87,7 @@ static ubool writeJSON(Value value, size_t *outLen, char *out) {
     len++;
     if (out) *out++ = ']';
     if (outLen) *outLen = len;
-    return UTRUE;
+    return STATUS_OK;
   }
   if (IS_DICT(value)) {
     ObjDict *dict = AS_DICT_UNSAFE(value);
@@ -106,14 +106,14 @@ static ubool writeJSON(Value value, size_t *outLen, char *out) {
       }
       first = UFALSE;
       if (!writeJSON(entry->key, &keyLen, out)) {
-        return UFALSE;
+        return STATUS_ERROR;
       }
       len += keyLen;
       if (out) out += keyLen;
       len++;
       if (out) *out++ = ':';
       if (!writeJSON(entry->value, &valueLen, out)) {
-        return UFALSE;
+        return STATUS_ERROR;
       }
       len += valueLen;
       if (out) out += valueLen;
@@ -121,10 +121,10 @@ static ubool writeJSON(Value value, size_t *outLen, char *out) {
     len++;
     if (out) *out++ = '}';
     if (outLen) *outLen = len;
-    return UTRUE;
+    return STATUS_OK;
   }
   runtimeError("Cannot convert %s to JSON", getKindName(value));
-  return UFALSE;
+  return STATUS_ERROR;
 }
 
 #endif /*mtots_m_json_write_h*/

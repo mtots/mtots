@@ -90,7 +90,7 @@ ubool mapContainsKey(Map *map, Value key) {
   MapEntry *entry;
 
   if (map->occupied == 0) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
 
   entry = findMapEntry(map->entries, map->capacity, key);
@@ -101,16 +101,16 @@ ubool mapGet(Map *map, Value key, Value *value) {
   MapEntry *entry;
 
   if (map->occupied == 0) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
 
   entry = findMapEntry(map->entries, map->capacity, key);
   if (IS_EMPTY_KEY(entry->key)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
 
   *value = entry->value;
-  return UTRUE;
+  return STATUS_OK;
 }
 
 ubool mapGetStr(Map *map, String *key, Value *value) {
@@ -224,12 +224,12 @@ ubool mapDelete(Map *map, Value key) {
   MapEntry *entry;
 
   if (map->occupied == 0) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
 
   entry = findMapEntry(map->entries, map->capacity, key);
   if (IS_EMPTY_KEY(entry->key)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
 
   /* Update linked list */
@@ -249,7 +249,7 @@ ubool mapDelete(Map *map, Value key) {
   entry->key = EMPTY_KEY_VAL();
   entry->value = BOOL_VAL(1);
   map->size--;
-  return UTRUE;
+  return STATUS_OK;
 }
 
 ubool mapDeleteStr(Map *map, String *key) {
@@ -370,16 +370,16 @@ ubool mapIteratorNext(MapIterator *di, MapEntry **out) {
   if (di->entry) {
     *out = di->entry;
     di->entry = di->entry->next;
-    return UTRUE;
+    return STATUS_OK;
   }
-  return UFALSE;
+  return STATUS_ERROR;
 }
 
 ubool mapIteratorNextKey(MapIterator *di, Value *out) {
   if (di->entry) {
     *out = di->entry->key;
     di->entry = di->entry->next;
-    return UTRUE;
+    return STATUS_OK;
   }
-  return UFALSE;
+  return STATUS_ERROR;
 }

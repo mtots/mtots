@@ -54,7 +54,7 @@ ubool escapeString2(
       if (opts.jsonSafe) {
         /* if we need to be JSON safe, we emit an error */
         runtimeError("invalid unicode escape at %lu", (unsigned long)pos);
-        return UFALSE;
+        return STATUS_ERROR;
       } else {
         /* otherwise, we can just emit a single byte */
         bputchar(out, '\\');
@@ -151,7 +151,7 @@ ubool escapeString2(
       /* At this point, the codepoint is not valid, so we can't be json safe */
       runtimeError("invalid unicode codepoint %lu at %lu",
                    (unsigned long)codePoint, (unsigned long)pos);
-      return UFALSE;
+      return STATUS_ERROR;
     } else {
       /* Arbitrary bytes, and we don't have to worry about being jsonSafe */
       size_t i;
@@ -166,7 +166,7 @@ ubool escapeString2(
     /* incr */
     pos += charlen;
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 /* TODO: Refactor to avoid passsing error messages back the same way
@@ -198,7 +198,7 @@ ubool escapeString(
       if (opts.jsonSafe) {
         /* if we need to be JSON safe, we emit an error */
         runtimeError("invalid unicode escape at %lu", (unsigned long)pos);
-        return UFALSE;
+        return STATUS_ERROR;
       } else {
         /* otherwise, we can just emit a single byte */
         len += 4;
@@ -314,7 +314,7 @@ ubool escapeString(
       /* At this point, the codepoint is not valid, so we can't be json safe */
       runtimeError("invalid unicode codepoint %lu at %lu",
                    (unsigned long)codePoint, (unsigned long)pos);
-      return UFALSE;
+      return STATUS_ERROR;
     } else {
       /* Arbitrary bytes, and we don't have to worry about being jsonSafe */
       size_t i;
@@ -336,7 +336,7 @@ ubool escapeString(
   if (outLen) {
     *outLen = len;
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 ubool unescapeString2(
@@ -392,7 +392,7 @@ ubool unescapeString2(
               evalHex(str[1]) == INVALID_HEX) {
             char invalid = evalHex(str[0]) == INVALID_HEX ? str[0] : str[1];
             runtimeError("in string unescape, invalid hex digit '%c'", invalid);
-            return UFALSE;
+            return STATUS_ERROR;
           }
           byte = evalHex(str[0]) << 4 | evalHex(str[1]);
           bputchar(out, (char)(unsigned char)byte);
@@ -414,7 +414,7 @@ ubool unescapeString2(
                                                       : evalHex(str[2]) == INVALID_HEX   ? str[2]
                                                                                          : str[3];
             runtimeError("in string unescape, invalid hex digit '%c'", invalid);
-            return UFALSE;
+            return STATUS_ERROR;
           }
           codePoint =
               evalHex(str[0]) << 12 |
@@ -430,11 +430,11 @@ ubool unescapeString2(
           runtimeError(
               "in string unescape, invalid escape '%c' (%d)",
               *str, (int)*str);
-          return UFALSE;
+          return STATUS_ERROR;
       }
     } else {
       bputchar(out, *str++);
     }
   }
-  return UTRUE;
+  return STATUS_OK;
 }

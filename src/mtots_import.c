@@ -13,10 +13,10 @@
  * Puts the result of running the module on the top of the stack
  * NOTE: Never cached (unlike importModule())
  */
-ubool importModuleWithPath(String *moduleName, const char *path) {
+Status importModuleWithPath(String *moduleName, const char *path) {
   void *source;
   if (!readFile(path, &source, NULL)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   return importModuleWithPathAndSource(moduleName, path, (char *)source, NULL, (char *)source);
 }
@@ -25,7 +25,7 @@ ubool importModuleWithPath(String *moduleName, const char *path) {
  * These should only be provided if 'path' or 'source' should be freed
  * after use. Requiring that they be specified twice is to work around
  * the fact that 'path' and 'source' are 'const char*'. */
-ubool importModuleWithPathAndSource(
+Status importModuleWithPathAndSource(
     String *moduleName, const char *path, const char *source,
     char *freePath, char *freeSource) {
   ObjClosure *closure;
@@ -50,7 +50,7 @@ ubool importModuleWithPathAndSource(
     if (freeSource) {
       free((void *)freeSource);
     }
-    return UFALSE;
+    return STATUS_ERROR;
   }
   if (freeSource) {
     free((void *)freeSource);
@@ -74,12 +74,12 @@ ubool importModuleWithPathAndSource(
     pop(); /* module */
 
     /* the module we pushed in the beginning is still on the stack */
-    return UTRUE;
+    return STATUS_OK;
   }
-  return UFALSE;
+  return STATUS_ERROR;
 }
 
-static ubool importModuleNoCache(String *moduleName) {
+static Status importModuleNoCache(String *moduleName) {
   Value nativeModuleThunkValue;
 
   /* Check for a native module with the given name */
@@ -95,7 +95,7 @@ static ubool importModuleNoCache(String *moduleName) {
       push(MODULE_VAL(module));
       stackStart = vm.stackTop;
       if (!nativeModuleThunk->body(1, &moduleValue, &result)) {
-        return UFALSE;
+        return STATUS_ERROR;
       }
       /* At this point, module should be at the top of the stack */
       if (vm.stackTop != stackStart) {
@@ -113,7 +113,7 @@ static ubool importModuleNoCache(String *moduleName) {
      * that method calls will properly call the functions in the module */
     mapAddAll(&module->fields, &module->klass->methods);
 
-    return UTRUE;
+    return STATUS_OK;
   }
 
   {
@@ -122,7 +122,7 @@ static ubool importModuleNoCache(String *moduleName) {
     ubool result;
     if (path == NULL) {
       runtimeError("Could not find module %s", moduleName->chars);
-      return UFALSE;
+      return STATUS_ERROR;
     }
     result = importModuleWithPath(moduleName, path);
     return result;
@@ -136,7 +136,7 @@ static ubool importModuleNoCache(String *moduleName) {
  * if not found, will call importModuleWithPath and add the
  * new entry into the cache
  */
-ubool importModule(String *moduleName) {
+Status importModule(String *moduleName) {
   Value module = NIL_VAL();
   if (mapGetStr(&vm.modules, moduleName, &module)) {
     if (!IS_MODULE(module)) {
@@ -144,10 +144,10 @@ ubool importModule(String *moduleName) {
       assertionError("importModule (cached not a module)");
     }
     push(module);
-    return UTRUE;
+    return STATUS_OK;
   }
   if (!importModuleNoCache(moduleName)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
 
   /* if importModuleNoCache is successful, we should have
@@ -156,7 +156,7 @@ ubool importModule(String *moduleName) {
     assertionError("importModule (TOS is not a module)");
   }
   mapSetStr(&vm.modules, moduleName, vm.stackTop[-1]);
-  return UTRUE;
+  return STATUS_OK;
 }
 
 /*
@@ -167,15 +167,15 @@ ubool importModule(String *moduleName) {
  *  * the name is specified with `const char*` instead of `String*`.
  *  * the module is popped from the stack.
  */
-ubool importModuleAndPop(const char *moduleName) {
+Status importModuleAndPop(const char *moduleName) {
   String *moduleNameString = internCString(moduleName);
   push(STRING_VAL(moduleNameString));
   if (!importModule(moduleNameString)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   pop(); /* module (from importModule) */
   pop(); /* moduleName */
-  return UTRUE;
+  return STATUS_OK;
 }
 
 /**
@@ -190,15 +190,15 @@ ubool runFunctionInModule(
     Value *out) {
   i16 i;
   if (!importModule(moduleName)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   for (i = 0; i < argCount; i++) {
     push(args[i]);
   }
   if (!callMethod(functionName, argCount)) {
-    return UFALSE;
+    return STATUS_ERROR;
   }
   *out = pop();
-  return UTRUE;
+  return STATUS_OK;
 }
 */

@@ -45,7 +45,7 @@ typedef struct Value {
 } Value;
 
 struct CFunction {
-  ubool (*body)(i16 argCount, Value *args, Value *out);
+  Status (*body)(i16 argCount, Value *args, Value *out);
   const char *name;
   i16 arity;
   i16 maxArity;

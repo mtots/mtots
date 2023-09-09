@@ -21,7 +21,7 @@ ubool readFile(const char *path, void **out, size_t *readFileSize) {
   void *bytes;
   if (!file) {
     runtimeError("Could not open file \"%s\" for reading", path);
-    return UFALSE;
+    return STATUS_ERROR;
   }
 
   fseek(file, 0L, SEEK_END);
@@ -31,12 +31,12 @@ ubool readFile(const char *path, void **out, size_t *readFileSize) {
   bytes = malloc(fileSize + 1);
   if (!bytes) {
     runtimeError("Not enough memory to read \"%s\"\n", path);
-    return UFALSE;
+    return STATUS_ERROR;
   }
   if (fread(bytes, 1, fileSize, file) != fileSize) {
     free(bytes);
     runtimeError("Could not read file \"%s\"", path);
-    return UFALSE;
+    return STATUS_ERROR;
   }
   ((char *)bytes)[fileSize] = '\0';
 
@@ -44,7 +44,7 @@ ubool readFile(const char *path, void **out, size_t *readFileSize) {
   if (readFileSize) {
     *readFileSize = fileSize;
   }
-  return UTRUE;
+  return STATUS_OK;
 }
 
 /*
@@ -56,7 +56,7 @@ ubool readFileIntoBuffer(const char *path, Buffer *out) {
   FILE *file = fopen(path, "rb");
   if (!file) {
     runtimeError("Could not open file \"%s\" for reading", path);
-    return UFALSE;
+    return STATUS_ERROR;
   }
   fseek(file, 0L, SEEK_END);
   fileSize = ftell(file);
@@ -64,7 +64,7 @@ ubool readFileIntoBuffer(const char *path, Buffer *out) {
   bufferSetLength(out, startSize + fileSize);
   if (fread(out->data + startSize, 1, fileSize, file) != fileSize) {
     runtimeError("Could not read file \"%s\"", path);
-    return UFALSE;
+    return STATUS_ERROR;
   }
-  return UTRUE;
+  return STATUS_OK;
 }
