@@ -145,6 +145,7 @@ void initVM(void) {
   vm.xString = internForeverCString("x");
   vm.yString = internForeverCString("y");
   vm.zString = internForeverCString("z");
+  vm.typeString = internForeverCString("type");
   vm.widthString = internForeverCString("width");
   vm.heightString = internForeverCString("height");
   vm.minXString = internForeverCString("minX");

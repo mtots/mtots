@@ -19,6 +19,19 @@ size_t asSize(Value value) {
   return (size_t)x;
 }
 
+int asInt(Value value) {
+  double x = asNumber(value);
+  if (x < (double)INT_MIN) {
+    int v = INT_MIN;
+    double vd = (double)v;
+    panic("Expected int, but value is less than INT_MIN (%f, %f, %d)", x, -2147483648.0, (x < vd));
+  }
+  if (x > (double)INT_MAX) {
+    panic("Expected int, but value is greater than INT_MAX (%f)", x);
+  }
+  return (int)x;
+}
+
 u32 asU32Bits(Value value) {
   double x = asNumber(value);
   if (x < 0) {

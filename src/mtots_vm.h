@@ -83,6 +83,7 @@ typedef struct VM {
   String *xString;
   String *yString;
   String *zString;
+  String *typeString;
   String *widthString;
   String *heightString;
   String *minXString;

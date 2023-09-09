@@ -61,16 +61,14 @@ static CFunction funcIsMacOS = {implIsMacOS, "isMacOS"};
 
 static Status impl(i16 argCount, Value *args, Value *out) {
   ObjModule *module = asModule(args[0]);
-  CFunction *cfunctions[] = {
+  CFunction *functions[] = {
       &funcGetcwd,
       &funcGetenv,
       &funcIsMacOS,
+      NULL,
   };
-  size_t i;
 
-  for (i = 0; i < sizeof(cfunctions) / sizeof(CFunction *); i++) {
-    mapSetN(&module->fields, cfunctions[i]->name, CFUNCTION_VAL(cfunctions[i]));
-  }
+  moduleAddFunctions(module, functions);
 
   mapSetN(&module->fields, "name", STRING_VAL(internCString(OS_NAME)));
   mapSetN(&module->fields, "sep", STRING_VAL(internCString(PATH_SEP_STR)));

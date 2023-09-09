@@ -67,6 +67,7 @@ typedef struct ValueArray {
 #define AS_OBJ_UNSAFE(value) ((value).as.obj)
 
 size_t asSize(Value value);
+int asInt(Value value);
 u32 asU32Bits(Value value);
 u32 asU32(Value value);
 i32 asI32(Value value);

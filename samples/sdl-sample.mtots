@@ -1,0 +1,14 @@
+import sdl
+
+
+final window = sdl.Window('title', 512, 512)
+final event = sdl.Event()
+
+def main():
+  while true:
+    while sdl.pollEvent(event):
+      if event.type == sdl.QUIT:
+        return nil
+
+
+main()

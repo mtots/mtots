@@ -72,6 +72,9 @@
         "editor.semanticHighlighting.enabled": true,
         "editor.tabSize": 2
     },
+    "C_Cpp.default.defines": [
+        "MTOTS_ENABLE_SDL=1"
+    ],
     "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 2, ColumnLimit: 0}",
     "python.analysis.typeCheckingMode": "strict"
 }

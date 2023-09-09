@@ -19,7 +19,7 @@ SYSTEM_MACOS = "Darwin"
 SYSTEM_LINUX = "Linux"
 SYSTEM = platform.system()
 
-CLANG_BASE_FLAGS = [
+MACOS_BASE_FLAGS = [
     # WARNINGS
     "-Wall", "-Werror", "-Wpedantic", "-Weverything",
     "-Wno-poison-system-directories", "-Wno-undef", "-Wno-unused-parameter",
@@ -36,6 +36,7 @@ CLANG_BASE_FLAGS = [
     "-Wno-sign-compare",
     "-Wno-conditional-uninitialized",
     "-Wno-unused-macros",
+    "-Wno-documentation-unknown-command",
 
     # math library (not needed on clang, but gcc on Linux often needs it)
     "-lm",
@@ -44,13 +45,19 @@ CLANG_BASE_FLAGS = [
     "-std=c89",
 ]
 
-CLANG_DEBUG_FLAGS = [
+MACOS_DEBUG_FLAGS = [
     "-g", "-fsanitize=address", "-O0",
 ]
 
-CLANG_RELEASE_FLAGS = [
+MACOS_RELEASE_FLAGS = [
     "-O3", "-flto",
     "-DMTOTS_RELEASE=1",
+]
+
+MACOS_SDL_FLAGS = [
+    "-F/Library/Frameworks",
+    "-framework", "SDL2",
+    "-DMTOTS_ENABLE_SDL=1",
 ]
 
 aparser = argparse.ArgumentParser()
@@ -58,12 +65,15 @@ aparser.add_argument('--verbose', '-v', default=False, action='store_true')
 aparser.add_argument('--release', '-r', default=False, action='store_true')
 aparser.add_argument('--no-compile', dest='compile', default=True, action='store_false')
 aparser.add_argument('--test', '-t', default=False, action='store_true')
+aparser.add_argument('--enable-sdl', default=False, action='store_true',
+                     help='links SDL. Requires SDL framework to be installed')
 args = aparser.parse_args()
 
 VERBOSE: bool = args.verbose
 RELEASE: bool = args.release
 COMPILE: bool = args.compile
 TEST: bool = args.test
+ENABLE_SDL: bool = args.enable_sdl
 
 
 def c_sources() -> typing.List[str]:
@@ -81,6 +91,7 @@ def compile(release: bool):
     if VERBOSE:
         print("COMPILING mtots")
         print(f"  release = {release}")
+        print(f"  ENABLE_SDL = {ENABLE_SDL}")
     args: typing.List[str] = []
     if SYSTEM == SYSTEM_WINDOWS:
         raise Exception("TODO: compile for Windows")
@@ -89,8 +100,9 @@ def compile(release: bool):
             # using 'gcc' to access clang adds additional
             # compatibility checks
             "gcc",
-            *CLANG_BASE_FLAGS,
-            *(CLANG_RELEASE_FLAGS if release else CLANG_DEBUG_FLAGS),
+            *MACOS_BASE_FLAGS,
+            *(MACOS_RELEASE_FLAGS if release else MACOS_DEBUG_FLAGS),
+            *(MACOS_SDL_FLAGS if ENABLE_SDL else []),
             *c_sources(),
             "-omtots",
         ])

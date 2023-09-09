@@ -3,13 +3,10 @@
         {
             "name": "Mac",
             "includePath": [
-                "${workspaceFolder}/src",
-                "${workspaceFolder}/lib/freetype/include",
-                "${workspaceFolder}/lib/lodepng/src",
-                "${workspaceFolder}/lib/miniz/src",
-                "${workspaceFolder}/lib/sdl2/include",
-                "${workspaceFolder}/lib/dr_mp3/include",
-                "${workspaceFolder}/lib/stbimage/include"
+                "${workspaceFolder}/src"
+            ],
+            "macFrameworkPath": [
+                "/Library/Frameworks"
             ],
             "cStandard": "c17",
             "cppStandard": "c++17",
@@ -18,13 +15,7 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/src",
-                "${workspaceFolder}/lib/freetype/include",
-                "${workspaceFolder}/lib/lodepng/src",
-                "${workspaceFolder}/lib/miniz/src",
-                "${workspaceFolder}/lib/sdl2/include",
-                "${workspaceFolder}/lib/dr_mp3/include",
-                "${workspaceFolder}/lib/stbimage/include"
+                "${workspaceFolder}/src"
             ],
             "defines": ["_DEBUG", "UNICODE", "_UNICODE"],
             "cStandard": "c89",
