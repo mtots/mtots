@@ -600,6 +600,10 @@ ObjClass *getClassOfValue(Value value) {
       return vm.functionClass;
     case VAL_SENTINEL:
       return vm.sentinelClass;
+    case VAL_RANGE:
+      return vm.rangeClass;
+    case VAL_RANGE_ITERATOR:
+      return vm.rangeIteratorClass;
     case VAL_OBJ: {
       switch (AS_OBJ_UNSAFE(value)->type) {
         case OBJ_CLASS:

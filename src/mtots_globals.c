@@ -321,32 +321,26 @@ static Status implPrint(i16 argCount, Value *args, Value *out) {
 static CFunction cfunctionPrint = {implPrint, "print", 1};
 
 static Status implRange(i16 argCount, Value *args, Value *out) {
-  double start = 0, stop, step = 1;
-  i32 i = 0;
-  for (i = 0; i < argCount; i++) {
-    if (!isNumber(args[i])) {
-      panic(
-          "range() requires number arguments but got %s for argument %d",
-          getKindName(args[i]), i);
-    }
-  }
+  Range range;
+  range.start = 0;
+  range.step = 1;
   switch (argCount) {
     case 1:
-      stop = asNumber(args[0]);
+      range.stop = asI32(args[0]);
       break;
     case 2:
-      start = asNumber(args[0]);
-      stop = asNumber(args[1]);
+      range.start = asI32(args[0]);
+      range.stop = asI32(args[1]);
       break;
     case 3:
-      start = asNumber(args[0]);
-      stop = asNumber(args[1]);
-      step = asNumber(args[2]);
+      range.start = asI32(args[0]);
+      range.stop = asI32(args[1]);
+      range.step = asI32(args[2]);
       break;
     default:
       panic("Invalid argc to range() (%d)", argCount);
   }
-  *out = OBJ_VAL_EXPLICIT((Obj *)newRange(start, stop, step));
+  *out = RANGE_VAL(range);
   return STATUS_OK;
 }
 
@@ -547,9 +541,9 @@ static CFunction funcIsInstance = {implIsInstance, "isinstance", 2};
 static Status implSort(i16 argCount, Value *args, Value *out) {
   ObjList *list = asList(args[0]);
   ObjList *keys =
-      argCount < 2      ? NULL
+      argCount < 2     ? NULL
       : isNil(args[1]) ? NULL
-                        : asList(args[1]);
+                       : asList(args[1]);
   sortList(list, keys);
   return STATUS_OK;
 }

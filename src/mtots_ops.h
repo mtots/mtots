@@ -13,10 +13,10 @@ ubool valueRepr(Buffer *out, Value value);
 ubool valueStr(Buffer *out, Value value);
 ubool strMod(Buffer *out, const char *format, ObjList *args);
 ubool valueLen(Value recv, size_t *out);
-ubool valueIter(Value iterable, Value *out);
-ubool valueIterNext(Value iterator, Value *out);
-ubool valueFastIter(Value iterable, Value *out);
-ubool valueFastIterNext(Value *iterator, Value *out);
+Status valueIter(Value iterable, Value *out);
+Status valueIterNext(Value iterator, Value *out);
+Status valueFastIter(Value iterable, Value *out);
+Status valueFastIterNext(Value *iterator, Value *out);
 ubool valueGetItem(Value owner, Value key, Value *out);
 ubool valueSetItem(Value owner, Value key, Value value);
 

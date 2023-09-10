@@ -258,7 +258,15 @@ def ord(ch String) Int:
 
 
 def range(start Int, end Int=0, step Int=1) Function[Iteration[Int]]:
-  "Iterates over the numbers from start (inclusive) to end (exclusive)"
+  """
+  Iterates over the numbers from start (inclusive) to end (exclusive)
+
+  `start`, `end` and `step` must fit in 32-bit signed integers for performance
+  reasons.
+
+  TODO: support cases for `start`, `end` and `step` when they are outside
+  this range.
+  """
 
 
 def int(value, base Int=10) Int:

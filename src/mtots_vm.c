@@ -211,19 +211,25 @@ static Value peek(int distance) {
 }
 
 static ubool isIterator(Value value) {
-  if (isObj(value)) {
-    switch (AS_OBJ_UNSAFE(value)->type) {
-      case OBJ_CLOSURE:
-        return AS_CLOSURE_UNSAFE(value)->thunk->arity == 0;
-      case OBJ_NATIVE: {
-        CFunction *call = AS_NATIVE_UNSAFE(value)->descriptor->klass->call;
-        return call && call->arity == 0;
+  switch (value.type) {
+    case VAL_RANGE_ITERATOR:
+      return UTRUE;
+    case VAL_OBJ:
+      switch (AS_OBJ_UNSAFE(value)->type) {
+        case OBJ_CLOSURE:
+          return AS_CLOSURE_UNSAFE(value)->thunk->arity == 0;
+        case OBJ_NATIVE: {
+          CFunction *call = AS_NATIVE_UNSAFE(value)->descriptor->klass->call;
+          return call && call->arity == 0;
+        }
+        default:
+          break;
       }
-      default:
-        break;
-    }
+      break;
+    default:
+      break;
   }
-  return STATUS_ERROR;
+  return UFALSE;
 }
 
 static ubool callCFunction(CFunction *cfunc, i16 argCount) {
@@ -456,7 +462,7 @@ static Status run(void) {
   } while (0)
 #define BINARY_OP(opexpr, invokeStr)                 \
   do {                                               \
-    if (isNumber(peek(0)) && isNumber(peek(1))) {  \
+    if (isNumber(peek(0)) && isNumber(peek(1))) {    \
       double b = pop().as.number;                    \
       double a = pop().as.number;                    \
       /* TODO: Forgive myself for this evil macro */ \
@@ -467,7 +473,7 @@ static Status run(void) {
   } while (0)
 #define BINARY_BITWISE_OP(opname, op)                          \
   do {                                                         \
-    if (!isNumber(peek(0)) || !isNumber(peek(1))) {          \
+    if (!isNumber(peek(0)) || !isNumber(peek(1))) {            \
       runtimeError(                                            \
           "Operands to %s must be numbers but got %s and %s",  \
           opname, getKindName(peek(1)), getKindName(peek(0))); \
@@ -801,13 +807,29 @@ static Status run(void) {
       case OP_GET_ITER: {
         Value iterable = peek(0);
         if (!isIterator(iterable)) {
-          INVOKE(vm.iterString, 0);
+          if (isRange(iterable)) {
+            vm.stackTop[-1].type = VAL_RANGE_ITERATOR;
+          } else {
+            INVOKE(vm.iterString, 0);
+          }
         }
         break;
       }
       case OP_GET_NEXT: {
-        push(peek(0));
-        CALL(0);
+        if (isRangeIterator(vm.stackTop[-1])) {
+          Value *iter = vm.stackTop - 1;
+          i32 step = iter->as.range.step;
+          if (step > 0 ? (iter->extra.integer < iter->as.range.stop)
+                       : (iter->extra.integer > iter->as.range.stop)) {
+            push(NUMBER_VAL(iter->extra.integer));
+            iter->extra.integer += step;
+          } else {
+            push(STOP_ITERATION_VAL());
+          }
+        } else {
+          push(peek(0));
+          CALL(0);
+        }
         break;
       }
       case OP_LOOP: {

@@ -18,8 +18,30 @@ typedef enum ValueType {
   VAL_STRING,
   VAL_CFUNCTION,
   VAL_SENTINEL,
+
+  /* optimization values */
+  VAL_RANGE,
+  VAL_RANGE_ITERATOR,
+
   VAL_OBJ
 } ValueType;
+
+typedef struct Range {
+  i32 start;
+  i32 stop;
+  i32 step;
+} Range;
+
+typedef struct RangeIterator {
+  i32 current;
+  i32 stop;
+  i32 step;
+} RangeIterator;
+
+typedef struct RangePartial {
+  i32 stop;
+  i32 step;
+} RangePartial;
 
 /* Value struct should be 16-bytes on all supported platforms */
 typedef struct Value {
@@ -40,6 +62,7 @@ typedef struct Value {
     String *string;
     CFunction *cfunction;
     Sentinel sentinel;
+    RangePartial range;
     Obj *obj;
   } as; /* 8-bytes */
 } Value;
@@ -63,6 +86,8 @@ typedef struct ValueArray {
 #define isString(value) ((value).type == VAL_STRING)
 #define isCFunction(value) ((value).type == VAL_CFUNCTION)
 #define isSentinel(value) ((value).type == VAL_SENTINEL)
+#define isRange(value) ((value).type == VAL_RANGE)
+#define isRangeIterator(value) ((value).type == VAL_RANGE_ITERATOR)
 #define isObj(value) ((value).type == VAL_OBJ)
 #define AS_OBJ_UNSAFE(value) ((value).as.obj)
 
@@ -81,6 +106,8 @@ ubool asBool(Value value);
 double asNumber(Value value);
 String *asString(Value value);
 CFunction *asCFunction(Value value);
+Range asRange(Value value);
+RangeIterator asRangeIterator(Value value);
 Obj *asObj(Value value);
 
 Value NIL_VAL(void);
@@ -89,6 +116,8 @@ Value NUMBER_VAL(double value);
 Value STRING_VAL(String *string);
 Value CFUNCTION_VAL(CFunction *func);
 Value SENTINEL_VAL(Sentinel sentinel);
+Value RANGE_VAL(Range range);
+Value RANGE_ITERATOR_VAL(RangeIterator rangeIterator);
 Value OBJ_VAL_EXPLICIT(Obj *object);
 
 #define isStopIteration(value) ( \

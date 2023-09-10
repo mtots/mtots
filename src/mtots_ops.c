@@ -5,6 +5,10 @@
 
 #include "mtots_vm.h"
 
+static ubool rangesEqual(Range a, Range b) {
+  return a.start == b.start && a.stop == b.stop && a.step == b.step;
+}
+
 ubool valuesIs(Value a, Value b) {
   if (a.type != b.type) {
     return STATUS_ERROR;
@@ -22,6 +26,10 @@ ubool valuesIs(Value a, Value b) {
       return a.as.cfunction == b.as.cfunction;
     case VAL_SENTINEL:
       return a.as.sentinel == b.as.sentinel;
+    case VAL_RANGE:
+      return rangesEqual(asRange(a), asRange(b));
+    case VAL_RANGE_ITERATOR:
+      return rangesEqual(asRange(a), asRange(b));
     case VAL_OBJ:
       return a.as.obj == b.as.obj;
   }
@@ -67,6 +75,10 @@ ubool valuesEqual(Value a, Value b) {
       return a.as.cfunction == b.as.cfunction;
     case VAL_SENTINEL:
       return a.as.sentinel == b.as.sentinel;
+    case VAL_RANGE:
+      return rangesEqual(asRange(a), asRange(b));
+    case VAL_RANGE_ITERATOR:
+      return rangesEqual(asRange(a), asRange(b));
     case VAL_OBJ: {
       Obj *objA = a.as.obj;
       Obj *objB = b.as.obj;
@@ -155,6 +167,10 @@ ubool valueLessThan(Value a, Value b) {
     case VAL_CFUNCTION:
       break;
     case VAL_SENTINEL:
+      break;
+    case VAL_RANGE:
+      break;
+    case VAL_RANGE_ITERATOR:
       break;
     case VAL_OBJ: {
       Obj *objA = AS_OBJ_UNSAFE(a);
@@ -349,6 +365,14 @@ ubool valueRepr(Buffer *out, Value value) {
       return STATUS_OK;
     case VAL_SENTINEL:
       bprintf(out, "<sentinel %d>", value.as.sentinel);
+      return STATUS_OK;
+    case VAL_RANGE: {
+      Range range = asRange(value);
+      bprintf(out, "Range(%d, %d, %d)", (int)range.start, (int)range.stop, (int)range.stop);
+      return STATUS_OK;
+    }
+    case VAL_RANGE_ITERATOR:
+      bprintf(out, "<RangeIterator instance>");
       return STATUS_OK;
     case VAL_OBJ: {
       Obj *obj = AS_OBJ_UNSAFE(value);
@@ -587,7 +611,7 @@ static ubool isIterator(Value value) {
   return STATUS_ERROR;
 }
 
-ubool valueIter(Value iterable, Value *out) {
+Status valueIter(Value iterable, Value *out) {
   if (isIterator(iterable)) {
     *out = iterable;
     return STATUS_OK;
@@ -600,7 +624,7 @@ ubool valueIter(Value iterable, Value *out) {
   return STATUS_OK;
 }
 
-ubool valueIterNext(Value iterator, Value *out) {
+Status valueIterNext(Value iterator, Value *out) {
   push(iterator);
   if (!callFunction(0)) {
     return STATUS_ERROR;
@@ -609,11 +633,27 @@ ubool valueIterNext(Value iterator, Value *out) {
   return STATUS_OK;
 }
 
-ubool valueFastIter(Value iterable, Value *out) {
+Status valueFastIter(Value iterable, Value *out) {
+  if (isRange(iterable)) {
+    iterable.type = VAL_RANGE_ITERATOR;
+    *out = iterable;
+    return STATUS_OK;
+  }
   return valueIter(iterable, out);
 }
 
-ubool valueFastIterNext(Value *iterator, Value *out) {
+Status valueFastIterNext(Value *iterator, Value *out) {
+  if (isRangeIterator(*iterator)) {
+    i32 step = iterator->as.range.step;
+    if (step > 0 ? (iterator->extra.integer < iterator->as.range.stop)
+                 : (iterator->extra.integer > iterator->as.range.stop)) {
+      *out = NUMBER_VAL(iterator->extra.integer);
+      iterator->extra.integer += step;
+    } else {
+      *out = STOP_ITERATION_VAL();
+    }
+    return STATUS_OK;
+  }
   return valueIterNext(*iterator, out);
 }
 

@@ -148,6 +148,26 @@ CFunction *asCFunction(Value value) {
   }
   return value.as.cfunction;
 }
+Range asRange(Value value) {
+  Range range;
+  if (!isRange(value)) {
+    panic("Expected Range but got %s", getKindName(value));
+  }
+  range.start = value.extra.integer;
+  range.stop = value.as.range.stop;
+  range.step = value.as.range.step;
+  return range;
+}
+RangeIterator asRangeIterator(Value value) {
+  RangeIterator rangeIter;
+  if (!isRangeIterator(value)) {
+    panic("Expected RangeIterator but got %s", getKindName(value));
+  }
+  rangeIter.current = value.extra.integer;
+  rangeIter.stop = value.as.range.stop;
+  rangeIter.step = value.as.range.step;
+  return rangeIter;
+}
 Obj *asObj(Value value) {
   if (!isObj(value)) {
     panic("Expected Obj but got %s", getKindName(value));
@@ -182,6 +202,20 @@ Value CFUNCTION_VAL(CFunction *func) {
 Value SENTINEL_VAL(Sentinel sentinel) {
   Value v = {VAL_SENTINEL};
   v.as.sentinel = sentinel;
+  return v;
+}
+Value RANGE_VAL(Range range) {
+  Value v = {VAL_RANGE};
+  v.extra.integer = range.start;
+  v.as.range.stop = range.stop;
+  v.as.range.step = range.step;
+  return v;
+}
+Value RANGE_ITERATOR_VAL(RangeIterator rangeIterator) {
+  Value v = {VAL_RANGE_ITERATOR};
+  v.extra.integer = rangeIterator.current;
+  v.as.range.stop = rangeIterator.stop;
+  v.as.range.step = rangeIterator.step;
   return v;
 }
 Value OBJ_VAL_EXPLICIT(Obj *object) {
@@ -219,41 +253,45 @@ void freeValueArray(ValueArray *array) {
 const char *getKindName(Value value) {
   switch (value.type) {
     case VAL_NIL:
-      return "nil";
+      return "Nil";
     case VAL_BOOL:
-      return "bool";
+      return "Bool";
     case VAL_NUMBER:
-      return "number";
+      return "Number";
     case VAL_STRING:
-      return "string";
+      return "String";
     case VAL_CFUNCTION:
-      return "cfunction";
+      return "Cfunction";
     case VAL_SENTINEL:
-      return "sentinel";
+      return "Sentinel";
+    case VAL_RANGE:
+      return "Range";
+    case VAL_RANGE_ITERATOR:
+      return "RangeIterator";
     case VAL_OBJ:
       switch (value.as.obj->type) {
         case OBJ_CLASS:
-          return "class";
+          return "Class";
         case OBJ_CLOSURE:
-          return "closure";
+          return "Closure";
         case OBJ_THUNK:
-          return "thunk";
+          return "Thunk";
         case OBJ_INSTANCE:
-          return "instance";
+          return "Instance";
         case OBJ_BUFFER:
-          return "buffer";
+          return "Buffer";
         case OBJ_LIST:
-          return "list";
+          return "List";
         case OBJ_FROZEN_LIST:
-          return "frozenList";
+          return "FrozenList";
         case OBJ_DICT:
-          return "dict";
+          return "Dict";
         case OBJ_FROZEN_DICT:
-          return "frozendict";
+          return "FrozenDict";
         case OBJ_NATIVE:
           return AS_NATIVE_UNSAFE(value)->descriptor->name;
         case OBJ_UPVALUE:
-          return "upvalue";
+          return "Upvalue";
       }
       return "<unrecognized-object>";
   }

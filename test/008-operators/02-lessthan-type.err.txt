@@ -1,2 +1,2 @@
-'<' requires values of the same type but got number and string
+'<' requires values of the same type but got Number and String
 [line 1] in __main__

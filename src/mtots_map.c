@@ -45,6 +45,10 @@ u32 hashval(Value value) {
       break;
     case VAL_SENTINEL:
       return (u32)value.as.sentinel;
+    case VAL_RANGE:
+      break;
+    case VAL_RANGE_ITERATOR:
+      break;
     case VAL_OBJ:
       switch (AS_OBJ_UNSAFE(value)->type) {
         case OBJ_FROZEN_LIST:

@@ -1,2 +1,2 @@
-list values are not hashable
+List values are not hashable
 [line 1] in __main__
