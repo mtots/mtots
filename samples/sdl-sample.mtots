@@ -5,10 +5,21 @@ final window = sdl.Window('title', 512, 512)
 final event = sdl.Event()
 
 def main():
+  final mouse = sdl.Point()
+  final rect = sdl.Rect(128, 128, 256, 256)
   while true:
     while sdl.pollEvent(event):
       if event.type == sdl.QUIT:
         return nil
 
+    sdl.getMouseState(mouse)
+
+    window.setDrawColor(100, 200, 40)
+    window.clear()
+    window.setDrawColor(40, 40, 150)
+    rect.x = mouse.x - rect.w / 2
+    rect.y = mouse.y - rect.h / 2
+    window.fillRect(rect)
+    window.present()
 
 main()

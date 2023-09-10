@@ -142,6 +142,12 @@ void initVM(void) {
   vm.greenString = internForeverCString("green");
   vm.blueString = internForeverCString("blue");
   vm.alphaString = internForeverCString("alpha");
+  vm.rString = internForeverCString("r");
+  vm.gString = internForeverCString("g");
+  vm.bString = internForeverCString("b");
+  vm.aString = internForeverCString("a");
+  vm.wString = internForeverCString("w");
+  vm.hString = internForeverCString("h");
   vm.xString = internForeverCString("x");
   vm.yString = internForeverCString("y");
   vm.zString = internForeverCString("z");

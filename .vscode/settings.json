@@ -72,6 +72,11 @@
         "editor.semanticHighlighting.enabled": true,
         "editor.tabSize": 2
     },
+    "C_Cpp.files.exclude": {
+        "misc/**": true,
+        "**/.vscode": true,
+        "**/.vs": true
+    },
     "C_Cpp.default.defines": [
         "MTOTS_ENABLE_SDL=1"
     ],

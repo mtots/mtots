@@ -80,6 +80,12 @@ typedef struct VM {
   String *greenString;
   String *blueString;
   String *alphaString;
+  String *rString;
+  String *gString;
+  String *bString;
+  String *aString;
+  String *wString;
+  String *hString;
   String *xString;
   String *yString;
   String *zString;

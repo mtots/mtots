@@ -32,6 +32,10 @@ int asInt(Value value) {
   return (int)x;
 }
 
+float asFloat(Value value) {
+  return (float)asNumber(value);
+}
+
 u32 asU32Bits(Value value) {
   double x = asNumber(value);
   if (x < 0) {

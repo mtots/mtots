@@ -1,0 +1,214 @@
+"""
+Mtots bindings for SDL2
+"""
+
+
+final QUIT "Event type: SDL_QUIT" = 0x100
+
+
+def pollEvent(event Event?) Bool:
+  """
+  ### SDL Docs for `SDL_PollEvent`
+
+  Poll for currently pending events.
+
+  If `event` is not NULL, the next event is removed from the queue and stored
+  in the SDL_Event structure pointed to by `event`. The 1 returned refers to
+  this event, immediately stored in the SDL Event structure -- not an event
+  to follow.
+
+  If `event` is NULL, it simply returns 1 if there is an event in the queue,
+  but will not remove it from the queue.
+
+  As this function may implicitly call SDL_PumpEvents(), you can only call
+  this function in the thread that set the video mode.
+
+  SDL_PollEvent() is the favored way of receiving system events since it can
+  be done from the main loop and does not suspend the main loop while waiting
+  on an event to be posted.
+
+  The common practice is to fully process the event queue once every frame,
+  usually as a first step before updating the game's state:
+
+  ```c
+  while (game_is_still_running) {
+      SDL_Event event;
+      while (SDL_PollEvent(&event)) {  // poll until all events are handled!
+          // decide what to do with this event.
+      }
+
+      // update game state, draw the current frame
+  }
+  ```
+
+  * param event the SDL_Event structure to be filled with the next event from
+               the queue, or NULL
+  * returns 1 if there is a pending event or 0 if there are none available.
+  """
+
+
+def getMouseState(position Point?=nil) Int:
+  """
+  ### SDL Docs for `SDL_GetMouseState`
+  Retrieve the current state of the mouse.
+
+  The current button state is returned as a button bitmask, which can be
+  tested using the `SDL_BUTTON(X)` macros (where `X` is generally 1 for the
+  left, 2 for middle, 3 for the right button), and `x` and `y` are set to the
+  mouse cursor position relative to the focus window. You can pass NULL for
+  either `x` or `y`.
+
+  * param x the x coordinate of the mouse cursor position relative to the
+           focus window
+  * param y the y coordinate of the mouse cursor position relative to the
+           focus window
+  * returns a 32-bit button bitmask of the current button state.
+  """
+
+
+class Point:
+  """
+  Wraps `SDL_Point`
+  """
+  var x Int
+  var y Int
+
+  def __init__(x Int=0, y Int=0) nil:
+    ""
+
+
+class FPoint:
+  """
+  Wraps `SDL_FPoint`
+  """
+  var x Float
+  var y Float
+
+  def __init__(x Float=0, y Float=0) nil:
+    ""
+
+
+class Rect:
+  """
+  Wraps `SDL_Rect`
+  """
+  var x Int
+  var y Int
+  var w Int
+  var h Int
+
+  def __init__(x Int, y Int, w Int, h Int) nil:
+    ""
+
+
+class FRect:
+  """
+  Wraps `SDL_FRect`
+  """
+  var x Float
+  var y Float
+  var w Float
+  var h Float
+
+  def __init__(x Float, y Float, w Float, h Float) nil:
+    ""
+
+
+class Event:
+  """
+  Wraps `SDL_Event`
+  """
+
+  final type Int "Indicates the type of this event"
+
+
+class Window:
+  """
+  Wraps `SDL_Window` and `SDL_Renderer`.
+
+  When using the Mtots bindings for SDL, an `SDL_Renderer` is always created
+  together with `SDL_Window` using `SDL_CreateWindowAndRenderer`.
+
+  Most if not all `SDL_Render*` functions map to methods on this class.
+  """
+
+  def __init__(title String, width Int, height Int):
+    pass
+
+  def setDrawColor(r Int, g Int, b Int, a Int = 255) nil:
+    """
+    ### SDL Docs for `SDL_SetRenderDrawColor`
+    Set the color used for drawing operations (Rect, Line and Clear).
+
+    Set the color for drawing or filling rectangles, lines, and points, and for
+    SDL_RenderClear().
+
+    * param `renderer` the rendering context
+    * param `r` the red value used to draw on the rendering target
+    * param `g` the green value used to draw on the rendering target
+    * param `b` the blue value used to draw on the rendering target
+    * param `a` the alpha value used to draw on the rendering target; usually
+             `SDL_ALPHA_OPAQUE` (255). Use SDL_SetRenderDrawBlendMode to
+             specify how the alpha channel is used
+    * returns 0 on success or a negative error code on failure; call
+             SDL_GetError() for more information.
+    """
+
+  def clear() nil:
+    """
+    ### SDL Docs for `SDL_RenderClear`
+
+    Clear the current rendering target with the drawing color.
+
+    This function clears the entire rendering target, ignoring the viewport and
+    the clip rectangle.
+
+    * param `renderer` the rendering context
+    * returns 0 on success or a negative error code on failure; call
+             SDL_GetError() for more information.
+    """
+
+  def fillRect(rect Rect) nil:
+    """
+    ### SDL Docs for `SDL_RenderFillRect`
+    Fill a rectangle on the current rendering target with the drawing color.
+
+    The current drawing color is set by SDL_SetRenderDrawColor(), and the
+    color's alpha value is ignored unless blending is enabled with the
+    appropriate call to SDL_SetRenderDrawBlendMode().
+
+    * param renderer the rendering context
+    * param rect the SDL_Rect structure representing the rectangle to fill, or
+                NULL for the entire rendering target
+    * returns 0 on success or a negative error code on failure; call
+             SDL_GetError() for more information.
+    """
+
+  def present() nil:
+    """
+    ### SDL Docs for `SDL_RenderPresent`
+    Update the screen with any rendering performed since the previous call.
+
+    SDL's rendering functions operate on a backbuffer; that is, calling a
+    rendering function such as SDL_RenderDrawLine() does not directly put a
+    line on the screen, but rather updates the backbuffer. As such, you compose
+    your entire scene and *present* the composed backbuffer to the screen as a
+    complete picture.
+
+    Therefore, when using SDL's rendering API, one does all drawing intended
+    for the frame, and then calls this function once per frame to present the
+    final drawing to the user.
+
+    The backbuffer should be considered invalidated after each present; do not
+    assume that previous contents will exist between frames. You are strongly
+    encouraged to call SDL_RenderClear() to initialize the backbuffer before
+    starting each new frame's drawing, even if you plan to overwrite every
+    pixel.
+
+    * param `renderer` the rendering context
+
+    * threadsafety You may only call this function on the main thread. If this
+                  happens to work on a background thread on any given platform
+                  or backend, it's purely by luck and you should not rely on it
+                  to work next time.
+    """
