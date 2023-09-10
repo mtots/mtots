@@ -211,7 +211,7 @@ static Value peek(int distance) {
 }
 
 static ubool isIterator(Value value) {
-  if (IS_OBJ(value)) {
+  if (isObj(value)) {
     switch (AS_OBJ_UNSAFE(value)->type) {
       case OBJ_CLOSURE:
         return AS_CLOSURE_UNSAFE(value)->thunk->arity == 0;
@@ -330,7 +330,7 @@ static ubool invoke(String *name, i16 argCount) {
     /* For classes, we invoke static methods */
     ObjClass *cls;
     Value method;
-    if (!IS_CLASS(receiver)) {
+    if (!isClass(receiver)) {
       panic("Class instance is not a Class (%s)", getKindName(receiver));
     }
     cls = AS_CLASS_UNSAFE(receiver);
@@ -396,9 +396,9 @@ static void defineStaticMethod(String *name) {
 }
 
 static ubool isFalsey(Value value) {
-  return IS_NIL(value) ||
-         (IS_BOOL(value) && !value.as.boolean) ||
-         (IS_NUMBER(value) && value.as.number == 0);
+  return isNil(value) ||
+         (isBool(value) && !value.as.boolean) ||
+         (isNumber(value) && value.as.number == 0);
 }
 
 static void concatenate(void) {
@@ -456,7 +456,7 @@ static Status run(void) {
   } while (0)
 #define BINARY_OP(opexpr, invokeStr)                 \
   do {                                               \
-    if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {  \
+    if (isNumber(peek(0)) && isNumber(peek(1))) {  \
       double b = pop().as.number;                    \
       double a = pop().as.number;                    \
       /* TODO: Forgive myself for this evil macro */ \
@@ -467,7 +467,7 @@ static Status run(void) {
   } while (0)
 #define BINARY_BITWISE_OP(opname, op)                          \
   do {                                                         \
-    if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) {          \
+    if (!isNumber(peek(0)) || !isNumber(peek(1))) {          \
       runtimeError(                                            \
           "Operands to %s must be numbers but got %s and %s",  \
           opname, getKindName(peek(1)), getKindName(peek(0))); \
@@ -550,7 +550,7 @@ static Status run(void) {
         String *name;
         Value value = NIL_VAL();
 
-        if (IS_INSTANCE(peek(0))) {
+        if (isInstance(peek(0))) {
           ObjInstance *instance;
           instance = AS_INSTANCE_UNSAFE(peek(0));
           name = READ_STRING();
@@ -565,7 +565,7 @@ static Status run(void) {
           RETURN_RUNTIME_ERROR();
         }
 
-        if (IS_DICT(peek(0))) {
+        if (isDict(peek(0))) {
           ObjDict *d = AS_DICT_UNSAFE(peek(0));
           name = READ_STRING();
           if (mapGet(&d->map, STRING_VAL(name), &value)) {
@@ -577,7 +577,7 @@ static Status run(void) {
           RETURN_RUNTIME_ERROR();
         }
 
-        if (IS_FROZEN_DICT(peek(0))) {
+        if (isFrozenDict(peek(0))) {
           ObjFrozenDict *d = AS_FROZEN_DICT_UNSAFE(peek(0));
           name = READ_STRING();
           if (mapGet(&d->map, STRING_VAL(name), &value)) {
@@ -607,7 +607,7 @@ static Status run(void) {
       case OP_SET_FIELD: {
         Value value;
 
-        if (IS_INSTANCE(peek(1))) {
+        if (isInstance(peek(1))) {
           ObjInstance *instance;
           instance = AS_INSTANCE_UNSAFE(peek(1));
           mapSetStr(&instance->fields, READ_STRING(), peek(0));
@@ -617,7 +617,7 @@ static Status run(void) {
           break;
         }
 
-        if (IS_DICT(peek(1))) {
+        if (isDict(peek(1))) {
           ObjDict *d = AS_DICT_UNSAFE(peek(1));
           mapSet(&d->map, STRING_VAL(READ_STRING()), peek(0));
           value = pop();
@@ -671,9 +671,9 @@ static Status run(void) {
         break;
       }
       case OP_ADD: {
-        if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
+        if (isString(peek(0)) && isString(peek(1))) {
           concatenate();
-        } else if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
+        } else if (isNumber(peek(0)) && isNumber(peek(1))) {
           double b = pop().as.number;
           double a = pop().as.number;
           push(NUMBER_VAL(a + b));
@@ -717,7 +717,7 @@ static Status run(void) {
         break;
       case OP_BITWISE_NOT: {
         u32 x;
-        if (!IS_NUMBER(peek(0))) {
+        if (!isNumber(peek(0))) {
           runtimeError("Operand must be a number");
           RETURN_RUNTIME_ERROR();
         }
@@ -726,7 +726,7 @@ static Status run(void) {
         break;
       }
       case OP_IN: {
-        if (IS_CLASS(peek(0))) {
+        if (isClass(peek(0))) {
           ObjClass *cls = AS_CLASS_UNSAFE(pop());
           push(BOOL_VAL(cls == getClassOfValue(pop())));
         } else {
@@ -742,7 +742,7 @@ static Status run(void) {
         push(BOOL_VAL(isFalsey(pop())));
         break;
       case OP_NEGATE:
-        if (IS_NUMBER(peek(0))) {
+        if (isNumber(peek(0))) {
           push(NUMBER_VAL(-pop().as.number));
         } else {
           INVOKE(vm.negString, 0);
@@ -762,7 +762,7 @@ static Status run(void) {
       }
       case OP_JUMP_IF_STOP_ITERATION: {
         u16 offset = READ_SHORT();
-        if (IS_STOP_ITERATION(peek(0))) {
+        if (isStopIteration(peek(0))) {
           frame->ip += offset;
         }
         break;
@@ -792,7 +792,7 @@ static Status run(void) {
         break;
       }
       case OP_RAISE: {
-        if (!IS_STRING(peek(0))) {
+        if (!isString(peek(0))) {
           panic("Only strings can be raised right now");
         }
         runtimeError("%s", peek(0).as.string->chars);
@@ -938,7 +938,7 @@ static Status run(void) {
         Value superclass;
         ObjClass *subclass;
         superclass = peek(1);
-        if (!IS_CLASS(superclass)) {
+        if (!isClass(superclass)) {
           runtimeError("Superclass must be a class");
           RETURN_RUNTIME_ERROR();
         }
@@ -985,7 +985,7 @@ Status interpret(const char *source, ObjModule *module) {
 }
 
 ubool valueIsCString(Value value, const char *string) {
-  return IS_STRING(value) && strcmp(value.as.string->chars, string) == 0;
+  return isString(value) && strcmp(value.as.string->chars, string) == 0;
 }
 
 void listAppend(ObjList *list, Value value) {
@@ -1058,10 +1058,10 @@ Status callClosure(ObjClosure *closure, i16 argCount) {
  * and it would still work.
  */
 static Status callFunctionOrMethod(Value callable, i16 argCount, ubool consummate) {
-  if (IS_CFUNCTION(callable)) {
+  if (isCFunction(callable)) {
     CFunction *cfunc = callable.as.cfunction;
     return callCFunction(cfunc, argCount);
-  } else if (IS_OBJ(callable)) {
+  } else if (isObj(callable)) {
     switch (OBJ_TYPE(callable)) {
       case OBJ_CLASS:
         return callClass(AS_CLASS_UNSAFE(callable), argCount, consummate);
@@ -1096,7 +1096,7 @@ static Status callMethodHelper(String *name, i16 argCount, ubool consummate) {
   if (klass == vm.classClass) {
     /* For classes, we invoke static methods */
     ObjClass *cls;
-    if (!IS_CLASS(receiver)) {
+    if (!isClass(receiver)) {
       panic("Class instance is not a Class (%s)", getKindName(receiver));
     }
     cls = AS_CLASS_UNSAFE(receiver);

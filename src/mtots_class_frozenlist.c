@@ -69,7 +69,7 @@ static CFunction funcFrozenListMul = {implFrozenListMul, "__mul__", 1, 0};
 static Status implFrozenListGetItem(i16 argCount, Value *args, Value *out) {
   ObjFrozenList *frozenList = asFrozenList(args[-1]);
   i32 index;
-  if (!IS_NUMBER(args[0])) {
+  if (!isNumber(args[0])) {
     runtimeError("Expcted FrozenList index to be a number");
     return STATUS_ERROR;
   }
@@ -87,18 +87,18 @@ static Status implFrozenListGetItem(i16 argCount, Value *args, Value *out) {
 
 static CFunction funcFrozenListGetItem = {implFrozenListGetItem, "__getitem__", 1};
 
-#define NEW_FROZEN_LIST_CFUNC(index)                                             \
+#define NEW_FROZEN_LIST_CFUNC(index)                                              \
   static Status implFrozenListGet##index(i16 argCount, Value *args, Value *out) { \
-    ObjFrozenList *frozenList = asFrozenList(args[-1]);                          \
-    if (frozenList->length <= index) {                                           \
-      runtimeError(                                                              \
-          "FrozenList.get" #index "(): index out of bounds, length = %lu",       \
-          (unsigned long)frozenList->length);                                    \
-      return STATUS_ERROR;                                                             \
-    }                                                                            \
-    *out = frozenList->buffer[index];                                            \
-    return STATUS_OK;                                                                \
-  }                                                                              \
+    ObjFrozenList *frozenList = asFrozenList(args[-1]);                           \
+    if (frozenList->length <= index) {                                            \
+      runtimeError(                                                               \
+          "FrozenList.get" #index "(): index out of bounds, length = %lu",        \
+          (unsigned long)frozenList->length);                                     \
+      return STATUS_ERROR;                                                        \
+    }                                                                             \
+    *out = frozenList->buffer[index];                                             \
+    return STATUS_OK;                                                             \
+  }                                                                               \
   static CFunction funcFrozenListGet##index = {implFrozenListGet##index, "get" #index};
 
 NEW_FROZEN_LIST_CFUNC(0)
@@ -112,7 +112,7 @@ static Status implFrozenListIter(i16 argCount, Value *args, Value *out) {
   Value receiver = args[-1];
   ObjFrozenList *frozenList;
   ObjFrozenListIterator *iter;
-  if (!IS_FROZEN_LIST(receiver)) {
+  if (!isFrozenList(receiver)) {
     runtimeError("Expected frozenList as receiver to FrozenList.__iter__()");
     return STATUS_ERROR;
   }

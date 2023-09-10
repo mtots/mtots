@@ -57,13 +57,13 @@ typedef struct ValueArray {
   Value *values;
 } ValueArray;
 
-#define IS_NIL(value) ((value).type == VAL_NIL)
-#define IS_BOOL(value) ((value).type == VAL_BOOL)
-#define IS_NUMBER(value) ((value).type == VAL_NUMBER)
-#define IS_STRING(value) ((value).type == VAL_STRING)
-#define IS_CFUNCTION(value) ((value).type == VAL_CFUNCTION)
-#define IS_SENTINEL(value) ((value).type == VAL_SENTINEL)
-#define IS_OBJ(value) ((value).type == VAL_OBJ)
+#define isNil(value) ((value).type == VAL_NIL)
+#define isBool(value) ((value).type == VAL_BOOL)
+#define isNumber(value) ((value).type == VAL_NUMBER)
+#define isString(value) ((value).type == VAL_STRING)
+#define isCFunction(value) ((value).type == VAL_CFUNCTION)
+#define isSentinel(value) ((value).type == VAL_SENTINEL)
+#define isObj(value) ((value).type == VAL_OBJ)
 #define AS_OBJ_UNSAFE(value) ((value).as.obj)
 
 size_t asSize(Value value);
@@ -91,11 +91,11 @@ Value CFUNCTION_VAL(CFunction *func);
 Value SENTINEL_VAL(Sentinel sentinel);
 Value OBJ_VAL_EXPLICIT(Obj *object);
 
-#define IS_STOP_ITERATION(value) ( \
-    IS_SENTINEL(value) &&          \
+#define isStopIteration(value) ( \
+    isSentinel(value) &&         \
     ((value).as.sentinel == SentinelStopIteration))
-#define IS_EMPTY_KEY(value) ( \
-    IS_SENTINEL(value) &&     \
+#define isEmptyKey(value) ( \
+    isSentinel(value) &&    \
     ((value).as.sentinel == SentinelEmptyKey))
 
 #define STOP_ITERATION_VAL() (SENTINEL_VAL(SentinelStopIteration))

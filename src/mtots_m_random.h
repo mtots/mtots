@@ -5,7 +5,7 @@
 
 #include "mtots_object.h"
 
-#define IS_RANDOM(value) (getNativeObjectDescriptor(value) == &descriptorRandom)
+#define isRandom(value) (getNativeObjectDescriptor(value) == &descriptorRandom)
 
 typedef struct ObjRandom {
   ObjNative obj;

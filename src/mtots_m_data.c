@@ -54,14 +54,14 @@ Value DATA_SINK_VAL(ObjDataSink *ds) {
 }
 
 ObjDataSource *asDataSource(Value value) {
-  if (!IS_DATA_SOURCE(value)) {
+  if (!isDataSource(value)) {
     panic("Expected DataSource but got %s", getKindName(value));
   }
   return (ObjDataSource *)value.as.obj;
 }
 
 ObjDataSink *asDataSink(Value value) {
-  if (!IS_DATA_SINK(value)) {
+  if (!isDataSink(value)) {
     panic("Expected DataSink but got %s", getKindName(value));
   }
   return (ObjDataSink *)value.as.obj;

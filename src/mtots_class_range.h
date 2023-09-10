@@ -3,8 +3,8 @@
 
 #include "mtots_object.h"
 
-#define IS_RANGE(value) (getNativeObjectDescriptor(value) == &descriptorRange)
-#define IS_RANGE_ITERATOR(value) (getNativeObjectDescriptor(value) == &descriptorRangeIterator)
+#define isRange(value) (getNativeObjectDescriptor(value) == &descriptorRange)
+#define isRangeIterator(value) (getNativeObjectDescriptor(value) == &descriptorRangeIterator)
 
 typedef struct ObjRange {
   ObjNative obj;

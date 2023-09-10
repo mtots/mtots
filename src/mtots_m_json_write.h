@@ -7,12 +7,12 @@
 #include "mtots_vm.h"
 
 static ubool writeJSON(Value value, size_t *outLen, char *out) {
-  if (IS_NIL(value)) {
+  if (isNil(value)) {
     if (outLen) *outLen = strlen("null");
     if (out) strcpy(out, "null");
     return STATUS_OK;
   }
-  if (IS_BOOL(value)) {
+  if (isBool(value)) {
     if (value.as.boolean) {
       if (outLen) *outLen = strlen("true");
       if (out) strcpy(out, "true");
@@ -22,7 +22,7 @@ static ubool writeJSON(Value value, size_t *outLen, char *out) {
     }
     return STATUS_OK;
   }
-  if (IS_NUMBER(value)) {
+  if (isNumber(value)) {
     double x = value.as.number;
     char buffer[32];
     size_t i, len = snprintf(buffer, 32, "%f", x);
@@ -49,7 +49,7 @@ static ubool writeJSON(Value value, size_t *outLen, char *out) {
     if (out) memcpy(out, buffer, len);
     return STATUS_OK;
   }
-  if (IS_STRING(value)) {
+  if (isString(value)) {
     String *str = value.as.string;
     size_t len;
     StringEscapeOptions opts;
@@ -66,7 +66,7 @@ static ubool writeJSON(Value value, size_t *outLen, char *out) {
     }
     return STATUS_OK;
   }
-  if (IS_LIST(value)) {
+  if (isList(value)) {
     ObjList *list = AS_LIST_UNSAFE(value);
     size_t i, len = 0;
     len++;
@@ -89,7 +89,7 @@ static ubool writeJSON(Value value, size_t *outLen, char *out) {
     if (outLen) *outLen = len;
     return STATUS_OK;
   }
-  if (IS_DICT(value)) {
+  if (isDict(value)) {
     ObjDict *dict = AS_DICT_UNSAFE(value);
     size_t len = 0;
     MapIterator di;

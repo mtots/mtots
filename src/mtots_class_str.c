@@ -81,8 +81,8 @@ static CFunction funcStrGetItem = {implStrGetItem, "__getitem__", 1};
 
 static Status implStrSlice(i16 argCount, Value *args, Value *out) {
   String *str = asString(args[-1]), *slicedStr;
-  i32 lower = IS_NIL(args[0]) ? 0 : asIndexLower(args[0], str->codePointCount);
-  i32 upper = IS_NIL(args[1]) ? str->codePointCount : asIndexUpper(args[1], str->codePointCount);
+  i32 lower = isNil(args[0]) ? 0 : asIndexLower(args[0], str->codePointCount);
+  i32 upper = isNil(args[1]) ? str->codePointCount : asIndexUpper(args[1], str->codePointCount);
   if (!sliceString(str, lower, upper, &slicedStr)) {
     return STATUS_ERROR;
   }
@@ -185,7 +185,7 @@ static Status implStrJoin(i16 argCount, Value *args, Value *out) {
   size_t i, len = (list->length - 1) * sep->byteLength;
   char *chars, *p;
   for (i = 0; i < list->length; i++) {
-    if (!IS_STRING(list->buffer[i])) {
+    if (!isString(list->buffer[i])) {
       runtimeError(
           "String.join() requires a list of strings, but found %s in the list",
           getKindName(list->buffer[i]));

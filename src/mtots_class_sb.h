@@ -3,7 +3,7 @@
 
 #include "mtots_object.h"
 
-#define IS_STRING_BUILDER(value) (getNativeObjectDescriptor(value) == &descriptorStringBuilder)
+#define isStringBuilder(value) (getNativeObjectDescriptor(value) == &descriptorStringBuilder)
 
 typedef struct ObjStringBuilder {
   ObjNative obj;

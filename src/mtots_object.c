@@ -9,13 +9,13 @@
   (type *)allocateObject(sizeof(type), objectType, NULL)
 
 /* should-be-inline */ ubool isObjType(Value value, ObjType type) {
-  return IS_OBJ(value) && AS_OBJ_UNSAFE(value)->type == type;
+  return isObj(value) && AS_OBJ_UNSAFE(value)->type == type;
 }
 
 /* Returns the value's native object descriptor if the value is a
  * native value. Otherwise returns NULL. */
 NativeObjectDescriptor *getNativeObjectDescriptor(Value value) {
-  if (IS_NATIVE(value)) {
+  if (isNativeObj(value)) {
     return AS_NATIVE_UNSAFE(value)->descriptor;
   }
   return NULL;
@@ -39,54 +39,54 @@ static Obj *allocateObject(size_t size, ObjType type, const char *typeName) {
   return object;
 }
 
-ubool IS_MODULE(Value value) {
-  return IS_INSTANCE(value) && AS_INSTANCE_UNSAFE(value)->klass->isModuleClass;
+ubool isModule(Value value) {
+  return isInstance(value) && AS_INSTANCE_UNSAFE(value)->klass->isModuleClass;
 }
 
 ObjClass *asClass(Value value) {
-  if (!IS_CLASS(value)) {
+  if (!isClass(value)) {
     panic("Expected Class but got %s", getKindName(value));
   }
   return (ObjClass *)value.as.obj;
 }
 
 ObjModule *asModule(Value value) {
-  if (!IS_MODULE(value)) {
+  if (!isModule(value)) {
     panic("Expected Module but got %s", getKindName(value));
   }
   return (ObjModule *)value.as.obj;
 }
 
 ObjBuffer *asBuffer(Value value) {
-  if (!IS_BUFFER(value)) {
+  if (!isBuffer(value)) {
     panic("Expected Buffer but got %s", getKindName(value));
   }
   return (ObjBuffer *)value.as.obj;
 }
 
 ObjList *asList(Value value) {
-  if (!IS_LIST(value)) {
+  if (!isList(value)) {
     panic("Expected List but got %s", getKindName(value));
   }
   return (ObjList *)value.as.obj;
 }
 
 ObjFrozenList *asFrozenList(Value value) {
-  if (!IS_FROZEN_LIST(value)) {
+  if (!isFrozenList(value)) {
     panic("Expected FrozenList but got %s", getKindName(value));
   }
   return (ObjFrozenList *)value.as.obj;
 }
 
 ObjDict *asDict(Value value) {
-  if (!IS_DICT(value)) {
+  if (!isDict(value)) {
     panic("Expected Dict but got %s", getKindName(value));
   }
   return (ObjDict *)value.as.obj;
 }
 
 ObjFrozenDict *asFrozenDict(Value value) {
-  if (!IS_FROZEN_DICT(value)) {
+  if (!isFrozenDict(value)) {
     panic("Expected FrozenDict but got %s", getKindName(value));
   }
   return (ObjFrozenDict *)value.as.obj;
@@ -371,12 +371,12 @@ ObjList *newListFromArray(Value *values, size_t length) {
 ubool newListFromIterable(Value iterable, ObjList **out) {
   Value iterator, item;
   ObjList *list;
-  if (IS_LIST(iterable)) {
+  if (isList(iterable)) {
     ObjList *other = AS_LIST_UNSAFE(iterable);
     *out = newListFromArray(other->buffer, other->length);
     return STATUS_OK;
   }
-  if (IS_FROZEN_LIST(iterable)) {
+  if (isFrozenList(iterable)) {
     ObjFrozenList *other = AS_FROZEN_LIST_UNSAFE(iterable);
     *out = newListFromArray(other->buffer, other->length);
     return STATUS_OK;
@@ -391,7 +391,7 @@ ubool newListFromIterable(Value iterable, ObjList **out) {
     if (!valueFastIterNext(&iterator, &item)) {
       return STATUS_ERROR;
     }
-    if (IS_STOP_ITERATION(item)) {
+    if (isStopIteration(item)) {
       break;
     }
     listAppend(list, item);
@@ -428,11 +428,11 @@ ObjFrozenList *copyFrozenList(Value *buffer, size_t length) {
 
 ubool newFrozenListFromIterable(Value iterable, ObjFrozenList **out) {
   ObjList *list;
-  if (IS_FROZEN_LIST(iterable)) {
+  if (isFrozenList(iterable)) {
     *out = AS_FROZEN_LIST_UNSAFE(iterable);
     return STATUS_OK;
   }
-  if (IS_LIST(iterable)) {
+  if (isList(iterable)) {
     list = AS_LIST_UNSAFE(iterable);
     *out = copyFrozenList(list->buffer, list->length);
     return STATUS_OK;
@@ -464,7 +464,7 @@ ubool newDictFromMap(Value map, ObjDict **out) {
     if (!valueFastIterNext(&iterator, &key)) {
       return STATUS_ERROR;
     }
-    if (IS_STOP_ITERATION(key)) {
+    if (isStopIteration(key)) {
       break;
     }
     if (!valueGetItem(map, key, &value)) {
@@ -490,7 +490,7 @@ ubool newDictFromPairs(Value iterable, ObjDict **out) {
     if (!valueFastIterNext(&iterator, &pair)) {
       return STATUS_ERROR;
     }
-    if (IS_STOP_ITERATION(pair)) {
+    if (isStopIteration(pair)) {
       break;
     }
     push(pair);
@@ -500,7 +500,7 @@ ubool newDictFromPairs(Value iterable, ObjDict **out) {
     if (!valueFastIterNext(&pairIterator, &first)) {
       return STATUS_ERROR;
     }
-    if (IS_STOP_ITERATION(first)) {
+    if (isStopIteration(first)) {
       runtimeError("dict(): a pair is missing first item");
       return STATUS_ERROR;
     }
@@ -508,7 +508,7 @@ ubool newDictFromPairs(Value iterable, ObjDict **out) {
     if (!valueFastIterNext(&pairIterator, &second)) {
       return STATUS_ERROR;
     }
-    if (IS_STOP_ITERATION(second)) {
+    if (isStopIteration(second)) {
       runtimeError("dict(): a pair is missing second item");
       return STATUS_ERROR;
     }
@@ -516,7 +516,7 @@ ubool newDictFromPairs(Value iterable, ObjDict **out) {
     if (!valueFastIterNext(&pairIterator, &third)) {
       return STATUS_ERROR;
     }
-    if (!IS_STOP_ITERATION(third)) {
+    if (!isStopIteration(third)) {
       runtimeError("dict(): a pair has more than two values");
       return STATUS_ERROR;
     }
@@ -719,7 +719,7 @@ const char *getObjectTypeName(ObjType type) {
 }
 
 ubool isNative(Value value, NativeObjectDescriptor *descriptor) {
-  return IS_NATIVE(value) && AS_NATIVE_UNSAFE(value)->descriptor == descriptor;
+  return isNativeObj(value) && AS_NATIVE_UNSAFE(value)->descriptor == descriptor;
 }
 
 Value LIST_VAL(ObjList *list) {

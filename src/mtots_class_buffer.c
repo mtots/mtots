@@ -81,8 +81,8 @@ static CFunction funcBufferSetitem = {implBufferSetitem, "__setitem__", 2};
 static Status implBufferMemset(i16 argc, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
   u8 value = (u8)asU32Bits(args[0]);
-  size_t start = argc > 1 && !IS_NIL(args[1]) ? asIndex(args[1], bo->handle.length) : 0;
-  size_t end = argc > 2 && !IS_NIL(args[2]) ? asIndex(args[2], bo->handle.length) : bo->handle.length;
+  size_t start = argc > 1 && !isNil(args[1]) ? asIndex(args[1], bo->handle.length) : 0;
+  size_t end = argc > 2 && !isNil(args[2]) ? asIndex(args[2], bo->handle.length) : bo->handle.length;
   if (start < end) {
     memset(bo->handle.data + start, value, end - start);
   }
@@ -111,7 +111,7 @@ static Status implBufferView(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
   ObjBuffer *newBuffer;
   size_t start = asIndex(args[0], bo->handle.length);
-  size_t end = argCount > 1 && !IS_NIL(args[1]) ? asIndexUpper(args[1], bo->handle.length) : bo->handle.length;
+  size_t end = argCount > 1 && !isNil(args[1]) ? asIndexUpper(args[1], bo->handle.length) : bo->handle.length;
   if (end < start) {
     runtimeError(
         "Buffer.view() start cannot come after end "
@@ -388,7 +388,7 @@ static Status implBufferStaticFromList(i16 argCount, Value *args, Value *out) {
   push(BUFFER_VAL(bo));
   for (i = 0; i < list->length; i++) {
     Value item = list->buffer[i];
-    if (IS_NUMBER(item)) {
+    if (isNumber(item)) {
       u8 itemValue = asNumber(item);
       bufferAddU8(&bo->handle, itemValue);
     } else {

@@ -86,7 +86,7 @@ static Status importModuleNoCache(String *moduleName) {
   if (mapGetStr(&vm.nativeModuleThunks, moduleName, &nativeModuleThunkValue)) {
     ObjModule *module = NULL;
     Value moduleValue;
-    if (IS_CFUNCTION(nativeModuleThunkValue)) {
+    if (isCFunction(nativeModuleThunkValue)) {
       Value result = NIL_VAL(), *stackStart;
       CFunction *nativeModuleThunk;
       nativeModuleThunk = nativeModuleThunkValue.as.cfunction;
@@ -139,7 +139,7 @@ static Status importModuleNoCache(String *moduleName) {
 Status importModule(String *moduleName) {
   Value module = NIL_VAL();
   if (mapGetStr(&vm.modules, moduleName, &module)) {
-    if (!IS_MODULE(module)) {
+    if (!isModule(module)) {
       /* vm.modules table should only contain modules */
       assertionError("importModule (cached not a module)");
     }
@@ -152,7 +152,7 @@ Status importModule(String *moduleName) {
 
   /* if importModuleNoCache is successful, we should have
    * a module at TOS */
-  if (!IS_MODULE(vm.stackTop[-1])) {
+  if (!isModule(vm.stackTop[-1])) {
     assertionError("importModule (TOS is not a module)");
   }
   mapSetStr(&vm.modules, moduleName, vm.stackTop[-1]);

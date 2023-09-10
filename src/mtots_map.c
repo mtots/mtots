@@ -69,8 +69,8 @@ static MapEntry *findMapEntry(MapEntry *entries, size_t capacity, Value key) {
   MapEntry *tombstone = NULL;
   for (;;) {
     MapEntry *entry = &entries[index];
-    if (IS_EMPTY_KEY(entry->key)) {
-      if (IS_NIL(entry->value)) {
+    if (isEmptyKey(entry->key)) {
+      if (isNil(entry->value)) {
         /* Empty entry */
         return tombstone != NULL ? tombstone : entry;
       } else if (tombstone == NULL) {
@@ -94,7 +94,7 @@ ubool mapContainsKey(Map *map, Value key) {
   }
 
   entry = findMapEntry(map->entries, map->capacity, key);
-  return !IS_EMPTY_KEY(entry->key);
+  return !isEmptyKey(entry->key);
 }
 
 ubool mapGet(Map *map, Value key, Value *value) {
@@ -105,7 +105,7 @@ ubool mapGet(Map *map, Value key, Value *value) {
   }
 
   entry = findMapEntry(map->entries, map->capacity, key);
-  if (IS_EMPTY_KEY(entry->key)) {
+  if (isEmptyKey(entry->key)) {
     return STATUS_ERROR;
   }
 
@@ -164,7 +164,7 @@ ubool mapSet(Map *map, Value key, Value value) {
     adjustMapCapacity(map, capacity);
   }
   entry = findMapEntry(map->entries, map->capacity, key);
-  isNewKey = IS_EMPTY_KEY(entry->key);
+  isNewKey = isEmptyKey(entry->key);
 
   if (isNewKey) {
     /* If entry->value is not nil, we're reusing a tombstone
@@ -172,7 +172,7 @@ ubool mapSet(Map *map, Value key, Value value) {
      * are already included in count.
      * We include tombstones in the count so that the loadfactor
      * is sensitive to slots occupied by tombstones */
-    if (IS_NIL(entry->value)) {
+    if (isNil(entry->value)) {
       map->occupied++;
     }
     map->size++;
@@ -228,7 +228,7 @@ ubool mapDelete(Map *map, Value key) {
   }
 
   entry = findMapEntry(map->entries, map->capacity, key);
-  if (IS_EMPTY_KEY(entry->key)) {
+  if (isEmptyKey(entry->key)) {
     return STATUS_ERROR;
   }
 
@@ -260,7 +260,7 @@ void mapAddAll(Map *from, Map *to) {
   size_t i;
   for (i = 0; i < from->capacity; i++) {
     MapEntry *entry = &from->entries[i];
-    if (!IS_EMPTY_KEY(entry->key)) {
+    if (!isEmptyKey(entry->key)) {
       mapSet(to, entry->key, entry->value);
     }
   }
@@ -279,12 +279,12 @@ ObjFrozenList *mapFindFrozenList(
   index = hash & (map->capacity - 1);
   for (;;) {
     MapEntry *entry = &map->entries[index];
-    if (IS_EMPTY_KEY(entry->key)) {
+    if (isEmptyKey(entry->key)) {
       /* Stop if we find an empty non-tombstone entry */
-      if (IS_NIL(entry->value)) {
+      if (isNil(entry->value)) {
         return NULL;
       }
-    } else if (IS_FROZEN_LIST(entry->key)) {
+    } else if (isFrozenList(entry->key)) {
       ObjFrozenList *key = AS_FROZEN_LIST_UNSAFE(entry->key);
       if (key->length == length && key->hash == hash) {
         size_t i;
@@ -317,12 +317,12 @@ ObjFrozenDict *mapFindFrozenDict(
   index = hash & (map->capacity - 1);
   for (;;) {
     MapEntry *entry = &map->entries[index];
-    if (IS_EMPTY_KEY(entry->key)) {
+    if (isEmptyKey(entry->key)) {
       /* Stop if we find an empty non-tombstone entry */
-      if (IS_NIL(entry->value)) {
+      if (isNil(entry->value)) {
         return NULL;
       }
-    } else if (IS_FROZEN_DICT(entry->key)) {
+    } else if (isFrozenDict(entry->key)) {
       ObjFrozenDict *key = AS_FROZEN_DICT_UNSAFE(entry->key);
       if (key->hash == hash && mapsEqual(frozenDictMap, &key->map)) {
         return key; /* We found it */
@@ -337,8 +337,8 @@ void mapRemoveWhite(Map *map) {
   size_t i;
   for (i = 0; i < map->capacity; i++) {
     MapEntry *entry = &map->entries[i];
-    if (!IS_EMPTY_KEY(entry->key) &&
-        IS_OBJ(entry->key) &&
+    if (!isEmptyKey(entry->key) &&
+        isObj(entry->key) &&
         !AS_OBJ_UNSAFE(entry->key)->isMarked) {
       mapDelete(map, entry->key);
     }
@@ -349,7 +349,7 @@ void markMap(Map *map) {
   size_t i;
   for (i = 0; i < map->capacity; i++) {
     MapEntry *entry = &map->entries[i];
-    if (!IS_EMPTY_KEY(entry->key)) {
+    if (!isEmptyKey(entry->key)) {
       markValue(entry->key);
       markValue(entry->value);
     }

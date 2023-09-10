@@ -125,31 +125,31 @@ size_t asIndexUpper(Value value, size_t length) {
 }
 
 ubool asBool(Value value) {
-  if (!IS_BOOL(value)) {
+  if (!isBool(value)) {
     panic("Expected Bool but got %s", getKindName(value));
   }
   return value.as.boolean;
 }
 double asNumber(Value value) {
-  if (!IS_NUMBER(value)) {
+  if (!isNumber(value)) {
     panic("Expected Number but got %s", getKindName(value));
   }
   return value.as.number;
 }
 String *asString(Value value) {
-  if (!IS_STRING(value)) {
+  if (!isString(value)) {
     panic("Expected String but got %s", getKindName(value));
   }
   return value.as.string;
 }
 CFunction *asCFunction(Value value) {
-  if (!IS_CFUNCTION(value)) {
+  if (!isCFunction(value)) {
     panic("Expected CFunction but got %s", getKindName(value));
   }
   return value.as.cfunction;
 }
 Obj *asObj(Value value) {
-  if (!IS_OBJ(value)) {
+  if (!isObj(value)) {
     panic("Expected Obj but got %s", getKindName(value));
   }
   return value.as.obj;

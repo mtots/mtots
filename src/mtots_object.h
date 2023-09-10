@@ -10,16 +10,16 @@
 
 #define OBJ_TYPE(value) (AS_OBJ_UNSAFE(value)->type)
 
-#define IS_CLASS(value) isObjType(value, OBJ_CLASS)
-#define IS_CLOSURE(value) isObjType(value, OBJ_CLOSURE)
-#define IS_THUNK(value) isObjType(value, OBJ_THUNK)
-#define IS_INSTANCE(value) isObjType(value, OBJ_INSTANCE)
-#define IS_BUFFER(value) isObjType(value, OBJ_BUFFER)
-#define IS_LIST(value) isObjType(value, OBJ_LIST)
-#define IS_FROZEN_LIST(value) isObjType(value, OBJ_FROZEN_LIST)
-#define IS_DICT(value) isObjType(value, OBJ_DICT)
-#define IS_FROZEN_DICT(value) isObjType(value, OBJ_FROZEN_DICT)
-#define IS_NATIVE(value) isObjType(value, OBJ_NATIVE)
+#define isClass(value) isObjType(value, OBJ_CLASS)
+#define isClosure(value) isObjType(value, OBJ_CLOSURE)
+#define isThunk(value) isObjType(value, OBJ_THUNK)
+#define isInstance(value) isObjType(value, OBJ_INSTANCE)
+#define isBuffer(value) isObjType(value, OBJ_BUFFER)
+#define isList(value) isObjType(value, OBJ_LIST)
+#define isFrozenList(value) isObjType(value, OBJ_FROZEN_LIST)
+#define isDict(value) isObjType(value, OBJ_DICT)
+#define isFrozenDict(value) isObjType(value, OBJ_FROZEN_DICT)
+#define isNativeObj(value) isObjType(value, OBJ_NATIVE)
 
 #define AS_CLASS_UNSAFE(value) ((ObjClass *)AS_OBJ_UNSAFE(value))
 #define AS_CLOSURE_UNSAFE(value) ((ObjClosure *)AS_OBJ_UNSAFE(value))
@@ -196,7 +196,7 @@ struct ObjInstance {
   ObjList *retainList;
 };
 
-ubool IS_MODULE(Value value);
+ubool isModule(Value value);
 
 ObjClass *asClass(Value value);
 ObjModule *asModule(Value value);

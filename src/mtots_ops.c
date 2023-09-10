@@ -37,7 +37,7 @@ ubool mapsEqual(Map *a, Map *b) {
   initMapIterator(&di, a);
   while (mapIteratorNext(&di, &entry)) {
     Value key = entry->key;
-    if (!IS_EMPTY_KEY(key)) {
+    if (!isEmptyKey(key)) {
       Value value1 = entry->value, value2;
       if (!mapGet(b, key, &value2)) {
         return STATUS_ERROR;
@@ -275,7 +275,7 @@ void sortList(ObjList *list, ObjList *keys) {
 }
 
 ubool sortListWithKeyFunc(ObjList *list, Value keyfunc) {
-  if (!IS_NIL(keyfunc)) {
+  if (!isNil(keyfunc)) {
     ObjList *keys = newList(list->length);
     size_t i = 0;
     push(LIST_VAL(keys));
@@ -312,7 +312,7 @@ static ubool mapRepr(Buffer *out, Map *map) {
     if (!valueRepr(out, entry->key)) {
       return STATUS_ERROR;
     }
-    if (!IS_NIL(entry->value)) {
+    if (!isNil(entry->value)) {
       bputchar(out, ':');
       bputchar(out, ' ');
       if (!valueRepr(out, entry->value)) {
@@ -373,7 +373,7 @@ ubool valueRepr(Buffer *out, Value value) {
               return STATUS_ERROR;
             }
             resultValue = pop();
-            if (!IS_STRING(resultValue)) {
+            if (!isString(resultValue)) {
               ObjClass *cls = getClassOfValue(value);
               runtimeError(
                   "%s.__repr__() must return a String but returned %s",
@@ -450,7 +450,7 @@ ubool valueRepr(Buffer *out, Value value) {
               return STATUS_ERROR;
             }
             resultValue = pop();
-            if (!IS_STRING(resultValue)) {
+            if (!isString(resultValue)) {
               ObjClass *cls = getClassOfValue(value);
               runtimeError(
                   "%s.__repr__() must return a String but returned %s",
@@ -475,7 +475,7 @@ ubool valueRepr(Buffer *out, Value value) {
 }
 
 ubool valueStr(Buffer *out, Value value) {
-  if (IS_STRING(value)) {
+  if (isString(value)) {
     String *string = value.as.string;
     bputstrlen(out, string->chars, string->byteLength);
     return STATUS_OK;
@@ -527,10 +527,10 @@ ubool strMod(Buffer *out, const char *format, ObjList *args) {
 }
 
 ubool valueLen(Value recv, size_t *out) {
-  if (IS_STRING(recv)) {
+  if (isString(recv)) {
     *out = recv.as.string->codePointCount;
     return STATUS_OK;
-  } else if (IS_OBJ(recv)) {
+  } else if (isObj(recv)) {
     switch (AS_OBJ_UNSAFE(recv)->type) {
       case OBJ_BUFFER:
         *out = AS_BUFFER_UNSAFE(recv)->handle.length;
@@ -554,7 +554,7 @@ ubool valueLen(Value recv, size_t *out) {
           return STATUS_ERROR;
         }
         value = pop();
-        if (!IS_NUMBER(value)) {
+        if (!isNumber(value)) {
           runtimeError(
               "__len__ did not return a number (got %s)",
               getKindName(value));
@@ -572,7 +572,7 @@ ubool valueLen(Value recv, size_t *out) {
 }
 
 static ubool isIterator(Value value) {
-  if (IS_OBJ(value)) {
+  if (isObj(value)) {
     switch (AS_OBJ_UNSAFE(value)->type) {
       case OBJ_CLOSURE:
         return AS_CLOSURE_UNSAFE(value)->thunk->arity == 0;
@@ -618,7 +618,7 @@ ubool valueFastIterNext(Value *iterator, Value *out) {
 }
 
 ubool valueGetItem(Value owner, Value key, Value *out) {
-  if (IS_LIST(owner) && IS_NUMBER(key)) {
+  if (isList(owner) && isNumber(key)) {
     ObjList *list = AS_LIST_UNSAFE(owner);
     size_t i = asIndex(key, list->length);
     *out = list->buffer[i];
@@ -634,7 +634,7 @@ ubool valueGetItem(Value owner, Value key, Value *out) {
 }
 
 ubool valueSetItem(Value owner, Value key, Value value) {
-  if (IS_LIST(owner) && IS_NUMBER(key)) {
+  if (isList(owner) && isNumber(key)) {
     ObjList *list = AS_LIST_UNSAFE(owner);
     size_t i = asIndex(key, list->length);
     list->buffer[i] = value;

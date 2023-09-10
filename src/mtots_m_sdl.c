@@ -8,14 +8,14 @@
 #if MTOTS_ENABLE_SDL
 #include <SDL2/SDL.h>
 
-#define IS_POINT(value) (getNativeObjectDescriptor(value) == &descriptorPoint)
-#define IS_FPOINT(value) (getNativeObjectDescriptor(value) == &descriptorFPoint)
-#define IS_RECT(value) (getNativeObjectDescriptor(value) == &descriptorRect)
-#define IS_FRECT(value) (getNativeObjectDescriptor(value) == &descriptorFRect)
-#define IS_COLOR(value) (getNativeObjectDescriptor(value) == &descriptorColor)
-#define IS_VERTEX(value) (getNativeObjectDescriptor(value) == &descriptorVertex)
-#define IS_EVENT(value) (getNativeObjectDescriptor(value) == &descriptorEvent)
-#define IS_WINDOW(value) (getNativeObjectDescriptor(value) == &descriptorWindow)
+#define isPoint(value) (getNativeObjectDescriptor(value) == &descriptorPoint)
+#define isFPoint(value) (getNativeObjectDescriptor(value) == &descriptorFPoint)
+#define isRect(value) (getNativeObjectDescriptor(value) == &descriptorRect)
+#define isFRect(value) (getNativeObjectDescriptor(value) == &descriptorFRect)
+#define isColor(value) (getNativeObjectDescriptor(value) == &descriptorColor)
+#define isVertex(value) (getNativeObjectDescriptor(value) == &descriptorVertex)
+#define isEvent(value) (getNativeObjectDescriptor(value) == &descriptorEvent)
+#define isWindow(value) (getNativeObjectDescriptor(value) == &descriptorWindow)
 
 /*
  * ███████ ████████ ██████  ██ ███    ██  ██████  ███████
@@ -254,56 +254,56 @@ static Value WINDOW_VAL(ObjWindow *window) {
  */
 
 static ObjPoint *asPoint(Value value) {
-  if (!IS_POINT(value)) {
+  if (!isPoint(value)) {
     panic("Expected Point but got %s", getKindName(value));
   }
   return (ObjPoint *)AS_OBJ_UNSAFE(value);
 }
 
 static ObjFPoint *asFPoint(Value value) {
-  if (!IS_FPOINT(value)) {
+  if (!isFPoint(value)) {
     panic("Expected FPoint but got %s", getKindName(value));
   }
   return (ObjFPoint *)AS_OBJ_UNSAFE(value);
 }
 
 static ObjRect *asRect(Value value) {
-  if (!IS_RECT(value)) {
+  if (!isRect(value)) {
     panic("Expected Rect but got %s", getKindName(value));
   }
   return (ObjRect *)AS_OBJ_UNSAFE(value);
 }
 
 static ObjFRect *asFRect(Value value) {
-  if (!IS_FRECT(value)) {
+  if (!isFRect(value)) {
     panic("Expected FRect but got %s", getKindName(value));
   }
   return (ObjFRect *)AS_OBJ_UNSAFE(value);
 }
 
 static ObjColor *asColor(Value value) {
-  if (!IS_COLOR(value)) {
+  if (!isColor(value)) {
     panic("Expected Color but got %s", getKindName(value));
   }
   return (ObjColor *)AS_OBJ_UNSAFE(value);
 }
 
 static ObjVertex *asVertex(Value value) {
-  if (!IS_VERTEX(value)) {
+  if (!isVertex(value)) {
     panic("Expected Vertex but got %s", getKindName(value));
   }
   return (ObjVertex *)AS_OBJ_UNSAFE(value);
 }
 
 static ObjEvent *asEvent(Value value) {
-  if (!IS_EVENT(value)) {
+  if (!isEvent(value)) {
     panic("Expected Event but got %s", getKindName(value));
   }
   return (ObjEvent *)AS_OBJ_UNSAFE(value);
 }
 
 static ObjWindow *asWindow(Value value) {
-  if (!IS_WINDOW(value)) {
+  if (!isWindow(value)) {
     panic("Expected Window but got %s", getKindName(value));
   }
   return (ObjWindow *)AS_OBJ_UNSAFE(value);
@@ -381,7 +381,7 @@ static Status newWindow(const char *title, int width, int height, ObjWindow **ou
  */
 
 static Status implPollEvent(i16 argc, Value *argv, Value *out) {
-  *out = BOOL_VAL(SDL_PollEvent(IS_NIL(argv[0]) ? NULL : &asEvent(argv[0])->handle));
+  *out = BOOL_VAL(SDL_PollEvent(isNil(argv[0]) ? NULL : &asEvent(argv[0])->handle));
   return STATUS_OK;
 }
 
@@ -409,7 +409,7 @@ static Status implGetPerformanceFrequency(i16 argc, Value *argv, Value *out) {
 static CFunction funcGetPerformanceFrequency = {implGetPerformanceFrequency, "getPerformanceFrequency"};
 
 static Status implGetMouseState(i16 argc, Value *argv, Value *out) {
-  ObjPoint *pos = argc > 0 && !IS_NIL(argv[0]) ? asPoint(argv[0]) : NULL;
+  ObjPoint *pos = argc > 0 && !isNil(argv[0]) ? asPoint(argv[0]) : NULL;
   if (pos) {
     *out = NUMBER_VAL(SDL_GetMouseState(&pos->handle->x, &pos->handle->y));
   } else {
@@ -430,8 +430,8 @@ static CFunction funcGetMouseState = {implGetMouseState, "getMouseState", 0, 1};
 
 static Status implPointStaticCall(i16 argc, Value *argv, Value *out) {
   ObjPoint *point = newPoint(NULL, NULL);
-  point->handle->x = argc > 0 && !IS_NIL(argv[0]) ? asInt(argv[0]) : 0;
-  point->handle->y = argc > 1 && !IS_NIL(argv[1]) ? asInt(argv[1]) : 0;
+  point->handle->x = argc > 0 && !isNil(argv[0]) ? asInt(argv[0]) : 0;
+  point->handle->y = argc > 1 && !isNil(argv[1]) ? asInt(argv[1]) : 0;
   *out = POINT_VAL(point);
   return STATUS_OK;
 }
@@ -481,8 +481,8 @@ static CFunction funcPointSet = {implPointSet, "set", 2};
 
 static Status implFPointStaticCall(i16 argc, Value *argv, Value *out) {
   ObjFPoint *fpoint = newFPoint(NULL, NULL);
-  fpoint->handle->x = argc > 0 && !IS_NIL(argv[0]) ? asNumber(argv[0]) : 0;
-  fpoint->handle->y = argc > 1 && !IS_NIL(argv[1]) ? asNumber(argv[1]) : 0;
+  fpoint->handle->x = argc > 0 && !isNil(argv[0]) ? asNumber(argv[0]) : 0;
+  fpoint->handle->y = argc > 1 && !isNil(argv[1]) ? asNumber(argv[1]) : 0;
   *out = FPOINT_VAL(fpoint);
   return STATUS_OK;
 }
@@ -532,10 +532,10 @@ static CFunction funcFPointSet = {implFPointSet, "set", 2};
 
 static Status implRectStaticCall(i16 argc, Value *argv, Value *out) {
   ObjRect *rect = newRect();
-  rect->handle.x = argc > 0 && !IS_NIL(argv[0]) ? asInt(argv[0]) : 0;
-  rect->handle.y = argc > 1 && !IS_NIL(argv[1]) ? asInt(argv[1]) : 0;
-  rect->handle.w = argc > 2 && !IS_NIL(argv[2]) ? asInt(argv[2]) : 0;
-  rect->handle.h = argc > 3 && !IS_NIL(argv[3]) ? asInt(argv[3]) : 0;
+  rect->handle.x = argc > 0 && !isNil(argv[0]) ? asInt(argv[0]) : 0;
+  rect->handle.y = argc > 1 && !isNil(argv[1]) ? asInt(argv[1]) : 0;
+  rect->handle.w = argc > 2 && !isNil(argv[2]) ? asInt(argv[2]) : 0;
+  rect->handle.h = argc > 3 && !isNil(argv[3]) ? asInt(argv[3]) : 0;
   *out = RECT_VAL(rect);
   return STATUS_OK;
 }
@@ -585,16 +585,16 @@ static CFunction funcRectSetattr = {implRectSetattr, "__setattr__", 2};
 
 static Status implRectSet(i16 argc, Value *argv, Value *out) {
   ObjRect *rect = asRect(argv[-1]);
-  if (argc > 0 && !IS_NIL(argv[0])) {
+  if (argc > 0 && !isNil(argv[0])) {
     rect->handle.x = asInt(argv[0]);
   }
-  if (argc > 1 && !IS_NIL(argv[1])) {
+  if (argc > 1 && !isNil(argv[1])) {
     rect->handle.y = asInt(argv[1]);
   }
-  if (argc > 2 && !IS_NIL(argv[2])) {
+  if (argc > 2 && !isNil(argv[2])) {
     rect->handle.w = asInt(argv[2]);
   }
-  if (argc > 3 && !IS_NIL(argv[3])) {
+  if (argc > 3 && !isNil(argv[3])) {
     rect->handle.h = asInt(argv[3]);
   }
   return STATUS_OK;
@@ -604,10 +604,10 @@ static CFunction funcRectSet = {implRectSet, "set", 0, 4};
 
 static Status implFRectStaticCall(i16 argc, Value *argv, Value *out) {
   ObjFRect *frect = newFRect();
-  frect->handle.x = argc > 0 && !IS_NIL(argv[0]) ? asFloat(argv[0]) : 0;
-  frect->handle.y = argc > 1 && !IS_NIL(argv[1]) ? asFloat(argv[1]) : 0;
-  frect->handle.w = argc > 2 && !IS_NIL(argv[2]) ? asFloat(argv[2]) : 0;
-  frect->handle.h = argc > 3 && !IS_NIL(argv[3]) ? asFloat(argv[3]) : 0;
+  frect->handle.x = argc > 0 && !isNil(argv[0]) ? asFloat(argv[0]) : 0;
+  frect->handle.y = argc > 1 && !isNil(argv[1]) ? asFloat(argv[1]) : 0;
+  frect->handle.w = argc > 2 && !isNil(argv[2]) ? asFloat(argv[2]) : 0;
+  frect->handle.h = argc > 3 && !isNil(argv[3]) ? asFloat(argv[3]) : 0;
   *out = FRECT_VAL(frect);
   return STATUS_OK;
 }
@@ -657,16 +657,16 @@ static CFunction funcFRectSetattr = {implFRectSetattr, "__setattr__", 2};
 
 static Status implFRectSet(i16 argc, Value *argv, Value *out) {
   ObjFRect *frect = asFRect(argv[-1]);
-  if (argc > 0 && !IS_NIL(argv[0])) {
+  if (argc > 0 && !isNil(argv[0])) {
     frect->handle.x = asFloat(argv[0]);
   }
-  if (argc > 1 && !IS_NIL(argv[1])) {
+  if (argc > 1 && !isNil(argv[1])) {
     frect->handle.y = asFloat(argv[1]);
   }
-  if (argc > 2 && !IS_NIL(argv[2])) {
+  if (argc > 2 && !isNil(argv[2])) {
     frect->handle.w = asFloat(argv[2]);
   }
-  if (argc > 3 && !IS_NIL(argv[3])) {
+  if (argc > 3 && !isNil(argv[3])) {
     frect->handle.h = asFloat(argv[3]);
   }
   return STATUS_OK;
@@ -676,10 +676,10 @@ static CFunction funcFRectSet = {implFRectSet, "set", 0, 4};
 
 static Status implColorStaticCall(i16 argc, Value *argv, Value *out) {
   ObjColor *color = newColor(NULL, NULL);
-  color->handle->r = argc > 0 && !IS_NIL(argv[0]) ? asU8(argv[0]) : 0;
-  color->handle->g = argc > 1 && !IS_NIL(argv[1]) ? asU8(argv[1]) : 0;
-  color->handle->b = argc > 2 && !IS_NIL(argv[2]) ? asU8(argv[2]) : 0;
-  color->handle->a = argc > 3 && !IS_NIL(argv[3]) ? asU8(argv[3]) : 255;
+  color->handle->r = argc > 0 && !isNil(argv[0]) ? asU8(argv[0]) : 0;
+  color->handle->g = argc > 1 && !isNil(argv[1]) ? asU8(argv[1]) : 0;
+  color->handle->b = argc > 2 && !isNil(argv[2]) ? asU8(argv[2]) : 0;
+  color->handle->a = argc > 3 && !isNil(argv[3]) ? asU8(argv[3]) : 255;
   *out = COLOR_VAL(color);
   return STATUS_OK;
 }
@@ -729,16 +729,16 @@ static CFunction funcColorSetattr = {implColorSetattr, "__setattr__", 2};
 
 static Status implColorSet(i16 argc, Value *argv, Value *out) {
   ObjColor *color = asColor(argv[-1]);
-  if (argc > 0 && !IS_NIL(argv[0])) {
+  if (argc > 0 && !isNil(argv[0])) {
     color->handle->r = asU8(argv[0]);
   }
-  if (argc > 1 && !IS_NIL(argv[1])) {
+  if (argc > 1 && !isNil(argv[1])) {
     color->handle->g = asU8(argv[1]);
   }
-  if (argc > 2 && !IS_NIL(argv[2])) {
+  if (argc > 2 && !isNil(argv[2])) {
     color->handle->b = asU8(argv[2]);
   }
-  if (argc > 3 && !IS_NIL(argv[3])) {
+  if (argc > 3 && !isNil(argv[3])) {
     color->handle->a = asU8(argv[3]);
   }
   return STATUS_OK;
@@ -832,7 +832,7 @@ static Status implWindowSetDrawColor(i16 argc, Value *argv, Value *out) {
   u8 r = asU8(argv[0]);
   u8 g = asU8(argv[1]);
   u8 b = asU8(argv[2]);
-  u8 a = argc > 3 && !IS_NIL(argv[3]) ? asU8(argv[3]) : 255;
+  u8 a = argc > 3 && !isNil(argv[3]) ? asU8(argv[3]) : 255;
   if (SDL_SetRenderDrawColor(window->renderer, r, g, b, a) != 0) {
     return sdlError("SDL_SetRenderDrawColor");
   }

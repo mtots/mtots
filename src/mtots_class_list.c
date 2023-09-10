@@ -76,7 +76,7 @@ static Status implListExtend(i16 argCount, Value *args, Value *out) {
     if (!valueFastIterNext(&iterator, &item)) {
       return STATUS_ERROR;
     }
-    if (IS_STOP_ITERATION(item)) {
+    if (isStopIteration(item)) {
       break;
     }
     push(item);
@@ -91,7 +91,7 @@ static CFunction funcListExtend = {implListExtend, "extend", 1};
 
 static Status implListPop(i16 argCount, Value *args, Value *out) {
   ObjList *list = asList(args[-1]);
-  size_t index = argCount > 0 && !IS_NIL(args[0]) ? asIndex(args[0], list->length) : list->length - 1;
+  size_t index = argCount > 0 && !isNil(args[0]) ? asIndex(args[0], list->length) : list->length - 1;
   *out = list->buffer[index];
   for (; index + 1 < list->length; index++) {
     list->buffer[index] = list->buffer[index + 1];
@@ -165,8 +165,8 @@ static CFunction funcListSetItem = {implListSetItem, "__setitem__", 2};
 
 static Status implListSlice(i16 argCount, Value *args, Value *out) {
   ObjList *list = asList(args[-1]);
-  size_t start = IS_NIL(args[0]) ? 0 : asIndexLower(args[0], list->length);
-  size_t end = IS_NIL(args[1]) ? list->length : asIndexUpper(args[1], list->length);
+  size_t start = isNil(args[0]) ? 0 : asIndexLower(args[0], list->length);
+  size_t end = isNil(args[1]) ? list->length : asIndexUpper(args[1], list->length);
   if (start > end) {
     runtimeError(
         "List.__slice__ start > end (%lu > %lu)",
@@ -216,7 +216,7 @@ static Status implListFlatten(i16 argCount, Value *args, Value *out) {
       if (!valueFastIterNext(&iterator, &item)) {
         return STATUS_ERROR;
       }
-      if (IS_STOP_ITERATION(item)) {
+      if (isStopIteration(item)) {
         break;
       }
       push(item);

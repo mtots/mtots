@@ -9,7 +9,7 @@
 static Random defaultInstance;
 
 ObjRandom *asRandom(Value value) {
-  if (!IS_RANDOM(value)) {
+  if (!isRandom(value)) {
     panic("Expected Random but got %s", getKindName(value));
   }
   return (ObjRandom *)AS_OBJ_UNSAFE(value);

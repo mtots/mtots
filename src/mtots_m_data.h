@@ -7,8 +7,8 @@
  * For reading and writing data from and to various
  * sources and sinks */
 
-#define IS_DATA_SOURCE(v) (getNativeObjectDescriptor(v) == &descriptorDataSource)
-#define IS_DATA_SINK(v) (getNativeObjectDescriptor(v) == &descriptorDataSink)
+#define isDataSource(v) (getNativeObjectDescriptor(v) == &descriptorDataSource)
+#define isDataSink(v) (getNativeObjectDescriptor(v) == &descriptorDataSink)
 
 typedef enum DataSourceType {
   DATA_SOURCE_BUFFER,

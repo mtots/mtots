@@ -1,14 +1,14 @@
 #include "mtots_vm.h"
 
 ObjRange *asRange(Value value) {
-  if (!IS_RANGE(value)) {
+  if (!isRange(value)) {
     panic("Expected Range but got %s", getKindName(value));
   }
   return (ObjRange *)AS_OBJ_UNSAFE(value);
 }
 
 ObjRangeIterator *asRangeIterator(Value value) {
-  if (!IS_RANGE_ITERATOR(value)) {
+  if (!isRangeIterator(value)) {
     panic("Expected RangeIterator but got %s", getKindName(value));
   }
   return (ObjRangeIterator *)AS_OBJ_UNSAFE(value);

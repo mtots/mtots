@@ -63,7 +63,7 @@ static Status implStringBuilderBuild(i16 argCount, Value *args, Value *out) {
 static CFunction funcStringBuilderBuild = {implStringBuilderBuild, "build"};
 
 ObjStringBuilder *asStringBuilder(Value value) {
-  if (!IS_STRING_BUILDER(value)) {
+  if (!isStringBuilder(value)) {
     panic("Expected StringBuilder but got %s", getKindName(value));
   }
   return (ObjStringBuilder *)value.as.obj;

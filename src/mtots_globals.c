@@ -62,10 +62,10 @@ static Status implSum(i16 argCount, Value *args, Value *out) {
     if (!valueFastIterNext(&iterator, &item)) {
       return STATUS_ERROR;
     }
-    if (IS_STOP_ITERATION(item)) {
+    if (isStopIteration(item)) {
       break;
     }
-    if (!IS_NUMBER(item)) {
+    if (!isNumber(item)) {
       runtimeError("Expected number but got %s", getKindName(item));
       return STATUS_ERROR;
     }
@@ -187,7 +187,7 @@ static Status implRepr(i16 argCount, Value *args, Value *out) {
 static CFunction cfunctionRepr = {implRepr, "repr", 1};
 
 static Status implStr(i16 argCount, Value *args, Value *out) {
-  if (IS_STRING(*args)) {
+  if (isString(*args)) {
     *out = *args;
     return STATUS_OK;
   }
@@ -198,7 +198,7 @@ static CFunction cfunctionStr = {implStr, "str", 1};
 
 static Status implChr(i16 argCount, Value *args, Value *out) {
   char c;
-  if (!IS_NUMBER(args[0])) {
+  if (!isNumber(args[0])) {
     runtimeError("chr() requires a number but got %s",
                  getKindName(args[0]));
     return STATUS_ERROR;
@@ -229,7 +229,7 @@ static Status implMin(i16 argCount, Value *args, Value *out) {
   Value best = args[0];
   i16 i;
   for (i = 1; i < argCount; i++) {
-    if (IS_NIL(args[i])) {
+    if (isNil(args[i])) {
       break;
     }
     if (valueLessThan(args[i], best)) {
@@ -246,7 +246,7 @@ static Status implMax(i16 argCount, Value *args, Value *out) {
   Value best = args[0];
   i16 i;
   for (i = 1; i < argCount; i++) {
-    if (IS_NIL(args[i])) {
+    if (isNil(args[i])) {
       break;
     }
     if (valueLessThan(best, args[i])) {
@@ -287,7 +287,7 @@ static Status implSet(i16 argCount, Value *args, Value *out) {
     if (!valueFastIterNext(&iterator, &key)) {
       return STATUS_ERROR;
     }
-    if (IS_STOP_ITERATION(key)) {
+    if (isStopIteration(key)) {
       break;
     }
     push(key);
@@ -324,7 +324,7 @@ static Status implRange(i16 argCount, Value *args, Value *out) {
   double start = 0, stop, step = 1;
   i32 i = 0;
   for (i = 0; i < argCount; i++) {
-    if (!IS_NUMBER(args[i])) {
+    if (!isNumber(args[i])) {
       panic(
           "range() requires number arguments but got %s for argument %d",
           getKindName(args[i]), i);
@@ -354,11 +354,11 @@ static CFunction cfunctionRange = {implRange, "range", 1, 3};
 
 static Status implFloat(i16 argCount, Value *args, Value *out) {
   Value arg = args[0];
-  if (IS_NUMBER(arg)) {
+  if (isNumber(arg)) {
     *out = arg;
     return STATUS_OK;
   }
-  if (IS_STRING(arg)) {
+  if (isString(arg)) {
     String *str = (String *)arg.as.obj;
     const char *ptr = str->chars;
     ubool decimalPoint = UFALSE;
@@ -406,11 +406,11 @@ static CFunction funcFloat = {implFloat, "float", 1};
 
 static Status implInt(i16 argCount, Value *args, Value *out) {
   Value arg = args[0];
-  if (IS_NUMBER(arg)) {
+  if (isNumber(arg)) {
     *out = NUMBER_VAL(floor(asNumber(arg)));
     return STATUS_OK;
   }
-  if (IS_STRING(arg)) {
+  if (isString(arg)) {
     String *str = (String *)arg.as.obj;
     i32 base = argCount > 1 ? asI32(args[1]) : 10;
     const char *ptr = str->chars;
@@ -467,7 +467,7 @@ static Status implIsClose(i16 argc, Value *args, Value *out) {
   Value b = args[1];
   double relTol = argc > 2 ? asNumber(args[2]) : DEFAULT_RELATIVE_TOLERANCE;
   double absTol = argc > 3 ? asNumber(args[3]) : DEFAULT_ABSOLUTE_TOLERANCE;
-  if (IS_NUMBER(args[0]) && IS_NUMBER(args[1])) {
+  if (isNumber(args[0]) && isNumber(args[1])) {
     *out = BOOL_VAL(doubleIsCloseEx(asNumber(a), asNumber(b), relTol, absTol));
     return STATUS_OK;
   }
@@ -548,7 +548,7 @@ static Status implSort(i16 argCount, Value *args, Value *out) {
   ObjList *list = asList(args[0]);
   ObjList *keys =
       argCount < 2      ? NULL
-      : IS_NIL(args[1]) ? NULL
+      : isNil(args[1]) ? NULL
                         : asList(args[1]);
   sortList(list, keys);
   return STATUS_OK;
