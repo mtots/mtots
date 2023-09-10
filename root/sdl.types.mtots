@@ -47,6 +47,50 @@ def pollEvent(event Event?) Bool:
   """
 
 
+def delay(ms Int) nil:
+  """
+  ### SDL Docs for `SDL_Delay`
+
+  This function waits a specified number of milliseconds before returning. It
+  waits at least the specified time, but possibly longer due to OS
+  scheduling.
+
+  * param ms the number of milliseconds to delay
+  """
+
+
+def getPerformanceCounter() Int:
+  """
+  NOTE: There may be some issues here because the returned Uint64 may not
+  fit in a double value.
+
+  ### SDL Docs for `SDL_GetPerformanceCounter`
+
+  Get the current value of the high resolution counter.
+
+  This function is typically used for profiling.
+
+  The counter values are only meaningful relative to each other. Differences
+  between values can be converted to times by using
+  SDL_GetPerformanceFrequency().
+
+  * returns the current counter value.
+  """
+
+
+def getPerformanceFrequency() Int:
+  """
+  NOTE: There may be some issues here because the returned Uint64 may not
+  fit in a double value.
+
+  ### SDL Docs for `SDL_GetPerformanceFrequency`
+
+  Get the count per second of the high resolution counter.
+
+  * returns a platform-specific count per second.
+  """
+
+
 def getMouseState(position Point?=nil) Int:
   """
   ### SDL Docs for `SDL_GetMouseState`

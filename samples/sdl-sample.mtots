@@ -1,13 +1,18 @@
 import sdl
+import sys
 
 
 final window = sdl.Window('title', 512, 512)
 final event = sdl.Event()
 
 def main():
+  sys.enableLogOnGC(true)
   final mouse = sdl.Point()
   final rect = sdl.Rect(128, 128, 256, 256)
+  final freq = sdl.getPerformanceFrequency()
   while true:
+    final start = sdl.getPerformanceCounter()
+
     while sdl.pollEvent(event):
       if event.type == sdl.QUIT:
         return nil
@@ -21,5 +26,11 @@ def main():
     rect.y = mouse.y - rect.h / 2
     window.fillRect(rect)
     window.present()
+
+    final end = sdl.getPerformanceCounter()
+    final elapsedMS = (end - start) / freq * 1000
+    # print("end = %s, start = %s, freq = %s, elapsedMS = %s" % [end, start, freq, elapsedMS])
+    # print(elapsedMS)
+    sdl.delay(max(0, 16.666 - elapsedMS))
 
 main()

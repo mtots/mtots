@@ -387,6 +387,27 @@ static Status implPollEvent(i16 argc, Value *argv, Value *out) {
 
 static CFunction funcPollEvent = {implPollEvent, "pollEvent", 1};
 
+static Status implDelay(i16 argc, Value *argv, Value *out) {
+  SDL_Delay(asU32(argv[0]));
+  return STATUS_OK;
+}
+
+static CFunction funcDelay = {implDelay, "delay", 1};
+
+static Status implGetPerformanceCounter(i16 argc, Value *argv, Value *out) {
+  *out = NUMBER_VAL(SDL_GetPerformanceCounter());
+  return STATUS_OK;
+}
+
+static CFunction funcGetPerformanceCounter = {implGetPerformanceCounter, "getPerformanceCounter"};
+
+static Status implGetPerformanceFrequency(i16 argc, Value *argv, Value *out) {
+  *out = NUMBER_VAL(SDL_GetPerformanceFrequency());
+  return STATUS_OK;
+}
+
+static CFunction funcGetPerformanceFrequency = {implGetPerformanceFrequency, "getPerformanceFrequency"};
+
 static Status implGetMouseState(i16 argc, Value *argv, Value *out) {
   ObjPoint *pos = argc > 0 && !IS_NIL(argv[0]) ? asPoint(argv[0]) : NULL;
   if (pos) {
@@ -861,6 +882,9 @@ static Status impl(i16 argCount, Value *args, Value *out) {
   ObjModule *module = asModule(args[0]);
   CFunction *functions[] = {
       &funcPollEvent,
+      &funcDelay,
+      &funcGetPerformanceCounter,
+      &funcGetPerformanceFrequency,
       &funcGetMouseState,
       NULL,
   };
