@@ -1,0 +1,7 @@
+import test_import2
+
+
+print(test_import2.foo(a = 'keyA'))
+print(test_import2.foo(b = 'keyB'))
+print(test_import2.foo(a = 'keyA', b = 'keyB'))
+print(test_import2.foo(b = 'keyB', a = 'keyA'))

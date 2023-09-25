@@ -1,0 +1,6 @@
+Foo.staticMethod: a = 12, b = 999
+Foo.staticMethod: a = 444, b = 55
+Foo.instanceMethod: a = 111, b = 222
+Foo.instanceMethod: a = 777, b = 222
+Foo.instanceMethod: a = 111, b = 333
+Foo.instanceMethod: a = 777, b = 333

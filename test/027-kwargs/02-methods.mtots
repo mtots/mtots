@@ -1,0 +1,26 @@
+
+
+
+class Foo:
+  """
+  ## NOTE: Currently constructors do not support keyword arguments
+  # var abc Int
+  # def __init__(abc Int):
+  #   this.abc = abc
+  """
+  static def staticMethod(a Int = 12, b Int = 55) nil:
+    print("Foo.staticMethod: a = %s, b = %s" % [a, b])
+
+  def instanceMethod(a Int = 111, b Int = 222) nil:
+    print("Foo.instanceMethod: a = %s, b = %s" % [a, b])
+
+
+Foo.staticMethod(b = 999)
+Foo.staticMethod(a = 444)
+
+
+final foo = Foo()
+foo.instanceMethod()
+foo.instanceMethod(a = 777)
+foo.instanceMethod(b = 333)
+foo.instanceMethod(b = 333, a = 777)

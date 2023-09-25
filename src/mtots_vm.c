@@ -347,10 +347,8 @@ static Status setupClosureWithKwArgs(ObjClosure *closure, i16 argc) {
   return setupCallClosure(closure, argc);
 }
 
-static Status callFunctionWithKwArgs(i16 argc) {
+static Status callValueWithKwArgs(Value callable, i16 argc) {
   /* TOS is assumed to be the kwargs dict, so args must start at TOS - argc - 1 */
-  Value callable = vm.stackTop[-argc - 2];
-
   switch (callable.type) {
     case VAL_CFUNCTION:
       return callCFunctionWithKwArgs(callable.as.cfunction, argc);
@@ -370,6 +368,55 @@ static Status callFunctionWithKwArgs(i16 argc) {
   runtimeError(
       "Can only call functions and classes but got %s (kwargs)", getKindName(callable));
   return STATUS_ERROR;
+}
+
+static Status callFunctionWithKwArgs(i16 argc) {
+  /* TOS is assumed to be the kwargs dict, so args must start at TOS - argc - 1 */
+  return callValueWithKwArgs(vm.stackTop[-argc - 2], argc);
+}
+
+static Status invokeFromClassWithKwArgs(
+    ObjClass *klass, String *name, i16 argCount) {
+  Value method;
+  if (!mapGetStr(&klass->methods, name, &method)) {
+    runtimeError(
+        "Method '%s' not found in '%s'",
+        name->chars,
+        klass->name->chars);
+    return STATUS_ERROR;
+  }
+  return callValueWithKwArgs(method, argCount);
+}
+
+static ubool invokeWithKwArgs(String *name, i16 argCount) {
+  ObjClass *klass;
+  Value receiver = peek(argCount + 1);
+
+  klass = getClassOfValue(receiver);
+  if (klass == NULL) {
+    runtimeError(
+        "%s kind does not yet support method calls", getKindName(receiver));
+    return STATUS_ERROR;
+  }
+  if (klass == vm.classClass) {
+    /* For classes, we invoke static methods */
+    ObjClass *cls;
+    Value method;
+    if (!isClass(receiver)) {
+      panic("Class instance is not a Class (%s)", getKindName(receiver));
+    }
+    cls = AS_CLASS_UNSAFE(receiver);
+    if (!mapGetStr(&cls->staticMethods, name, &method)) {
+      runtimeError(
+          "Static method '%s' not found in '%s'",
+          name->chars,
+          cls->name->chars);
+      return STATUS_ERROR;
+    }
+    return callValueWithKwArgs(method, argCount);
+  }
+
+  return invokeFromClassWithKwArgs(klass, name, argCount);
 }
 
 static Status callCFunction(CFunction *cfunc, i16 argCount) {
@@ -591,6 +638,13 @@ static Status run(void) {
       RETURN_RUNTIME_ERROR();              \
     }                                      \
     frame = &vm.frames[vm.frameCount - 1]; \
+  } while (0)
+#define INVOKE_KW(methodName, argCount)            \
+  do {                                             \
+    if (!invokeWithKwArgs(methodName, argCount)) { \
+      RETURN_RUNTIME_ERROR();                      \
+    }                                              \
+    frame = &vm.frames[vm.frameCount - 1];         \
   } while (0)
 #define CALL(argCount)                     \
   do {                                     \
@@ -1011,6 +1065,12 @@ static Status run(void) {
         CALL_KW(argCount);
         break;
       }
+      case OP_INVOKE_KW: {
+        String *method = READ_STRING();
+        i16 argCount = READ_BYTE();
+        INVOKE_KW(method, argCount);
+        break;
+      }
       case OP_CLOSURE: {
         ObjThunk *thunk = AS_THUNK_UNSAFE(READ_CONSTANT());
         ObjClosure *closure = newClosure(thunk, frame->closure->module);
@@ -1134,7 +1194,9 @@ static Status run(void) {
 #undef BINARY_BITWISE_OP
 #undef BINARY_OP
 #undef CALL
+#undef CALL_KW
 #undef INVOKE
+#undef INVOKE_KW
 #undef RETURN_RUNTIME_ERROR
 #undef READ_STRING
 #undef READ_CONSTANT

@@ -1574,7 +1574,11 @@ static ubool parseDot(Parser *parser) {
     u8 argCount;
     ubool hasKwArgs;
     CHECK2(parseArgumentList, &argCount, &hasKwArgs);
-    EMIT1C1(OP_INVOKE, nameID, argCount);
+    if (hasKwArgs) {
+      EMIT1C1(OP_INVOKE_KW, nameID, argCount);
+    } else {
+      EMIT1C1(OP_INVOKE, nameID, argCount);
+    }
   } else {
     EMIT1C(OP_GET_FIELD, nameID);
   }
