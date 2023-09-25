@@ -538,6 +538,7 @@ export class Lambda extends Expression {
 export class FunctionCall extends Expression {
   readonly func: Expression;
   readonly args: Expression[];
+  readonly kwargs: [Identifier, Expression][];
 
   /**
    * argLocations are the spaces where the arguments are.
@@ -552,10 +553,12 @@ export class FunctionCall extends Expression {
       location: MLocation,
       func: Expression,
       args: Expression[],
+      kwargs: [Identifier, Expression][],
       argLocations: MLocation[] | null) {
     super(location);
     this.func = func;
     this.args = args;
+    this.kwargs = kwargs;
     this.argLocations = argLocations;
   }
   accept<A, R>(visitor: ExpressionVisitor<A, R>, arg: A): R {
@@ -572,6 +575,7 @@ export class MethodCall extends Expression {
   readonly owner: Expression;
   readonly identifier: Identifier;
   readonly args: Expression[];
+  readonly kwargs: [Identifier, Expression][];
 
   /**
    * argLocations are the spaces where the arguments are.
@@ -587,11 +591,13 @@ export class MethodCall extends Expression {
       owner: Expression,
       identifier: Identifier,
       args: Expression[],
+      kwargs: [Identifier, Expression][] = [],
       argLocations: MLocation[] | null = null) {
     super(location);
     this.owner = owner;
     this.identifier = identifier;
     this.args = args;
+    this.kwargs = kwargs;
     this.argLocations = argLocations;
   }
   accept<A, R>(visitor: ExpressionVisitor<A, R>, arg: A): R {

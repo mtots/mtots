@@ -212,8 +212,9 @@ function _parse(filePath: string | Uri, s: string): ast.File {
     return parseArgumentsAndLocations()[0];
   }
 
-  function parseArgumentsAndLocations(): [ast.Expression[], MLocation[]] {
+  function parseArgumentsAndLocations(): [ast.Expression[], [ast.Identifier, ast.Expression][], MLocation[]] {
     const args: ast.Expression[] = [];
+    const kwargs: [ast.Identifier, ast.Expression][] = [];
     const argLocations: MLocation[] = [];
     while (true) {
       const argStartPosition = peek.location.range.start;
@@ -224,7 +225,18 @@ function _parse(filePath: string | Uri, s: string): ast.File {
           new MRange(argStartPosition, argEndPosition)));
         break;
       }
-      args.push(parseExpression());
+      if (peek.type == 'IDENTIFIER' && tokens[i].type === '=') {
+        const argname = parseIdentifier();
+        expect('=');
+        kwargs.push([argname, parseExpression()]);
+      } else if (kwargs.length > 0) {
+        err(`Positional arguments cannot follow keyword arguments`);
+        kwargs.push([
+          new ast.Identifier(peek.location, '<positional>'),
+          parseExpression()]);
+      } else {
+        args.push(parseExpression());
+      }
       const argEndPosition = peek.location.range.start;
       argLocations.push(new MLocation(
         tokens[0].location.filePath,
@@ -239,7 +251,7 @@ function _parse(filePath: string | Uri, s: string): ast.File {
         break;
       }
     }
-    return [args, argLocations];
+    return [args, kwargs, argLocations];
   }
 
   function parsePrefix(): ast.Expression {
@@ -436,10 +448,10 @@ function _parse(filePath: string | Uri, s: string): ast.File {
         const identifier = parseIdentifier();
         if (at('(')) {
           incr();
-          const [args, argLocations] = parseArgumentsAndLocations();
+          const [args, kwargs, argLocations] = parseArgumentsAndLocations();
           const endLocation = expect(')').location;
           const location = startLocation.merge(endLocation);
-          return new ast.MethodCall(location, lhs, identifier, args, argLocations);
+          return new ast.MethodCall(location, lhs, identifier, args, kwargs, argLocations);
         } else if (consume('=')) {
           const value = parseExpression();
           const location = startLocation.merge(value.location);
@@ -484,10 +496,10 @@ function _parse(filePath: string | Uri, s: string): ast.File {
       }
       case '(': {
         incr();
-        const [args, argLocations] = parseArgumentsAndLocations();
+        const [args, kwargs, argLocations] = parseArgumentsAndLocations();
         const closeParenLocation = expect(')').location;
         const location = startLocation.merge(closeParenLocation);
-        return new ast.FunctionCall(location, lhs, args, argLocations);
+        return new ast.FunctionCall(location, lhs, args, kwargs, argLocations);
       }
       case 'as': {
         incr();
@@ -920,8 +932,8 @@ function _parse(filePath: string | Uri, s: string): ast.File {
       func,
       new ast.ExpressionStatement(location,
         methodName ?
-          new ast.MethodCall(location, decorator, methodName, [getfunc]) :
-          new ast.FunctionCall(location, decorator, [getfunc], null)),
+          new ast.MethodCall(location, decorator, methodName, [getfunc], []) :
+          new ast.FunctionCall(location, decorator, [getfunc], [], null)),
     ]);
   }
 

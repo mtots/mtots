@@ -19,6 +19,10 @@ Future work:
 
 ## Release Notes
 
+### 0.0.47
+
+Support for keyword arguments
+
 ### 0.0.45
 
 "Mtots: Run Mtots File" command to run an open file

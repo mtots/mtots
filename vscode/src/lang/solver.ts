@@ -532,10 +532,54 @@ function _solve(
       funcType: ir.FunctionType,
       hintReturnType: ir.Type | null,
       argexprs: ast.Expression[],
+      kwargExprs: [ast.Identifier, ast.Expression][],
       argLocations: MLocation[] | null): ir.Type {
     const tparams = funcType.typeParameters;
     const params = funcType.parameters;
     const rtype = funcType.returnType;
+
+    if (kwargExprs.length > 0) {
+      argexprs = Array.from(argexprs);
+      const kwargsMap = new Map(kwargExprs.map((pair => [pair[0].name, pair])));
+      while (argexprs.length < params.length && kwargsMap.size > 0) {
+        const param = params[argexprs.length];
+        const pair = kwargsMap.get(param.identifier.name);
+        if (pair) {
+          const [argname, kwExpr] = pair;
+          declareUsage(argname, new Variable(false, param.identifier, param.type, null));
+          kwargsMap.delete(param.identifier.name);
+          argexprs.push(kwExpr);
+        } else if (param.defaultValue !== undefined) {
+          if (param.defaultValue === null) {
+            argexprs.push(new ast.NilLiteral(param.identifier.location, null));
+          } else {
+            switch (typeof param.defaultValue) {
+              case 'boolean':
+                argexprs.push(new ast.BoolLiteral(param.identifier.location, param.defaultValue));
+                break;
+              case 'number':
+                argexprs.push(new ast.NumberLiteral(param.identifier.location, param.defaultValue));
+                break;
+              case 'string':
+                argexprs.push(new ast.StringLiteral(param.identifier.location, param.defaultValue));
+                break;
+              default:
+                throw new Error(`Impossible defaultValue ${param.defaultValue}`);
+            }
+          }
+        } else {
+          // Invalid - but should be caught by a later check
+          argexprs.push(new ast.NilLiteral(param.identifier.location, null));
+        }
+      }
+      if (kwargsMap.size > 0) {
+        for (const [argname, argexpr] of kwargExprs) {
+          if (kwargsMap.has(argname.name)) {
+            err(argname.location, `Unused keyword argument '${argname.name}'`);
+          }
+        }
+      }
+    }
 
     // signature helpers
     if (argLocations) {
@@ -868,7 +912,7 @@ function _solve(
             usage = module.usages[usageID];
           }
         }
-        return applyFunction(e.location, usage, func, hint, e.args, e.argLocations);
+        return applyFunction(e.location, usage, func, hint, e.args, e.kwargs, e.argLocations);
       }
       if (callable !== ir.ANY_TYPE) {
         err(e.location, `${callable} is not callable`);
@@ -889,7 +933,7 @@ function _solve(
             usage = module.usages[usageID];
           }
           return applyFunction(
-            e.location, usage, methodType, hint, e.args, e.argLocations);
+            e.location, usage, methodType, hint, e.args, e.kwargs, e.argLocations);
         }
         if (method.type !== ir.ANY_TYPE) {
           err(e.location, `${method.type} is not callable`);

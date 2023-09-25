@@ -1,0 +1,9 @@
+foo: a = 123, b = 456
+foo: a = 12, b = 44
+foo: a = 111, b = 222
+foo: a = 123, b = 456
+bar: a = posA, b = posB
+bar: a = defaultA, b = keyB
+bar: a = keyA, b = defaultB
+bar: a = defaultA, b = defaultB
+bar: a = keyA, b = keyB
