@@ -156,7 +156,7 @@ static ubool parseBlock(Parser *parser, ubool newScope);
 static ubool loadVariableByName(Parser *parser, StringSlice name);
 static ubool storeVariableByName(Parser *parser, StringSlice name);
 static ubool parseFunctionCore(Parser *parser, StringSlice name, ThunkContext *thunkContext);
-static ubool parseArgumentList(Parser *parser, u8 *out);
+static ubool parseArgumentList(Parser *parser, u8 *out, ubool *hasKwArgs);
 
 static StringSlice newSlice(const char *chars, size_t length) {
   StringSlice ss;
@@ -758,14 +758,24 @@ static ubool parseDefaultArgument(Parser *parser, Value *out) {
   return STATUS_OK;
 }
 
-static ubool parseParameterList(Parser *parser, i16 *argCount) {
+static ubool parseParameterList(Parser *parser, ObjThunk *thunk) {
   i16 argc = 0;
+  size_t parameterNameCapacity = 0;
   parser->defaultArgs->length = 0;
   EXPECT(TOKEN_LEFT_PAREN);
   while (!AT(TOKEN_RIGHT_PAREN)) {
     Local *local;
+    if (((size_t)argc) + 1 >= parameterNameCapacity) {
+      size_t newCap = parameterNameCapacity < 8 ? 8 : 2 * parameterNameCapacity;
+      thunk->parameterNames = GROW_ARRAY(
+          String *, thunk->parameterNames, parameterNameCapacity, newCap);
+      parameterNameCapacity = newCap;
+    }
     argc++;
     EXPECT(TOKEN_IDENTIFIER);
+    thunk->parameterNames[argc - 1] = internForeverString(
+        parser->previous.start,
+        parser->previous.length);
     CHECK2(newLocal, SLICE_PREVIOUS(), &local);
     MARK_LOCAL_READY(local); /* all arguments are initialized at the start */
 
@@ -796,7 +806,12 @@ static ubool parseParameterList(Parser *parser, i16 *argCount) {
     }
   }
   EXPECT(TOKEN_RIGHT_PAREN);
-  *argCount = argc;
+  if (parameterNameCapacity > argc) {
+    /* really this is a 'shrink-array' */
+    thunk->parameterNames = GROW_ARRAY(
+        String *, thunk->parameterNames, parameterNameCapacity, argc);
+  }
+  thunk->arity = argc;
   return STATUS_OK;
 }
 
@@ -819,7 +834,7 @@ static ubool parseFunctionCore(Parser *parser, StringSlice name, ThunkContext *t
   thunk->name = internString(name.chars, name.length);
 
   /* parameter list */
-  CHECK1(parseParameterList, &thunk->arity);
+  CHECK1(parseParameterList, thunk);
   if (parser->defaultArgs->length > 0) {
     thunk->defaultArgs = ALLOCATE(Value, parser->defaultArgs->length);
     thunk->defaultArgsCount = parser->defaultArgs->length;
@@ -1233,6 +1248,7 @@ static ubool parseThis(Parser *parser) {
 static ubool parseSuper(Parser *parser) {
   ConstID methodNameID;
   u8 argCount;
+  ubool hasKwArgs;
   EXPECT(TOKEN_SUPER);
   if (!parser->classInfo || !parser->classInfo->hasSuperClass) {
     runtimeError("'super' cannot be used outside a class with a super class");
@@ -1242,7 +1258,11 @@ static ubool parseSuper(Parser *parser) {
   EXPECT(TOKEN_IDENTIFIER);
   ADD_CONST_NAME_FROM_PREVIOUS_TOKEN(&methodNameID);
   CHECK1(loadVariableByName, newSlice("this", 4));
-  CHECK1(parseArgumentList, &argCount);
+  CHECK2(parseArgumentList, &argCount, &hasKwArgs);
+  if (hasKwArgs) {
+    runtimeError("Keyword arguments are not supported here");
+    return STATUS_ERROR;
+  }
   CHECK1(loadVariableByName, newSlice("super", 5));
   EMIT1C1(OP_SUPER_INVOKE, methodNameID, argCount);
   return STATUS_OK;
@@ -1426,12 +1446,22 @@ static ubool parseFrozenDisplay(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseArgumentList(Parser *parser, u8 *out) {
+/* A hack to do a sort of lookahead and check whether the current
+ * token is followed by '=' */
+static ubool peekEqual(Parser *parser) {
+  const char *ptr = parser->lexer->current;
+  while (*ptr == ' ') {
+    ptr++;
+  }
+  return *ptr == '=';
+}
+
+static ubool parseArgumentList(Parser *parser, u8 *out, ubool *hasKwArgs) {
   u8 argCount = 0;
+  u8 kwargc = 0;
 
   EXPECT(TOKEN_LEFT_PAREN);
   while (!AT(TOKEN_RIGHT_PAREN)) {
-    CHECK(parseExpression);
     if (argCount == U8_MAX) {
       runtimeError(
           "[%s:%d] Too many arguments (no more than %d are allowed)",
@@ -1440,6 +1470,21 @@ static ubool parseArgumentList(Parser *parser, u8 *out) {
           U8_MAX);
       return STATUS_ERROR;
     }
+    if (AT(TOKEN_IDENTIFIER) && peekEqual(parser)) {
+      ADVANCE();
+      EMIT_CONST(STRING_VAL(internString(
+          parser->previous.start,
+          parser->previous.length)));
+      EXPECT(TOKEN_EQUAL);
+      kwargc++;
+    } else if (kwargc > 0) {
+      runtimeError(
+          "[%s:%d] Positional arguments may not come after keyword arguments",
+          MODULE_NAME_CHARS,
+          PREVIOUS_LINE);
+      return STATUS_ERROR;
+    }
+    CHECK(parseExpression);
     argCount++;
     if (AT(TOKEN_COMMA)) {
       ADVANCE();
@@ -1449,14 +1494,24 @@ static ubool parseArgumentList(Parser *parser, u8 *out) {
   }
   EXPECT(TOKEN_RIGHT_PAREN);
 
-  *out = argCount;
+  if (kwargc > 0) {
+    EMIT2(OP_NEW_DICT, kwargc);
+  }
+
+  *out = argCount - kwargc;
+  *hasKwArgs = kwargc > 0;
   return STATUS_OK;
 }
 
 static ubool parseFunctionCall(Parser *parser) {
   u8 argCount;
-  CHECK1(parseArgumentList, &argCount);
-  EMIT2(OP_CALL, argCount);
+  ubool hasKwArgs;
+  CHECK2(parseArgumentList, &argCount, &hasKwArgs);
+  if (hasKwArgs) {
+    EMIT2(OP_CALL_KW, argCount);
+  } else {
+    EMIT2(OP_CALL, argCount);
+  }
   return STATUS_OK;
 }
 
@@ -1517,7 +1572,8 @@ static ubool parseDot(Parser *parser) {
     EMIT1C(OP_SET_FIELD, nameID);
   } else if (AT(TOKEN_LEFT_PAREN)) {
     u8 argCount;
-    CHECK1(parseArgumentList, &argCount);
+    ubool hasKwArgs;
+    CHECK2(parseArgumentList, &argCount, &hasKwArgs);
     EMIT1C1(OP_INVOKE, nameID, argCount);
   } else {
     EMIT1C(OP_GET_FIELD, nameID);
@@ -1927,9 +1983,10 @@ static ParseRule newRule(ParseFn prefix, ParseFn infix, Precedence prec) {
 }
 
 static void initParseRulesPrivate(void) {
-  if (!parseRulesInitialized) {
-    parseRulesInitialized = UTRUE;
+  if (parseRulesInitialized) {
+    return;
   }
+  parseRulesInitialized = UTRUE;
 
   rules[TOKEN_LEFT_PAREN] = newRule(parseGrouping, parseFunctionCall, PREC_CALL);
   rules[TOKEN_LEFT_BRACE] = newRule(parseMapDisplay, NULL, PREC_NONE);

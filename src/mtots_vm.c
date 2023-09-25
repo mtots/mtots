@@ -232,9 +232,149 @@ static ubool isIterator(Value value) {
   return UFALSE;
 }
 
-static ubool callCFunction(CFunction *cfunc, i16 argCount) {
+static void prepCFunction(CFunction *cfunc) {
+  if (cfunc->parameterNames && !cfunc->parameterNameStrings) {
+    size_t argc = 0, i, expected = (size_t)(cfunc->maxArity == 0 ? cfunc->arity : cfunc->maxArity);
+    while (cfunc->parameterNames[argc]) {
+      argc++;
+    }
+    if (argc != expected) {
+      panic("CFunction %s must have exactly %lu parameter names, but got %lu",
+            cfunc->name,
+            (unsigned long)expected,
+            (unsigned long)argc);
+    }
+    cfunc->parameterNameStrings = (String **)malloc(sizeof(String *) * (argc + 1));
+    for (i = 0; i < argc; i++) {
+      cfunc->parameterNameStrings[i] = internForeverCString(cfunc->parameterNames[i]);
+    }
+    cfunc->parameterNameStrings[argc] = NULL;
+  }
+}
+
+static Status callCFunctionWithKwArgs(CFunction *cfunc, i16 argc) {
+  /* TOS is assumed to be the kwargs dict, so args must start at TOS - argc - 1 */
+  Value *argv = vm.stackTop - argc - 1, *returnSlot = argv - 1;
+  ObjDict *kwargs = AS_DICT_UNSAFE(vm.stackTop[-1]);
+
+  prepCFunction(cfunc); /* potential GC */
+
+  if (!cfunc->parameterNameStrings) {
+    runtimeError("CFunction %s does not support keyword arguments", cfunc->name);
+    return STATUS_ERROR;
+  }
+
+  /* We have to be careful here - kwargs is no longer safe from GC */
+  vm.stackTop--;
+
+  while (argc < cfunc->arity) {
+    Value value;
+    if (mapGetStr(&kwargs->map, cfunc->parameterNameStrings[argc], &value)) {
+      mapDeleteStr(&kwargs->map, cfunc->parameterNameStrings[argc]);
+      argc++;
+      push(value);
+    } else {
+      runtimeError(
+          "Call is missing parameter %s",
+          cfunc->parameterNameStrings[argc]->chars);
+      return STATUS_ERROR;
+    }
+  }
+
+  while (argc < cfunc->maxArity) {
+    Value value;
+    if (mapGetStr(&kwargs->map, cfunc->parameterNameStrings[argc], &value)) {
+      mapDeleteStr(&kwargs->map, cfunc->parameterNameStrings[argc]);
+      push(value);
+    } else {
+      push(NIL_VAL());
+    }
+    argc++;
+  }
+
+  if (kwargs->map.size > 0) {
+    runtimeError("Unused keyword argument '%s'", kwargs->map.first->key.as.string->chars);
+    return STATUS_ERROR;
+  }
+
+  if (cfunc->body(argc, argv, returnSlot)) {
+    vm.stackTop = argv;
+    return STATUS_OK;
+  }
+
+  return STATUS_ERROR;
+}
+
+static Status setupCallClosure(ObjClosure *closure, i16 argCount);
+
+static Status setupClosureWithKwArgs(ObjClosure *closure, i16 argc) {
+  ObjDict *kwargs = AS_DICT_UNSAFE(vm.stackTop[-1]);
+  i16 requiredArgc = closure->thunk->arity - closure->thunk->defaultArgsCount;
+
+  /* We have to be careful here - kwargs is no longer safe from GC */
+  vm.stackTop--;
+
+  while (argc < requiredArgc) {
+    Value value;
+    if (mapGetStr(&kwargs->map, closure->thunk->parameterNames[argc], &value)) {
+      mapDeleteStr(&kwargs->map, closure->thunk->parameterNames[argc]);
+      argc++;
+      push(value);
+    } else {
+      runtimeError(
+          "Call is missing parameter %s",
+          closure->thunk->parameterNames[argc]->chars);
+      return STATUS_ERROR;
+    }
+  }
+
+  while (argc < closure->thunk->arity) {
+    Value value;
+    if (mapGetStr(&kwargs->map, closure->thunk->parameterNames[argc], &value)) {
+      mapDeleteStr(&kwargs->map, closure->thunk->parameterNames[argc]);
+      push(value);
+    } else {
+      push(closure->thunk->defaultArgs[argc - requiredArgc]);
+    }
+    argc++;
+  }
+
+  if (kwargs->map.size > 0) {
+    runtimeError("Unused keyword argument '%s'", kwargs->map.first->key.as.string->chars);
+    return STATUS_ERROR;
+  }
+
+  return setupCallClosure(closure, argc);
+}
+
+static Status callFunctionWithKwArgs(i16 argc) {
+  /* TOS is assumed to be the kwargs dict, so args must start at TOS - argc - 1 */
+  Value callable = vm.stackTop[-argc - 2];
+
+  switch (callable.type) {
+    case VAL_CFUNCTION:
+      return callCFunctionWithKwArgs(callable.as.cfunction, argc);
+    case VAL_OBJ: {
+      Obj *obj = callable.as.obj;
+      switch (obj->type) {
+        case OBJ_CLOSURE:
+          return setupClosureWithKwArgs(AS_CLOSURE_UNSAFE(callable), argc);
+        default:
+          break;
+      }
+    }
+    default:
+      break;
+  }
+
+  runtimeError(
+      "Can only call functions and classes but got %s (kwargs)", getKindName(callable));
+  return STATUS_ERROR;
+}
+
+static Status callCFunction(CFunction *cfunc, i16 argCount) {
   Value result = NIL_VAL(), *argsStart;
-  ubool status;
+  Status status;
   if (cfunc->arity != argCount) {
     /* not an exact match for the arity
      * We need further checks */
@@ -456,6 +596,14 @@ static Status run(void) {
   do {                                     \
     i16 ac = argCount;                     \
     if (!setupOrCallValue(peek(ac), ac)) { \
+      RETURN_RUNTIME_ERROR();              \
+    }                                      \
+    frame = &vm.frames[vm.frameCount - 1]; \
+  } while (0)
+#define CALL_KW(argCount)                  \
+  do {                                     \
+    i16 ac = argCount;                     \
+    if (!callFunctionWithKwArgs(ac)) {     \
       RETURN_RUNTIME_ERROR();              \
     }                                      \
     frame = &vm.frames[vm.frameCount - 1]; \
@@ -858,6 +1006,11 @@ static Status run(void) {
         frame = &vm.frames[vm.frameCount - 1];
         break;
       }
+      case OP_CALL_KW: {
+        i16 argCount = READ_BYTE();
+        CALL_KW(argCount);
+        break;
+      }
       case OP_CLOSURE: {
         ObjThunk *thunk = AS_THUNK_UNSAFE(READ_CONSTANT());
         ObjClosure *closure = newClosure(thunk, frame->closure->module);
@@ -1088,7 +1241,9 @@ static Status callFunctionOrMethod(Value callable, i16 argCount, ubool consummat
       case OBJ_CLASS:
         return callClass(AS_CLASS_UNSAFE(callable), argCount, consummate);
       case OBJ_CLOSURE:
-        return callClosure(AS_CLOSURE_UNSAFE(callable), argCount);
+        return consummate
+                   ? callClosure(AS_CLOSURE_UNSAFE(callable), argCount)
+                   : setupCallClosure(AS_CLOSURE_UNSAFE(callable), argCount);
       case OBJ_NATIVE: {
         ObjNative *n = AS_NATIVE_UNSAFE(callable);
         if (n->descriptor->klass->call) {

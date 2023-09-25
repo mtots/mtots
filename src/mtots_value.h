@@ -72,6 +72,8 @@ struct CFunction {
   const char *name;
   i16 arity;
   i16 maxArity;
+  const char **parameterNames;
+  String **parameterNameStrings;
 };
 
 typedef struct ValueArray {

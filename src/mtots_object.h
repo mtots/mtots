@@ -36,6 +36,7 @@
 #define NEW_NATIVE(type, descriptor) \
   ((type *)newNative(descriptor, sizeof(type)))
 
+typedef struct ObjList ObjList;
 typedef struct ObjNative ObjNative;
 typedef struct ObjClass ObjClass;
 typedef struct ObjInstance ObjInstance;
@@ -65,12 +66,13 @@ struct Obj {
 
 typedef struct ObjThunk {
   Obj obj;
-  i16 arity;
+  i16 arity; /* max arity; min arity is 'arity - defaultArgsCount' */
   i16 upvalueCount;
   Chunk chunk;
   String *name;
   Value *defaultArgs;
   i16 defaultArgsCount;
+  String **parameterNames; /* Length must match arity, or be NULL */
   String *moduleName;
 } ObjThunk;
 
@@ -93,12 +95,12 @@ typedef struct ObjBuffer {
   Value memoryRegionOwner;
 } ObjBuffer;
 
-typedef struct ObjList {
+struct ObjList {
   Obj obj;
   size_t length;
   size_t capacity;
   Value *buffer;
-} ObjList;
+};
 
 /* Unlike in Python, mtots frozenLists can only hold hashable items */
 typedef struct ObjFrozenList {

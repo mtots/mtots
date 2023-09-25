@@ -1,0 +1,7 @@
+
+
+def foo(a Int, b Int = 16) nil:
+  print("a = %s, b = %s" % [a, b])
+
+
+foo(a = 5, y = 12)

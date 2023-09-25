@@ -1,0 +1,21 @@
+
+
+def foo(a Int, b Int) nil:
+  print("foo: a = %s, b = %s" % [a, b])
+
+
+foo(123, 456)
+foo(b = 44, a = 5 + 7)
+foo(a = 111, b = 222)
+foo(123, 456)
+
+
+def bar(a String = 'defaultA', b String = 'defaultB') nil:
+  print("bar: a = %s, b = %s" % [a, b])
+
+
+bar('posA', 'posB')
+bar(b = 'keyB')
+bar(a = 'keyA')
+bar()
+bar(b = 'keyB', a = 'keyA')

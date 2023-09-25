@@ -35,6 +35,7 @@ typedef struct Memory {
 void initMemory(Memory *memory);
 void addForeverValue(Value value);
 String *internForeverCString(const char *string);
+String *internForeverString(const char *chars, size_t len);
 void *reallocate(void *pointer, size_t oldSize, size_t newSize);
 void markObject(Obj *object);
 void markString(String *string);

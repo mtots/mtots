@@ -94,7 +94,7 @@ ubool mapContainsKey(Map *map, Value key) {
   MapEntry *entry;
 
   if (map->occupied == 0) {
-    return STATUS_ERROR;
+    return UFALSE;
   }
 
   entry = findMapEntry(map->entries, map->capacity, key);
@@ -105,16 +105,16 @@ ubool mapGet(Map *map, Value key, Value *value) {
   MapEntry *entry;
 
   if (map->occupied == 0) {
-    return STATUS_ERROR;
+    return UFALSE;
   }
 
   entry = findMapEntry(map->entries, map->capacity, key);
   if (isEmptyKey(entry->key)) {
-    return STATUS_ERROR;
+    return UFALSE;
   }
 
   *value = entry->value;
-  return STATUS_OK;
+  return UTRUE;
 }
 
 ubool mapGetStr(Map *map, String *key, Value *value) {

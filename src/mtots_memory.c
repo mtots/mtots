@@ -30,6 +30,12 @@ String *internForeverCString(const char *cstr) {
   return str;
 }
 
+String *internForeverString(const char *chars, size_t len) {
+  String *str = internString(chars, len);
+  addForeverValue(STRING_VAL(str));
+  return str;
+}
+
 void *reallocate(void *pointer, size_t oldSize, size_t newSize) {
   void *result;
 
@@ -201,6 +207,7 @@ static void freeObject(Obj *object) {
     case OBJ_THUNK: {
       ObjThunk *thunk = (ObjThunk *)object;
       freeChunk(&thunk->chunk);
+      free(thunk->parameterNames);
       FREE_ARRAY(Value, thunk->defaultArgs, thunk->defaultArgsCount);
       FREE(ObjThunk, object);
       return;

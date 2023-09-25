@@ -289,6 +289,7 @@ ObjThunk *newThunk(void) {
   thunk->name = NULL;
   thunk->defaultArgs = NULL;
   thunk->defaultArgsCount = 0;
+  thunk->parameterNames = NULL;
   thunk->moduleName = NULL;
   initChunk(&thunk->chunk);
   return thunk;
