@@ -8,6 +8,7 @@
             "macFrameworkPath": [
                 "/Library/Frameworks"
             ],
+            "defines": ["MTOTS_USE_POSIX=1"],
             "cStandard": "c17",
             "cppStandard": "c++17",
             "intelliSenseMode": "macos-clang-arm64"
