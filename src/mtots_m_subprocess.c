@@ -16,13 +16,23 @@
 typedef struct ObjCompletedProcess {
   ObjNative obj;
   int returncode;
+  String *stdoutString;
+  String *stderrString;
 } ObjCompletedProcess;
 
 static ObjCompletedProcess *completedProcess;
 static String *stringReturncode;
+static String *stringStdout;
+static String *stringStderr;
+
+static void blackenCompletedProcess(ObjNative *n) {
+  ObjCompletedProcess *proc = (ObjCompletedProcess *)n;
+  markString(proc->stdoutString);
+  markString(proc->stderrString);
+}
 
 static NativeObjectDescriptor descriptorCompletedProcess = {
-    nopBlacken,
+    blackenCompletedProcess,
     nopFree,
     sizeof(ObjCompletedProcess),
     "CompletedProcess",
@@ -40,6 +50,10 @@ static Status implCompletedProcessGetattr(i16 argc, Value *argv, Value *out) {
   String *name = asString(argv[0]);
   if (name == stringReturncode) {
     *out = NUMBER_VAL(cp->returncode);
+  } else if (name == stringStdout) {
+    *out = STRING_VAL(cp->stdoutString);
+  } else if (name == stringStderr) {
+    *out = STRING_VAL(cp->stderrString);
   } else {
     runtimeError("Field '%s' not found on %s", name->chars, getKindName(argv[-1]));
     return STATUS_ERROR;
@@ -60,9 +74,15 @@ static Status implRun(i16 argc, Value *argv, Value *out) {
    */
   const char *args[MAX_RUN_ARGC + 1] = {NULL};
   ObjList *argsList = asList(argv[0]);
+  ubool check = argc > 1 && !isNil(argv[1]) ? asBool(argv[1]) : UFALSE;
+  ubool captureOutput = argc > 2 && !isNil(argv[2]) ? asBool(argv[2]) : UFALSE;
   size_t i;
   pid_t child, p;
+  posix_spawn_file_actions_t actions;
   int status;
+  int stdoutfd[2];
+  int stderrfd[2];
+  FILE *stdoutFile, *stderrFile;
 
   if (argsList->length == 0) {
     runtimeError(
@@ -82,17 +102,83 @@ static Status implRun(i16 argc, Value *argv, Value *out) {
     args[i] = asString(argsList->buffer[i])->chars;
   }
 
+  if (captureOutput) {
+    if (0 != pipe(stdoutfd)) {
+      runtimeError("pipe(stdoutfd) failed");
+      return STATUS_ERROR;
+    }
+
+    if (0 != pipe(stderrfd)) {
+      runtimeError("pipe(stderrfd) failed");
+      return STATUS_ERROR;
+    }
+
+    if (0 != posix_spawn_file_actions_init(&actions)) {
+      runtimeError("posix_spawn_file_actions_init failed");
+      return STATUS_ERROR;
+    }
+
+    /* Close the stdout read end */
+    if (0 != posix_spawn_file_actions_addclose(&actions, stdoutfd[0])) {
+      posix_spawn_file_actions_destroy(&actions);
+      runtimeError("posix_spawn_file_actions_addclose(.., stdoutfd[0]) failed");
+      return STATUS_ERROR;
+    }
+
+    /* Map the write end to stdout */
+    if (0 != posix_spawn_file_actions_adddup2(&actions, stdoutfd[1], STDOUT_FILENO)) {
+      posix_spawn_file_actions_destroy(&actions);
+      runtimeError("posix_spawn_file_actions_adddup2(.., stdoutfd[1]) failed");
+      return STATUS_ERROR;
+    }
+
+    /* Close the stderr read end */
+    if (0 != posix_spawn_file_actions_addclose(&actions, stderrfd[0])) {
+      posix_spawn_file_actions_destroy(&actions);
+      runtimeError("posix_spawn_file_actions_addclose(.., stderrfd[0]) failed");
+      return STATUS_ERROR;
+    }
+
+    /* Map the write end to stdout */
+    if (0 != posix_spawn_file_actions_adddup2(&actions, stderrfd[1],
+                                              STDERR_FILENO)) {
+      posix_spawn_file_actions_destroy(&actions);
+      runtimeError("posix_spawn_file_actions_adddup2(.., stderrfd[1]) failed");
+      return STATUS_ERROR;
+    }
+  }
+
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-qual"
 #endif
-  if (0 != posix_spawnp(&child, args[0], NULL, NULL, (char *const *)args, NULL)) {
+  if (0 != posix_spawnp(
+               &child, args[0],
+               captureOutput ? &actions : NULL, NULL,
+               (char *const *)args, NULL)) {
+    posix_spawn_file_actions_destroy(&actions);
     runtimeError("posix_spawnp failed");
     return STATUS_ERROR;
   }
 #ifdef __clang__
 #pragma clang diagnostic pop
 #endif
+
+  if (captureOutput) {
+    posix_spawn_file_actions_destroy(&actions);
+
+    /* Close the stdout write end */
+    close(stdoutfd[1]);
+
+    /* Store the stdout read end */
+    stdoutFile = fdopen(stdoutfd[0], "rb");
+
+    /* Close the stderr write end */
+    close(stderrfd[1]);
+
+    /* Store the stderr read end */
+    stderrFile = fdopen(stderrfd[0], "rb");
+  }
 
   /* We are at the parent process */
   do {
@@ -102,6 +188,8 @@ static Status implRun(i16 argc, Value *argv, Value *out) {
       break; /* error */
     }
   } while (p != child);
+
+  /* TODO: close stdoutFile and stderrFile on error */
 
   if (p != child) {
     /* Child process was lost
@@ -121,6 +209,40 @@ static Status implRun(i16 argc, Value *argv, Value *out) {
     return STATUS_ERROR;
   }
 
+  if (captureOutput) {
+    size_t size = 0, capacity = 0;
+    char *buffer = NULL;
+
+    do {
+      capacity = capacity == 0 ? 512 : capacity * 2;
+      buffer = (char *)realloc(buffer, capacity);
+      size += fread(buffer + size, 1, capacity - size, stdoutFile);
+    } while (size == capacity && !feof(stdoutFile) && !ferror(stdoutFile));
+
+    completedProcess->stdoutString = internString(buffer, size);
+
+    size = 0;
+    do {
+      capacity = capacity == 0 ? 512
+                 : size == 0   ? capacity
+                               : capacity * 2;
+      buffer = (char *)realloc(buffer, capacity);
+      size += fread(buffer + size, 1, capacity - size, stderrFile);
+    } while (size == capacity && !feof(stderrFile) && !ferror(stderrFile));
+
+    completedProcess->stderrString = internString(buffer, size);
+
+    free(buffer);
+  } else {
+    completedProcess->stdoutString = vm.emptyString;
+    completedProcess->stderrString = vm.emptyString;
+  }
+
+  if (check && status != 0) {
+    runtimeError("subprocess returned with non-zero exit code %d", status);
+    return STATUS_ERROR;
+  }
+
   *out = OBJ_VAL_EXPLICIT((Obj *)completedProcess);
 
   return STATUS_OK;
@@ -133,13 +255,15 @@ static Status implRun(i16 argc, Value *argv, Value *out) {
 static const char *argsRun[] = {
     "args",
     "check",
+    "captureOutput",
+    NULL,
 };
 
 static CFunction funcRun = {
     implRun,
     "run",
     1,
-    sizeof(argsRun) / sizeof(argsRun[0]),
+    (sizeof(argsRun) / sizeof(argsRun[0])) - 1,
     argsRun,
 };
 
@@ -164,9 +288,13 @@ static Status impl(i16 argc, Value *argv, Value *out) {
       completedProcessStaticMethods);
 
   completedProcess = NEW_NATIVE(ObjCompletedProcess, &descriptorCompletedProcess);
+  completedProcess->stderrString = vm.emptyString;
+  completedProcess->stdoutString = vm.emptyString;
   moduleRetain(module, OBJ_VAL_EXPLICIT((Obj *)(completedProcess)));
 
   moduleRetain(module, STRING_VAL(stringReturncode = internCString("returncode")));
+  moduleRetain(module, STRING_VAL(stringStdout = internCString("stdout")));
+  moduleRetain(module, STRING_VAL(stringStderr = internCString("stderr")));
   return STATUS_OK;
 }
 

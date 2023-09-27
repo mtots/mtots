@@ -1,0 +1,25 @@
+
+
+class CompletedProcess:
+  final returncode Int
+  final stdout String
+  final stderr String
+
+
+def run(args List[String], check Bool=false, captureOutput Bool=false) CompletedProcess:
+  """
+  Spawn a subprocess and wait for it to finish.
+
+  NOTE: the returned `CompletedProcess` is a singleton and successive calls to `run`
+  will clobber fields values populated in previous calls.
+
+  Parameters:
+  * args - the only required parameter. List containing the command to run and arguments
+    to pass to the subprocess.
+  * check - if set to `true`, this function will throw if the subprocess returns
+    a non-zero exit code.
+  * captureOutput - by default, when set to `false`, `run` will inherit stdout and
+    stderr from the parent. However, when this parameter is set to `true`, stdout
+    and stderr will be piped and stored as a `String` in the returned `CompletedProcess`'s
+    `stdout` and `stderr` fields.
+  """

@@ -15,7 +15,7 @@
  * For convenience, an extra byte will be allocated at the end of
  * the buffer for the null termiantor ('\0')
  */
-ubool readFile(const char *path, void **out, size_t *readFileSize) {
+Status readFile(const char *path, void **out, size_t *readFileSize) {
   size_t fileSize;
   FILE *file = fopen(path, "rb");
   void *bytes;
@@ -51,7 +51,7 @@ ubool readFile(const char *path, void **out, size_t *readFileSize) {
  * Read the contents of the file specified by `path` and append
  * its contents to the given Buffer
  */
-ubool readFileIntoBuffer(const char *path, Buffer *out) {
+Status readFileIntoBuffer(const char *path, Buffer *out) {
   size_t fileSize, startSize = out->length;
   FILE *file = fopen(path, "rb");
   if (!file) {

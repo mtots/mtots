@@ -1,5 +1,11 @@
 import subprocess
 
 
-subprocess.run(['ls', '.'])
-subprocess.run(['cat', './make.py'])
+final cproc = subprocess.run(['ls', 'lib'], check=true, captureOutput=true)
+print("STDOUT = %s" % [cproc.stdout])
+print("STDERR = %s" % [cproc.stderr])
+
+
+subprocess.run(['ls', 'lib'], check=true)
+
+# subprocess.run(['cat', './make.py'])

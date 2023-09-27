@@ -54,6 +54,7 @@ typedef struct VM {
    * call to `window.mainLoop()` */
   CFunction *runOnFinish;
 
+  String *emptyString;
   String *initString;
   String *iterString;
   String *lenString;

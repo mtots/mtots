@@ -116,6 +116,7 @@ void initVM(void) {
   initMap(&vm.frozenLists);
   initMap(&vm.frozenDicts);
 
+  vm.emptyString = internForeverCString("");
   vm.initString = internForeverCString("__init__");
   vm.iterString = internForeverCString("__iter__");
   vm.lenString = internForeverCString("__len__");
