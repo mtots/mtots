@@ -4,6 +4,7 @@
 
 #ifdef MTOTS_USE_POSIX
 #include <errno.h>
+#include <spawn.h>
 #include <stdlib.h>
 #include <unistd.h>
 #endif
@@ -57,7 +58,6 @@ static Status implRun(i16 argc, Value *argv, Value *out) {
   /*
    * https://stackoverflow.com/questions/17196877/subprocess-popen-python-in-c
    */
-  const char *execName;
   const char *args[MAX_RUN_ARGC + 1] = {NULL};
   ObjList *argsList = asList(argv[0]);
   size_t i;
@@ -78,39 +78,21 @@ static Status implRun(i16 argc, Value *argv, Value *out) {
     return STATUS_ERROR;
   }
 
-  execName = asString(argsList->buffer[0])->chars;
-  for (i = 1; i < argsList->length; i++) {
-    args[i - 1] = asString(argsList->buffer[i])->chars;
+  for (i = 0; i < argsList->length; i++) {
+    args[i] = asString(argsList->buffer[i])->chars;
   }
 
-  child = fork();
-  if (child == (pid_t)-1) {
-    /* Cannot fork() for some reason */
-    runtimeError("subprocess.run() failed to fork()");
-    return STATUS_ERROR;
-  }
-
-  if (!child) {
-    /* This is the child process */
-    /* NOTE about const correctness:
-     * https://stackoverflow.com/questions/190184/execv-and-const-ness
-     * https://pubs.opengroup.org/onlinepubs/9699919799/functions/exec.html
-     *
-     * TBH, I think it sucks, but the standard seems to suggest
-     * this is ok.
-     */
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-qual"
 #endif
-    execvp(execName, (char *const *)args);
+  if (0 != posix_spawnp(&child, args[0], NULL, NULL, (char *const *)args, NULL)) {
+    runtimeError("posix_spawnp failed");
+    return STATUS_ERROR;
+  }
 #ifdef __clang__
 #pragma clang diagnostic pop
 #endif
-
-    /* This is only reached if the exec failed */
-    exit(127);
-  }
 
   /* We are at the parent process */
   do {
