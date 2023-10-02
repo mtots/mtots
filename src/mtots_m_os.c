@@ -74,6 +74,13 @@ static Status implIsPosix(i16 argc, Value *argv, Value *out) {
 
 static CFunction funcIsPosix = {implIsPosix, "isPosix"};
 
+static Status implIsDarwin(i16 argc, Value *argv, Value *out) {
+  *out = BOOL_VAL(MTOTS_IS_DARWIN);
+  return STATUS_OK;
+}
+
+static CFunction funcIsDarwin = {implIsDarwin, "isDarwin"};
+
 static Status implIsMacOS(i16 argc, Value *argv, Value *out) {
   *out = BOOL_VAL(MTOTS_IS_MACOS);
   return STATUS_OK;
@@ -95,6 +102,27 @@ static Status implIsLinux(i16 argc, Value *argv, Value *out) {
 
 static CFunction funcIsLinux = {implIsLinux, "isLinux"};
 
+static Status implIsIPhone(i16 argc, Value *argv, Value *out) {
+  *out = BOOL_VAL(MTOTS_IS_IPHONE);
+  return STATUS_OK;
+}
+
+static CFunction funcIsIPhone = {implIsIPhone, "isIPhone"};
+
+static Status implIsAndroid(i16 argc, Value *argv, Value *out) {
+  *out = BOOL_VAL(MTOTS_IS_ANDROID);
+  return STATUS_OK;
+}
+
+static CFunction funcIsAndroid = {implIsAndroid, "isAndroid"};
+
+static Status implIsEmscripten(i16 argc, Value *argv, Value *out) {
+  *out = BOOL_VAL(MTOTS_IS_EMSCRIPTEN);
+  return STATUS_OK;
+}
+
+static CFunction funcIsEmscripten = {implIsEmscripten, "isEmscripten"};
+
 static Status impl(i16 argc, Value *argv, Value *out) {
   ObjModule *module = asModule(argv[0]);
   CFunction *functions[] = {
@@ -102,15 +130,19 @@ static Status impl(i16 argc, Value *argv, Value *out) {
       &funcGetenv,
       &funcListdir,
       &funcIsPosix,
+      &funcIsDarwin,
       &funcIsMacOS,
       &funcIsWindows,
       &funcIsLinux,
+      &funcIsIPhone,
+      &funcIsAndroid,
+      &funcIsEmscripten,
       NULL,
   };
 
   moduleAddFunctions(module, functions);
 
-  mapSetN(&module->fields, "name", STRING_VAL(internCString(OS_NAME)));
+  mapSetN(&module->fields, "name", STRING_VAL(internCString(MTOTS_OS_NAME)));
   mapSetN(&module->fields, "sep", STRING_VAL(internCString(PATH_SEP_STR)));
 
   {

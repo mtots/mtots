@@ -19,8 +19,6 @@ def getenv(name String) String?:
 
 def getcwd() String:
   """
-  Similar to Python's os.getcwd.
-
   Return a string representing the current working directory
   """
 
@@ -39,10 +37,13 @@ def listdir(path String = ".") List[String]:
 
 def isPosix() Bool:
   """
-  Returns true if Mtots was compiled to use POSIX APIs.
+  Returns true if the platform is (mostly) POSIX compliant.
+  """
 
-  This function may return false even if the underlying operating system
-  is POSIX compliant if this could not be determined when Mtots was compiled.
+
+def isDarwin() Bool:
+  """
+  Returns true if the current platform is detected to be MacOS or iOS
   """
 
 
@@ -61,4 +62,16 @@ def isWindows() Bool:
 def isLinux() Bool:
   """
   Returns true if the current platform is detected to be Linux
+  """
+
+
+def isIPhone() Bool:
+  """
+  Returns true if the current platform is detected to be iOS
+  """
+
+
+def isAndroid() Bool:
+  """
+  Returns true if the current platform is detected to be Android
   """

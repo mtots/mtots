@@ -47,55 +47,73 @@
  * OS
  ****************************************************************/
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-#define MTOTS_PLATFORM_SYSTEM "Windows"
-#define MTOTS_IS_WINDOWS 1
-#define OS_NAME "windows"
-#elif __APPLE__
-#define MTOTS_PLATFORM_SYSTEM "Darwin"
-#include <TargetConditionals.h>
-#if TARGET_OS_IPHONE
-#define OS_NAME "iphone"
-#elif TARGET_OS_MAC
-#define MTOTS_IS_MACOS 1
-#define OS_NAME "macos"
-#endif
-#elif __EMSCRIPTEN__
-#define OS_NAME "emscripten"
-#elif defined(__ANDROID__)
-#define OS_NAME "android"
-#elif __linux__
-#define MTOTS_PLATFORM_SYSTEM "Linux"
-#define MTOTS_IS_LINUX 1
-#define OS_NAME "linux"
-#elif __unix__
-#define OS_NAME "unix"
-#elif defined(_POSIX_VERSION)
-#define OS_NAME "posix"
-#else
-#define OS_NAME "unknown"
-#endif
+/* 'MTOTS_IS_*' macros */
 
-#ifndef MTOTS_IS_WINDOWS
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+#define MTOTS_IS_WINDOWS 1
+#else
 #define MTOTS_IS_WINDOWS 0
 #endif
-#ifndef MTOTS_IS_MACOS
-#define MTOTS_IS_MACOS 0
-#endif
-#ifndef MTOTS_IS_LINUX
-#define MTOTS_IS_LINUX 0
-#endif
 
-#ifndef MTOTS_PLATFORM_SYSTEM
-#define MTOTS_PLATFORM_SYSTEM ""
-#endif
-
-#ifndef MTOTS_IS_POSIX
-#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+#if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
 #define MTOTS_IS_POSIX 1
 #else
 #define MTOTS_IS_POSIX 0
 #endif
+
+#if defined(__APPLE__)
+#define MTOTS_IS_DARWIN 1
+#include <TargetConditionals.h>
+#if TARGET_OS_IPHONE
+#define MTOTS_IS_IPHONE 1
+#else
+#define MTOTS_IS_IPHONE 0
+#endif
+#if TARGET_OS_MAC
+#define MTOTS_IS_MACOS 1
+#else
+#define MTOTS_IS_MACOS 0
+#endif
+#else
+#define MTOTS_IS_DARWIN 0
+#endif
+
+#if defined(__ANDROID__)
+#define MTOTS_IS_ANDROID 1
+#else
+#define MTOTS_IS_ANDROID 0
+#endif
+
+#if defined(__linux__)
+#define MTOTS_IS_LINUX 1
+#else
+#define MTOTS_IS_LINUX 0
+#endif
+
+#if defined(__EMSCRIPTEN__)
+#define MTOTS_IS_EMSCRIPTEN 1
+#else
+#define MTOTS_IS_EMSCRIPTEN 0
+#endif
+
+/* Other OS identifying macros */
+
+#if MTOTS_IS_WINDOWS
+#define MTOTS_OS_NAME "nt"
+#elif MTOTS_IS_POSIX
+#define MTOTS_OS_NAME "posix"
+#else
+#define MTOTS_OS_NAME "c89"
+#endif
+
+#if MTOTS_IS_WINDOWS
+#define MTOTS_PLATFORM_SYSTEM "Windows"
+#elif defined(__APPLE__)
+#define MTOTS_PLATFORM_SYSTEM "Darwin"
+#elif defined(__linux__)
+#define MTOTS_PLATFORM_SYSTEM "Linux"
+#else
+#define MTOTS_PLATFORM_SYSTEM ""
 #endif
 
 /****************************************************************
