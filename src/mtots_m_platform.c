@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "mtots_m_os.h"
 #include "mtots_vm.h"
 
 static Status implSystem(i16 argc, Value *argv, Value *out) {

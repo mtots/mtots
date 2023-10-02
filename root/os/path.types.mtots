@@ -1,0 +1,30 @@
+"""
+Common pathname manipulations
+
+Implements a subset of Python's `os.path`.
+(Compare https://docs.python.org/3/library/os.path.html)
+"""
+
+
+final sep """
+The character used by the operating system to separate pathname components.
+This is '/' for POSIX and '\\' for Windows.
+"""= "/"
+
+
+def isfile(path String) Bool:
+  """
+  Return True if path is an existing regular file
+  """
+
+
+def isdir(path String) Bool:
+  """
+  Return True if path is an existing directory
+  """
+
+
+def getsize(path String) Number:
+  """
+  Return the size in bytes of the file pointed to by path.
+  """

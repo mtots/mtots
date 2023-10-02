@@ -4,8 +4,10 @@ Miscellaneous operating system interfaces
 Implements a subset of Python's os module, and adds a few things not in Python's version.
 (Compare with https://docs.python.org/3/library/os.html)
 """
+import os.path as path
 
 final name "A human readable name of the current operating system" = 'macos'
+final sep = path.sep
 
 
 def getenv(name String) String?:
@@ -20,6 +22,18 @@ def getcwd() String:
   Similar to Python's os.getcwd.
 
   Return a string representing the current working directory
+  """
+
+
+def listdir(path String = ".") List[String]:
+  """
+  Return a list containing the names of the entries in the
+  directory given by path.
+  The list is in arbitrary order, and does not include the special
+  entries `'.'` and `'..'` even if they are present in the directory.
+  If a file is removed from or added to the directory during the
+  call of this function, whether a name for that file be included
+  is unspecified.
   """
 
 

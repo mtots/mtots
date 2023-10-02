@@ -5,6 +5,7 @@
 #include "mtots_m_fs.h"
 #include "mtots_m_json.h"
 #include "mtots_m_os.h"
+#include "mtots_m_os_path.h"
 #include "mtots_m_platform.h"
 #include "mtots_m_random.h"
 #include "mtots_m_sdl.h"
@@ -22,4 +23,5 @@ void addNativeModules(void) {
   addNativeModuleSDL();
   addNativeModuleSubprocess();
   addNativeModulePlatform();
+  addNativeModuleOsPath();
 }

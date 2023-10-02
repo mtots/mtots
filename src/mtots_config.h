@@ -51,7 +51,6 @@
 #define MTOTS_PLATFORM_SYSTEM "Windows"
 #define MTOTS_IS_WINDOWS 1
 #define OS_NAME "windows"
-#define MTOTS_ASSUME_WINDOWS 1
 #elif __APPLE__
 #define MTOTS_PLATFORM_SYSTEM "Darwin"
 #include <TargetConditionals.h>
@@ -60,7 +59,6 @@
 #elif TARGET_OS_MAC
 #define MTOTS_IS_MACOS 1
 #define OS_NAME "macos"
-#define MTOTS_ASSUME_MACOS 1
 #endif
 #elif __EMSCRIPTEN__
 #define OS_NAME "emscripten"

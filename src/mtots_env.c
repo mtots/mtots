@@ -8,7 +8,7 @@
 #include "mtots_util_buffer.h"
 #include "mtots_util_error.h"
 
-#if MTOTS_ASSUME_WINDOWS
+#if MTOTS_IS_WINDOWS
 #include <Windows.h>
 #elif __APPLE__
 #include <mach-o/dyld.h>
@@ -171,7 +171,7 @@ const char *findMtotsModulePath(const char *moduleName) {
 
 /* Basically https://stackoverflow.com/questions/933850 */
 static const char *getMtotsExecutablePath(const char *argv0) {
-#if MTOTS_ASSUME_WINDOWS
+#if MTOTS_IS_WINDOWS
   /* TODO: handle cases where buffer is too small */
   GetModuleFileName(NULL, exePathBuf, PATH_LIMIT);
   exePathBuf[PATH_LIMIT - 1] = '\0';
