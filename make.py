@@ -43,8 +43,6 @@ MACOS_BASE_FLAGS = [
 
     # language standard
     "-std=c89",
-
-    "-DMTOTS_USE_POSIX=1",
 ]
 
 MACOS_DEBUG_FLAGS = [

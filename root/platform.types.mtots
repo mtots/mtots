@@ -1,0 +1,13 @@
+"""
+Access to underlying platform's identifying data
+
+Implements a subset of Python's `platform` module.
+(Compare with https://docs.python.org/3/library/platform.html)
+"""
+
+
+def system() String:
+  """
+  Returns the system/OS name, such as 'Linux', 'Darwin', 'Windows'.
+  An empty string is returned if the value cannot be determined.
+  """

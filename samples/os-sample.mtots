@@ -1,0 +1,8 @@
+import os
+
+print("os.name = %s" % [os.name])
+print("os.getcwd() = %s" % [os.getcwd()])
+print("os.isPosix() = %s" % [os.isPosix()])
+print("os.isMacOS() = %s" % [os.isMacOS()])
+print("os.isWindows() = %s" % [os.isWindows()])
+print("os.isLinux() = %s" % [os.isLinux()])

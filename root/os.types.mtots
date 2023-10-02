@@ -1,5 +1,8 @@
 r"""
-The operating system module
+Miscellaneous operating system interfaces
+
+Implements a subset of Python's os module, and adds a few things not in Python's version.
+(Compare with https://docs.python.org/3/library/os.html)
 """
 
 final name "A human readable name of the current operating system" = 'macos'
@@ -20,7 +23,28 @@ def getcwd() String:
   """
 
 
+def isPosix() Bool:
+  """
+  Returns true if Mtots was compiled to use POSIX APIs.
+
+  This function may return false even if the underlying operating system
+  is POSIX compliant if this could not be determined when Mtots was compiled.
+  """
+
+
 def isMacOS() Bool:
   """
-  Returns true if the current platform is MacOS
+  Returns true if the current platform is detected to be MacOS
+  """
+
+
+def isWindows() Bool:
+  """
+  Returns true if the current platform is detected to be Windows
+  """
+
+
+def isLinux() Bool:
+  """
+  Returns true if the current platform is detected to be Linux
   """

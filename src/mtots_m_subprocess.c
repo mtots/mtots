@@ -2,7 +2,7 @@
 
 #include "mtots_vm.h"
 
-#ifdef MTOTS_USE_POSIX
+#ifdef MTOTS_IS_POSIX
 #include <errno.h>
 #include <spawn.h>
 #include <stdlib.h>
@@ -68,7 +68,7 @@ static CFunction funcCompletedProcessGetattr = {
 };
 
 static Status implRun(i16 argc, Value *argv, Value *out) {
-#if MTOTS_USE_POSIX
+#if MTOTS_IS_POSIX
   /*
    * https://stackoverflow.com/questions/17196877/subprocess-popen-python-in-c
    */

@@ -48,13 +48,17 @@
  ****************************************************************/
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+#define MTOTS_PLATFORM_SYSTEM "Windows"
+#define MTOTS_IS_WINDOWS 1
 #define OS_NAME "windows"
 #define MTOTS_ASSUME_WINDOWS 1
 #elif __APPLE__
+#define MTOTS_PLATFORM_SYSTEM "Darwin"
 #include <TargetConditionals.h>
 #if TARGET_OS_IPHONE
 #define OS_NAME "iphone"
 #elif TARGET_OS_MAC
+#define MTOTS_IS_MACOS 1
 #define OS_NAME "macos"
 #define MTOTS_ASSUME_MACOS 1
 #endif
@@ -63,6 +67,8 @@
 #elif defined(__ANDROID__)
 #define OS_NAME "android"
 #elif __linux__
+#define MTOTS_PLATFORM_SYSTEM "Linux"
+#define MTOTS_IS_LINUX 1
 #define OS_NAME "linux"
 #elif __unix__
 #define OS_NAME "unix"
@@ -72,9 +78,25 @@
 #define OS_NAME "unknown"
 #endif
 
-#ifndef MTOTS_ASSUME_POSIX
+#ifndef MTOTS_IS_WINDOWS
+#define MTOTS_IS_WINDOWS 0
+#endif
+#ifndef MTOTS_IS_MACOS
+#define MTOTS_IS_MACOS 0
+#endif
+#ifndef MTOTS_IS_LINUX
+#define MTOTS_IS_LINUX 0
+#endif
+
+#ifndef MTOTS_PLATFORM_SYSTEM
+#define MTOTS_PLATFORM_SYSTEM ""
+#endif
+
+#ifndef MTOTS_IS_POSIX
 #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
-#define MTOTS_ASSUME_POSIX 1
+#define MTOTS_IS_POSIX 1
+#else
+#define MTOTS_IS_POSIX 0
 #endif
 #endif
 

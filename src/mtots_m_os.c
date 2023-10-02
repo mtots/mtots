@@ -5,19 +5,14 @@
 
 #include "mtots_vm.h"
 
-#if MTOTS_ASSUME_POSIX
+#if MTOTS_IS_POSIX
+#include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#define MTOTS_USE_DIRENT 1
-#define MTOTS_USE_STAT 1
-#endif
-
-#if MTOTS_USE_DIRENT
-#include <dirent.h>
 #endif
 
 static Status implGetcwd(i16 argCount, Value *args, Value *out) {
-#if MTOTS_USE_DIRENT
+#if MTOTS_IS_POSIX
   char buffer[MAX_PATH_LENGTH];
   String *path;
   if (getcwd(buffer, MAX_PATH_LENGTH) == NULL) {
@@ -46,25 +41,43 @@ static Status implGetenv(i16 argCount, Value *args, Value *out) {
 
 static CFunction funcGetenv = {implGetenv, "getenv", 1, 0};
 
+static Status implIsPosix(i16 argCount, Value *args, Value *out) {
+  *out = BOOL_VAL(MTOTS_IS_POSIX);
+  return STATUS_OK;
+}
+
+static CFunction funcIsPosix = {implIsPosix, "isPosix"};
+
 static Status implIsMacOS(i16 argCount, Value *args, Value *out) {
-  *out = BOOL_VAL(
-#if MTOTS_ASSUME_MACOS
-      UTRUE
-#else
-      UFALSE
-#endif
-  );
+  *out = BOOL_VAL(MTOTS_IS_MACOS);
   return STATUS_OK;
 }
 
 static CFunction funcIsMacOS = {implIsMacOS, "isMacOS"};
+
+static Status implIsWindows(i16 argCount, Value *args, Value *out) {
+  *out = BOOL_VAL(MTOTS_IS_WINDOWS);
+  return STATUS_OK;
+}
+
+static CFunction funcIsWindows = {implIsWindows, "isWindows"};
+
+static Status implIsLinux(i16 argCount, Value *args, Value *out) {
+  *out = BOOL_VAL(MTOTS_IS_LINUX);
+  return STATUS_OK;
+}
+
+static CFunction funcIsLinux = {implIsLinux, "isLinux"};
 
 static Status impl(i16 argCount, Value *args, Value *out) {
   ObjModule *module = asModule(args[0]);
   CFunction *functions[] = {
       &funcGetcwd,
       &funcGetenv,
+      &funcIsPosix,
       &funcIsMacOS,
+      &funcIsWindows,
+      &funcIsLinux,
       NULL,
   };
 

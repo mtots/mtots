@@ -1,0 +1,4 @@
+import platform
+
+
+print("platform.system() = %s" % [platform.system()])
