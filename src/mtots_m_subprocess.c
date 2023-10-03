@@ -197,15 +197,19 @@ static Status implRun(i16 argc, Value *argv, Value *out) {
     runtimeError("Child process was lost");
     return STATUS_ERROR;
   } else if (WIFEXITED(status)) {
-    completedProcess->returncode = status;
+    completedProcess->returncode = WEXITSTATUS(status);
   } else if (WIFSIGNALED(status)) {
     /* Child process died from a terminating signal */
-    runtimeError("Child process died from signal");
+    runtimeError("Child process killed by signal %d",
+                 (int)WTERMSIG(status));
     return STATUS_ERROR;
   } else {
     /* Child process died from unknown causes
      * TODO: figure out what this means */
-    runtimeError("Child process died from unknown causes");
+    runtimeError(
+        "Child process died from unknown causes "
+        "(status = %d, errno = %d)",
+        status, (int)errno);
     return STATUS_ERROR;
   }
 
