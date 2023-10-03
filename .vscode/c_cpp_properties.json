@@ -8,7 +8,7 @@
             "macFrameworkPath": [
                 "/Library/Frameworks"
             ],
-            "cStandard": "c17",
+            "cStandard": "c89",
             "cppStandard": "c++17",
             "intelliSenseMode": "macos-clang-arm64"
         },
