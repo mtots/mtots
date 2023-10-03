@@ -7,9 +7,21 @@
 
 #if MTOTS_IS_POSIX
 #include <dirent.h>
+#include <errno.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #endif
+
+static Status implGetenv(i16 argc, Value *argv, Value *out) {
+  String *name = asString(argv[0]);
+  const char *value = getenv(name->chars);
+  if (value) {
+    *out = STRING_VAL(internCString(value));
+  }
+  return STATUS_OK;
+}
+
+static CFunction funcGetenv = {implGetenv, "getenv", 1};
 
 static Status implGetcwd(i16 argc, Value *argv, Value *out) {
 #if MTOTS_IS_POSIX
@@ -30,16 +42,21 @@ static Status implGetcwd(i16 argc, Value *argv, Value *out) {
 
 static CFunction funcGetcwd = {implGetcwd, "getcwd"};
 
-static Status implGetenv(i16 argc, Value *argv, Value *out) {
-  String *name = asString(argv[0]);
-  const char *value = getenv(name->chars);
-  if (value) {
-    *out = STRING_VAL(internCString(value));
+static Status implChdir(i16 argc, Value *argv, Value *out) {
+#if MTOTS_IS_POSIX
+  String *path = asString(argv[0]);
+  if (chdir(path->chars) != 0) {
+    runtimeError("chdir: %s", strerror(errno));
+    return STATUS_ERROR;
   }
   return STATUS_OK;
+#else
+  runtimeError("Unsupported platfrom (os.chdir())");
+  return STATUS_ERROR;
+#endif
 }
 
-static CFunction funcGetenv = {implGetenv, "getenv", 1};
+static CFunction funcChdir = {implChdir, "chdir", 1};
 
 static Status listDirCallback(void *userData, const char *fileName) {
   ObjList *names = (ObjList *)userData;
@@ -126,8 +143,9 @@ static CFunction funcIsEmscripten = {implIsEmscripten, "isEmscripten"};
 static Status impl(i16 argc, Value *argv, Value *out) {
   ObjModule *module = asModule(argv[0]);
   CFunction *functions[] = {
-      &funcGetcwd,
       &funcGetenv,
+      &funcGetcwd,
+      &funcChdir,
       &funcListdir,
       &funcIsPosix,
       &funcIsDarwin,

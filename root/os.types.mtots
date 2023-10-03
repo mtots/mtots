@@ -23,6 +23,12 @@ def getcwd() String:
   """
 
 
+def chdir(path String) nil:
+  """
+  Changes the current working directory to the one indicated by the
+  given path
+  """
+
 def listdir(path String = ".") List[String]:
   """
   Return a list containing the names of the entries in the

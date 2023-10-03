@@ -16,3 +16,10 @@ print("os.path.isdir('LICENSE') = %s" % [os.path.isdir('LICENSE')])
 print("os.path.isfile('src') = %s" % [os.path.isfile('src')])
 print("os.path.isfile('none') = %s" % [os.path.isfile('none')])
 print("os.path.isfile('LICENSE') = %s" % [os.path.isfile('LICENSE')])
+
+os.chdir('src')
+print("os.chdir('src')")
+print("os.getcwd() = %s" % [os.getcwd()])
+print("os.listdir() = %s" % [os.listdir()])
+
+os.chdir('asdf')
