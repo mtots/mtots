@@ -1,0 +1,38 @@
+import os
+import stat as st
+
+
+def dump(stat os.StatResult) nil:
+  print("stat.st_ino = %s" % [stat.st_ino])
+  print("stat.st_dev = %s" % [stat.st_dev])
+  print("stat.st_nlink = %s" % [stat.st_nlink])
+  print("stat.st_mode = %s" % [oct(stat.st_mode)])
+  print("S_ISDIR(stat.st_mode) = %s" % [st.S_ISDIR(stat.st_mode)])
+  print("S_ISCHR(stat.st_mode) = %s" % [st.S_ISCHR(stat.st_mode)])
+  print("S_ISBLK(stat.st_mode) = %s" % [st.S_ISBLK(stat.st_mode)])
+  print("S_ISREG(stat.st_mode) = %s" % [st.S_ISREG(stat.st_mode)])
+  print("S_ISFIFO(stat.st_mode) = %s" % [st.S_ISFIFO(stat.st_mode)])
+  print("S_ISLNK(stat.st_mode) = %s" % [st.S_ISLNK(stat.st_mode)])
+  print("S_ISSOCK(stat.st_mode) = %s" % [st.S_ISSOCK(stat.st_mode)])
+
+
+final fn1 = "LICENSE"
+final fd = os.open(fn1, os.O_RDONLY)
+print("fd = %s (filename = %r)" % [fd, fn1])
+final stat1 = os.fstat(fd)
+dump(stat1)
+os.close(fd)
+print("closed fd %s" % [fd])
+
+print("")
+final fn2 = "README.md"
+final stat2 = os.stat(fn2)
+print("stat(%r)" % [fn2])
+dump(stat2)
+
+print("")
+final fn3 = "src"
+final stat3 = os.stat(fn3)
+print("stat(%r)" % [fn3])
+dump(stat3)
+

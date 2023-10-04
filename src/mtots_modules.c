@@ -9,19 +9,21 @@
 #include "mtots_m_platform.h"
 #include "mtots_m_random.h"
 #include "mtots_m_sdl.h"
+#include "mtots_m_stat.h"
 #include "mtots_m_subprocess.h"
 #include "mtots_m_sys.h"
 
 void addNativeModules(void) {
-  addNativeModuleSys();
-  addNativeModuleOs();
+  addNativeModuleBmon();
+  addNativeModuleData();
   addNativeModuleFs();
   addNativeModuleJson();
-  addNativeModuleBmon();
-  addNativeModuleRandom();
-  addNativeModuleData();
-  addNativeModuleSDL();
-  addNativeModuleSubprocess();
-  addNativeModulePlatform();
+  addNativeModuleOs();
   addNativeModuleOsPath();
+  addNativeModulePlatform();
+  addNativeModuleRandom();
+  addNativeModuleSDL();
+  addNativeModuleStat();
+  addNativeModuleSubprocess();
+  addNativeModuleSys();
 }

@@ -286,13 +286,19 @@ def int(value, base Int=10) Int:
 
 def hex(value Int) String:
   """
-  Converts an integer value into a hex string
+  Converts an integer value into a hex string prefixed by '0x'
+  """
+
+
+def oct(value Int) String:
+  """
+  Converts an integer value into a octal string prefixed by '0o'
   """
 
 
 def bin(value Int) String:
   """
-  Converts an integer value into a string of the number in base 2
+  Converts an integer value into a binary string prefixed by '0b'
   """
 
 

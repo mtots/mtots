@@ -120,6 +120,43 @@ static Status implHex(i16 argCount, Value *args, Value *out) {
 
 static CFunction funcHex = {implHex, "hex", 1};
 
+static Status implOct(i16 argCount, Value *args, Value *out) {
+  double rawValue = asNumber(args[0]);
+  size_t start, end, value;
+  Buffer buf;
+
+  initBuffer(&buf);
+  if (rawValue < 0) {
+    bputchar(&buf, '-');
+    rawValue *= -1;
+  }
+  value = (size_t)rawValue;
+  bputstr(&buf, "0o");
+  if (value == 0) {
+    bputchar(&buf, '0');
+  } else {
+    start = buf.length;
+    while (value) {
+      bputchar(&buf, '0' + (value & 7));
+      value /= 8;
+    }
+    end = buf.length;
+    while (start + 1 < end) {
+      u8 tmp = buf.data[start];
+      buf.data[start] = buf.data[end - 1];
+      buf.data[end - 1] = tmp;
+      start++;
+      end--;
+    }
+  }
+
+  *out = STRING_VAL(bufferToString(&buf));
+  freeBuffer(&buf);
+  return STATUS_OK;
+}
+
+static CFunction funcOct = {implOct, "oct", 1};
+
 static Status implBin(i16 argCount, Value *args, Value *out) {
   double rawValue = asNumber(args[0]);
   size_t start, end, value;
@@ -563,6 +600,7 @@ void defineDefaultGlobals(void) {
       &cfuncLen,
       &cfuncSum,
       &funcHex,
+      &funcOct,
       &funcBin,
       &cfuncRound,
       &cfuncType,

@@ -8,9 +8,98 @@
 #if MTOTS_IS_POSIX
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #endif
+
+#define isStatResult(v) (getNativeObjectDescriptor(v) == &descriptorStatResult)
+
+#if MTOTS_IS_POSIX
+static String *string_st_mode;
+static String *string_st_ino;
+static String *string_st_dev;
+static String *string_st_nlink;
+static String *string_st_uid;
+static String *string_st_gid;
+static String *string_st_size;
+#endif
+
+typedef struct ObjStatResult {
+  ObjNative obj;
+#if MTOTS_IS_POSIX
+  struct stat handle;
+#else
+  int handle;
+#endif
+} ObjStatResult;
+
+static NativeObjectDescriptor descriptorStatResult = {
+    nopBlacken,
+    nopFree,
+    sizeof(ObjStatResult),
+    "StatResult",
+};
+
+static Value STAT_RESULT_VAL(ObjStatResult *sr) {
+  return OBJ_VAL_EXPLICIT((Obj *)sr);
+}
+
+static ObjStatResult *asStatResult(Value value) {
+  if (!isStatResult(value)) {
+    panic("Expected StatResult but got %s", getKindName(value));
+  }
+  return (ObjStatResult *)value.as.obj;
+}
+
+static ObjStatResult *newStatResult() {
+  ObjStatResult *sr = NEW_NATIVE(ObjStatResult, &descriptorStatResult);
+  memset(&sr->handle, 0, sizeof(sr->handle));
+  return sr;
+}
+
+static Status implStatResultStaticCall(i16 argc, Value *argv, Value *out) {
+  *out = STAT_RESULT_VAL(newStatResult());
+  return STATUS_OK;
+}
+
+static CFunction funcStatResultStaticCall = {implStatResultStaticCall, "__call__"};
+
+static Status implStatResultGetattr(i16 argc, Value *argv, Value *out) {
+#if MTOTS_IS_POSIX
+  ObjStatResult *sr = asStatResult(argv[-1]);
+  String *name = asString(argv[0]);
+  if (name == string_st_mode) {
+    *out = NUMBER_VAL(sr->handle.st_mode);
+  } else if (name == string_st_ino) {
+    /* NOTE: st_ino may be a 64-bit integer...
+     * TODO: figure out a way not to lose precision by using something
+     * other than a double */
+    *out = NUMBER_VAL(sr->handle.st_ino);
+  } else if (name == string_st_dev) {
+    *out = NUMBER_VAL(sr->handle.st_dev);
+  } else if (name == string_st_nlink) {
+    *out = NUMBER_VAL(sr->handle.st_nlink);
+  } else if (name == string_st_uid) {
+    *out = NUMBER_VAL(sr->handle.st_uid);
+  } else if (name == string_st_gid) {
+    *out = NUMBER_VAL(sr->handle.st_gid);
+  } else if (name == string_st_size) {
+    *out = NUMBER_VAL(sr->handle.st_size);
+  } else {
+    runtimeError("Field '%s' not found on %s", name->chars, getKindName(argv[-1]));
+    return STATUS_ERROR;
+  }
+  return STATUS_OK;
+#else
+  runtimeError("Field '%s' not found on %s",
+               asString(argv[0])->chars,
+               getKindName(argv[-1]));
+  return STATUS_ERROR;
+#endif
+}
+
+static CFunction funcStatResultGetattr = {implStatResultGetattr, "__getattr__", 1};
 
 static Status implGetlogin(i16 argc, Value *argv, Value *out) {
 #if MTOTS_IS_POSIX
@@ -200,8 +289,105 @@ static Status implIsEmscripten(i16 argc, Value *argv, Value *out) {
 
 static CFunction funcIsEmscripten = {implIsEmscripten, "isEmscripten"};
 
+static Status implOpen(i16 argc, Value *argv, Value *out) {
+#if MTOTS_IS_POSIX
+  int fd;
+  const char *path = asString(argv[0])->chars;
+  int flags = asInt(argv[1]);
+  mode_t mode = S_IRWXU | S_IRWXG | S_IRWXO; /* default */
+  if (argc > 2 && !isNil(argv[2])) {
+    mode = (mode_t)asU32(argv[2]);
+  }
+  fd = open(path, flags, mode);
+  if (fd == -1) {
+    runtimeError("open(): %s", strerror(errno));
+    return STATUS_ERROR;
+  }
+  *out = NUMBER_VAL(fd);
+  return STATUS_OK;
+#else
+  runtimeError("Unsupported platfom (os.open())");
+  return STATUS_ERROR;
+#endif
+}
+
+static const char *argsOpen[] = {
+    "path",
+    "flags",
+    "mode",
+    NULL,
+};
+
+static CFunction funcOpen = {
+    implOpen,
+    "open",
+    2,
+    sizeof(argsOpen) / sizeof(argsOpen[0]) - 1,
+    argsOpen,
+};
+
+static Status implClose(i16 argc, Value *argv, Value *out) {
+#if MTOTS_IS_POSIX
+  int fd = asInt(argv[0]);
+  if (close(fd) != 0) {
+    runtimeError("close(): %s", strerror(errno));
+    return STATUS_ERROR;
+  }
+  return STATUS_OK;
+#else
+  runtimeError("Unsupported platfom (os.close())");
+  return STATUS_ERROR;
+#endif
+}
+
+static CFunction funcClose = {implClose, "close", 1};
+
+static Status implFstat(i16 argc, Value *argv, Value *out) {
+#if MTOTS_IS_POSIX
+  int fd = asInt(argv[0]);
+  ObjStatResult *sr = argc > 1 && !isNil(argv[1]) ? asStatResult(argv[1]) : newStatResult();
+  if (fstat(fd, &sr->handle) != 0) {
+    runtimeError("fstat(): %s", strerror(errno));
+    return STATUS_ERROR;
+  }
+  *out = STAT_RESULT_VAL(sr);
+  return STATUS_OK;
+#else
+  runtimeError("Unsupported platfom (os.fstat())");
+  return STATUS_ERROR;
+#endif
+}
+
+static CFunction funcFstat = {implFstat, "fstat", 1, 2};
+
+static Status implStat(i16 argc, Value *argv, Value *out) {
+#if MTOTS_IS_POSIX
+  const char *path = asString(argv[0])->chars;
+  ObjStatResult *sr = argc > 1 && !isNil(argv[1]) ? asStatResult(argv[1]) : newStatResult();
+  if (stat(path, &sr->handle) != 0) {
+    runtimeError("stat(): %s", strerror(errno));
+    return STATUS_ERROR;
+  }
+  *out = STAT_RESULT_VAL(sr);
+  return STATUS_OK;
+#else
+  runtimeError("Unsupported platfom (os.stat())");
+  return STATUS_ERROR;
+#endif
+}
+
+static CFunction funcStat = {implStat, "stat", 1, 2};
+
 static Status impl(i16 argc, Value *argv, Value *out) {
   ObjModule *module = asModule(argv[0]);
+  CFunction *statResultStaticMethods[] = {
+      &funcStatResultStaticCall,
+      NULL,
+  };
+  CFunction *statResultMethods[] = {
+      &funcStatResultGetattr,
+      NULL,
+  };
   CFunction *functions[] = {
       &funcGetlogin,
       &funcGetpid,
@@ -220,10 +406,39 @@ static Status impl(i16 argc, Value *argv, Value *out) {
       &funcIsIPhone,
       &funcIsAndroid,
       &funcIsEmscripten,
+      &funcOpen,
+      &funcClose,
+      &funcFstat,
+      &funcStat,
       NULL,
   };
 
   moduleAddFunctions(module, functions);
+  newNativeClass(
+      module,
+      &descriptorStatResult,
+      statResultMethods,
+      statResultStaticMethods);
+
+#if MTOTS_IS_POSIX
+  string_st_mode = moduleRetainCString(module, "st_mode");
+  string_st_ino = moduleRetainCString(module, "st_ino");
+  string_st_dev = moduleRetainCString(module, "st_dev");
+  string_st_nlink = moduleRetainCString(module, "st_nlink");
+  string_st_uid = moduleRetainCString(module, "st_uid");
+  string_st_gid = moduleRetainCString(module, "st_gid");
+  string_st_size = moduleRetainCString(module, "st_size");
+#endif
+
+#if MTOTS_IS_POSIX
+  mapSetN(&module->fields, "O_RDONLY", NUMBER_VAL(O_RDONLY));
+  mapSetN(&module->fields, "O_WRONLY", NUMBER_VAL(O_WRONLY));
+  mapSetN(&module->fields, "O_RDWR", NUMBER_VAL(O_RDWR));
+  mapSetN(&module->fields, "O_APPEND", NUMBER_VAL(O_APPEND));
+  mapSetN(&module->fields, "O_CREAT", NUMBER_VAL(O_CREAT));
+  mapSetN(&module->fields, "O_EXCL", NUMBER_VAL(O_EXCL));
+  mapSetN(&module->fields, "O_TRUNC", NUMBER_VAL(O_TRUNC));
+#endif
 
   mapSetN(&module->fields, "name", STRING_VAL(internCString(MTOTS_OS_NAME)));
   mapSetN(&module->fields, "sep", STRING_VAL(internCString(PATH_SEP_STR)));

@@ -1,5 +1,5 @@
 r"""
-Miscellaneous operating system interfaces
+## Miscellaneous operating system interfaces
 
 Implements a subset of Python's os module, and adds a few things not in Python's version.
 (Compare with https://docs.python.org/3/library/os.html)
@@ -121,4 +121,109 @@ def isIPhone() Bool:
 def isAndroid() Bool:
   """
   Returns true if the current platform is detected to be Android
+  """
+
+
+######################################################################
+# File Descriptor Operations
+######################################################################
+
+
+# Flags for `open()`
+# https://pubs.opengroup.org/onlinepubs/007904875/functions/open.html
+
+final O_RDONLY Int "open file for reading only" = raise 0
+final O_WRONLY Int "open for writing only" = raise 0
+final O_RDWR Int "open for reading and writing"  = raise 0
+final O_APPEND Int """
+If set, the file offset shall be set to the end of the file
+prior to each write
+""" = raise 0
+final O_CREAT Int """
+If the file exists, this flag has no effect except as noted under
+O_EXCL below.
+Otherwise, the file shall be created; the user ID of the file
+shall be set to the effective user ID of the process;
+the group ID of the file shall be set to the group ID of the file's parent
+directory or to the effective group ID of the process; and the access
+permission bits (see <sys/stat.h>) of the file mode shall be set to the
+value of the third argument taken as type mode_t modified as follows:
+a bitwise AND is performed on the file-mode bits and the corresponding bits
+in the complement of the process' file mode creation mask. Thus, all bits
+in the file mode whose corresponding bit in the file mode creation mask is
+set are cleared. When bits other than the file permission bits are set,
+the effect is unspecified. The third argument does not affect whether
+the file is open for reading, writing, or for both. Implementations shall
+provide a way to initialize the file's group ID to the group ID of the
+parent directory.
+Implementations may, but need not, provide an implementation-defined way
+to initialize the file's group ID to the effective group ID of the
+calling process.
+""" = raise 0
+final O_EXCL Int = raise 0
+final O_TRUNC Int """
+If O_CREAT and O_EXCL are set, open() shall fail if the file exists.
+The check for the existence of the file and the creation of the file if
+it does not exist shall be atomic with respect to other threads executing
+open() naming the same filename in the same directory with O_EXCL and
+O_CREAT set.
+If O_EXCL and O_CREAT are set, and path names a symbolic link, open()
+shall fail and set errno to [EEXIST], regardless of the contents of
+the symbolic link. If O_EXCL is set and O_CREAT is not set,
+the result is undefined.
+""" = raise 0
+
+
+def open(path String, flags Int, mode Int? = nil) Int:
+  """
+  Open the file path and set various flags according to flags and possibly
+  its mode according to mode. Returns the file descriptor.
+
+  For a description of the flag and mode values, see the C run-time
+  documentation; flag constants (like O_RDONLY and O_WRONLY) are defined
+  in the os module. In particular, on Windows adding O_BINARY is needed
+  to open files in binary mode.
+
+  `mode` only matters if `O_CREAT` is set and defaults
+  to `S_IRWXU | S_IRWXG | S_IRWXO` (i.e. 0777) if omitted or nil.
+  """
+
+
+def close(fd Int) nil:
+  """
+  Closes a file descriptor.
+  """
+
+
+class StatResult:
+  """
+  Metadata about a file from calling `stat` or `fstat`
+
+  See: https://man7.org/linux/man-pages/man3/stat.3type.html
+  For what these fields mean in Linux.
+  """
+  final st_mode Int "File type and mode"
+  final st_ino Int  "Inode number"
+  final st_dev Int "ID of device containing file"
+  final st_nlink Int "Number of hard links"
+  final st_uid Int "User ID of owner"
+  final st_gid Int "Group ID of owner"
+  final st_size Int "Total size, in bytes"
+
+
+def fstat(fd Int, ret StatResult?=nil) StatResult:
+  """
+  Get the status of the file descriptor fd. Return a `StatResult` object.
+
+  An optional second argument can be passed in to avoid the allocation
+  of a new `StatResult` instance.
+  """
+
+
+def stat(path String, ret StatResult?=nil) StatResult:
+  """
+  Get the status of the given file. Return a `StatResult` object.
+
+  An optional second argument can be passed in to avoid the allocation
+  of a new `StatResult` instance.
   """
