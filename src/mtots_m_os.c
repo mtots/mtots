@@ -12,6 +12,66 @@
 #include <unistd.h>
 #endif
 
+static Status implGetlogin(i16 argc, Value *argv, Value *out) {
+#if MTOTS_IS_POSIX
+  *out = STRING_VAL(internCString(getlogin()));
+  return STATUS_OK;
+#else
+  runtimeError("Unsupported platfom (os.getlogin())");
+  return STATUS_ERROR;
+#endif
+}
+
+static CFunction funcGetlogin = {implGetlogin, "getlogin"};
+
+static Status implGetpid(i16 argc, Value *argv, Value *out) {
+#if MTOTS_IS_POSIX
+  *out = NUMBER_VAL((double)(pid_t)getpid());
+  return STATUS_OK;
+#else
+  runtimeError("Unsupported platfom (os.getpid())");
+  return STATUS_ERROR;
+#endif
+}
+
+static CFunction funcGetpid = {implGetpid, "getpid"};
+
+static Status implGetppid(i16 argc, Value *argv, Value *out) {
+#if MTOTS_IS_POSIX
+  *out = NUMBER_VAL((double)(pid_t)getppid());
+  return STATUS_OK;
+#else
+  runtimeError("Unsupported platfom (os.getppid())");
+  return STATUS_ERROR;
+#endif
+}
+
+static CFunction funcGetppid = {implGetppid, "getppid"};
+
+static Status implGetuid(i16 argc, Value *argv, Value *out) {
+#if MTOTS_IS_POSIX
+  *out = NUMBER_VAL((double)(uid_t)getuid());
+  return STATUS_OK;
+#else
+  runtimeError("Unsupported platfom (os.getuid())");
+  return STATUS_ERROR;
+#endif
+}
+
+static CFunction funcGetuid = {implGetuid, "getuid"};
+
+static Status implGeteuid(i16 argc, Value *argv, Value *out) {
+#if MTOTS_IS_POSIX
+  *out = NUMBER_VAL((double)(uid_t)geteuid());
+  return STATUS_OK;
+#else
+  runtimeError("Unsupported platfom (os.geteuid())");
+  return STATUS_ERROR;
+#endif
+}
+
+static CFunction funcGeteuid = {implGeteuid, "geteuid"};
+
 static Status implGetenv(i16 argc, Value *argv, Value *out) {
   String *name = asString(argv[0]);
   const char *value = getenv(name->chars);
@@ -143,6 +203,11 @@ static CFunction funcIsEmscripten = {implIsEmscripten, "isEmscripten"};
 static Status impl(i16 argc, Value *argv, Value *out) {
   ObjModule *module = asModule(argv[0]);
   CFunction *functions[] = {
+      &funcGetlogin,
+      &funcGetpid,
+      &funcGetppid,
+      &funcGetuid,
+      &funcGeteuid,
       &funcGetenv,
       &funcGetcwd,
       &funcChdir,

@@ -10,6 +10,40 @@ final name "A human readable name of the current operating system" = 'macos'
 final sep = path.sep
 
 
+def getlogin() String:
+  """
+  Return the name of the user logged in on the controlling terminal of the
+  process
+  """
+
+
+def getpid() Int:
+  """
+  Return the current process id
+  """
+
+
+def getppid() Int:
+  """
+  Return the parent's process id.
+  When the parent process has exited, on Unix the id returned is
+  the one of the init process (1), on Windows it is still the same id,
+  which may be already reused by another process.
+  """
+
+
+def getuid() Int:
+  """
+  Return the current process's real user id.
+  """
+
+
+def geteuid() Int:
+  """
+  Return the current process's effective user id.
+  """
+
+
 def getenv(name String) String?:
   """
   Looks up an environment variable.
@@ -43,7 +77,14 @@ def listdir(path String = ".") List[String]:
 
 def isPosix() Bool:
   """
-  Returns true if the platform is (mostly) POSIX compliant.
+  Returns true if the platform is detected to be POSIX or at least UNIX-like.
+
+  Specifically, this function returns true if, when Mtots was compiled:
+    * C macro `__unix__` was defined, or
+    * C macro `_unix` was defined, or
+    * C macros `__APPLE__` and `__MACH__` were both defined
+
+  otherwise, this function returns false.
   """
 
 

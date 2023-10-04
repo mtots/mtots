@@ -1,6 +1,11 @@
 import os
 
 print("os.name = %s" % [os.name])
+print("os.getlogin() = %s" % [os.getlogin()])
+print("os.getpid() = %s" % [os.getpid()])
+print("os.getppid() = %s" % [os.getppid()])
+print("os.getuid() = %s" % [os.getuid()])
+print("os.geteuid() = %s" % [os.geteuid()])
 print("os.getcwd() = %s" % [os.getcwd()])
 print("os.isPosix() = %s" % [os.isPosix()])
 print("os.isDarwin() = %s" % [os.isDarwin()])
