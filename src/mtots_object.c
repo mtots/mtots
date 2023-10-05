@@ -99,12 +99,12 @@ ObjModule *newModule(String *name, ubool includeGlobals) {
   klass = newClass(name);
   klass->isModuleClass = UTRUE;
 
-  push(CLASS_VAL(klass));
+  push(valClass(klass));
   instance = newInstance(klass);
   pop(); /* klass */
 
   if (includeGlobals) {
-    push(INSTANCE_VAL(instance));
+    push(valInstance(instance));
     mapAddAll(&vm.globals, &instance->fields);
     pop(); /* instance */
   }
@@ -117,7 +117,7 @@ ObjModule *newModuleFromCString(const char *name, ubool includeGlobals) {
   ObjModule *instance;
 
   nameStr = internCString(name);
-  push(STRING_VAL(nameStr));
+  push(valString(nameStr));
   instance = newModule(nameStr, includeGlobals);
   pop(); /* nameStr */
 
@@ -127,7 +127,7 @@ ObjModule *newModuleFromCString(const char *name, ubool includeGlobals) {
 void moduleAddFunctions(ObjModule *module, CFunction **functions) {
   CFunction **function;
   for (function = functions; *function; function++) {
-    mapSetN(&module->fields, (*function)->name, CFUNCTION_VAL(*function));
+    mapSetN(&module->fields, (*function)->name, valCFunction(*function));
   }
 }
 
@@ -165,7 +165,7 @@ void moduleRelease(ObjModule *module, Value value) {
  */
 String *moduleRetainCString(ObjModule *module, const char *value) {
   String *string = internCString(value);
-  moduleRetain(module, STRING_VAL(string));
+  moduleRetain(module, valString(string));
   return string;
 }
 
@@ -187,7 +187,7 @@ ObjClass *newClass(String *name) {
 ObjClass *newClassFromCString(const char *name) {
   ObjClass *klass;
   String *nameObj = internCString(name);
-  push(STRING_VAL(nameObj));
+  push(valString(nameObj));
   klass = newClass(nameObj);
   pop(); /* nameObj */
   return klass;
@@ -195,14 +195,14 @@ ObjClass *newClassFromCString(const char *name) {
 
 ObjClass *newForeverClassFromCString(const char *name) {
   ObjClass *klass = newClassFromCString(name);
-  addForeverValue(CLASS_VAL(klass));
+  addForeverValue(valClass(klass));
   return klass;
 }
 
 ObjClass *newClassForModule(ObjModule *module, const char *name) {
   ObjClass *cls = newClassFromCString(name);
-  moduleRetain(module, CLASS_VAL(cls));
-  mapSetN(&module->fields, name, CLASS_VAL(cls));
+  moduleRetain(module, valClass(cls));
+  mapSetN(&module->fields, name, valClass(cls));
   return cls;
 }
 
@@ -216,7 +216,7 @@ static void addMethodsToNativeOrBuiltinClass(
   if (methods) {
     for (function = methods; *function; function++) {
       String *name = internCString((*function)->name);
-      push(STRING_VAL(name));
+      push(valString(name));
       if (name == vm.callString) {
         cls->call = *function;
       } else if (name == vm.getattrString) {
@@ -224,7 +224,7 @@ static void addMethodsToNativeOrBuiltinClass(
       } else if (name == vm.setattrString) {
         cls->setattr = *function;
       } else {
-        mapSetStr(&cls->methods, name, CFUNCTION_VAL(*function));
+        mapSetStr(&cls->methods, name, valCFunction(*function));
       }
       pop(); /* name */
     }
@@ -233,8 +233,8 @@ static void addMethodsToNativeOrBuiltinClass(
   if (staticMethods) {
     for (function = staticMethods; *function; function++) {
       String *name = internCString((*function)->name);
-      push(STRING_VAL(name));
-      mapSetStr(&cls->staticMethods, name, CFUNCTION_VAL(*function));
+      push(valString(name));
+      mapSetStr(&cls->staticMethods, name, valCFunction(*function));
       if (name == vm.callString) {
         cls->instantiate = *function;
       }
@@ -324,7 +324,7 @@ static u32 hashFrozenList(Value *buffer, size_t length) {
 ObjBuffer *newBuffer(void) {
   ObjBuffer *buffer = ALLOCATE_OBJ(ObjBuffer, OBJ_BUFFER);
   initBuffer(&buffer->handle);
-  buffer->memoryRegionOwner = NIL_VAL();
+  buffer->memoryRegionOwner = valNil();
   return buffer;
 }
 
@@ -351,7 +351,7 @@ ObjList *newList(size_t size) {
     list->buffer = ALLOCATE(Value, size);
     list->capacity = list->length = size;
     for (i = 0; i < size; i++) {
-      list->buffer[i] = NIL_VAL();
+      list->buffer[i] = valNil();
     }
   }
 
@@ -387,7 +387,7 @@ ubool newListFromIterable(Value iterable, ObjList **out) {
   }
   push(iterator);
   *out = list = newList(0);
-  push(LIST_VAL(list));
+  push(valList(list));
   while (1) {
     if (!valueFastIterNext(&iterator, &item)) {
       return STATUS_ERROR;
@@ -408,8 +408,8 @@ static ObjFrozenList *allocateFrozenList(Value *buffer, int length, u32 hash) {
   frozenList->buffer = buffer;
   frozenList->hash = hash;
 
-  push(FROZEN_LIST_VAL(frozenList));
-  mapSet(&vm.frozenLists, FROZEN_LIST_VAL(frozenList), NIL_VAL());
+  push(valFrozenList(frozenList));
+  mapSet(&vm.frozenLists, valFrozenList(frozenList), valNil());
   pop();
 
   return frozenList;
@@ -441,7 +441,7 @@ ubool newFrozenListFromIterable(Value iterable, ObjFrozenList **out) {
   if (!newListFromIterable(iterable, &list)) {
     return STATUS_ERROR;
   }
-  push(LIST_VAL(list));
+  push(valList(list));
   *out = copyFrozenList(list->buffer, list->length);
   pop(); /* list */
   return STATUS_OK;
@@ -481,7 +481,7 @@ ubool newDictFromMap(Value map, ObjDict **out) {
 ubool newDictFromPairs(Value iterable, ObjDict **out) {
   ObjDict *dict = newDict();
   Value iterator;
-  push(DICT_VAL(dict));
+  push(valDict(dict));
   if (!valueFastIter(iterable, &iterator)) {
     return STATUS_ERROR;
   }
@@ -540,9 +540,9 @@ static ObjFrozenDict *newFrozenDictWithHash(Map *map, u32 hash) {
   fdict = ALLOCATE_OBJ(ObjFrozenDict, OBJ_FROZEN_DICT);
   fdict->hash = hash;
   initMap(&fdict->map);
-  push(FROZEN_DICT_VAL(fdict));
+  push(valFrozenDict(fdict));
   mapAddAll(map, &fdict->map);
-  mapSet(&vm.frozenDicts, FROZEN_DICT_VAL(fdict), NIL_VAL());
+  mapSet(&vm.frozenDicts, valFrozenDict(fdict), valNil());
   pop();
   return fdict;
 }
@@ -581,7 +581,7 @@ ObjNative *newNative(NativeObjectDescriptor *descriptor, size_t objectSize) {
 
 ObjUpvalue *newUpvalue(Value *slot) {
   ObjUpvalue *upvalue = ALLOCATE_OBJ(ObjUpvalue, OBJ_UPVALUE);
-  upvalue->closed = NIL_VAL();
+  upvalue->closed = valNil();
   upvalue->location = slot;
   upvalue->next = NULL;
   return upvalue;
@@ -639,7 +639,7 @@ ObjClass *getClassOfValue(Value value) {
 
 ubool classHasMethod(ObjClass *cls, String *name) {
   Value method;
-  return cls && mapGet(&cls->methods, STRING_VAL(name), &method);
+  return cls && mapGet(&cls->methods, valString(name), &method);
 }
 
 static void printFunction(ObjThunk *function) {
@@ -727,42 +727,42 @@ ubool isNative(Value value, NativeObjectDescriptor *descriptor) {
   return isNativeObj(value) && AS_NATIVE_UNSAFE(value)->descriptor == descriptor;
 }
 
-Value LIST_VAL(ObjList *list) {
-  return OBJ_VAL_EXPLICIT((Obj *)list);
+Value valList(ObjList *list) {
+  return valObjExplicit((Obj *)list);
 }
 
-Value DICT_VAL(ObjDict *dict) {
-  return OBJ_VAL_EXPLICIT((Obj *)dict);
+Value valDict(ObjDict *dict) {
+  return valObjExplicit((Obj *)dict);
 }
 
-Value FROZEN_DICT_VAL(ObjFrozenDict *fdict) {
-  return OBJ_VAL_EXPLICIT((Obj *)fdict);
+Value valFrozenDict(ObjFrozenDict *fdict) {
+  return valObjExplicit((Obj *)fdict);
 }
 
-Value INSTANCE_VAL(ObjInstance *instance) {
-  return OBJ_VAL_EXPLICIT((Obj *)instance);
+Value valInstance(ObjInstance *instance) {
+  return valObjExplicit((Obj *)instance);
 }
 
-Value MODULE_VAL(ObjModule *module) {
-  return OBJ_VAL_EXPLICIT((Obj *)module);
+Value valModule(ObjModule *module) {
+  return valObjExplicit((Obj *)module);
 }
 
-Value BUFFER_VAL(ObjBuffer *buffer) {
-  return OBJ_VAL_EXPLICIT((Obj *)buffer);
+Value valBuffer(ObjBuffer *buffer) {
+  return valObjExplicit((Obj *)buffer);
 }
 
-Value THUNK_VAL(ObjThunk *thunk) {
-  return OBJ_VAL_EXPLICIT((Obj *)thunk);
+Value valThunk(ObjThunk *thunk) {
+  return valObjExplicit((Obj *)thunk);
 }
 
-Value CLOSURE_VAL(ObjClosure *closure) {
-  return OBJ_VAL_EXPLICIT((Obj *)closure);
+Value valClosure(ObjClosure *closure) {
+  return valObjExplicit((Obj *)closure);
 }
 
-Value FROZEN_LIST_VAL(ObjFrozenList *frozenList) {
-  return OBJ_VAL_EXPLICIT((Obj *)frozenList);
+Value valFrozenList(ObjFrozenList *frozenList) {
+  return valObjExplicit((Obj *)frozenList);
 }
 
-Value CLASS_VAL(ObjClass *klass) {
-  return OBJ_VAL_EXPLICIT((Obj *)klass);
+Value valClass(ObjClass *klass) {
+  return valObjExplicit((Obj *)klass);
 }

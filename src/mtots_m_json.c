@@ -11,7 +11,7 @@ static Status implLoad(i16 argc, Value *args, Value *out) {
   if (!dataSourceReadToString(src, &str)) {
     return STATUS_ERROR;
   }
-  push(STRING_VAL(str));
+  push(valString(str));
   initJSONParseState(&state, str->chars);
   if (!parseJSON(&state)) {
     return STATUS_ERROR;
@@ -66,7 +66,7 @@ static Status implDumps(i16 argCount, Value *args, Value *out) {
   chars = malloc(sizeof(char) * (len + 1));
   writeJSON(args[0], NULL, chars);
   chars[len] = '\0';
-  *out = STRING_VAL(internOwnedString(chars, len));
+  *out = valString(internOwnedString(chars, len));
   return STATUS_OK;
 }
 
@@ -83,7 +83,7 @@ static Status impl(i16 argCount, Value *args, Value *out) {
   size_t i;
 
   for (i = 0; i < sizeof(functions) / sizeof(CFunction *); i++) {
-    mapSetN(&module->fields, functions[i]->name, CFUNCTION_VAL(functions[i]));
+    mapSetN(&module->fields, functions[i]->name, valCFunction(functions[i]));
   }
 
   return STATUS_OK;

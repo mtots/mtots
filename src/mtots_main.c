@@ -16,14 +16,14 @@ static ubool runMainModule(int argc, const char **argv) {
   String *mainModuleName;
   registerArgs(argc - 1, argv + 1);
   mainModuleName = internCString("__main__");
-  push(STRING_VAL(mainModuleName));
+  push(valString(mainModuleName));
 
   if (!importModuleWithPath(mainModuleName, argv[1])) {
     return STATUS_ERROR;
   }
 
   if (vm.runOnFinish) {
-    push(CFUNCTION_VAL(vm.runOnFinish));
+    push(valCFunction(vm.runOnFinish));
     if (!callFunction(0)) {
       return STATUS_ERROR;
     }

@@ -19,15 +19,15 @@ static void blackenStringIterator(ObjNative *n) {
 static Status implStringIteratorCall(i16 argCount, Value *args, Value *out) {
   ObjStringIterator *si = (ObjStringIterator *)AS_OBJ_UNSAFE(args[-1]);
   if (si->i >= si->string->codePointCount) {
-    *out = STOP_ITERATION_VAL();
+    *out = valStopIteration();
   } else if (si->string->utf32) {
     String *str;
     if (!internUTF32(si->string->utf32 + si->i++, 1, &str)) {
       return STATUS_ERROR;
     }
-    *out = STRING_VAL(str);
+    *out = valString(str);
   } else {
-    *out = STRING_VAL(internString(si->string->chars + si->i++, 1));
+    *out = valString(internString(si->string->chars + si->i++, 1));
   }
   return STATUS_OK;
 }
@@ -46,7 +46,7 @@ static Status implStringIter(i16 argCount, Value *args, Value *out) {
   ObjStringIterator *iterator = NEW_NATIVE(ObjStringIterator, &descriptorStringIterator);
   iterator->string = string;
   iterator->i = 0;
-  *out = OBJ_VAL_EXPLICIT((Obj *)iterator);
+  *out = valObjExplicit((Obj *)iterator);
   return STATUS_OK;
 }
 
@@ -54,7 +54,7 @@ static CFunction funcStringIter = {implStringIter, "__iter__"};
 
 static Status implStrGetByteLength(i16 argCount, Value *args, Value *out) {
   String *str = asString(args[-1]);
-  *out = NUMBER_VAL(str->byteLength);
+  *out = valNumber(str->byteLength);
   return STATUS_OK;
 }
 
@@ -70,9 +70,9 @@ static Status implStrGetItem(i16 argCount, Value *args, Value *out) {
     if (bytesWritten == 0) {
       panic("Invalid code point %lu\n", (unsigned long)codePoint);
     }
-    *out = STRING_VAL(internString(buffer, bytesWritten));
+    *out = valString(internString(buffer, bytesWritten));
   } else {
-    *out = STRING_VAL(internString(str->chars + index, 1));
+    *out = valString(internString(str->chars + index, 1));
   }
   return STATUS_OK;
 }
@@ -86,7 +86,7 @@ static Status implStrSlice(i16 argCount, Value *args, Value *out) {
   if (!sliceString(str, lower, upper, &slicedStr)) {
     return STATUS_ERROR;
   }
-  *out = STRING_VAL(slicedStr);
+  *out = valString(slicedStr);
   return STATUS_OK;
 }
 
@@ -103,7 +103,7 @@ static Status implStrMod(i16 argCount, Value *args, Value *out) {
     return STATUS_ERROR;
   }
 
-  *out = STRING_VAL(bufferToString(&buf));
+  *out = valString(bufferToString(&buf));
   freeBuffer(&buf);
 
   return STATUS_OK;
@@ -136,7 +136,7 @@ static Status implStrStrip(i16 argCount, Value *args, Value *out) {
   while (start < end && containsChar(stripSet, end[-1])) {
     end--;
   }
-  *out = STRING_VAL(internString(start, end - start));
+  *out = valString(internString(start, end - start));
   return STATUS_OK;
 }
 
@@ -173,7 +173,7 @@ static Status implStrReplace(i16 argCount, Value *args, Value *out) {
   char *chars = malloc(sizeof(char) * (len + 1));
   cStrReplace(orig->chars, oldstr->chars, newstr->chars, chars);
   chars[len] = '\0';
-  *out = STRING_VAL(internOwnedString(chars, len));
+  *out = valString(internOwnedString(chars, len));
   return STATUS_OK;
 }
 
@@ -207,7 +207,7 @@ static Status implStrJoin(i16 argCount, Value *args, Value *out) {
   if (p - chars != len) {
     panic("Consistency error in String.join()");
   }
-  *out = STRING_VAL(internOwnedString(chars, len));
+  *out = valString(internOwnedString(chars, len));
   return STATUS_OK;
 }
 
@@ -236,7 +236,7 @@ static Status implStringUpper(i16 argc, Value *args, Value *out) {
     }
     newString = internString(newChars, string->byteLength);
     free(newChars);
-    *out = STRING_VAL(newString);
+    *out = valString(newString);
     return STATUS_OK;
   }
 }
@@ -266,7 +266,7 @@ static Status implStringLower(i16 argc, Value *args, Value *out) {
     }
     newString = internString(newChars, string->byteLength);
     free(newChars);
-    *out = STRING_VAL(newString);
+    *out = valString(newString);
     return STATUS_OK;
   }
 }
@@ -276,7 +276,7 @@ static CFunction funcStringLower = {implStringLower, "lower"};
 static Status implStringStartsWith(i16 argc, Value *args, Value *out) {
   String *string = asString(args[-1]);
   String *prefix = asString(args[0]);
-  *out = BOOL_VAL(
+  *out = valBool(
       string->byteLength >= prefix->byteLength &&
       memcmp(string->chars, prefix->chars, prefix->byteLength) == 0);
   return STATUS_OK;
@@ -287,7 +287,7 @@ static CFunction funcStringStartsWith = {implStringStartsWith, "startsWith", 1};
 static Status implStringEndsWith(i16 argc, Value *args, Value *out) {
   String *string = asString(args[-1]);
   String *suffix = asString(args[0]);
-  *out = BOOL_VAL(
+  *out = valBool(
       string->byteLength >= suffix->byteLength &&
       memcmp(
           string->chars + (string->byteLength - suffix->byteLength),
@@ -333,17 +333,17 @@ static Status implStringPadX(ubool padStart, i16 argCount, Value *args, Value *o
   String *padString = argCount > 1 ? asString(args[1]) : internCString(" ");
   Buffer buf;
   if (string->codePointCount >= width) {
-    *out = STRING_VAL(string);
+    *out = valString(string);
     return STATUS_OK;
   }
-  push(STRING_VAL(padString));
+  push(valString(padString));
   initBuffer(&buf);
   if (!padStringImpl(string, width, padString, padStart, &buf)) {
     freeBuffer(&buf);
     return STATUS_ERROR;
   }
   pop(); /* padString */
-  *out = STRING_VAL(bufferToString(&buf));
+  *out = valString(bufferToString(&buf));
   freeBuffer(&buf);
   return STATUS_OK;
 }
@@ -363,7 +363,7 @@ static CFunction funcStringPadEnd = {implStringPadEnd, "padEnd", 1, 2};
 static Status implStringStaticFromUTF8(i16 argc, Value *args, Value *out) {
   ObjBuffer *buffer = asBuffer(args[0]);
   String *string = internString((char *)buffer->handle.data, buffer->handle.length);
-  *out = STRING_VAL(string);
+  *out = valString(string);
   return STATUS_OK;
 }
 

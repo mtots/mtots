@@ -208,7 +208,7 @@ static ubool parseString(JSONParseState *s) {
 
   incr(s); /* ending '"' */
 
-  push(STRING_VAL(internOwnedString(chars, len)));
+  push(valString(internOwnedString(chars, len)));
   return STATUS_OK;
 }
 
@@ -251,7 +251,7 @@ static ubool parseObject(JSONParseState *s) {
   }
   incr(s); /* '}' */
   dict = newDict();
-  push(DICT_VAL(dict));
+  push(valDict(dict));
   for (i = 0; i < count; i++) {
     Value key = vm.stackTop[-(2 * (i32)count) - 1 + 2 * i];
     Value value = vm.stackTop[-(2 * (i32)count) - 1 + 2 * i + 1];
@@ -259,7 +259,7 @@ static ubool parseObject(JSONParseState *s) {
   }
   pop(); /* dict */
   vm.stackTop -= 2 * count;
-  push(DICT_VAL(dict));
+  push(valDict(dict));
   return STATUS_OK;
 }
 
@@ -296,7 +296,7 @@ static ubool parseArray(JSONParseState *s) {
     list->buffer[i] = vm.stackTop[-(i32)count + i];
   }
   vm.stackTop -= count;
-  push(LIST_VAL(list));
+  push(valList(list));
   return STATUS_OK;
 }
 
@@ -333,7 +333,7 @@ static ubool parseNumber(JSONParseState *s) {
       incr(s);
     }
   }
-  push(NUMBER_VAL(atof(start)));
+  push(valNumber(atof(start)));
   return STATUS_OK;
 }
 
@@ -357,7 +357,7 @@ static ubool parseOneBlob(JSONParseState *s) {
         for (i = 0; i < len; i++) {
           incr(s);
         }
-        push(BOOL_VAL(UFALSE));
+        push(valBool(UFALSE));
         return STATUS_OK;
       }
       break;
@@ -367,7 +367,7 @@ static ubool parseOneBlob(JSONParseState *s) {
         for (i = 0; i < len; i++) {
           incr(s);
         }
-        push(NIL_VAL());
+        push(valNil());
         return STATUS_OK;
       }
       break;
@@ -377,7 +377,7 @@ static ubool parseOneBlob(JSONParseState *s) {
         for (i = 0; i < len; i++) {
           incr(s);
         }
-        push(BOOL_VAL(UTRUE));
+        push(valBool(UTRUE));
         return STATUS_OK;
       }
       break;

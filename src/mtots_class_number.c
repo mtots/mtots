@@ -5,11 +5,11 @@
 static Status implNumberToU32(i16 argCount, Value *args, Value *out) {
   double value = asNumber(args[-1]);
   if (value < 0) {
-    *out = NUMBER_VAL(0);
+    *out = valNumber(0);
   } else if (value > (double)U32_MAX) {
-    *out = NUMBER_VAL(U32_MAX);
+    *out = valNumber(U32_MAX);
   } else {
-    *out = NUMBER_VAL((u32)value);
+    *out = valNumber((u32)value);
   }
   return STATUS_OK;
 }
@@ -29,7 +29,7 @@ static Status implNumberBase(i16 argCount, Value *args, Value *out) {
     return STATUS_ERROR;
   }
   if (value == 0) {
-    *out = STRING_VAL(internCString("0"));
+    *out = valString(internCString("0"));
     return STATUS_OK;
   }
   initBuffer(&buf);
@@ -51,7 +51,7 @@ static Status implNumberBase(i16 argCount, Value *args, Value *out) {
     buf.data[start] = buf.data[end - 1];
     buf.data[end - 1] = tmp;
   }
-  *out = STRING_VAL(bufferToString(&buf));
+  *out = valString(bufferToString(&buf));
   freeBuffer(&buf);
   return STATUS_OK;
 }

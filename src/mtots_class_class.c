@@ -4,7 +4,7 @@
 
 static Status implClassGetName(i16 argCount, Value *args, Value *out) {
   ObjClass *cls = asClass(args[0]);
-  *out = STRING_VAL(cls->name);
+  *out = valString(cls->name);
   return STATUS_OK;
 }
 

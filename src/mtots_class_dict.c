@@ -7,7 +7,7 @@ static Status implInstantiateDict(i16 argCount, Value *args, Value *out) {
   if (!newDictFromMap(args[0], &dict)) {
     return STATUS_ERROR;
   }
-  *out = DICT_VAL(dict);
+  *out = valDict(dict);
   return STATUS_OK;
 }
 
@@ -29,7 +29,7 @@ static Status implDictIteratorCall(i16 argCount, Value *args, Value *out) {
   if (mapIteratorNextKey(&iter->di, out)) {
     return STATUS_OK;
   }
-  *out = STOP_ITERATION_VAL();
+  *out = valStopIteration();
   return STATUS_OK;
 }
 
@@ -48,7 +48,7 @@ static NativeObjectDescriptor descriptorDictIterator = {
 static Status implDictGetOrNil(i16 argCount, Value *args, Value *out) {
   ObjDict *dict = asDict(args[-1]);
   if (!mapGet(&dict->map, args[0], out)) {
-    *out = NIL_VAL();
+    *out = valNil();
   }
   return STATUS_OK;
 }
@@ -78,7 +78,7 @@ static CFunction funcDictGetItem = {implDictGetItem, "__getitem__", 1};
 
 static Status implDictSetItem(i16 argCount, Value *args, Value *out) {
   ObjDict *dict = asDict(args[-1]);
-  *out = BOOL_VAL(mapSet(&dict->map, args[0], args[1]));
+  *out = valBool(mapSet(&dict->map, args[0], args[1]));
   return STATUS_OK;
 }
 
@@ -86,7 +86,7 @@ static CFunction funcDictSetItem = {implDictSetItem, "__setitem__", 2};
 
 static Status implDictDelete(i16 argCount, Value *args, Value *out) {
   ObjDict *dict = asDict(args[-1]);
-  *out = BOOL_VAL(mapDelete(&dict->map, args[0]));
+  *out = valBool(mapDelete(&dict->map, args[0]));
   return STATUS_OK;
 }
 
@@ -95,7 +95,7 @@ static CFunction funcDictDelete = {implDictDelete, "delete", 1};
 static Status implDictContains(i16 argCount, Value *args, Value *out) {
   Value dummy;
   ObjDict *dict = asDict(args[-1]);
-  *out = BOOL_VAL(mapGet(&dict->map, args[0], &dummy));
+  *out = valBool(mapGet(&dict->map, args[0], &dummy));
   return STATUS_OK;
 }
 
@@ -107,7 +107,7 @@ static Status implDictIter(i16 argCount, Value *args, Value *out) {
   iter = NEW_NATIVE(ObjDictIterator, &descriptorDictIterator);
   iter->dict = dict;
   initMapIterator(&iter->di, &dict->map);
-  *out = OBJ_VAL_EXPLICIT((Obj *)iter);
+  *out = valObjExplicit((Obj *)iter);
   return STATUS_OK;
 }
 
@@ -155,7 +155,7 @@ static CFunction funcDictRget = {implDictRget, "rget", 1, 2};
 static Status implDictFreeze(i16 argCount, Value *args, Value *out) {
   ObjDict *dict = asDict(args[-1]);
   ObjFrozenDict *fdict = newFrozenDict(&dict->map);
-  *out = FROZEN_DICT_VAL(fdict);
+  *out = valFrozenDict(fdict);
   return STATUS_OK;
 }
 
@@ -166,7 +166,7 @@ static Status implDictStaticFromPairs(i16 argCount, Value *args, Value *out) {
   if (!newDictFromPairs(args[0], &dict)) {
     return STATUS_ERROR;
   }
-  *out = DICT_VAL(dict);
+  *out = valDict(dict);
   return STATUS_OK;
 }
 

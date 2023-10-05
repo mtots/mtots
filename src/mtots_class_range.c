@@ -11,7 +11,7 @@ static Status implRangeRepr(i16 argCount, Value *args, Value *out) {
   bputchar(&buf, ',');
   bputnumber(&buf, range.step);
   bputchar(&buf, ')');
-  *out = STRING_VAL(bufferToString(&buf));
+  *out = valString(bufferToString(&buf));
   freeBuffer(&buf);
   return STATUS_OK;
 }

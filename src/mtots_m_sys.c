@@ -7,14 +7,14 @@ static ObjList *programArgs;
 void registerArgs(int argc, const char **argv) {
   int i;
   programArgs = newList(argc);
-  addForeverValue(LIST_VAL(programArgs));
+  addForeverValue(valList(programArgs));
   for (i = 0; i < argc; i++) {
-    programArgs->buffer[i] = STRING_VAL(internCString(argv[i]));
+    programArgs->buffer[i] = valString(internCString(argv[i]));
   }
 }
 
 static Status implGetMallocCount(i16 argc, Value *args, Value *out) {
-  *out = NUMBER_VAL(vm.memory.mallocCount);
+  *out = valNumber(vm.memory.mallocCount);
   return STATUS_OK;
 }
 
@@ -53,14 +53,14 @@ static Status impl(i16 argc, Value *args, Value *out) {
   };
   CFunction **function;
 
-  mapSetN(&module->fields, "sizeOfValue", NUMBER_VAL(sizeof(Value)));
+  mapSetN(&module->fields, "sizeOfValue", valNumber(sizeof(Value)));
 
   if (programArgs) {
-    mapSetN(&module->fields, "argv", LIST_VAL(programArgs));
+    mapSetN(&module->fields, "argv", valList(programArgs));
   }
 
   for (function = functions; *function; function++) {
-    mapSetN(&module->fields, (*function)->name, CFUNCTION_VAL(*function));
+    mapSetN(&module->fields, (*function)->name, valCFunction(*function));
   }
 
   return STATUS_OK;

@@ -258,15 +258,15 @@ NativeObjectDescriptor *getNativeObjectDescriptor(Value value);
 void nopBlacken(ObjNative *n);
 void nopFree(ObjNative *n);
 
-Value LIST_VAL(ObjList *list);
-Value DICT_VAL(ObjDict *dict);
-Value FROZEN_DICT_VAL(ObjFrozenDict *fdict);
-Value INSTANCE_VAL(ObjInstance *instance);
-Value MODULE_VAL(ObjModule *instance);
-Value BUFFER_VAL(ObjBuffer *buffer);
-Value THUNK_VAL(ObjThunk *thunk);
-Value CLOSURE_VAL(ObjClosure *closure);
-Value FROZEN_LIST_VAL(ObjFrozenList *frozenList);
-Value CLASS_VAL(ObjClass *klass);
+Value valList(ObjList *list);
+Value valDict(ObjDict *dict);
+Value valFrozenDict(ObjFrozenDict *fdict);
+Value valInstance(ObjInstance *instance);
+Value valModule(ObjModule *instance);
+Value valBuffer(ObjBuffer *buffer);
+Value valThunk(ObjThunk *thunk);
+Value valClosure(ObjClosure *closure);
+Value valFrozenList(ObjFrozenList *frozenList);
+Value valClass(ObjClass *klass);
 
 #endif /*mtots_object_h*/

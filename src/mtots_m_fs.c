@@ -31,7 +31,7 @@ static Status implReadString(i16 argCount, Value *args, Value *out) {
   }
 
   fclose(file);
-  *out = STRING_VAL(internString(buffer, fileSize));
+  *out = valString(internString(buffer, fileSize));
   free(buffer);
   return STATUS_OK;
 }
@@ -55,7 +55,7 @@ static Status implReadBytes(i16 argCount, Value *args, Value *out) {
   }
 
   buffer = newBuffer();
-  push(BUFFER_VAL(buffer));
+  push(valBuffer(buffer));
   bufferSetLength(&buffer->handle, fileSize);
   if (fread(buffer->handle.data, 1, fileSize, file) != fileSize) {
     runtimeError("Error while reading file %s", fileName->chars);
@@ -63,7 +63,7 @@ static Status implReadBytes(i16 argCount, Value *args, Value *out) {
   }
 
   fclose(file);
-  *out = BUFFER_VAL(buffer);
+  *out = valBuffer(buffer);
   pop(); /* buffer */
   return STATUS_OK;
 }
@@ -115,14 +115,14 @@ static Status implWriteBytes(i16 argCount, Value *args, Value *out) {
 static CFunction funcWriteBytes = {implWriteBytes, "writeBytes", 2, 0};
 
 static Status implIsFile(i16 argCount, Value *args, Value *out) {
-  *out = BOOL_VAL(isFile(asString(args[0])->chars));
+  *out = valBool(isFile(asString(args[0])->chars));
   return STATUS_OK;
 }
 
 static CFunction funcIsFile = {implIsFile, "isFile", 1, 0};
 
 static Status implIsDir(i16 argCount, Value *args, Value *out) {
-  *out = BOOL_VAL(isDirectory(asString(args[0])->chars));
+  *out = valBool(isDirectory(asString(args[0])->chars));
   return STATUS_OK;
 }
 
@@ -136,8 +136,8 @@ static Status implListCallback(void *listPtr, const char *fileName) {
     return STATUS_OK;
   }
   name = internCString(fileName);
-  push(STRING_VAL(name));
-  listAppend(list, STRING_VAL(name));
+  push(valString(name));
+  listAppend(list, valString(name));
   pop(); /* name */
   return STATUS_OK;
 }
@@ -147,7 +147,7 @@ static Status implList(i16 argCount, Value *args, Value *out) {
   ObjList *entries;
 
   entries = newList(0);
-  push(LIST_VAL(entries));
+  push(valList(entries));
   if (!listDirectory(dirpath, entries, implListCallback)) {
     return STATUS_ERROR;
   }
@@ -184,7 +184,7 @@ static Status implJoin(i16 argCount, Value *args, Value *out) {
     bputstrlen(&buf, item->chars, item->byteLength);
   }
 
-  *out = STRING_VAL(bufferToString(&buf));
+  *out = valString(bufferToString(&buf));
 
   freeBuffer(&buf);
 
@@ -206,7 +206,7 @@ static Status implDirname(i16 argCount, Value *args, Value *out) {
       break;
     }
   }
-  *out = STRING_VAL(internString(chars, i));
+  *out = valString(internString(chars, i));
   return STATUS_OK;
 }
 
@@ -225,7 +225,7 @@ static Status implBasename(i16 argCount, Value *args, Value *out) {
       break;
     }
   }
-  *out = STRING_VAL(internString(chars + i, end - i));
+  *out = valString(internString(chars + i, end - i));
   return STATUS_OK;
 }
 
@@ -249,7 +249,7 @@ static Status impl(i16 argCount, Value *args, Value *out) {
   };
 
   moduleAddFunctions(module, functions);
-  mapSetN(&module->fields, "sep", STRING_VAL(internCString(PATH_SEP_STR)));
+  mapSetN(&module->fields, "sep", valString(internCString(PATH_SEP_STR)));
 
   return STATUS_OK;
 }

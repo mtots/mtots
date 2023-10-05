@@ -16,7 +16,7 @@ ObjRandom *asRandom(Value value) {
 }
 
 static Status implRandom(i16 argc, Value *args, Value *out) {
-  *out = NUMBER_VAL(randomFloat(&defaultInstance));
+  *out = valNumber(randomFloat(&defaultInstance));
   return STATUS_OK;
 }
 
@@ -26,7 +26,7 @@ static Status implInstantiateRandom(i16 argCount, Value *args, Value *out) {
   ObjRandom *random = NEW_NATIVE(ObjRandom, &descriptorRandom);
   u32 seed = argCount > 0 ? asU32(args[0]) : 19937 /* default seed */;
   initRandom(&random->handle, seed);
-  *out = OBJ_VAL_EXPLICIT((Obj *)random);
+  *out = valObjExplicit((Obj *)random);
   return STATUS_OK;
 }
 
@@ -51,7 +51,7 @@ static CFunction funcRandomSeed = {implRandomSeed, "seed", 1};
 static Status implRandomNext(i16 argCount, Value *args, Value *out) {
   ObjRandom *random = asRandom(args[-1]);
   u32 value = randomNext(&random->handle);
-  *out = NUMBER_VAL(value);
+  *out = valNumber(value);
   return STATUS_OK;
 }
 
@@ -60,7 +60,7 @@ static CFunction funcRandomNext = {implRandomNext, "next"};
 static Status implRandomNumber(i16 argCount, Value *args, Value *out) {
   ObjRandom *random = asRandom(args[-1]);
   double value = randomFloat(&random->handle);
-  *out = NUMBER_VAL(value);
+  *out = valNumber(value);
   return STATUS_OK;
 }
 
@@ -86,7 +86,7 @@ static Status implRandomInt(i16 argCount, Value *args, Value *out) {
         (long)low, (long)high);
     return STATUS_ERROR;
   }
-  *out = NUMBER_VAL(((double)low) + randomInt(&random->handle, high - low));
+  *out = valNumber(((double)low) + randomInt(&random->handle, high - low));
   return STATUS_OK;
 }
 
@@ -108,7 +108,7 @@ static Status implRandomRange(i16 argCount, Value *args, Value *out) {
         (long)start, (long)end);
     return STATUS_ERROR;
   }
-  *out = NUMBER_VAL(((double)start) + randomInt(&random->handle, end - start - 1));
+  *out = valNumber(((double)start) + randomInt(&random->handle, end - start - 1));
   return STATUS_OK;
 }
 

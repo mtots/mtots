@@ -57,7 +57,7 @@ static void printStackToStringBuffer(Buffer *out) {
 }
 
 void defineGlobal(const char *name, Value value) {
-  push(STRING_VAL(internString(name, strlen(name))));
+  push(valString(internString(name, strlen(name))));
   push(value);
   mapSetStr(&vm.globals, vm.stack[0].as.string, vm.stack[1]);
   pop();
@@ -70,8 +70,8 @@ void addNativeModule(CFunction *func) {
     panic("Native modules must accept 1 argument but got %d", func->arity);
   }
   name = internCString(func->name);
-  push(STRING_VAL(name));
-  if (!mapSetStr(&vm.nativeModuleThunks, name, CFUNCTION_VAL(func))) {
+  push(valString(name));
+  if (!mapSetStr(&vm.nativeModuleThunks, name, valCFunction(func))) {
     panic("Native module %s is already defined", name->chars);
   }
 
@@ -288,7 +288,7 @@ static Status callCFunctionWithKwArgs(CFunction *cfunc, i16 argc) {
       mapDeleteStr(&kwargs->map, cfunc->parameterNameStrings[argc]);
       push(value);
     } else {
-      push(NIL_VAL());
+      push(valNil());
     }
     argc++;
   }
@@ -421,7 +421,7 @@ static ubool invokeWithKwArgs(String *name, i16 argCount) {
 }
 
 static Status callCFunction(CFunction *cfunc, i16 argCount) {
-  Value result = NIL_VAL(), *argsStart;
+  Value result = valNil(), *argsStart;
   Status status;
   if (cfunc->arity != argCount) {
     /* not an exact match for the arity
@@ -607,7 +607,7 @@ static void concatenate(void) {
   result = internOwnedString(chars, length);
   pop();
   pop();
-  push(STRING_VAL(result));
+  push(valString(result));
 }
 
 static Status run(void) {
@@ -669,7 +669,7 @@ static Status run(void) {
       double b = pop().as.number;                    \
       double a = pop().as.number;                    \
       /* TODO: Forgive myself for this evil macro */ \
-      push(NUMBER_VAL(opexpr));                      \
+      push(valNumber(opexpr));                      \
     } else {                                         \
       INVOKE(invokeStr, 1);                          \
     }                                                \
@@ -685,7 +685,7 @@ static Status run(void) {
     {                                                          \
       u32 b = asU32Bits(pop());                                \
       u32 a = asU32Bits(pop());                                \
-      push(NUMBER_VAL(a op b));                                \
+      push(valNumber(a op b));                                \
     }                                                          \
   } while (0)
 
@@ -699,13 +699,13 @@ static Status run(void) {
         break;
       }
       case OP_NIL:
-        push(NIL_VAL());
+        push(valNil());
         break;
       case OP_TRUE:
-        push(BOOL_VAL(1));
+        push(valBool(1));
         break;
       case OP_FALSE:
-        push(BOOL_VAL(0));
+        push(valBool(0));
         break;
       case OP_POP:
         pop();
@@ -757,7 +757,7 @@ static Status run(void) {
       }
       case OP_GET_FIELD: {
         String *name;
-        Value value = NIL_VAL();
+        Value value = valNil();
 
         if (isInstance(peek(0))) {
           ObjInstance *instance;
@@ -777,7 +777,7 @@ static Status run(void) {
         if (isDict(peek(0))) {
           ObjDict *d = AS_DICT_UNSAFE(peek(0));
           name = READ_STRING();
-          if (mapGet(&d->map, STRING_VAL(name), &value)) {
+          if (mapGet(&d->map, valString(name), &value)) {
             pop(); /* Instance */
             push(value);
             break;
@@ -789,7 +789,7 @@ static Status run(void) {
         if (isFrozenDict(peek(0))) {
           ObjFrozenDict *d = AS_FROZEN_DICT_UNSAFE(peek(0));
           name = READ_STRING();
-          if (mapGet(&d->map, STRING_VAL(name), &value)) {
+          if (mapGet(&d->map, valString(name), &value)) {
             pop(); /* Instance */
             push(value);
             break;
@@ -801,7 +801,7 @@ static Status run(void) {
         {
           ObjClass *cls = getClassOfValue(peek(0));
           if (cls->getattr) {
-            push(STRING_VAL(READ_STRING()));
+            push(valString(READ_STRING()));
             if (!callCFunction(cls->getattr, 1)) {
               RETURN_RUNTIME_ERROR();
             }
@@ -828,7 +828,7 @@ static Status run(void) {
 
         if (isDict(peek(1))) {
           ObjDict *d = AS_DICT_UNSAFE(peek(1));
-          mapSet(&d->map, STRING_VAL(READ_STRING()), peek(0));
+          mapSet(&d->map, valString(READ_STRING()), peek(0));
           value = pop();
           pop();
           push(value);
@@ -839,7 +839,7 @@ static Status run(void) {
           ObjClass *cls = getClassOfValue(peek(1));
           if (cls->setattr) {
             value = pop();
-            push(STRING_VAL(READ_STRING()));
+            push(valString(READ_STRING()));
             push(value);
             if (!callCFunction(cls->setattr, 2)) {
               RETURN_RUNTIME_ERROR();
@@ -856,27 +856,27 @@ static Status run(void) {
       case OP_IS: {
         Value b = pop();
         Value a = pop();
-        push(BOOL_VAL(valuesIs(a, b)));
+        push(valBool(valuesIs(a, b)));
         break;
       }
       case OP_EQUAL: {
         Value b = pop();
         Value a = pop();
-        push(BOOL_VAL(valuesEqual(a, b)));
+        push(valBool(valuesEqual(a, b)));
         break;
       }
       case OP_GREATER: {
         ubool result = valueLessThan(peek(0), peek(1));
         pop();
         pop();
-        push(BOOL_VAL(result));
+        push(valBool(result));
         break;
       }
       case OP_LESS: {
         ubool result = valueLessThan(peek(1), peek(0));
         pop();
         pop();
-        push(BOOL_VAL(result));
+        push(valBool(result));
         break;
       }
       case OP_ADD: {
@@ -885,7 +885,7 @@ static Status run(void) {
         } else if (isNumber(peek(0)) && isNumber(peek(1))) {
           double b = pop().as.number;
           double a = pop().as.number;
-          push(NUMBER_VAL(a + b));
+          push(valNumber(a + b));
         } else {
           INVOKE(vm.addString, 1);
         }
@@ -931,13 +931,13 @@ static Status run(void) {
           RETURN_RUNTIME_ERROR();
         }
         x = asU32Bits(pop());
-        push(NUMBER_VAL(~x));
+        push(valNumber(~x));
         break;
       }
       case OP_IN: {
         if (isClass(peek(0))) {
           ObjClass *cls = AS_CLASS_UNSAFE(pop());
-          push(BOOL_VAL(cls == getClassOfValue(pop())));
+          push(valBool(cls == getClassOfValue(pop())));
         } else {
           Value b = pop();
           Value a = pop();
@@ -948,11 +948,11 @@ static Status run(void) {
         break;
       }
       case OP_NOT:
-        push(BOOL_VAL(isFalsey(pop())));
+        push(valBool(isFalsey(pop())));
         break;
       case OP_NEGATE:
         if (isNumber(peek(0))) {
-          push(NUMBER_VAL(-pop().as.number));
+          push(valNumber(-pop().as.number));
         } else {
           INVOKE(vm.negString, 0);
         }
@@ -1024,10 +1024,10 @@ static Status run(void) {
           i32 step = iter->as.range.step;
           if (step > 0 ? (iter->extra.integer < iter->as.range.stop)
                        : (iter->extra.integer > iter->as.range.stop)) {
-            push(NUMBER_VAL(iter->extra.integer));
+            push(valNumber(iter->extra.integer));
             iter->extra.integer += step;
           } else {
-            push(STOP_ITERATION_VAL());
+            push(valStopIteration());
           }
         } else {
           push(peek(0));
@@ -1076,7 +1076,7 @@ static Status run(void) {
         ObjThunk *thunk = AS_THUNK_UNSAFE(READ_CONSTANT());
         ObjClosure *closure = newClosure(thunk, frame->closure->module);
         i16 i;
-        push(CLOSURE_VAL(closure));
+        push(valClosure(closure));
         for (i = 0; i < closure->upvalueCount; i++) {
           u8 isLocal = READ_BYTE();
           u8 index = READ_BYTE();
@@ -1126,7 +1126,7 @@ static Status run(void) {
         for (i = 0; i < length; i++) {
           list->buffer[i] = start[i];
         }
-        *start = LIST_VAL(list);
+        *start = valList(list);
         vm.stackTop = start + 1;
         break;
       }
@@ -1134,7 +1134,7 @@ static Status run(void) {
         size_t length = READ_BYTE();
         Value *start = vm.stackTop - length;
         ObjFrozenList *frozenList = copyFrozenList(start, length);
-        *start = FROZEN_LIST_VAL(frozenList);
+        *start = valFrozenList(frozenList);
         vm.stackTop = start + 1;
         break;
       }
@@ -1149,7 +1149,7 @@ static Status run(void) {
         }
         LOCAL_GC_UNPAUSE(gcPause);
         vm.stackTop = start;
-        push(DICT_VAL(dict));
+        push(valDict(dict));
         break;
       }
       case OP_NEW_FROZEN_DICT: {
@@ -1163,12 +1163,12 @@ static Status run(void) {
         }
         fdict = newFrozenDict(&map);
         vm.stackTop = start;
-        push(FROZEN_DICT_VAL(fdict));
+        push(valFrozenDict(fdict));
         freeMap(&map);
         break;
       }
       case OP_CLASS:
-        push(CLASS_VAL(newClass(READ_STRING())));
+        push(valClass(newClass(READ_STRING())));
         break;
       case OP_INHERIT: {
         Value superclass;
@@ -1214,10 +1214,10 @@ Status interpret(const char *source, ObjModule *module) {
     return STATUS_ERROR;
   }
 
-  push(THUNK_VAL(thunk));
+  push(valThunk(thunk));
   closure = newClosure(thunk, module);
   pop();
-  push(CLOSURE_VAL(closure));
+  push(valClosure(closure));
 
   return callClosure(closure, 0);
 }
@@ -1257,7 +1257,7 @@ static Status callClass(ObjClass *klass, i16 argCount, ubool consummate) {
     return STATUS_ERROR;
   } else {
     /* normal classes */
-    vm.stackTop[-argCount - 1] = INSTANCE_VAL(newInstance(klass));
+    vm.stackTop[-argCount - 1] = valInstance(newInstance(klass));
     if (mapGetStr(&klass->methods, vm.initString, &initializer)) {
       if (!setupCallClosure(AS_CLOSURE_UNSAFE(initializer), argCount)) {
         return STATUS_ERROR;

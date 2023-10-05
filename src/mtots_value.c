@@ -175,50 +175,50 @@ Obj *asObj(Value value) {
   return value.as.obj;
 }
 
-Value NIL_VAL(void) {
+Value valNil(void) {
   Value v = {VAL_NIL};
   return v;
 }
-Value BOOL_VAL(ubool value) {
+Value valBool(ubool value) {
   Value v = {VAL_BOOL};
   v.as.boolean = value != 0;
   return v;
 }
-Value NUMBER_VAL(double value) {
+Value valNumber(double value) {
   Value v = {VAL_NUMBER};
   v.as.number = value;
   return v;
 }
-Value STRING_VAL(String *string) {
+Value valString(String *string) {
   Value v = {VAL_STRING};
   v.as.string = string;
   return v;
 }
-Value CFUNCTION_VAL(CFunction *func) {
+Value valCFunction(CFunction *func) {
   Value v = {VAL_CFUNCTION};
   v.as.cfunction = func;
   return v;
 }
-Value SENTINEL_VAL(Sentinel sentinel) {
+Value valSentinel(Sentinel sentinel) {
   Value v = {VAL_SENTINEL};
   v.as.sentinel = sentinel;
   return v;
 }
-Value RANGE_VAL(Range range) {
+Value valRange(Range range) {
   Value v = {VAL_RANGE};
   v.extra.integer = range.start;
   v.as.range.stop = range.stop;
   v.as.range.step = range.step;
   return v;
 }
-Value RANGE_ITERATOR_VAL(RangeIterator rangeIterator) {
+Value valRangeIterator(RangeIterator rangeIterator) {
   Value v = {VAL_RANGE_ITERATOR};
   v.extra.integer = rangeIterator.current;
   v.as.range.stop = rangeIterator.stop;
   v.as.range.step = rangeIterator.step;
   return v;
 }
-Value OBJ_VAL_EXPLICIT(Obj *object) {
+Value valObjExplicit(Obj *object) {
   Value v = {VAL_OBJ};
   v.as.obj = object;
   return v;

@@ -213,36 +213,36 @@ static NativeObjectDescriptor descriptorWindow = {
  *   ████   ██   ██ ███████ ██       ██████  ██   ████  ██████ ███████
  */
 
-static Value POINT_VAL(ObjPoint *point) {
-  return OBJ_VAL_EXPLICIT((Obj *)point);
+static Value valPoint(ObjPoint *point) {
+  return valObjExplicit((Obj *)point);
 }
 
-static Value FPOINT_VAL(ObjFPoint *fpoint) {
-  return OBJ_VAL_EXPLICIT((Obj *)fpoint);
+static Value valFpoint(ObjFPoint *fpoint) {
+  return valObjExplicit((Obj *)fpoint);
 }
 
-static Value RECT_VAL(ObjRect *rect) {
-  return OBJ_VAL_EXPLICIT((Obj *)rect);
+static Value valRect(ObjRect *rect) {
+  return valObjExplicit((Obj *)rect);
 }
 
-static Value FRECT_VAL(ObjFRect *frect) {
-  return OBJ_VAL_EXPLICIT((Obj *)frect);
+static Value valFRect(ObjFRect *frect) {
+  return valObjExplicit((Obj *)frect);
 }
 
-static Value COLOR_VAL(ObjColor *color) {
-  return OBJ_VAL_EXPLICIT((Obj *)color);
+static Value valColor(ObjColor *color) {
+  return valObjExplicit((Obj *)color);
 }
 
-static Value VERTEX_VAL(ObjVertex *vertex) {
-  return OBJ_VAL_EXPLICIT((Obj *)vertex);
+static Value valVertex(ObjVertex *vertex) {
+  return valObjExplicit((Obj *)vertex);
 }
 
-static Value EVENT_VAL(ObjEvent *event) {
-  return OBJ_VAL_EXPLICIT((Obj *)event);
+static Value valEvent(ObjEvent *event) {
+  return valObjExplicit((Obj *)event);
 }
 
-static Value WINDOW_VAL(ObjWindow *window) {
-  return OBJ_VAL_EXPLICIT((Obj *)window);
+static Value valWindow(ObjWindow *window) {
+  return valObjExplicit((Obj *)window);
 }
 
 /*
@@ -381,7 +381,7 @@ static Status newWindow(const char *title, int width, int height, ObjWindow **ou
  */
 
 static Status implPollEvent(i16 argc, Value *argv, Value *out) {
-  *out = BOOL_VAL(SDL_PollEvent(isNil(argv[0]) ? NULL : &asEvent(argv[0])->handle));
+  *out = valBool(SDL_PollEvent(isNil(argv[0]) ? NULL : &asEvent(argv[0])->handle));
   return STATUS_OK;
 }
 
@@ -395,14 +395,14 @@ static Status implDelay(i16 argc, Value *argv, Value *out) {
 static CFunction funcDelay = {implDelay, "delay", 1};
 
 static Status implGetPerformanceCounter(i16 argc, Value *argv, Value *out) {
-  *out = NUMBER_VAL(SDL_GetPerformanceCounter());
+  *out = valNumber(SDL_GetPerformanceCounter());
   return STATUS_OK;
 }
 
 static CFunction funcGetPerformanceCounter = {implGetPerformanceCounter, "getPerformanceCounter"};
 
 static Status implGetPerformanceFrequency(i16 argc, Value *argv, Value *out) {
-  *out = NUMBER_VAL(SDL_GetPerformanceFrequency());
+  *out = valNumber(SDL_GetPerformanceFrequency());
   return STATUS_OK;
 }
 
@@ -411,9 +411,9 @@ static CFunction funcGetPerformanceFrequency = {implGetPerformanceFrequency, "ge
 static Status implGetMouseState(i16 argc, Value *argv, Value *out) {
   ObjPoint *pos = argc > 0 && !isNil(argv[0]) ? asPoint(argv[0]) : NULL;
   if (pos) {
-    *out = NUMBER_VAL(SDL_GetMouseState(&pos->handle->x, &pos->handle->y));
+    *out = valNumber(SDL_GetMouseState(&pos->handle->x, &pos->handle->y));
   } else {
-    *out = NUMBER_VAL(SDL_GetMouseState(NULL, NULL));
+    *out = valNumber(SDL_GetMouseState(NULL, NULL));
   }
   return STATUS_OK;
 }
@@ -432,7 +432,7 @@ static Status implPointStaticCall(i16 argc, Value *argv, Value *out) {
   ObjPoint *point = newPoint(NULL, NULL);
   point->handle->x = argc > 0 && !isNil(argv[0]) ? asInt(argv[0]) : 0;
   point->handle->y = argc > 1 && !isNil(argv[1]) ? asInt(argv[1]) : 0;
-  *out = POINT_VAL(point);
+  *out = valPoint(point);
   return STATUS_OK;
 }
 
@@ -442,9 +442,9 @@ static Status implPointGetattr(i16 argc, Value *argv, Value *out) {
   ObjPoint *point = asPoint(argv[-1]);
   String *name = asString(argv[0]);
   if (name == vm.xString) {
-    *out = NUMBER_VAL(point->handle->x);
+    *out = valNumber(point->handle->x);
   } else if (name == vm.yString) {
-    *out = NUMBER_VAL(point->handle->y);
+    *out = valNumber(point->handle->y);
   } else {
     runtimeError("Field '%s' not found on %s", name->chars, getKindName(argv[-1]));
     return STATUS_ERROR;
@@ -483,7 +483,7 @@ static Status implFPointStaticCall(i16 argc, Value *argv, Value *out) {
   ObjFPoint *fpoint = newFPoint(NULL, NULL);
   fpoint->handle->x = argc > 0 && !isNil(argv[0]) ? asNumber(argv[0]) : 0;
   fpoint->handle->y = argc > 1 && !isNil(argv[1]) ? asNumber(argv[1]) : 0;
-  *out = FPOINT_VAL(fpoint);
+  *out = valFpoint(fpoint);
   return STATUS_OK;
 }
 
@@ -493,9 +493,9 @@ static Status implFPointGetattr(i16 argc, Value *argv, Value *out) {
   ObjFPoint *fpoint = asFPoint(argv[-1]);
   String *name = asString(argv[0]);
   if (name == vm.xString) {
-    *out = NUMBER_VAL(fpoint->handle->x);
+    *out = valNumber(fpoint->handle->x);
   } else if (name == vm.yString) {
-    *out = NUMBER_VAL(fpoint->handle->y);
+    *out = valNumber(fpoint->handle->y);
   } else {
     runtimeError("Field '%s' not found on %s", name->chars, getKindName(argv[-1]));
     return STATUS_ERROR;
@@ -536,7 +536,7 @@ static Status implRectStaticCall(i16 argc, Value *argv, Value *out) {
   rect->handle.y = argc > 1 && !isNil(argv[1]) ? asInt(argv[1]) : 0;
   rect->handle.w = argc > 2 && !isNil(argv[2]) ? asInt(argv[2]) : 0;
   rect->handle.h = argc > 3 && !isNil(argv[3]) ? asInt(argv[3]) : 0;
-  *out = RECT_VAL(rect);
+  *out = valRect(rect);
   return STATUS_OK;
 }
 
@@ -546,13 +546,13 @@ static Status implRectGetattr(i16 argc, Value *argv, Value *out) {
   ObjRect *rect = asRect(argv[-1]);
   String *name = asString(argv[0]);
   if (name == vm.xString) {
-    *out = NUMBER_VAL(rect->handle.x);
+    *out = valNumber(rect->handle.x);
   } else if (name == vm.yString) {
-    *out = NUMBER_VAL(rect->handle.y);
+    *out = valNumber(rect->handle.y);
   } else if (name == vm.wString) {
-    *out = NUMBER_VAL(rect->handle.w);
+    *out = valNumber(rect->handle.w);
   } else if (name == vm.hString) {
-    *out = NUMBER_VAL(rect->handle.h);
+    *out = valNumber(rect->handle.h);
   } else {
     runtimeError("Field '%s' not found on %s", name->chars, getKindName(argv[-1]));
     return STATUS_ERROR;
@@ -608,7 +608,7 @@ static Status implFRectStaticCall(i16 argc, Value *argv, Value *out) {
   frect->handle.y = argc > 1 && !isNil(argv[1]) ? asFloat(argv[1]) : 0;
   frect->handle.w = argc > 2 && !isNil(argv[2]) ? asFloat(argv[2]) : 0;
   frect->handle.h = argc > 3 && !isNil(argv[3]) ? asFloat(argv[3]) : 0;
-  *out = FRECT_VAL(frect);
+  *out = valFRect(frect);
   return STATUS_OK;
 }
 
@@ -618,13 +618,13 @@ static Status implFRectGetattr(i16 argc, Value *argv, Value *out) {
   ObjFRect *frect = asFRect(argv[-1]);
   String *name = asString(argv[0]);
   if (name == vm.xString) {
-    *out = NUMBER_VAL(frect->handle.x);
+    *out = valNumber(frect->handle.x);
   } else if (name == vm.yString) {
-    *out = NUMBER_VAL(frect->handle.y);
+    *out = valNumber(frect->handle.y);
   } else if (name == vm.wString) {
-    *out = NUMBER_VAL(frect->handle.w);
+    *out = valNumber(frect->handle.w);
   } else if (name == vm.hString) {
-    *out = NUMBER_VAL(frect->handle.h);
+    *out = valNumber(frect->handle.h);
   } else {
     runtimeError("Field '%s' not found on %s", name->chars, getKindName(argv[-1]));
     return STATUS_ERROR;
@@ -680,7 +680,7 @@ static Status implColorStaticCall(i16 argc, Value *argv, Value *out) {
   color->handle->g = argc > 1 && !isNil(argv[1]) ? asU8(argv[1]) : 0;
   color->handle->b = argc > 2 && !isNil(argv[2]) ? asU8(argv[2]) : 0;
   color->handle->a = argc > 3 && !isNil(argv[3]) ? asU8(argv[3]) : 255;
-  *out = COLOR_VAL(color);
+  *out = valColor(color);
   return STATUS_OK;
 }
 
@@ -690,13 +690,13 @@ static Status implColorGetattr(i16 argc, Value *argv, Value *out) {
   ObjColor *color = asColor(argv[-1]);
   String *name = asString(argv[0]);
   if (name == vm.rString) {
-    *out = NUMBER_VAL(color->handle->r);
+    *out = valNumber(color->handle->r);
   } else if (name == vm.gString) {
-    *out = NUMBER_VAL(color->handle->g);
+    *out = valNumber(color->handle->g);
   } else if (name == vm.bString) {
-    *out = NUMBER_VAL(color->handle->b);
+    *out = valNumber(color->handle->b);
   } else if (name == vm.aString) {
-    *out = NUMBER_VAL(color->handle->a);
+    *out = valNumber(color->handle->a);
   } else {
     runtimeError("Field '%s' not found on %s", name->chars, getKindName(argv[-1]));
     return STATUS_ERROR;
@@ -748,7 +748,7 @@ static CFunction funcColorSet = {implColorSet, "set", 0, 4};
 
 static Status implVertexStaticCall(i16 argc, Value *argv, Value *out) {
   ObjVertex *vertex = newVertex(NULL, NULL);
-  *out = VERTEX_VAL(vertex);
+  *out = valVertex(vertex);
   return STATUS_OK;
 }
 
@@ -758,11 +758,11 @@ static Status implVertexGetattr(i16 argc, Value *argv, Value *out) {
   ObjVertex *vertex = asVertex(argv[-1]);
   String *name = asString(argv[0]);
   if (name == positionString) {
-    *out = FPOINT_VAL(vertex->position);
+    *out = valFpoint(vertex->position);
   } else if (name == colorString) {
-    *out = COLOR_VAL(vertex->color);
+    *out = valColor(vertex->color);
   } else if (name == texCoordString) {
-    *out = FPOINT_VAL(vertex->texCoord);
+    *out = valFpoint(vertex->texCoord);
   } else {
     runtimeError("Field '%s' not found on %s", name->chars, getKindName(argv[-1]));
     return STATUS_ERROR;
@@ -793,7 +793,7 @@ static CFunction funcVertexSetattr = {implVertexSetattr, "__setattr__", 2};
 
 static Status implEventStaticCall(i16 argc, Value *argv, Value *out) {
   ObjEvent *event = NEW_NATIVE(ObjEvent, &descriptorEvent);
-  *out = EVENT_VAL(event);
+  *out = valEvent(event);
   return STATUS_OK;
 }
 
@@ -803,7 +803,7 @@ static Status implEventGetattr(i16 argc, Value *argv, Value *out) {
   ObjEvent *event = asEvent(argv[-1]);
   String *name = asString(argv[0]);
   if (name == vm.typeString) {
-    *out = NUMBER_VAL(event->handle.type);
+    *out = valNumber(event->handle.type);
   } else {
     runtimeError("Field '%s' not found on %s", name->chars, getKindName(argv[-1]));
     return STATUS_ERROR;
@@ -821,7 +821,7 @@ static Status implWindowStaticCall(i16 argc, Value *argv, Value *out) {
   if (!newWindow(title->chars, width, height, &window)) {
     return STATUS_ERROR;
   }
-  *out = WINDOW_VAL(window);
+  *out = valWindow(window);
   return STATUS_OK;
 }
 
@@ -969,9 +969,9 @@ static Status impl(i16 argCount, Value *args, Value *out) {
   if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
     return sdlError("SDL_Init");
   }
-  moduleRetain(module, STRING_VAL(positionString = internCString("position")));
-  moduleRetain(module, STRING_VAL(colorString = internCString("color")));
-  moduleRetain(module, STRING_VAL(texCoordString = internCString("texCoord")));
+  moduleRetain(module, valString(positionString = internCString("position")));
+  moduleRetain(module, valString(colorString = internCString("color")));
+  moduleRetain(module, valString(texCoordString = internCString("texCoord")));
   moduleAddFunctions(module, functions);
   newNativeClass(module, &descriptorPoint, pointMethods, pointStaticMethods);
   newNativeClass(module, &descriptorFPoint, fpointMethods, fpointStaticMethods);
@@ -981,7 +981,7 @@ static Status impl(i16 argCount, Value *args, Value *out) {
   newNativeClass(module, &descriptorVertex, vertexMethods, vertexStaticMethods);
   newNativeClass(module, &descriptorEvent, eventMethods, eventStaticMethods);
   newNativeClass(module, &descriptorWindow, windowMethods, windowStaticMethods);
-  mapSetN(&module->fields, "QUIT", NUMBER_VAL(SDL_QUIT));
+  mapSetN(&module->fields, "QUIT", valNumber(SDL_QUIT));
   return STATUS_OK;
 }
 

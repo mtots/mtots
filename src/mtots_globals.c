@@ -9,7 +9,7 @@
 #include "mtots_vm.h"
 
 static Status implClock(i16 argCount, Value *args, Value *out) {
-  *out = NUMBER_VAL(clock() / (double)CLOCKS_PER_SEC);
+  *out = valNumber(clock() / (double)CLOCKS_PER_SEC);
   return STATUS_OK;
 }
 
@@ -31,7 +31,7 @@ static Status implGetErrorString(i16 argCount, Value *args, Value *out) {
     runtimeError("No error string found");
     return STATUS_ERROR;
   }
-  *out = STRING_VAL(internCString(errorString));
+  *out = valString(internCString(errorString));
   clearSavedErrorString();
   return STATUS_OK;
 }
@@ -44,7 +44,7 @@ static Status implLen(i16 argCount, Value *args, Value *out) {
   if (!valueLen(recv, &len)) {
     return STATUS_ERROR;
   }
-  *out = NUMBER_VAL(len);
+  *out = valNumber(len);
   return STATUS_OK;
 }
 
@@ -72,7 +72,7 @@ static Status implSum(i16 argCount, Value *args, Value *out) {
     total += asNumber(item);
   }
   pop(); /* iterator */
-  *out = NUMBER_VAL(total);
+  *out = valNumber(total);
   return STATUS_OK;
 }
 
@@ -113,7 +113,7 @@ static Status implHex(i16 argCount, Value *args, Value *out) {
     }
   }
 
-  *out = STRING_VAL(bufferToString(&buf));
+  *out = valString(bufferToString(&buf));
   freeBuffer(&buf);
   return STATUS_OK;
 }
@@ -150,7 +150,7 @@ static Status implOct(i16 argCount, Value *args, Value *out) {
     }
   }
 
-  *out = STRING_VAL(bufferToString(&buf));
+  *out = valString(bufferToString(&buf));
   freeBuffer(&buf);
   return STATUS_OK;
 }
@@ -187,7 +187,7 @@ static Status implBin(i16 argCount, Value *args, Value *out) {
     }
   }
 
-  *out = STRING_VAL(bufferToString(&buf));
+  *out = valString(bufferToString(&buf));
   freeBuffer(&buf);
   return STATUS_OK;
 }
@@ -196,14 +196,14 @@ static CFunction funcBin = {implBin, "bin", 1};
 
 static Status implRound(i16 argCount, Value *args, Value *out) {
   double number = asNumber(args[0]);
-  *out = NUMBER_VAL((long)(number + 0.5));
+  *out = valNumber((long)(number + 0.5));
   return STATUS_OK;
 }
 
 static CFunction cfuncRound = {implRound, "round", 0, 1};
 
 static Status implType(i16 argCount, Value *args, Value *out) {
-  *out = CLASS_VAL(getClassOfValue(args[0]));
+  *out = valClass(getClassOfValue(args[0]));
   return STATUS_OK;
 }
 
@@ -216,7 +216,7 @@ static Status implRepr(i16 argCount, Value *args, Value *out) {
     freeBuffer(&buf);
     return STATUS_ERROR;
   }
-  *out = STRING_VAL(bufferToString(&buf));
+  *out = valString(bufferToString(&buf));
   freeBuffer(&buf);
   return STATUS_OK;
 }
@@ -241,7 +241,7 @@ static Status implChr(i16 argCount, Value *args, Value *out) {
     return STATUS_ERROR;
   }
   c = (char)asI32(args[0]);
-  *out = STRING_VAL(internString(&c, 1));
+  *out = valString(internString(&c, 1));
   return STATUS_OK;
 }
 
@@ -256,7 +256,7 @@ static Status implOrd(i16 argCount, Value *args, Value *out) {
         (long)str->byteLength);
     return STATUS_ERROR;
   }
-  *out = NUMBER_VAL((u8)str->chars[0]);
+  *out = valNumber((u8)str->chars[0]);
   return STATUS_OK;
 }
 
@@ -301,8 +301,8 @@ static Status implSorted(i16 argCount, Value *args, Value *out) {
   if (!newListFromIterable(args[0], &list)) {
     return STATUS_ERROR;
   }
-  push(LIST_VAL(list));
-  if (!sortListWithKeyFunc(list, argCount > 1 ? args[1] : NIL_VAL())) {
+  push(valList(list));
+  if (!sortListWithKeyFunc(list, argCount > 1 ? args[1] : valNil())) {
     return STATUS_ERROR;
   }
   *out = pop(); /* list */
@@ -314,7 +314,7 @@ static CFunction cfunctionSorted = {implSorted, "sorted", 1, 2};
 static Status implSet(i16 argCount, Value *args, Value *out) {
   ObjDict *dict = newDict();
   Value iterator;
-  push(DICT_VAL(dict));
+  push(valDict(dict));
   if (!valueFastIter(args[0], &iterator)) {
     return STATUS_ERROR;
   }
@@ -328,7 +328,7 @@ static Status implSet(i16 argCount, Value *args, Value *out) {
       break;
     }
     push(key);
-    mapSet(&dict->map, key, NIL_VAL());
+    mapSet(&dict->map, key, valNil());
     pop(); /* key */
   }
   pop();        /* iterator */
@@ -340,7 +340,7 @@ static CFunction cfunctionSet = {implSet, "Set", 1};
 
 static Status implTuple(i16 argCount, Value *args, Value *out) {
   ObjFrozenList *frozenList = copyFrozenList(args, argCount);
-  *out = FROZEN_LIST_VAL(frozenList);
+  *out = valFrozenList(frozenList);
   return STATUS_OK;
 }
 
@@ -377,7 +377,7 @@ static Status implRange(i16 argCount, Value *args, Value *out) {
     default:
       panic("Invalid argc to range() (%d)", argCount);
   }
-  *out = RANGE_VAL(range);
+  *out = valRange(range);
   return STATUS_OK;
 }
 
@@ -422,7 +422,7 @@ static Status implFloat(i16 argCount, Value *args, Value *out) {
         }
       }
       if (*ptr == '\0') {
-        *out = NUMBER_VAL(strtod(str->chars, NULL));
+        *out = valNumber(strtod(str->chars, NULL));
         return STATUS_OK;
       }
     }
@@ -438,7 +438,7 @@ static CFunction funcFloat = {implFloat, "float", 1};
 static Status implInt(i16 argCount, Value *args, Value *out) {
   Value arg = args[0];
   if (isNumber(arg)) {
-    *out = NUMBER_VAL(floor(asNumber(arg)));
+    *out = valNumber(floor(asNumber(arg)));
     return STATUS_OK;
   }
   if (isString(arg)) {
@@ -484,7 +484,7 @@ static Status implInt(i16 argCount, Value *args, Value *out) {
       runtimeError("int(): Expected digit but got '%c'", *ptr);
       return STATUS_ERROR;
     }
-    *out = NUMBER_VAL(value * sign);
+    *out = valNumber(value * sign);
     return STATUS_OK;
   }
   runtimeError("%s is not convertible to int", getKindName(arg));
@@ -499,7 +499,7 @@ static Status implIsClose(i16 argc, Value *args, Value *out) {
   double relTol = argc > 2 ? asNumber(args[2]) : DEFAULT_RELATIVE_TOLERANCE;
   double absTol = argc > 3 ? asNumber(args[3]) : DEFAULT_ABSOLUTE_TOLERANCE;
   if (isNumber(args[0]) && isNumber(args[1])) {
-    *out = BOOL_VAL(doubleIsCloseEx(asNumber(a), asNumber(b), relTol, absTol));
+    *out = valBool(doubleIsCloseEx(asNumber(a), asNumber(b), relTol, absTol));
     return STATUS_OK;
   }
   runtimeError(
@@ -511,21 +511,21 @@ static Status implIsClose(i16 argc, Value *args, Value *out) {
 static CFunction funcIsClose = {implIsClose, "isClose", 2, 4};
 
 static Status implSin(i16 argCount, Value *args, Value *out) {
-  *out = NUMBER_VAL(sin(asNumber(args[0])));
+  *out = valNumber(sin(asNumber(args[0])));
   return STATUS_OK;
 }
 
 static CFunction funcSin = {implSin, "sin", 1};
 
 static Status implCos(i16 argCount, Value *args, Value *out) {
-  *out = NUMBER_VAL(cos(asNumber(args[0])));
+  *out = valNumber(cos(asNumber(args[0])));
   return STATUS_OK;
 }
 
 static CFunction funcCos = {implCos, "cos", 1};
 
 static Status implTan(i16 argCount, Value *args, Value *out) {
-  *out = NUMBER_VAL(tan(asNumber(args[0])));
+  *out = valNumber(tan(asNumber(args[0])));
   return STATUS_OK;
 }
 
@@ -533,7 +533,7 @@ static CFunction funcTan = {implTan, "tan", 1};
 
 static Status implAbs(i16 argCount, Value *args, Value *out) {
   double value = asNumber(args[0]);
-  *out = NUMBER_VAL(value < 0 ? -value : value);
+  *out = valNumber(value < 0 ? -value : value);
   return STATUS_OK;
 }
 
@@ -545,7 +545,7 @@ static Status implLog(i16 argCount, Value *args, Value *out) {
     runtimeError("Argument to log() must be positive but got %f", value);
     return STATUS_ERROR;
   }
-  *out = NUMBER_VAL(log(value));
+  *out = valNumber(log(value));
   return STATUS_OK;
 }
 
@@ -562,14 +562,14 @@ static Status implFlog2(i16 argCount, Value *args, Value *out) {
     value /= 2;
     ret++;
   }
-  *out = NUMBER_VAL(ret);
+  *out = valNumber(ret);
   return STATUS_OK;
 }
 
 static CFunction funcFlog2 = {implFlog2, "flog2", 1};
 
 static Status implIsInstance(i16 argCount, Value *args, Value *out) {
-  *out = BOOL_VAL(asClass(args[1]) == getClassOfValue(args[0]));
+  *out = valBool(asClass(args[1]) == getClassOfValue(args[0]));
   return STATUS_OK;
 }
 
@@ -650,34 +650,34 @@ void defineDefaultGlobals(void) {
   },
            ***builtinClass;
 
-  defineGlobal("PI", NUMBER_VAL(PI));
-  defineGlobal("TAU", NUMBER_VAL(TAU));
+  defineGlobal("PI", valNumber(PI));
+  defineGlobal("TAU", valNumber(TAU));
 
 #ifdef NAN
-  defineGlobal("NAN", NUMBER_VAL(NAN));
+  defineGlobal("NAN", valNumber(NAN));
 #else
-  defineGlobal("NAN", NUMBER_VAL(0.0 / 0.0));
+  defineGlobal("NAN", valNumber(0.0 / 0.0));
 #endif
 
 #ifdef INFINITY
-  defineGlobal("INFINITY", NUMBER_VAL(INFINITY));
+  defineGlobal("INFINITY", valNumber(INFINITY));
 #else
-  defineGlobal("INFINITY", NUMBER_VAL(1.0 / 0.0));
+  defineGlobal("INFINITY", valNumber(1.0 / 0.0));
 #endif
 
-  defineGlobal("StopIteration", STOP_ITERATION_VAL());
+  defineGlobal("StopIteration", valStopIteration());
 
   for (function = functions; *function; function++) {
-    defineGlobal((*function)->name, CFUNCTION_VAL(*function));
+    defineGlobal((*function)->name, valCFunction(*function));
   }
-  defineGlobal("__print", CFUNCTION_VAL(&cfunctionPrint));
+  defineGlobal("__print", valCFunction(&cfunctionPrint));
 
   for (builtinClass = builtinClasses; *builtinClass; builtinClass++) {
-    mapSetStr(&vm.globals, (**builtinClass)->name, CLASS_VAL(**builtinClass));
+    mapSetStr(&vm.globals, (**builtinClass)->name, valClass(**builtinClass));
   }
 
   for (descriptor = descriptors; *descriptor; descriptor++) {
     NativeObjectDescriptor *d = *descriptor;
-    mapSetStr(&vm.globals, d->klass->name, CLASS_VAL(d->klass));
+    mapSetStr(&vm.globals, d->klass->name, valClass(d->klass));
   }
 }

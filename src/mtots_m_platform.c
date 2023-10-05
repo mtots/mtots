@@ -6,7 +6,7 @@
 #include "mtots_vm.h"
 
 static Status implSystem(i16 argc, Value *argv, Value *out) {
-  *out = STRING_VAL(internCString(MTOTS_PLATFORM_SYSTEM));
+  *out = valString(internCString(MTOTS_PLATFORM_SYSTEM));
   return STATUS_OK;
 }
 

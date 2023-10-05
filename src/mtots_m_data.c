@@ -45,12 +45,12 @@ NativeObjectDescriptor descriptorDataSink = {
     "DataSink",
 };
 
-Value DATA_SOURCE_VAL(ObjDataSource *ds) {
-  return OBJ_VAL_EXPLICIT((Obj *)ds);
+Value valDataSource(ObjDataSource *ds) {
+  return valObjExplicit((Obj *)ds);
 }
 
-Value DATA_SINK_VAL(ObjDataSink *ds) {
-  return OBJ_VAL_EXPLICIT((Obj *)ds);
+Value valDataSink(ObjDataSink *ds) {
+  return valObjExplicit((Obj *)ds);
 }
 
 ObjDataSource *asDataSource(Value value) {
@@ -214,7 +214,7 @@ ubool dataSinkWrite(ObjDataSink *sink, ObjDataSource *src) {
 
 static Status implFromBuffer(i16 argc, Value *args, Value *out) {
   ObjBuffer *buffer = asBuffer(args[0]);
-  *out = DATA_SOURCE_VAL(newDataSourceFromBuffer(buffer));
+  *out = valDataSource(newDataSourceFromBuffer(buffer));
   return STATUS_OK;
 }
 
@@ -222,7 +222,7 @@ static CFunction funcFromBuffer = {implFromBuffer, "fromBuffer", 1, 0};
 
 static Status implFromString(i16 argc, Value *args, Value *out) {
   String *path = asString(args[0]);
-  *out = DATA_SOURCE_VAL(newDataSourceFromString(path));
+  *out = valDataSource(newDataSourceFromString(path));
   return STATUS_OK;
 }
 
@@ -230,7 +230,7 @@ static CFunction funcFromString = {implFromString, "fromString", 1, 0};
 
 static Status implFromFile(i16 argc, Value *args, Value *out) {
   String *path = asString(args[0]);
-  *out = DATA_SOURCE_VAL(newDataSourceFromFile(path));
+  *out = valDataSource(newDataSourceFromFile(path));
   return STATUS_OK;
 }
 
@@ -238,7 +238,7 @@ static CFunction funcFromFile = {implFromFile, "fromFile", 1, 0};
 
 static Status implToBuffer(i16 argc, Value *args, Value *out) {
   ObjBuffer *buffer = asBuffer(args[0]);
-  *out = DATA_SINK_VAL(newDataSinkFromBuffer(buffer));
+  *out = valDataSink(newDataSinkFromBuffer(buffer));
   return STATUS_OK;
 }
 
@@ -248,7 +248,7 @@ static CFunction funcDataSinkStaticFromBuffer = {implToBuffer, "fromBuffer", 1, 
 
 static Status implToFile(i16 argc, Value *args, Value *out) {
   String *filePath = asString(args[0]);
-  *out = DATA_SINK_VAL(newDataSinkFromFile(filePath));
+  *out = valDataSink(newDataSinkFromFile(filePath));
   return STATUS_OK;
 }
 
@@ -278,7 +278,7 @@ static Status implDataSourceToBuffer(i16 argc, Value *args, Value *out) {
 
   LOCAL_GC_UNPAUSE(gcPause);
 
-  *out = BUFFER_VAL(buf);
+  *out = valBuffer(buf);
   return STATUS_OK;
 }
 
@@ -292,7 +292,7 @@ static Status implDataSourceToString(i16 argc, Value *args, Value *out) {
     return STATUS_ERROR;
   }
 
-  *out = STRING_VAL(string);
+  *out = valString(string);
   return STATUS_OK;
 }
 

@@ -18,7 +18,7 @@ static Status implFrozenDictIteratorCall(i16 argCount, Value *args, Value *out) 
   if (mapIteratorNextKey(&iter->di, out)) {
     return STATUS_OK;
   }
-  *out = STOP_ITERATION_VAL();
+  *out = valStopIteration();
   return STATUS_OK;
 }
 
@@ -45,7 +45,7 @@ static CFunction funcFrozenDictGetItem = {implFrozenDictGetItem, "__getitem__", 
 static Status implFrozenDictContains(i16 argCount, Value *args, Value *out) {
   Value dummy;
   ObjFrozenDict *dict = asFrozenDict(args[-1]);
-  *out = BOOL_VAL(mapGet(&dict->map, args[0], &dummy));
+  *out = valBool(mapGet(&dict->map, args[0], &dummy));
   return STATUS_OK;
 }
 
@@ -56,7 +56,7 @@ static Status implFrozenDictIter(i16 argCount, Value *args, Value *out) {
   ObjFrozenDictIterator *iter = NEW_NATIVE(ObjFrozenDictIterator, &descriptorFrozenDictIterator);
   iter->dict = dict;
   initMapIterator(&iter->di, &dict->map);
-  *out = OBJ_VAL_EXPLICIT((Obj *)iter);
+  *out = valObjExplicit((Obj *)iter);
   return STATUS_OK;
 }
 

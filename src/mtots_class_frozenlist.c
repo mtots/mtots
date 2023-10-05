@@ -9,7 +9,7 @@ static Status implFrozenListInstantiate(i16 argCount, Value *args, Value *out) {
   if (!newFrozenListFromIterable(args[0], &frozenList)) {
     return STATUS_ERROR;
   }
-  *out = FROZEN_LIST_VAL(frozenList);
+  *out = valFrozenList(frozenList);
   return STATUS_OK;
 }
 
@@ -31,7 +31,7 @@ static Status implFrozenListIteratorCall(i16 argCount, Value *args, Value *out) 
   if (iter->index < iter->frozenList->length) {
     *out = iter->frozenList->buffer[iter->index++];
   } else {
-    *out = STOP_ITERATION_VAL();
+    *out = valStopIteration();
   }
   return STATUS_OK;
 }
@@ -59,7 +59,7 @@ static Status implFrozenListMul(i16 argCount, Value *args, Value *out) {
       buffer[r * frozenList->length + i] = frozenList->buffer[i];
     }
   }
-  *out = FROZEN_LIST_VAL(copyFrozenList(buffer, frozenList->length * rep));
+  *out = valFrozenList(copyFrozenList(buffer, frozenList->length * rep));
   free(buffer);
   return STATUS_OK;
 }
@@ -120,7 +120,7 @@ static Status implFrozenListIter(i16 argCount, Value *args, Value *out) {
   iter = NEW_NATIVE(ObjFrozenListIterator, &descriptorFrozenListIterator);
   iter->frozenList = frozenList;
   iter->index = 0;
-  *out = OBJ_VAL_EXPLICIT((Obj *)iter);
+  *out = valObjExplicit((Obj *)iter);
   return STATUS_OK;
 }
 

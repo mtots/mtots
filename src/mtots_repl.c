@@ -32,9 +32,9 @@ void repl(void) {
   ObjModule *module;
   String *mainModuleName;
   mainModuleName = internCString("__main__");
-  push(STRING_VAL(mainModuleName));
+  push(valString(mainModuleName));
   module = newModule(mainModuleName, UTRUE);
-  push(MODULE_VAL(module));
+  push(valModule(module));
   for (;;) {
     printf("> ");
 

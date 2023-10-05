@@ -6,7 +6,7 @@
 #include "mtots_vm.h"
 
 static Status implInstantiateBuffer(i16 argCount, Value *args, Value *out) {
-  *out = BUFFER_VAL(newBuffer());
+  *out = valBuffer(newBuffer());
   return STATUS_OK;
 }
 
@@ -25,7 +25,7 @@ static CFunction funcBufferLock = {implBufferLock, "lock", 0};
 
 static Status implBufferIsLocked(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
-  *out = BOOL_VAL(bo->handle.isLocked);
+  *out = valBool(bo->handle.isLocked);
   return STATUS_OK;
 }
 
@@ -42,10 +42,10 @@ static CFunction funcBufferClear = {implBufferClear, "clear"};
 static Status implBufferClone(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
   ObjBuffer *newBuf = newBuffer();
-  push(BUFFER_VAL(newBuf));
+  push(valBuffer(newBuf));
   bufferAddBytes(&newBuf->handle, bo->handle.data, bo->handle.length);
   pop(); /* newBuf */
-  *out = BUFFER_VAL(newBuf);
+  *out = valBuffer(newBuf);
   return STATUS_OK;
 }
 
@@ -53,7 +53,7 @@ static CFunction funcBufferClone = {implBufferClone, "clone"};
 
 static Status implBufferLen(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
-  *out = NUMBER_VAL(bo->handle.length);
+  *out = valNumber(bo->handle.length);
   return STATUS_OK;
 }
 
@@ -62,7 +62,7 @@ static CFunction funcBufferLen = {implBufferLen, "__len__"};
 static Status implBufferGetitem(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
   size_t i = asIndex(args[0], bo->handle.length);
-  *out = NUMBER_VAL(bo->handle.data[i]);
+  *out = valNumber(bo->handle.data[i]);
   return STATUS_OK;
 }
 
@@ -123,9 +123,9 @@ static Status implBufferView(i16 argCount, Value *args, Value *out) {
   }
   bufferLock(&bo->handle);
   newBuffer = newBufferWithExternalData(
-      BUFFER_VAL(bo), bo->handle.data + start, end - start);
+      valBuffer(bo), bo->handle.data + start, end - start);
   newBuffer->handle.byteOrder = bo->handle.byteOrder;
-  *out = BUFFER_VAL(newBuffer);
+  *out = valBuffer(newBuffer);
   return STATUS_OK;
 }
 
@@ -213,7 +213,7 @@ static CFunction funcBufferAddBase64 = {
 
 static Status implBufferGetI8(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
-  *out = NUMBER_VAL(bufferGetI8(&bo->handle, asNumber(args[0])));
+  *out = valNumber(bufferGetI8(&bo->handle, asNumber(args[0])));
   return STATUS_OK;
 }
 
@@ -221,7 +221,7 @@ static CFunction funcBufferGetI8 = {implBufferGetI8, "getI8", 1};
 
 static Status implBufferGetU8(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
-  *out = NUMBER_VAL(bufferGetU8(&bo->handle, asNumber(args[0])));
+  *out = valNumber(bufferGetU8(&bo->handle, asNumber(args[0])));
   return STATUS_OK;
 }
 
@@ -229,7 +229,7 @@ static CFunction funcBufferGetU8 = {implBufferGetU8, "getU8", 1};
 
 static Status implBufferGetI16(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
-  *out = NUMBER_VAL(bufferGetI16(&bo->handle, asNumber(args[0])));
+  *out = valNumber(bufferGetI16(&bo->handle, asNumber(args[0])));
   return STATUS_OK;
 }
 
@@ -237,7 +237,7 @@ static CFunction funcBufferGetI16 = {implBufferGetI16, "getI16", 1};
 
 static Status implBufferGetU16(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
-  *out = NUMBER_VAL(bufferGetU16(&bo->handle, asNumber(args[0])));
+  *out = valNumber(bufferGetU16(&bo->handle, asNumber(args[0])));
   return STATUS_OK;
 }
 
@@ -245,7 +245,7 @@ static CFunction funcBufferGetU16 = {implBufferGetU16, "getU16", 1};
 
 static Status implBufferGetI32(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
-  *out = NUMBER_VAL(bufferGetI32(&bo->handle, asNumber(args[0])));
+  *out = valNumber(bufferGetI32(&bo->handle, asNumber(args[0])));
   return STATUS_OK;
 }
 
@@ -253,7 +253,7 @@ static CFunction funcBufferGetI32 = {implBufferGetI32, "getI32", 1};
 
 static Status implBufferGetU32(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
-  *out = NUMBER_VAL(bufferGetU32(&bo->handle, asNumber(args[0])));
+  *out = valNumber(bufferGetU32(&bo->handle, asNumber(args[0])));
   return STATUS_OK;
 }
 
@@ -261,7 +261,7 @@ static CFunction funcBufferGetU32 = {implBufferGetU32, "getU32", 1};
 
 static Status implBufferGetF32(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
-  *out = NUMBER_VAL(bufferGetF32(&bo->handle, asNumber(args[0])));
+  *out = valNumber(bufferGetF32(&bo->handle, asNumber(args[0])));
   return STATUS_OK;
 }
 
@@ -269,7 +269,7 @@ static CFunction funcBufferGetF32 = {implBufferGetF32, "getF32", 1};
 
 static Status implBufferGetF64(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
-  *out = NUMBER_VAL(bufferGetF64(&bo->handle, asNumber(args[0])));
+  *out = valNumber(bufferGetF64(&bo->handle, asNumber(args[0])));
   return STATUS_OK;
 }
 
@@ -360,10 +360,10 @@ static CFunction funcBufferMemcpy = {implBufferMemcpy, "memcpy", 2, 4};
 static Status implBufferStaticFromSize(i16 argCount, Value *args, Value *out) {
   size_t size = asU32(args[0]);
   ObjBuffer *bo = newBuffer();
-  push(BUFFER_VAL(bo));
+  push(valBuffer(bo));
   bufferSetLength(&bo->handle, size);
   pop(); /* bo */
-  *out = BUFFER_VAL(bo);
+  *out = valBuffer(bo);
   return STATUS_OK;
 }
 
@@ -372,10 +372,10 @@ static CFunction funcBufferStaticFromSize = {implBufferStaticFromSize, "fromSize
 static Status implBufferStaticFromString(i16 argCount, Value *args, Value *out) {
   String *string = asString(args[0]);
   ObjBuffer *bo = newBuffer();
-  push(BUFFER_VAL(bo));
+  push(valBuffer(bo));
   bufferAddBytes(&bo->handle, string->chars, string->byteLength);
   pop(); /* bo */
-  *out = BUFFER_VAL(bo);
+  *out = valBuffer(bo);
   return STATUS_OK;
 }
 
@@ -385,7 +385,7 @@ static Status implBufferStaticFromList(i16 argCount, Value *args, Value *out) {
   ObjList *list = asList(args[0]);
   ObjBuffer *bo = newBuffer();
   size_t i;
-  push(BUFFER_VAL(bo));
+  push(valBuffer(bo));
   for (i = 0; i < list->length; i++) {
     Value item = list->buffer[i];
     if (isNumber(item)) {
@@ -400,7 +400,7 @@ static Status implBufferStaticFromList(i16 argCount, Value *args, Value *out) {
     }
   }
   pop(); /* bo */
-  *out = BUFFER_VAL(bo);
+  *out = valBuffer(bo);
   return STATUS_OK;
 }
 

@@ -112,15 +112,15 @@ Range asRange(Value value);
 RangeIterator asRangeIterator(Value value);
 Obj *asObj(Value value);
 
-Value NIL_VAL(void);
-Value BOOL_VAL(ubool value);
-Value NUMBER_VAL(double value);
-Value STRING_VAL(String *string);
-Value CFUNCTION_VAL(CFunction *func);
-Value SENTINEL_VAL(Sentinel sentinel);
-Value RANGE_VAL(Range range);
-Value RANGE_ITERATOR_VAL(RangeIterator rangeIterator);
-Value OBJ_VAL_EXPLICIT(Obj *object);
+Value valNil(void);
+Value valBool(ubool value);
+Value valNumber(double value);
+Value valString(String *string);
+Value valCFunction(CFunction *func);
+Value valSentinel(Sentinel sentinel);
+Value valRange(Range range);
+Value valRangeIterator(RangeIterator rangeIterator);
+Value valObjExplicit(Obj *object);
 
 #define isStopIteration(value) ( \
     isSentinel(value) &&         \
@@ -129,8 +129,8 @@ Value OBJ_VAL_EXPLICIT(Obj *object);
     isSentinel(value) &&    \
     ((value).as.sentinel == SentinelEmptyKey))
 
-#define STOP_ITERATION_VAL() (SENTINEL_VAL(SentinelStopIteration))
-#define EMPTY_KEY_VAL() (SENTINEL_VAL(SentinelEmptyKey))
+#define valStopIteration() (valSentinel(SentinelStopIteration))
+#define valEmptyKey() (valSentinel(SentinelEmptyKey))
 
 void initValueArray(ValueArray *array);
 void writeValueArray(ValueArray *array, Value value);

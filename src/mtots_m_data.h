@@ -47,8 +47,8 @@ typedef struct ObjDataSink {
 extern NativeObjectDescriptor descriptorDataSource;
 extern NativeObjectDescriptor descriptorDataSink;
 
-Value DATA_SOURCE_VAL(ObjDataSource *ds);
-Value DATA_SINK_VAL(ObjDataSink *ds);
+Value valDataSource(ObjDataSource *ds);
+Value valDataSink(ObjDataSink *ds);
 
 ObjDataSource *asDataSource(Value value);
 ObjDataSink *asDataSink(Value value);

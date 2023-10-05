@@ -41,8 +41,8 @@ static NativeObjectDescriptor descriptorStatResult = {
     "StatResult",
 };
 
-static Value STAT_RESULT_VAL(ObjStatResult *sr) {
-  return OBJ_VAL_EXPLICIT((Obj *)sr);
+static Value valStatResult(ObjStatResult *sr) {
+  return valObjExplicit((Obj *)sr);
 }
 
 static ObjStatResult *asStatResult(Value value) {
@@ -59,7 +59,7 @@ static ObjStatResult *newStatResult() {
 }
 
 static Status implStatResultStaticCall(i16 argc, Value *argv, Value *out) {
-  *out = STAT_RESULT_VAL(newStatResult());
+  *out = valStatResult(newStatResult());
   return STATUS_OK;
 }
 
@@ -70,22 +70,22 @@ static Status implStatResultGetattr(i16 argc, Value *argv, Value *out) {
   ObjStatResult *sr = asStatResult(argv[-1]);
   String *name = asString(argv[0]);
   if (name == string_st_mode) {
-    *out = NUMBER_VAL(sr->handle.st_mode);
+    *out = valNumber(sr->handle.st_mode);
   } else if (name == string_st_ino) {
     /* NOTE: st_ino may be a 64-bit integer...
      * TODO: figure out a way not to lose precision by using something
      * other than a double */
-    *out = NUMBER_VAL(sr->handle.st_ino);
+    *out = valNumber(sr->handle.st_ino);
   } else if (name == string_st_dev) {
-    *out = NUMBER_VAL(sr->handle.st_dev);
+    *out = valNumber(sr->handle.st_dev);
   } else if (name == string_st_nlink) {
-    *out = NUMBER_VAL(sr->handle.st_nlink);
+    *out = valNumber(sr->handle.st_nlink);
   } else if (name == string_st_uid) {
-    *out = NUMBER_VAL(sr->handle.st_uid);
+    *out = valNumber(sr->handle.st_uid);
   } else if (name == string_st_gid) {
-    *out = NUMBER_VAL(sr->handle.st_gid);
+    *out = valNumber(sr->handle.st_gid);
   } else if (name == string_st_size) {
-    *out = NUMBER_VAL(sr->handle.st_size);
+    *out = valNumber(sr->handle.st_size);
   } else {
     runtimeError("Field '%s' not found on %s", name->chars, getKindName(argv[-1]));
     return STATUS_ERROR;
@@ -103,7 +103,7 @@ static CFunction funcStatResultGetattr = {implStatResultGetattr, "__getattr__", 
 
 static Status implGetlogin(i16 argc, Value *argv, Value *out) {
 #if MTOTS_IS_POSIX
-  *out = STRING_VAL(internCString(getlogin()));
+  *out = valString(internCString(getlogin()));
   return STATUS_OK;
 #else
   runtimeError("Unsupported platfom (os.getlogin())");
@@ -115,7 +115,7 @@ static CFunction funcGetlogin = {implGetlogin, "getlogin"};
 
 static Status implGetpid(i16 argc, Value *argv, Value *out) {
 #if MTOTS_IS_POSIX
-  *out = NUMBER_VAL((double)(pid_t)getpid());
+  *out = valNumber((double)(pid_t)getpid());
   return STATUS_OK;
 #else
   runtimeError("Unsupported platfom (os.getpid())");
@@ -127,7 +127,7 @@ static CFunction funcGetpid = {implGetpid, "getpid"};
 
 static Status implGetppid(i16 argc, Value *argv, Value *out) {
 #if MTOTS_IS_POSIX
-  *out = NUMBER_VAL((double)(pid_t)getppid());
+  *out = valNumber((double)(pid_t)getppid());
   return STATUS_OK;
 #else
   runtimeError("Unsupported platfom (os.getppid())");
@@ -139,7 +139,7 @@ static CFunction funcGetppid = {implGetppid, "getppid"};
 
 static Status implGetuid(i16 argc, Value *argv, Value *out) {
 #if MTOTS_IS_POSIX
-  *out = NUMBER_VAL((double)(uid_t)getuid());
+  *out = valNumber((double)(uid_t)getuid());
   return STATUS_OK;
 #else
   runtimeError("Unsupported platfom (os.getuid())");
@@ -151,7 +151,7 @@ static CFunction funcGetuid = {implGetuid, "getuid"};
 
 static Status implGeteuid(i16 argc, Value *argv, Value *out) {
 #if MTOTS_IS_POSIX
-  *out = NUMBER_VAL((double)(uid_t)geteuid());
+  *out = valNumber((double)(uid_t)geteuid());
   return STATUS_OK;
 #else
   runtimeError("Unsupported platfom (os.geteuid())");
@@ -165,7 +165,7 @@ static Status implGetenv(i16 argc, Value *argv, Value *out) {
   String *name = asString(argv[0]);
   const char *value = getenv(name->chars);
   if (value) {
-    *out = STRING_VAL(internCString(value));
+    *out = valString(internCString(value));
   }
   return STATUS_OK;
 }
@@ -181,7 +181,7 @@ static Status implGetcwd(i16 argc, Value *argv, Value *out) {
     return STATUS_ERROR;
   }
   path = internCString(buffer);
-  *out = STRING_VAL(path);
+  *out = valString(path);
   return STATUS_OK;
 #else
   runtimeError("Unsupported platfom (os.getcwd())");
@@ -210,7 +210,7 @@ static CFunction funcChdir = {implChdir, "chdir", 1};
 static Status listDirCallback(void *userData, const char *fileName) {
   ObjList *names = (ObjList *)userData;
   if (strcmp(fileName, ".") != 0 && strcmp(fileName, "..") != 0) {
-    Value item = STRING_VAL(internCString(fileName));
+    Value item = valString(internCString(fileName));
     push(item);
     listAppend(names, item);
     pop(); /* item */
@@ -221,69 +221,69 @@ static Status listDirCallback(void *userData, const char *fileName) {
 static Status implListdir(i16 argc, Value *argv, Value *out) {
   const char *path = argc > 0 && !isNil(argv[0]) ? asString(argv[0])->chars : ".";
   ObjList *names = newList(0);
-  push(LIST_VAL(names));
+  push(valList(names));
   if (!listDirectory(path, names, listDirCallback)) {
     pop(); /* names */
     return STATUS_ERROR;
   }
   pop(); /* names */
-  *out = LIST_VAL(names);
+  *out = valList(names);
   return STATUS_OK;
 }
 
 static CFunction funcListdir = {implListdir, "listdir", 0, 1};
 
 static Status implIsPosix(i16 argc, Value *argv, Value *out) {
-  *out = BOOL_VAL(MTOTS_IS_POSIX);
+  *out = valBool(MTOTS_IS_POSIX);
   return STATUS_OK;
 }
 
 static CFunction funcIsPosix = {implIsPosix, "isPosix"};
 
 static Status implIsDarwin(i16 argc, Value *argv, Value *out) {
-  *out = BOOL_VAL(MTOTS_IS_DARWIN);
+  *out = valBool(MTOTS_IS_DARWIN);
   return STATUS_OK;
 }
 
 static CFunction funcIsDarwin = {implIsDarwin, "isDarwin"};
 
 static Status implIsMacOS(i16 argc, Value *argv, Value *out) {
-  *out = BOOL_VAL(MTOTS_IS_MACOS);
+  *out = valBool(MTOTS_IS_MACOS);
   return STATUS_OK;
 }
 
 static CFunction funcIsMacOS = {implIsMacOS, "isMacOS"};
 
 static Status implIsWindows(i16 argc, Value *argv, Value *out) {
-  *out = BOOL_VAL(MTOTS_IS_WINDOWS);
+  *out = valBool(MTOTS_IS_WINDOWS);
   return STATUS_OK;
 }
 
 static CFunction funcIsWindows = {implIsWindows, "isWindows"};
 
 static Status implIsLinux(i16 argc, Value *argv, Value *out) {
-  *out = BOOL_VAL(MTOTS_IS_LINUX);
+  *out = valBool(MTOTS_IS_LINUX);
   return STATUS_OK;
 }
 
 static CFunction funcIsLinux = {implIsLinux, "isLinux"};
 
 static Status implIsIPhone(i16 argc, Value *argv, Value *out) {
-  *out = BOOL_VAL(MTOTS_IS_IPHONE);
+  *out = valBool(MTOTS_IS_IPHONE);
   return STATUS_OK;
 }
 
 static CFunction funcIsIPhone = {implIsIPhone, "isIPhone"};
 
 static Status implIsAndroid(i16 argc, Value *argv, Value *out) {
-  *out = BOOL_VAL(MTOTS_IS_ANDROID);
+  *out = valBool(MTOTS_IS_ANDROID);
   return STATUS_OK;
 }
 
 static CFunction funcIsAndroid = {implIsAndroid, "isAndroid"};
 
 static Status implIsEmscripten(i16 argc, Value *argv, Value *out) {
-  *out = BOOL_VAL(MTOTS_IS_EMSCRIPTEN);
+  *out = valBool(MTOTS_IS_EMSCRIPTEN);
   return STATUS_OK;
 }
 
@@ -303,7 +303,7 @@ static Status implOpen(i16 argc, Value *argv, Value *out) {
     runtimeError("open(): %s", strerror(errno));
     return STATUS_ERROR;
   }
-  *out = NUMBER_VAL(fd);
+  *out = valNumber(fd);
   return STATUS_OK;
 #else
   runtimeError("Unsupported platfom (os.open())");
@@ -350,7 +350,7 @@ static Status implFstat(i16 argc, Value *argv, Value *out) {
     runtimeError("fstat(): %s", strerror(errno));
     return STATUS_ERROR;
   }
-  *out = STAT_RESULT_VAL(sr);
+  *out = valStatResult(sr);
   return STATUS_OK;
 #else
   runtimeError("Unsupported platfom (os.fstat())");
@@ -368,7 +368,7 @@ static Status implStat(i16 argc, Value *argv, Value *out) {
     runtimeError("stat(): %s", strerror(errno));
     return STATUS_ERROR;
   }
-  *out = STAT_RESULT_VAL(sr);
+  *out = valStatResult(sr);
   return STATUS_OK;
 #else
   runtimeError("Unsupported platfom (os.stat())");
@@ -431,29 +431,29 @@ static Status impl(i16 argc, Value *argv, Value *out) {
 #endif
 
 #if MTOTS_IS_POSIX
-  mapSetN(&module->fields, "O_RDONLY", NUMBER_VAL(O_RDONLY));
-  mapSetN(&module->fields, "O_WRONLY", NUMBER_VAL(O_WRONLY));
-  mapSetN(&module->fields, "O_RDWR", NUMBER_VAL(O_RDWR));
-  mapSetN(&module->fields, "O_APPEND", NUMBER_VAL(O_APPEND));
-  mapSetN(&module->fields, "O_CREAT", NUMBER_VAL(O_CREAT));
-  mapSetN(&module->fields, "O_EXCL", NUMBER_VAL(O_EXCL));
-  mapSetN(&module->fields, "O_TRUNC", NUMBER_VAL(O_TRUNC));
+  mapSetN(&module->fields, "O_RDONLY", valNumber(O_RDONLY));
+  mapSetN(&module->fields, "O_WRONLY", valNumber(O_WRONLY));
+  mapSetN(&module->fields, "O_RDWR", valNumber(O_RDWR));
+  mapSetN(&module->fields, "O_APPEND", valNumber(O_APPEND));
+  mapSetN(&module->fields, "O_CREAT", valNumber(O_CREAT));
+  mapSetN(&module->fields, "O_EXCL", valNumber(O_EXCL));
+  mapSetN(&module->fields, "O_TRUNC", valNumber(O_TRUNC));
 #endif
 
-  mapSetN(&module->fields, "name", STRING_VAL(internCString(MTOTS_OS_NAME)));
-  mapSetN(&module->fields, "sep", STRING_VAL(internCString(PATH_SEP_STR)));
+  mapSetN(&module->fields, "name", valString(internCString(MTOTS_OS_NAME)));
+  mapSetN(&module->fields, "sep", valString(internCString(PATH_SEP_STR)));
 
   {
     ObjModule *osPathModule;
     String *moduleNameString = internCString("os.path");
-    push(STRING_VAL(moduleNameString));
+    push(valString(moduleNameString));
     if (!importModule(moduleNameString)) {
       return STATUS_ERROR;
     }
     osPathModule = asModule(pop()); /* module (from importModule) */
     pop();                          /* moduleName */
 
-    mapSetN(&module->fields, "path", MODULE_VAL(osPathModule));
+    mapSetN(&module->fields, "path", valModule(osPathModule));
   }
 
   return STATUS_OK;

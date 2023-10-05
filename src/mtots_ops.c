@@ -294,7 +294,7 @@ ubool sortListWithKeyFunc(ObjList *list, Value keyfunc) {
   if (!isNil(keyfunc)) {
     ObjList *keys = newList(list->length);
     size_t i = 0;
-    push(LIST_VAL(keys));
+    push(valList(keys));
     for (i = 0; i < list->length; i++) {
       push(keyfunc);
       push(list->buffer[i]);
@@ -647,10 +647,10 @@ Status valueFastIterNext(Value *iterator, Value *out) {
     i32 step = iterator->as.range.step;
     if (step > 0 ? (iterator->extra.integer < iterator->as.range.stop)
                  : (iterator->extra.integer > iterator->as.range.stop)) {
-      *out = NUMBER_VAL(iterator->extra.integer);
+      *out = valNumber(iterator->extra.integer);
       iterator->extra.integer += step;
     } else {
-      *out = STOP_ITERATION_VAL();
+      *out = valStopIteration();
     }
     return STATUS_OK;
   }

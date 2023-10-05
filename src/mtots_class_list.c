@@ -9,7 +9,7 @@ static Status implInstantiateList(i16 argCount, Value *args, Value *out) {
   if (!newListFromIterable(args[0], &list)) {
     return STATUS_ERROR;
   }
-  *out = LIST_VAL(list);
+  *out = valList(list);
   return STATUS_OK;
 }
 
@@ -31,7 +31,7 @@ static Status implListIteratorCall(i16 argCount, Value *args, Value *out) {
   if (iter->index < iter->list->length) {
     *out = iter->list->buffer[iter->index++];
   } else {
-    *out = STOP_ITERATION_VAL();
+    *out = valStopIteration();
   }
   return STATUS_OK;
 }
@@ -106,7 +106,7 @@ static Status implListInsert(i16 argCount, Value *args, Value *out) {
   ObjList *list = asList(args[-1]);
   size_t index = asIndex(args[0], list->length + 1), i;
   Value value = args[1];
-  listAppend(list, NIL_VAL());
+  listAppend(list, valNil());
   for (i = list->length - 1; i > index; i--) {
     list->buffer[i] = list->buffer[i - 1];
   }
@@ -122,7 +122,7 @@ static Status implListAdd(i16 argCount, Value *args, Value *out) {
   ObjList *result = newList(list->length + other->length);
   memcpy(result->buffer, list->buffer, sizeof(Value) * list->length);
   memcpy(result->buffer + list->length, other->buffer, sizeof(Value) * other->length);
-  *out = LIST_VAL(result);
+  *out = valList(result);
   return STATUS_OK;
 }
 
@@ -139,7 +139,7 @@ static Status implListMul(i16 argCount, Value *args, Value *out) {
       result->buffer[r * list->length + i] = list->buffer[i];
     }
   }
-  *out = LIST_VAL(result);
+  *out = valList(result);
   return STATUS_OK;
 }
 
@@ -174,7 +174,7 @@ static Status implListSlice(i16 argCount, Value *args, Value *out) {
         (unsigned long)end);
     return STATUS_ERROR;
   }
-  *out = LIST_VAL(newListFromArray(list->buffer + start, end - start));
+  *out = valList(newListFromArray(list->buffer + start, end - start));
   return STATUS_OK;
 }
 
@@ -195,7 +195,7 @@ static CFunction funcListReverse = {implListReverse, "reverse"};
 
 static Status implListSort(i16 argCount, Value *args, Value *out) {
   ObjList *list = asList(args[-1]);
-  return sortListWithKeyFunc(list, argCount > 0 ? args[0] : NIL_VAL());
+  return sortListWithKeyFunc(list, argCount > 0 ? args[0] : valNil());
 }
 
 static CFunction funcListSort = {implListSort, "sort", 0, 1};
@@ -204,7 +204,7 @@ static Status implListFlatten(i16 argCount, Value *args, Value *out) {
   ObjList *list = asList(args[-1]);
   ObjList *result = newList(0);
   size_t i;
-  push(LIST_VAL(result));
+  push(valList(result));
   for (i = 0; i < list->length; i++) {
     Value iterator;
     if (!valueFastIter(list->buffer[i], &iterator)) {
@@ -237,7 +237,7 @@ static Status implListIter(i16 argCount, Value *args, Value *out) {
   iter = NEW_NATIVE(ObjListIterator, &descriptorListIterator);
   iter->list = list;
   iter->index = 0;
-  *out = OBJ_VAL_EXPLICIT((Obj *)iter);
+  *out = valObjExplicit((Obj *)iter);
   return STATUS_OK;
 }
 

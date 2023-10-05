@@ -49,11 +49,11 @@ static Status implCompletedProcessGetattr(i16 argc, Value *argv, Value *out) {
   ObjCompletedProcess *cp = asCompletedProcess(argv[-1]);
   String *name = asString(argv[0]);
   if (name == stringReturncode) {
-    *out = NUMBER_VAL(cp->returncode);
+    *out = valNumber(cp->returncode);
   } else if (name == stringStdout) {
-    *out = STRING_VAL(cp->stdoutString);
+    *out = valString(cp->stdoutString);
   } else if (name == stringStderr) {
-    *out = STRING_VAL(cp->stderrString);
+    *out = valString(cp->stderrString);
   } else {
     runtimeError("Field '%s' not found on %s", name->chars, getKindName(argv[-1]));
     return STATUS_ERROR;
@@ -247,7 +247,7 @@ static Status implRun(i16 argc, Value *argv, Value *out) {
     return STATUS_ERROR;
   }
 
-  *out = OBJ_VAL_EXPLICIT((Obj *)completedProcess);
+  *out = valObjExplicit((Obj *)completedProcess);
 
   return STATUS_OK;
 #else
@@ -294,11 +294,11 @@ static Status impl(i16 argc, Value *argv, Value *out) {
   completedProcess = NEW_NATIVE(ObjCompletedProcess, &descriptorCompletedProcess);
   completedProcess->stderrString = vm.emptyString;
   completedProcess->stdoutString = vm.emptyString;
-  moduleRetain(module, OBJ_VAL_EXPLICIT((Obj *)(completedProcess)));
+  moduleRetain(module, valObjExplicit((Obj *)(completedProcess)));
 
-  moduleRetain(module, STRING_VAL(stringReturncode = internCString("returncode")));
-  moduleRetain(module, STRING_VAL(stringStdout = internCString("stdout")));
-  moduleRetain(module, STRING_VAL(stringStderr = internCString("stderr")));
+  moduleRetain(module, valString(stringReturncode = internCString("returncode")));
+  moduleRetain(module, valString(stringStdout = internCString("stdout")));
+  moduleRetain(module, valString(stringStderr = internCString("stderr")));
   return STATUS_OK;
 }
 

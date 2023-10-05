@@ -16,7 +16,7 @@
 #define EXPECT(t) WRAP(expectToken(parser, (t)))
 #define ADVANCE() WRAP(advance(parser))
 #define ADD_CONST_VALUE(v, r) WRAP(addConstValue(parser, (v), (r)))
-#define ADD_CONST_STRING(v, r) WRAP(addConstValue(parser, STRING_VAL(v), (r)))
+#define ADD_CONST_STRING(v, r) WRAP(addConstValue(parser, valString(v), (r)))
 #define ADD_CONST_SLICE(s, r) WRAP(addConstSlice(parser, (s), (r)))
 #define CHECK(f) WRAP((f)(parser))
 #define CHECK1(f, a) WRAP((f)(parser, (a)))
@@ -366,7 +366,7 @@ static ubool addConstValue(Parser *parser, Value value, ConstID *ref) {
 }
 
 static ubool addConstSlice(Parser *parser, StringSlice slice, ConstID *ref) {
-  return addConstValue(parser, STRING_VAL(internString(slice.chars, slice.length)), ref);
+  return addConstValue(parser, valString(internString(slice.chars, slice.length)), ref);
 }
 
 static ubool inGlobalScope(Parser *parser) {
@@ -712,25 +712,25 @@ static ubool parseDefaultArgument(Parser *parser, Value *out) {
   switch (parser->current.type) {
     case TOKEN_NIL:
       ADVANCE();
-      *out = NIL_VAL();
+      *out = valNil();
       return STATUS_OK;
     case TOKEN_TRUE:
       ADVANCE();
-      *out = BOOL_VAL(UTRUE);
+      *out = valBool(UTRUE);
       return STATUS_OK;
     case TOKEN_FALSE:
       ADVANCE();
-      *out = BOOL_VAL(UFALSE);
+      *out = valBool(UFALSE);
       return STATUS_OK;
     case TOKEN_NUMBER:
       ADVANCE();
-      *out = NUMBER_VAL(strtod(parser->previous.start, NULL));
+      *out = valNumber(strtod(parser->previous.start, NULL));
       return STATUS_OK;
     case TOKEN_MINUS:
       ADVANCE();
       if (AT(TOKEN_NUMBER)) {
         ADVANCE();
-        *out = NUMBER_VAL(-strtod(parser->previous.start, NULL));
+        *out = valNumber(-strtod(parser->previous.start, NULL));
         return STATUS_OK;
       } else {
         runtimeError(
@@ -744,7 +744,7 @@ static ubool parseDefaultArgument(Parser *parser, Value *out) {
       String *str;
       ADVANCE();
       CHECK1(stringTokenToObjString, &str);
-      *out = STRING_VAL(str);
+      *out = valString(str);
       return STATUS_OK;
     }
     default:
@@ -794,7 +794,7 @@ static ubool parseParameterList(Parser *parser, ObjThunk *thunk) {
     }
     if (AT(TOKEN_EQUAL)) {
       ADVANCE();
-      listAppend(parser->defaultArgs, NIL_VAL());
+      listAppend(parser->defaultArgs, valNil());
       CHECK1(
           parseDefaultArgument,
           &parser->defaultArgs->buffer[parser->defaultArgs->length - 1]);
@@ -867,7 +867,7 @@ static ubool parseFunctionCore(Parser *parser, StringSlice name, ThunkContext *t
 
   /* Pop the Thunk and Environment for this function */
   parser->env = parser->env->enclosing;
-  ADD_CONST_VALUE(THUNK_VAL(thunk), &thunkID);
+  ADD_CONST_VALUE(valThunk(thunk), &thunkID);
 
   EMIT1C(OP_CLOSURE, thunkID);
   for (i = 0; i < thunk->upvalueCount; i++) {
@@ -987,11 +987,11 @@ static ubool parseRawStringLiteral(Parser *parser) {
     char quote = parser->previous.start[1];
     if (quote == parser->previous.start[2] &&
         quote == parser->previous.start[3]) {
-      EMIT_CONST(STRING_VAL(internString(
+      EMIT_CONST(valString(internString(
           parser->previous.start + 4,
           parser->previous.length - 7)));
     } else {
-      EMIT_CONST(STRING_VAL(internString(
+      EMIT_CONST(valString(internString(
           parser->previous.start + 2,
           parser->previous.length - 3)));
     }
@@ -1037,7 +1037,7 @@ static ubool parseStringLiteral(Parser *parser) {
     return STATUS_ERROR;
   }
 
-  EMIT_CONST(STRING_VAL(str));
+  EMIT_CONST(valString(str));
   return STATUS_OK;
 }
 
@@ -1045,7 +1045,7 @@ static ubool parseNumber(Parser *parser) {
   double value;
   EXPECT(TOKEN_NUMBER);
   value = strtod(parser->previous.start, NULL);
-  EMIT_CONST(NUMBER_VAL(value));
+  EMIT_CONST(valNumber(value));
   return STATUS_OK;
 }
 
@@ -1068,7 +1068,7 @@ static ubool parseNumberHex(Parser *parser) {
       return STATUS_ERROR;
     }
   }
-  EMIT_CONST(NUMBER_VAL(value));
+  EMIT_CONST(valNumber(value));
   return STATUS_OK;
 }
 
@@ -1087,7 +1087,7 @@ static ubool parseNumberBin(Parser *parser) {
       return STATUS_ERROR;
     }
   }
-  EMIT_CONST(NUMBER_VAL(value));
+  EMIT_CONST(valNumber(value));
   return STATUS_OK;
 }
 
@@ -1472,7 +1472,7 @@ static ubool parseArgumentList(Parser *parser, u8 *out, ubool *hasKwArgs) {
     }
     if (AT(TOKEN_IDENTIFIER) && peekEqual(parser)) {
       ADVANCE();
-      EMIT_CONST(STRING_VAL(internString(
+      EMIT_CONST(valString(internString(
           parser->previous.start,
           parser->previous.length)));
       EXPECT(TOKEN_EQUAL);

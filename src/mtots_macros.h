@@ -24,7 +24,7 @@
 
 #define MTOTS_POD_VAL(baseName)           \
   Value baseName##VAL(Obj##baseName *p) { \
-    return OBJ_VAL_EXPLICIT((Obj *)p);    \
+    return valObjExplicit((Obj *)p);      \
   }
 
 #define MTOTS_POD_VAL_STATIC(baseName) \

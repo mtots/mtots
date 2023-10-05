@@ -35,13 +35,13 @@ static ubool load(u8 *buffer, size_t limit, size_t *pos, Value *out) {
   header = buffer[i++];
   switch (header) {
     case TAG_NIL:
-      *out = NIL_VAL();
+      *out = valNil();
       break;
     case TAG_TRUE:
-      *out = BOOL_VAL(1);
+      *out = valBool(1);
       break;
     case TAG_FALSE:
-      *out = BOOL_VAL(0);
+      *out = valBool(0);
       break;
     case TAG_NUMBER: {
       /* NOTE: type-punning double is checked for in assumptions.c. */
@@ -54,7 +54,7 @@ static ubool load(u8 *buffer, size_t limit, size_t *pos, Value *out) {
       }
       memcpy(u.arr, buffer + i, 8);
       i += 8;
-      *out = NUMBER_VAL(u.x);
+      *out = valNumber(u.x);
       break;
     }
     case TAG_STRING: {
@@ -72,7 +72,7 @@ static ubool load(u8 *buffer, size_t limit, size_t *pos, Value *out) {
       if (i + len > limit) {
         return runtimeErrorUnexpectedEOF(i, len, limit);
       }
-      *out = STRING_VAL(internString((const char *)(buffer + i), len));
+      *out = valString(internString((const char *)(buffer + i), len));
       i += len;
       break;
     }
@@ -90,14 +90,14 @@ static ubool load(u8 *buffer, size_t limit, size_t *pos, Value *out) {
       i += 4;
       len = (size_t)u.len;
       list = newList(len);
-      push(LIST_VAL(list));
+      push(valList(list));
       for (j = 0; j < len; j++) {
         if (!load(buffer, limit, &i, list->buffer + j)) {
           return STATUS_ERROR;
         }
       }
       pop(); /* list */
-      *out = LIST_VAL(list);
+      *out = valList(list);
       break;
     }
     case TAG_DICT: {
@@ -114,7 +114,7 @@ static ubool load(u8 *buffer, size_t limit, size_t *pos, Value *out) {
       i += 4;
       len = (size_t)u.len;
       dict = newDict();
-      push(DICT_VAL(dict));
+      push(valDict(dict));
       for (j = 0; j < len; j++) {
         Value key, value;
         if (!load(buffer, limit, &i, &key)) {
@@ -130,7 +130,7 @@ static ubool load(u8 *buffer, size_t limit, size_t *pos, Value *out) {
         pop(); /* key */
       }
       pop(); /* dict */
-      *out = DICT_VAL(dict);
+      *out = valDict(dict);
       break;
     }
     default:
@@ -234,7 +234,7 @@ ubool bmonDump(Value value, Buffer *out) {
           /* For instances, if there is a method __bmon__, use that
            * allow for a sort of custom serialization */
           ObjClass *cls = getClassOfValue(value);
-          if (mapContainsKey(&cls->methods, STRING_VAL(stringBmon))) {
+          if (mapContainsKey(&cls->methods, valString(stringBmon))) {
             push(value);
             if (!callMethod(stringBmon, 0)) {
               return STATUS_ERROR;
@@ -260,12 +260,12 @@ ubool bmonDump(Value value, Buffer *out) {
 static Status implDumps(i16 argCount, Value *args, Value *out) {
   Value value = args[0];
   ObjBuffer *buffer = newBuffer();
-  push(BUFFER_VAL(buffer));
+  push(valBuffer(buffer));
   if (!bmonDump(value, &buffer->handle)) {
     return STATUS_ERROR;
   }
   pop(); /* buffer */
-  *out = BUFFER_VAL(buffer);
+  *out = valBuffer(buffer);
   return STATUS_OK;
 }
 
@@ -283,7 +283,7 @@ static Status impl(i16 argCount, Value *args, Value *out) {
   stringBmon = moduleRetainCString(module, "__bmon__");
 
   for (i = 0; i < sizeof(functions) / sizeof(CFunction *); i++) {
-    mapSetN(&module->fields, functions[i]->name, CFUNCTION_VAL(functions[i]));
+    mapSetN(&module->fields, functions[i]->name, valCFunction(functions[i]));
   }
 
   return STATUS_OK;

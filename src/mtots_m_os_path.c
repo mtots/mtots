@@ -7,7 +7,7 @@
 
 static Status implIsfile(i16 argc, Value *argv, Value *out) {
   String *path = asString(argv[0]);
-  *out = BOOL_VAL(isFile(path->chars));
+  *out = valBool(isFile(path->chars));
   return STATUS_OK;
 }
 
@@ -15,7 +15,7 @@ static CFunction funcIsfile = {implIsfile, "isfile", 1};
 
 static Status implIsdir(i16 argc, Value *argv, Value *out) {
   String *path = asString(argv[0]);
-  *out = BOOL_VAL(isDirectory(path->chars));
+  *out = valBool(isDirectory(path->chars));
   return STATUS_OK;
 }
 
@@ -27,7 +27,7 @@ static Status implGetsize(i16 argc, Value *argv, Value *out) {
   if (!getFileSize(path->chars, &fileSize)) {
     return STATUS_ERROR;
   }
-  *out = NUMBER_VAL(fileSize);
+  *out = valNumber(fileSize);
   return STATUS_OK;
 }
 
@@ -44,7 +44,7 @@ static Status impl(i16 argc, Value *argv, Value *out) {
 
   moduleAddFunctions(module, functions);
 
-  mapSetN(&module->fields, "sep", STRING_VAL(internCString(PATH_SEP_STR)));
+  mapSetN(&module->fields, "sep", valString(internCString(PATH_SEP_STR)));
 
   return STATUS_OK;
 }

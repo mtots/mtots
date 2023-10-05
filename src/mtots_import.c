@@ -34,15 +34,15 @@ Status importModuleWithPathAndSource(
   String *pathStr;
 
   module = newModule(moduleName, UTRUE);
-  push(MODULE_VAL(module));
-  mapSetN(&module->fields, "__name__", STRING_VAL(moduleName));
+  push(valModule(module));
+  mapSetN(&module->fields, "__name__", valString(moduleName));
 
   pathStr = internCString(path);
   if (freePath) {
     free((void *)freePath);
   }
-  push(STRING_VAL(pathStr));
-  mapSetN(&module->fields, "__file__", STRING_VAL(pathStr));
+  push(valString(pathStr));
+  mapSetN(&module->fields, "__file__", valString(pathStr));
   pop(); /* pathStr */
 
   if (!parse((const char *)source, moduleName, &thunk)) {
@@ -56,16 +56,16 @@ Status importModuleWithPathAndSource(
     free((void *)freeSource);
   }
 
-  push(THUNK_VAL(thunk));
+  push(valThunk(thunk));
   closure = newClosure(thunk, module);
   pop(); /* function */
 
-  push(CLOSURE_VAL(closure));
+  push(valClosure(closure));
 
   if (callClosure(closure, 0)) {
     pop(); /* return value from run */
 
-    push(MODULE_VAL(module));
+    push(valModule(module));
 
     /* We need to copy all fields of the instance to the class so
      * that method calls will properly call the functions in the module */
@@ -87,12 +87,12 @@ static Status importModuleNoCache(String *moduleName) {
     ObjModule *module = NULL;
     Value moduleValue;
     if (isCFunction(nativeModuleThunkValue)) {
-      Value result = NIL_VAL(), *stackStart;
+      Value result = valNil(), *stackStart;
       CFunction *nativeModuleThunk;
       nativeModuleThunk = nativeModuleThunkValue.as.cfunction;
       module = newModule(moduleName, UFALSE);
-      moduleValue = MODULE_VAL(module);
-      push(MODULE_VAL(module));
+      moduleValue = valModule(module);
+      push(valModule(module));
       stackStart = vm.stackTop;
       if (!nativeModuleThunk->body(1, &moduleValue, &result)) {
         return STATUS_ERROR;
@@ -137,7 +137,7 @@ static Status importModuleNoCache(String *moduleName) {
  * new entry into the cache
  */
 Status importModule(String *moduleName) {
-  Value module = NIL_VAL();
+  Value module = valNil();
   if (mapGetStr(&vm.modules, moduleName, &module)) {
     if (!isModule(module)) {
       /* vm.modules table should only contain modules */
@@ -169,7 +169,7 @@ Status importModule(String *moduleName) {
  */
 Status importModuleAndPop(const char *moduleName) {
   String *moduleNameString = internCString(moduleName);
-  push(STRING_VAL(moduleNameString));
+  push(valString(moduleNameString));
   if (!importModule(moduleNameString)) {
     return STATUS_ERROR;
   }

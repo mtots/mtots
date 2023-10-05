@@ -118,7 +118,7 @@ ubool mapGet(Map *map, Value key, Value *value) {
 }
 
 ubool mapGetStr(Map *map, String *key, Value *value) {
-  return mapGet(map, STRING_VAL(key), value);
+  return mapGet(map, valString(key), value);
 }
 
 static void adjustMapCapacity(Map *map, size_t capacity) {
@@ -126,8 +126,8 @@ static void adjustMapCapacity(Map *map, size_t capacity) {
   MapEntry *entries = ALLOCATE(MapEntry, capacity);
   MapEntry *p, *first = NULL, *last = NULL;
   for (i = 0; i < capacity; i++) {
-    entries[i].key = EMPTY_KEY_VAL();
-    entries[i].value = NIL_VAL();
+    entries[i].key = valEmptyKey();
+    entries[i].value = valNil();
   }
 
   map->occupied = 0;
@@ -197,7 +197,7 @@ ubool mapSet(Map *map, Value key, Value value) {
 }
 
 ubool mapSetStr(Map *map, String *key, Value value) {
-  return mapSet(map, STRING_VAL(key), value);
+  return mapSet(map, valString(key), value);
 }
 
 /**
@@ -217,8 +217,8 @@ ubool mapSetN(Map *map, const char *key, Value value) {
 
   push(value);
   keystr = internCString(key);
-  push(STRING_VAL(keystr));
-  result = mapSet(map, STRING_VAL(keystr), value);
+  push(valString(keystr));
+  result = mapSet(map, valString(keystr), value);
   pop(); /* keystr */
   pop(); /* value */
   return result;
@@ -250,14 +250,14 @@ ubool mapDelete(Map *map, Value key) {
   entry->prev = entry->next = NULL;
 
   /* Place a tombstone in the entry */
-  entry->key = EMPTY_KEY_VAL();
-  entry->value = BOOL_VAL(1);
+  entry->key = valEmptyKey();
+  entry->value = valBool(1);
   map->size--;
   return STATUS_OK;
 }
 
 ubool mapDeleteStr(Map *map, String *key) {
-  return mapDelete(map, STRING_VAL(key));
+  return mapDelete(map, valString(key));
 }
 
 void mapAddAll(Map *from, Map *to) {

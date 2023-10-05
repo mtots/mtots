@@ -14,7 +14,7 @@ ObjStringBuilder *newStringBuilder(void) {
 }
 
 static Status implInstantiateStringBuilder(i16 argCount, Value *args, Value *out) {
-  *out = OBJ_VAL_EXPLICIT((Obj *)newStringBuilder());
+  *out = valObjExplicit((Obj *)newStringBuilder());
   return STATUS_OK;
 }
 
@@ -56,7 +56,7 @@ static CFunction funcSringBuilderAddBase64 = {implStringBuilderAddBase64, "addBa
 
 static Status implStringBuilderBuild(i16 argCount, Value *args, Value *out) {
   ObjStringBuilder *sb = (ObjStringBuilder *)AS_OBJ_UNSAFE(args[-1]);
-  *out = STRING_VAL(bufferToString(&sb->buf));
+  *out = valString(bufferToString(&sb->buf));
   return STATUS_OK;
 }
 

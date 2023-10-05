@@ -15,7 +15,7 @@
 #define MAKE_FUNC(fn)                                         \
   static Status impl##fn(i16 argc, Value *argv, Value *out) { \
     mode_t mode = (mode_t)asInt(argv[0]);                     \
-    *out = BOOL_VAL(!!fn(mode));                              \
+    *out = valBool(!!fn(mode));                              \
     return STATUS_OK;                                         \
   }                                                           \
   static CFunction func##fn = {impl##fn, #fn, 1}
@@ -52,18 +52,18 @@ static Status impl(i16 argc, Value *argv, Value *out) {
   moduleAddFunctions(module, functions);
 
 #if MTOTS_IS_POSIX
-  mapSetN(&module->fields, "S_IRWXU", NUMBER_VAL(S_IRWXU));
-  mapSetN(&module->fields, "S_IRUSR", NUMBER_VAL(S_IRUSR));
-  mapSetN(&module->fields, "S_IWUSR", NUMBER_VAL(S_IWUSR));
-  mapSetN(&module->fields, "S_IXUSR", NUMBER_VAL(S_IXUSR));
-  mapSetN(&module->fields, "S_IRWXG", NUMBER_VAL(S_IRWXG));
-  mapSetN(&module->fields, "S_IRGRP", NUMBER_VAL(S_IRGRP));
-  mapSetN(&module->fields, "S_IWGRP", NUMBER_VAL(S_IWGRP));
-  mapSetN(&module->fields, "S_IXGRP", NUMBER_VAL(S_IXGRP));
-  mapSetN(&module->fields, "S_IRWXO", NUMBER_VAL(S_IRWXO));
-  mapSetN(&module->fields, "S_IROTH", NUMBER_VAL(S_IROTH));
-  mapSetN(&module->fields, "S_IWOTH", NUMBER_VAL(S_IWOTH));
-  mapSetN(&module->fields, "S_IXOTH", NUMBER_VAL(S_IXOTH));
+  mapSetN(&module->fields, "S_IRWXU", valNumber(S_IRWXU));
+  mapSetN(&module->fields, "S_IRUSR", valNumber(S_IRUSR));
+  mapSetN(&module->fields, "S_IWUSR", valNumber(S_IWUSR));
+  mapSetN(&module->fields, "S_IXUSR", valNumber(S_IXUSR));
+  mapSetN(&module->fields, "S_IRWXG", valNumber(S_IRWXG));
+  mapSetN(&module->fields, "S_IRGRP", valNumber(S_IRGRP));
+  mapSetN(&module->fields, "S_IWGRP", valNumber(S_IWGRP));
+  mapSetN(&module->fields, "S_IXGRP", valNumber(S_IXGRP));
+  mapSetN(&module->fields, "S_IRWXO", valNumber(S_IRWXO));
+  mapSetN(&module->fields, "S_IROTH", valNumber(S_IROTH));
+  mapSetN(&module->fields, "S_IWOTH", valNumber(S_IWOTH));
+  mapSetN(&module->fields, "S_IXOTH", valNumber(S_IXOTH));
 #endif
 
   return STATUS_OK;
