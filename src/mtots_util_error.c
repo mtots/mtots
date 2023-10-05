@@ -29,7 +29,7 @@ NORETURN void panic(const char *format, ...) {
     initStringBuilder(&sb);
     errorContextProvider(&sb);
 #ifdef __ANDROID__
-    __android_log_print(ANDROID_LOG_ERROR, "MTOTS_RT", "%s", bufferToString(&sb)->chars);
+    __android_log_print(ANDROID_LOG_ERROR, "MTOTS_RT", "%s", sbstring(&sb)->buffer);
 #else
     fprintf(stderr, "%.*s", (int)sb.length, sb.buffer);
 #endif

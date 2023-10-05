@@ -3,8 +3,7 @@
 
 /* Some utilities for dealing with strings */
 
-#include "mtots_common.h"
-#include "mtots_util_buffer.h"
+#include "mtots_util_sb.h"
 
 typedef struct StringEscapeOptions {
   ubool jsonSafe;
@@ -16,7 +15,7 @@ typedef struct StringEscapeOptions {
 void initStringEscapeOptions(StringEscapeOptions *opts);
 
 ubool escapeString2(
-    Buffer *out,
+    StringBuilder *out,
     const char *str,
     size_t length,
     StringEscapeOptions *givenOpts);
@@ -39,6 +38,6 @@ ubool escapeString(
  * outLen: length of the final string not including the null terminator
  * outBytes: the buffer to write out the final string */
 ubool unescapeString2(
-    Buffer *out, const char *str, const char *quote, size_t quoteLen);
+    StringBuilder *out, const char *str, const char *quote, size_t quoteLen);
 
 #endif /*mtots_util_escape_h*/

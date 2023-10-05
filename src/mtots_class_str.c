@@ -95,16 +95,16 @@ static CFunction funcStrSlice = {implStrSlice, "__slice__", 2};
 static Status implStrMod(i16 argCount, Value *args, Value *out) {
   const char *fmt = asString(args[-1])->chars;
   ObjList *arglist = asList(args[0]);
-  Buffer buf;
+  StringBuilder sb;
 
-  initBuffer(&buf);
+  initStringBuilder(&sb);
 
-  if (!strMod(&buf, fmt, arglist)) {
+  if (!strMod(&sb, fmt, arglist)) {
     return STATUS_ERROR;
   }
 
-  *out = valString(bufferToString(&buf));
-  freeBuffer(&buf);
+  *out = valString(sbstring(&sb));
+  freeStringBuilder(&sb);
 
   return STATUS_OK;
 }
@@ -303,14 +303,14 @@ static Status padStringImpl(
     size_t width,
     String *padString,
     ubool padStart,
-    Buffer *out) {
+    StringBuilder *out) {
   size_t remain = width - string->codePointCount;
   if (!padStart) {
-    bputstrlen(out, string->chars, string->byteLength);
+    sbputstrlen(out, string->chars, string->byteLength);
   }
   while (remain >= padString->codePointCount) {
     remain -= padString->codePointCount;
-    bputstrlen(out, padString->chars, padString->byteLength);
+    sbputstrlen(out, padString->chars, padString->byteLength);
   }
   if (remain > 0) {
     if (padString->utf32) {
@@ -319,10 +319,10 @@ static Status padStringImpl(
           "remaining width are not supported");
       return STATUS_ERROR;
     }
-    bputstrlen(out, padString->chars, remain);
+    sbputstrlen(out, padString->chars, remain);
   }
   if (padStart) {
-    bputstrlen(out, string->chars, string->byteLength);
+    sbputstrlen(out, string->chars, string->byteLength);
   }
   return STATUS_OK;
 }
@@ -331,20 +331,20 @@ static Status implStringPadX(ubool padStart, i16 argCount, Value *args, Value *o
   String *string = asString(args[-1]);
   size_t width = asSize(args[0]);
   String *padString = argCount > 1 ? asString(args[1]) : internCString(" ");
-  Buffer buf;
+  StringBuilder sb;
   if (string->codePointCount >= width) {
     *out = valString(string);
     return STATUS_OK;
   }
   push(valString(padString));
-  initBuffer(&buf);
-  if (!padStringImpl(string, width, padString, padStart, &buf)) {
-    freeBuffer(&buf);
+  initStringBuilder(&sb);
+  if (!padStringImpl(string, width, padString, padStart, &sb)) {
+    freeStringBuilder(&sb);
     return STATUS_ERROR;
   }
   pop(); /* padString */
-  *out = valString(bufferToString(&buf));
-  freeBuffer(&buf);
+  *out = valString(sbstring(&sb));
+  freeStringBuilder(&sb);
   return STATUS_OK;
 }
 

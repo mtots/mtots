@@ -313,82 +313,82 @@ ubool sortListWithKeyFunc(ObjList *list, Value keyfunc) {
   return STATUS_OK;
 }
 
-static ubool mapRepr(Buffer *out, Map *map) {
+static ubool mapRepr(StringBuilder *out, Map *map) {
   MapIterator mi;
   MapEntry *entry;
   size_t i;
 
-  bputchar(out, '{');
+  sbputchar(out, '{');
   initMapIterator(&mi, map);
   for (i = 0; mapIteratorNext(&mi, &entry); i++) {
     if (i > 0) {
-      bputchar(out, ',');
-      bputchar(out, ' ');
+      sbputchar(out, ',');
+      sbputchar(out, ' ');
     }
     if (!valueRepr(out, entry->key)) {
       return STATUS_ERROR;
     }
     if (!isNil(entry->value)) {
-      bputchar(out, ':');
-      bputchar(out, ' ');
+      sbputchar(out, ':');
+      sbputchar(out, ' ');
       if (!valueRepr(out, entry->value)) {
         return STATUS_ERROR;
       }
     }
   }
-  bputchar(out, '}');
+  sbputchar(out, '}');
   return STATUS_OK;
 }
 
-ubool valueRepr(Buffer *out, Value value) {
+ubool valueRepr(StringBuilder *out, Value value) {
   switch (value.type) {
     case VAL_NIL:
-      bprintf(out, "nil");
+      sbprintf(out, "nil");
       return STATUS_OK;
     case VAL_BOOL:
-      bprintf(out, value.as.boolean ? "true" : "false");
+      sbprintf(out, value.as.boolean ? "true" : "false");
       return STATUS_OK;
     case VAL_NUMBER:
-      bputnumber(out, value.as.number);
+      sbputnumber(out, value.as.number);
       return STATUS_OK;
     case VAL_STRING: {
       String *str = value.as.string;
-      bputchar(out, '"');
+      sbputchar(out, '"');
       if (!escapeString2(out, str->chars, str->byteLength, NULL)) {
         return STATUS_ERROR;
       }
-      bputchar(out, '"');
+      sbputchar(out, '"');
       return STATUS_OK;
     }
     case VAL_CFUNCTION:
-      bprintf(out, "<function %s>", value.as.cfunction->name);
+      sbprintf(out, "<function %s>", value.as.cfunction->name);
       return STATUS_OK;
     case VAL_SENTINEL:
-      bprintf(out, "<sentinel %d>", value.as.sentinel);
+      sbprintf(out, "<sentinel %d>", value.as.sentinel);
       return STATUS_OK;
     case VAL_RANGE: {
       Range range = asRange(value);
-      bprintf(out, "Range(%d, %d, %d)", (int)range.start, (int)range.stop, (int)range.stop);
+      sbprintf(out, "Range(%d, %d, %d)", (int)range.start, (int)range.stop, (int)range.stop);
       return STATUS_OK;
     }
     case VAL_RANGE_ITERATOR:
-      bprintf(out, "<RangeIterator instance>");
+      sbprintf(out, "<RangeIterator instance>");
       return STATUS_OK;
     case VAL_OBJ: {
       Obj *obj = AS_OBJ_UNSAFE(value);
       switch (obj->type) {
         case OBJ_CLASS:
-          bprintf(out, "<class %s>", AS_CLASS_UNSAFE(value)->name->chars);
+          sbprintf(out, "<class %s>", AS_CLASS_UNSAFE(value)->name->chars);
           return STATUS_OK;
         case OBJ_CLOSURE:
-          bprintf(out, "<function %s>", AS_CLOSURE_UNSAFE(value)->thunk->name->chars);
+          sbprintf(out, "<function %s>", AS_CLOSURE_UNSAFE(value)->thunk->name->chars);
           return STATUS_OK;
         case OBJ_THUNK:
-          bprintf(out, "<thunk %s>", AS_THUNK_UNSAFE(value)->name->chars);
+          sbprintf(out, "<thunk %s>", AS_THUNK_UNSAFE(value)->name->chars);
           return STATUS_OK;
         case OBJ_INSTANCE:
           if (AS_INSTANCE_UNSAFE(value)->klass->isModuleClass) {
-            bprintf(out, "<module %s>", AS_INSTANCE_UNSAFE(value)->klass->name->chars);
+            sbprintf(out, "<module %s>", AS_INSTANCE_UNSAFE(value)->klass->name->chars);
           } else if (classHasMethod(getClassOfValue(value), vm.reprString)) {
             Value resultValue;
             String *resultString;
@@ -406,9 +406,9 @@ ubool valueRepr(Buffer *out, Value value) {
               return STATUS_ERROR;
             }
             resultString = resultValue.as.string;
-            bputstrlen(out, resultString->chars, resultString->byteLength);
+            sbputstrlen(out, resultString->chars, resultString->byteLength);
           } else {
-            bprintf(out, "<%s instance>", AS_INSTANCE_UNSAFE(value)->klass->name->chars);
+            sbprintf(out, "<%s instance>", AS_INSTANCE_UNSAFE(value)->klass->name->chars);
           }
           return STATUS_OK;
         case OBJ_BUFFER: {
@@ -418,42 +418,42 @@ ubool valueRepr(Buffer *out, Value value) {
           initStringEscapeOptions(&opts);
           opts.shorthandControlCodes = UFALSE;
           opts.tryUnicode = UFALSE;
-          bputchar(out, 'b');
-          bputchar(out, '"');
+          sbputchar(out, 'b');
+          sbputchar(out, '"');
           escapeString2(out, (const char *)buf->data, buf->length, &opts);
-          bputchar(out, '"');
+          sbputchar(out, '"');
           return STATUS_OK;
         }
         case OBJ_LIST: {
           ObjList *list = AS_LIST_UNSAFE(value);
           size_t i, len = list->length;
-          bputchar(out, '[');
+          sbputchar(out, '[');
           for (i = 0; i < len; i++) {
             if (i > 0) {
-              bputchar(out, ',');
-              bputchar(out, ' ');
+              sbputchar(out, ',');
+              sbputchar(out, ' ');
             }
             if (!valueRepr(out, list->buffer[i])) {
               return STATUS_ERROR;
             }
           }
-          bputchar(out, ']');
+          sbputchar(out, ']');
           return STATUS_OK;
         }
         case OBJ_FROZEN_LIST: {
           ObjFrozenList *frozenList = AS_FROZEN_LIST_UNSAFE(value);
           size_t i, len = frozenList->length;
-          bputchar(out, '(');
+          sbputchar(out, '(');
           for (i = 0; i < len; i++) {
             if (i > 0) {
-              bputchar(out, ',');
-              bputchar(out, ' ');
+              sbputchar(out, ',');
+              sbputchar(out, ' ');
             }
             if (!valueRepr(out, frozenList->buffer[i])) {
               return STATUS_ERROR;
             }
           }
-          bputchar(out, ')');
+          sbputchar(out, ')');
           return STATUS_OK;
         }
         case OBJ_DICT: {
@@ -462,7 +462,7 @@ ubool valueRepr(Buffer *out, Value value) {
         }
         case OBJ_FROZEN_DICT: {
           ObjFrozenDict *dict = AS_FROZEN_DICT_UNSAFE(value);
-          bputstr(out, "final");
+          sbputstr(out, "final");
           return mapRepr(out, &dict->map);
         }
         case OBJ_NATIVE:
@@ -483,14 +483,14 @@ ubool valueRepr(Buffer *out, Value value) {
               return STATUS_ERROR;
             }
             resultString = resultValue.as.string;
-            bputstrlen(out, resultString->chars, resultString->byteLength);
+            sbputstrlen(out, resultString->chars, resultString->byteLength);
           } else {
-            bprintf(out, "<%s native-instance>",
-                    AS_NATIVE_UNSAFE(value)->descriptor->klass->name->chars);
+            sbprintf(out, "<%s native-instance>",
+                     AS_NATIVE_UNSAFE(value)->descriptor->klass->name->chars);
           }
           return STATUS_OK;
         case OBJ_UPVALUE:
-          bprintf(out, "<upvalue>");
+          sbprintf(out, "<upvalue>");
           return STATUS_OK;
       }
     }
@@ -498,16 +498,16 @@ ubool valueRepr(Buffer *out, Value value) {
   panic("unrecognized value type %s", getKindName(value));
 }
 
-ubool valueStr(Buffer *out, Value value) {
+ubool valueStr(StringBuilder *out, Value value) {
   if (isString(value)) {
     String *string = value.as.string;
-    bputstrlen(out, string->chars, string->byteLength);
+    sbputstrlen(out, string->chars, string->byteLength);
     return STATUS_OK;
   }
   return valueRepr(out, value);
 }
 
-ubool strMod(Buffer *out, const char *format, ObjList *args) {
+ubool strMod(StringBuilder *out, const char *format, ObjList *args) {
   const char *p;
   size_t j;
 
@@ -516,7 +516,7 @@ ubool strMod(Buffer *out, const char *format, ObjList *args) {
       Value item;
       p++;
       if (*p == '%') {
-        bputchar(out, '%');
+        sbputchar(out, '%');
         continue;
       }
       if (j >= args->length) {
@@ -543,7 +543,7 @@ ubool strMod(Buffer *out, const char *format, ObjList *args) {
           return STATUS_ERROR;
       }
     } else {
-      bputchar(out, *p);
+      sbputchar(out, *p);
     }
   }
 

@@ -22,7 +22,7 @@ static CFunction funcNumberToU32 = {
 static Status implNumberBase(i16 argCount, Value *args, Value *out) {
   i32 value = asI32(args[-1]);
   i32 base = asI32(args[0]);
-  Buffer buf;
+  StringBuilder sb;
   size_t start, end;
   if (base > 36 || base < 2) {
     runtimeError("base > 36 and base < 2 are not supported (got %d)", (int)base);
@@ -32,27 +32,27 @@ static Status implNumberBase(i16 argCount, Value *args, Value *out) {
     *out = valString(internCString("0"));
     return STATUS_OK;
   }
-  initBuffer(&buf);
+  initStringBuilder(&sb);
   if (value < 0) {
-    bputchar(&buf, '-');
+    sbputchar(&sb, '-');
   }
-  start = buf.length;
+  start = sb.length;
   for (; value > 0; value /= base) {
     i32 digit = value % base;
     if (digit < 10) {
-      bputchar(&buf, '0' + digit);
+      sbputchar(&sb, '0' + digit);
     } else {
-      bputchar(&buf, 'A' + (digit - 10));
+      sbputchar(&sb, 'A' + (digit - 10));
     }
   }
-  end = buf.length;
+  end = sb.length;
   for (; start + 1 < end; start++, end--) {
-    u8 tmp = buf.data[start];
-    buf.data[start] = buf.data[end - 1];
-    buf.data[end - 1] = tmp;
+    char tmp = sb.buffer[start];
+    sb.buffer[start] = sb.buffer[end - 1];
+    sb.buffer[end - 1] = tmp;
   }
-  *out = valString(bufferToString(&buf));
-  freeBuffer(&buf);
+  *out = valString(sbstring(&sb));
+  freeStringBuilder(&sb);
   return STATUS_OK;
 }
 

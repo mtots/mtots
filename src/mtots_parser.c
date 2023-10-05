@@ -1003,7 +1003,7 @@ static ubool stringTokenToObjString(Parser *parser, String **out) {
   size_t quoteLen;
   char quoteChar = parser->previous.start[0];
   char quoteStr[4];
-  Buffer buf;
+  StringBuilder sb;
 
   if (quoteChar == parser->previous.start[1] &&
       quoteChar == parser->previous.start[2]) {
@@ -1016,14 +1016,14 @@ static ubool stringTokenToObjString(Parser *parser, String **out) {
     quoteLen = 1;
   }
 
-  initBuffer(&buf);
-  if (!unescapeString2(&buf, parser->previous.start + quoteLen, quoteStr, quoteLen)) {
+  initStringBuilder(&sb);
+  if (!unescapeString2(&sb, parser->previous.start + quoteLen, quoteStr, quoteLen)) {
     return STATUS_ERROR;
   }
 
-  *out = bufferToString(&buf);
+  *out = sbstring(&sb);
 
-  freeBuffer(&buf);
+  freeStringBuilder(&sb);
 
   return STATUS_OK;
 }

@@ -78,43 +78,47 @@ static Status implSum(i16 argCount, Value *args, Value *out) {
 
 static CFunction cfuncSum = {implSum, "sum", 1};
 
+static void reverseChars(char *chars, size_t start, size_t end) {
+  while (start + 1 < end) {
+    char tmp = chars[start];
+    chars[start] = chars[end - 1];
+    chars[end - 1] = tmp;
+    start++;
+    end--;
+  }
+}
+
 static Status implHex(i16 argCount, Value *args, Value *out) {
   double rawValue = asNumber(args[0]);
   size_t start, end, value;
-  Buffer buf;
+  StringBuilder sb;
 
-  initBuffer(&buf);
+  initStringBuilder(&sb);
   if (rawValue < 0) {
-    bputchar(&buf, '-');
+    sbputchar(&sb, '-');
     rawValue *= -1;
   }
   value = (size_t)rawValue;
-  bputstr(&buf, "0x");
+  sbputstr(&sb, "0x");
   if (value == 0) {
-    bputchar(&buf, '0');
+    sbputchar(&sb, '0');
   } else {
-    start = buf.length;
+    start = sb.length;
     while (value) {
       size_t digit = value & 0xF;
       if (digit < 10) {
-        bputchar(&buf, '0' + digit);
+        sbputchar(&sb, '0' + digit);
       } else {
-        bputchar(&buf, 'A' + (digit - 10));
+        sbputchar(&sb, 'A' + (digit - 10));
       }
       value /= 0x10;
     }
-    end = buf.length;
-    while (start + 1 < end) {
-      u8 tmp = buf.data[start];
-      buf.data[start] = buf.data[end - 1];
-      buf.data[end - 1] = tmp;
-      start++;
-      end--;
-    }
+    end = sb.length;
+    reverseChars(sb.buffer, start, end);
   }
 
-  *out = valString(bufferToString(&buf));
-  freeBuffer(&buf);
+  *out = valString(sbstring(&sb));
+  freeStringBuilder(&sb);
   return STATUS_OK;
 }
 
@@ -123,35 +127,29 @@ static CFunction funcHex = {implHex, "hex", 1};
 static Status implOct(i16 argCount, Value *args, Value *out) {
   double rawValue = asNumber(args[0]);
   size_t start, end, value;
-  Buffer buf;
+  StringBuilder sb;
 
-  initBuffer(&buf);
+  initStringBuilder(&sb);
   if (rawValue < 0) {
-    bputchar(&buf, '-');
+    sbputchar(&sb, '-');
     rawValue *= -1;
   }
   value = (size_t)rawValue;
-  bputstr(&buf, "0o");
+  sbputstr(&sb, "0o");
   if (value == 0) {
-    bputchar(&buf, '0');
+    sbputchar(&sb, '0');
   } else {
-    start = buf.length;
+    start = sb.length;
     while (value) {
-      bputchar(&buf, '0' + (value & 7));
+      sbputchar(&sb, '0' + (value & 7));
       value /= 8;
     }
-    end = buf.length;
-    while (start + 1 < end) {
-      u8 tmp = buf.data[start];
-      buf.data[start] = buf.data[end - 1];
-      buf.data[end - 1] = tmp;
-      start++;
-      end--;
-    }
+    end = sb.length;
+    reverseChars(sb.buffer, start, end);
   }
 
-  *out = valString(bufferToString(&buf));
-  freeBuffer(&buf);
+  *out = valString(sbstring(&sb));
+  freeStringBuilder(&sb);
   return STATUS_OK;
 }
 
@@ -160,35 +158,29 @@ static CFunction funcOct = {implOct, "oct", 1};
 static Status implBin(i16 argCount, Value *args, Value *out) {
   double rawValue = asNumber(args[0]);
   size_t start, end, value;
-  Buffer buf;
+  StringBuilder sb;
 
-  initBuffer(&buf);
+  initStringBuilder(&sb);
   if (rawValue < 0) {
-    bputchar(&buf, '-');
+    sbputchar(&sb, '-');
     rawValue *= -1;
   }
   value = (size_t)rawValue;
-  bputstr(&buf, "0b");
+  sbputstr(&sb, "0b");
   if (value == 0) {
-    bputchar(&buf, '0');
+    sbputchar(&sb, '0');
   } else {
-    start = buf.length;
+    start = sb.length;
     while (value) {
-      bputchar(&buf, (value & 1) ? '1' : '0');
+      sbputchar(&sb, (value & 1) ? '1' : '0');
       value /= 2;
     }
-    end = buf.length;
-    while (start + 1 < end) {
-      u8 tmp = buf.data[start];
-      buf.data[start] = buf.data[end - 1];
-      buf.data[end - 1] = tmp;
-      start++;
-      end--;
-    }
+    end = sb.length;
+    reverseChars(sb.buffer, start, end);
   }
 
-  *out = valString(bufferToString(&buf));
-  freeBuffer(&buf);
+  *out = valString(sbstring(&sb));
+  freeStringBuilder(&sb);
   return STATUS_OK;
 }
 
@@ -210,14 +202,14 @@ static Status implType(i16 argCount, Value *args, Value *out) {
 static CFunction cfuncType = {implType, "type", 1};
 
 static Status implRepr(i16 argCount, Value *args, Value *out) {
-  Buffer buf;
-  initBuffer(&buf);
-  if (!valueRepr(&buf, args[0])) {
-    freeBuffer(&buf);
+  StringBuilder sb;
+  initStringBuilder(&sb);
+  if (!valueRepr(&sb, args[0])) {
+    freeStringBuilder(&sb);
     return STATUS_ERROR;
   }
-  *out = valString(bufferToString(&buf));
-  freeBuffer(&buf);
+  *out = valString(sbstring(&sb));
+  freeStringBuilder(&sb);
   return STATUS_OK;
 }
 

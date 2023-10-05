@@ -2,17 +2,17 @@
 
 static Status implRangeRepr(i16 argCount, Value *args, Value *out) {
   Range range = asRange(args[-1]);
-  Buffer buf;
-  initBuffer(&buf);
-  bputstr(&buf, "Range(");
-  bputnumber(&buf, range.start);
-  bputchar(&buf, ',');
-  bputnumber(&buf, range.stop);
-  bputchar(&buf, ',');
-  bputnumber(&buf, range.step);
-  bputchar(&buf, ')');
-  *out = valString(bufferToString(&buf));
-  freeBuffer(&buf);
+  StringBuilder sb;
+  initStringBuilder(&sb);
+  sbputstr(&sb, "Range(");
+  sbputnumber(&sb, range.start);
+  sbputchar(&sb, ',');
+  sbputnumber(&sb, range.stop);
+  sbputchar(&sb, ',');
+  sbputnumber(&sb, range.step);
+  sbputchar(&sb, ')');
+  *out = valString(sbstring(&sb));
+  freeStringBuilder(&sb);
   return STATUS_OK;
 }
 

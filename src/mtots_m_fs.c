@@ -171,22 +171,22 @@ static CFunction funcMkdir = {implMkdir, "mkdir", 1, 2};
 static Status implJoin(i16 argCount, Value *args, Value *out) {
   ObjList *list = asList(args[0]);
   size_t i, len = list->length;
-  Buffer buf;
+  StringBuilder sb;
 
-  initBuffer(&buf);
+  initStringBuilder(&sb);
 
   for (i = 0; i < len; i++) {
     String *item;
     if (i > 0) {
-      bputchar(&buf, PATH_SEP);
+      sbputchar(&sb, PATH_SEP);
     }
     item = asString(list->buffer[i]);
-    bputstrlen(&buf, item->chars, item->byteLength);
+    sbputstrlen(&sb, item->chars, item->byteLength);
   }
 
-  *out = valString(bufferToString(&buf));
+  *out = valString(sbstring(&sb));
 
-  freeBuffer(&buf);
+  freeStringBuilder(&sb);
 
   return STATUS_OK;
 }

@@ -67,12 +67,4 @@ void bufferAddF32(Buffer *buf, f32 value);
 void bufferAddF64(Buffer *buf, f64 value);
 void bufferAddBytes(Buffer *buf, const void *data, size_t length);
 
-String *bufferToString(Buffer *buf);
-
-void bputnumber(Buffer *buf, double number);
-void bputchar(Buffer *buf, char ch);
-void bputstrlen(Buffer *buf, const char *chars, size_t byteLength);
-void bputstr(Buffer *buf, const char *string);
-void bprintf(Buffer *buf, const char *format, ...) MTOTS_PRINTFLIKE(2, 3);
-
 #endif /*mtots_util_buffer_h*/
