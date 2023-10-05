@@ -2,10 +2,15 @@ import subprocess
 
 
 final cproc = subprocess.run(['ls', 'lib'], check=true, captureOutput=true)
-print("STDOUT = %s" % [cproc.stdout])
-print("STDERR = %s" % [cproc.stderr])
+print("STDOUT = %r" % [cproc.stdout])
+print("STDERR = %r" % [cproc.stderr])
 
 
 subprocess.run(['ls', 'lib'], check=true)
 
 # subprocess.run(['cat', './make.py'])
+
+
+final proc = subprocess.Popen(['ls', 'src'], check=true, captureOutput=true)
+final out = proc.communicate()
+print("out = %r" % [out])

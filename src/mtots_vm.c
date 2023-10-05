@@ -351,6 +351,41 @@ static Status setupClosureWithKwArgs(ObjClosure *closure, i16 argc) {
   return setupCallClosure(closure, argc);
 }
 
+static Status setupCallClassWithKwArgs(ObjClass *klass, i16 argc) {
+  Value initializer;
+
+  if (klass->instantiate) {
+    return callCFunctionWithKwArgs(klass->instantiate, argc);
+  } else if (klass->isBuiltinClass) {
+    /* builtin class */
+    runtimeError("Builtin class %s does not support being called",
+                 klass->name->chars);
+    return STATUS_ERROR;
+  } else if (klass->descriptor) {
+    /* native class */
+    runtimeError("Native class %s does not support being called",
+                 klass->name->chars);
+    return STATUS_ERROR;
+  } else if (klass->isModuleClass) {
+    /* module */
+    runtimeError("Module classes cannot be instantiated");
+    return STATUS_ERROR;
+  } else {
+    /* normal classes */
+    vm.stackTop[-argc - 2] = valInstance(newInstance(klass));
+    if (mapGetStr(&klass->methods, vm.initString, &initializer)) {
+      if (!setupClosureWithKwArgs(AS_CLOSURE_UNSAFE(initializer), argc)) {
+        return STATUS_ERROR;
+      }
+      return STATUS_OK;
+    } else if (argc != 0) {
+      runtimeError("Expected 0 arguments but got %d", argc);
+      return STATUS_ERROR;
+    }
+    return STATUS_OK;
+  }
+}
+
 static Status callValueWithKwArgs(Value callable, i16 argc) {
   /* TOS is assumed to be the kwargs dict, so args must start at TOS - argc - 1 */
   switch (callable.type) {
@@ -359,6 +394,8 @@ static Status callValueWithKwArgs(Value callable, i16 argc) {
     case VAL_OBJ: {
       Obj *obj = callable.as.obj;
       switch (obj->type) {
+        case OBJ_CLASS:
+          return setupCallClassWithKwArgs(AS_CLASS_UNSAFE(callable), argc);
         case OBJ_CLOSURE:
           return setupClosureWithKwArgs(AS_CLOSURE_UNSAFE(callable), argc);
         default:
