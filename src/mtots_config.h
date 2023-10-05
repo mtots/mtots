@@ -32,12 +32,36 @@
  * Language version
  ****************************************************************/
 
+#if __cplusplus >= 201703L
+#define MTOTS_CPP17 1 /* C++17 and above */
+#else
+#define MTOTS_CPP17 0
+#endif
+
+#if __cplusplus >= 201103L
+#define MTOTS_CPP11 1 /* C++11 and above */
+#else
+#define MTOTS_CPP11 0
+#endif
+
+#if __STDC_VERSION__ >= 201112L
+#define MTOTS_C11 1 /* C11 and above  */
+#else
+#define MTOTS_C11 0
+#endif
+
+#if __GNUC__
+#define MTOTS_GNUC 1
+#else
+#define MTOTS_GNUC 0
+#endif
+
 /* #if __cplusplus >= 201103L || (defined(_MSC_VER) && _MSC_VER >= 1900) */
-#if __cplusplus >= 201103L /* C++11 and above */
+#if MTOTS_CPP11 /* C++11 and above */
 #define NORETURN [[noreturn]]
-#elif __STDC_VERSION__ >= 201112L /* C11 and above  */
+#elif MTOTS_C11 /* C11 and above  */
 #define NORETURN _Noreturn
-#elif __GNUC__
+#elif MTOTS_GNUC
 #define NORETURN __attribute__((noreturn))
 #else /* Assume C89 only */
 #define NORETURN

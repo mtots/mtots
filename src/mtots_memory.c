@@ -269,6 +269,10 @@ static void markRoots(void) {
     markValue(*slot);
   }
 
+  for (i = 0; i < SIGNAL_HANDLERS_COUNT; i++) {
+    markValue(vm.signalHandlers[i]);
+  }
+
   for (i = 0; i < vm.frameCount; i++) {
     markObject((Obj *)vm.frames[i].closure);
   }

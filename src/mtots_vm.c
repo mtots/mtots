@@ -93,6 +93,9 @@ void initVM(void) {
   vm.enableMallocFreeLogs = UFALSE;
   vm.enableLogOnGC = UFALSE;
   vm.localGCPause = UFALSE;
+  vm.trap = UFALSE;
+  vm.signal = 0;
+  memset(&vm.signalHandlers, 0, sizeof(vm.signalHandlers));
 
   if (sizeof(Value) != 16) {
     panic("sizeof(Value) != 16 (got %lu)", (unsigned long)sizeof(Value));
@@ -692,6 +695,11 @@ static Status run(void) {
   for (;;) {
     u8 instruction;
   loop:
+    if (vm.trap) {
+      if (!checkAndHandleSignals()) {
+        RETURN_RUNTIME_ERROR();
+      }
+    }
     switch (instruction = READ_BYTE()) {
       case OP_CONSTANT: {
         Value constant = READ_CONSTANT();
@@ -1366,4 +1374,25 @@ Status callFunction(i16 argCount) {
 
 Status callMethod(String *name, i16 argCount) {
   return callMethodHelper(name, argCount, UTRUE);
+}
+
+Status checkAndHandleSignals(void) {
+  int signal = vm.signal;
+  Value signalHandler;
+  if (signal < 0 || signal >= SIGNAL_HANDLERS_COUNT) {
+    panic("Invalid signal %d", signal);
+  }
+  signalHandler = vm.signalHandlers[vm.signal];
+  vm.signal = 0;
+  vm.trap = UFALSE;
+  if (isNil(signalHandler)) {
+    panic("nil signal handler (signal = %d)", signal);
+  }
+  push(signalHandler);
+  push(valNumber(signal));
+  if (!callFunction(1)) {
+    return STATUS_ERROR;
+  }
+  pop(); /* return value */
+  return STATUS_OK;
 }

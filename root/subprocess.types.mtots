@@ -1,4 +1,9 @@
+"""
+## Subprocess management
 
+Implements a subset of Python's subprocess module, and adds a few things not in Python's version.
+(Compare with https://docs.python.org/3/library/subprocess.html)
+"""
 
 class CompletedProcess:
   final returncode Int

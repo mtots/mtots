@@ -12,6 +12,7 @@
 #define STACK_MAX (FRAMES_MAX * U8_COUNT)
 #define TRY_SNAPSHOTS_MAX 64
 #define MAX_ERROR_STRING_LENGTH 2048
+#define SIGNAL_HANDLERS_COUNT 32
 
 #define LOCAL_GC_PAUSE(flag) \
   do {                       \
@@ -121,6 +122,10 @@ typedef struct VM {
   ubool enableMallocFreeLogs;
   ubool enableLogOnGC;
   ubool localGCPause;
+  ubool trap;
+
+  int signal;
+  Value signalHandlers[SIGNAL_HANDLERS_COUNT];
 } VM;
 
 extern VM vm;
@@ -192,5 +197,7 @@ Status callFunction(i16 argCount);
  *
  */
 Status callMethod(String *methodName, i16 argCount);
+
+Status checkAndHandleSignals(void);
 
 #endif /*mtots_vm_h*/

@@ -1,0 +1,29 @@
+"""
+## Set handlers for asynchronous events
+
+Implements a subset of Python's signal module
+(Compare with https://docs.python.org/3/library/signal.html)
+"""
+
+final SIGHUP Int = raise 0
+final SIGINT Int = raise 0
+final SIGQUIT Int = raise 0
+final SIGILL Int = raise 0
+final SIGABRT Int = raise 0
+final SIGFPE Int = raise 0
+final SIGKILL Int = raise 0
+final SIGSEGV Int = raise 0
+final SIGPIPE Int = raise 0
+final SIGALRM Int = raise 0
+final SIGTERM Int = raise 0
+final SIGCHLD Int = raise 0
+
+final SIG_IGN Function[Int, Any] = raise 0
+final SIG_DFL Function[Int, Any] = raise 0
+
+def signal(sig Int, handler Function[Int, Any]) nil:
+  """
+  Set the handler for signal signalnum to the function handler.
+  handler can be a callable Mtots object taking one argument (the signal),
+  or or one of the special values signal.SIG_IGN or signal.SIG_DFL.
+  """

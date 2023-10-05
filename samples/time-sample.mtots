@@ -1,0 +1,6 @@
+import time
+
+
+print("Starting sleep (time = %s)" % [time.time()])
+time.sleep(0.5)
+print("Finished sleep (time = %s)" % [time.time()])

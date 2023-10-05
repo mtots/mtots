@@ -9,9 +9,11 @@
 #include "mtots_m_platform.h"
 #include "mtots_m_random.h"
 #include "mtots_m_sdl.h"
+#include "mtots_m_signal.h"
 #include "mtots_m_stat.h"
 #include "mtots_m_subprocess.h"
 #include "mtots_m_sys.h"
+#include "mtots_m_time.h"
 
 void addNativeModules(void) {
   addNativeModuleBmon();
@@ -23,7 +25,9 @@ void addNativeModules(void) {
   addNativeModulePlatform();
   addNativeModuleRandom();
   addNativeModuleSDL();
+  addNativeModuleSignal();
   addNativeModuleStat();
   addNativeModuleSubprocess();
   addNativeModuleSys();
+  addNativeModuleTime();
 }

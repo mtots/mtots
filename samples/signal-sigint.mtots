@@ -1,0 +1,18 @@
+import time
+import signal
+
+var count = 0
+
+def handler(sig Int):
+  count = count + 1
+  print("Handling signal %s (count = %s)" % [sig, count])
+  if count > 3:
+    print("Restoring SIGINT handler to default")
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+print("installing signal handler")
+signal.signal(signal.SIGINT, handler)
+
+print("Starting sleep")
+time.sleep(10)
+
