@@ -138,7 +138,7 @@ static const u8 base64Rmap[] = {
     INVALID_CHAR,
 };
 
-ubool encodeBase64(const u8 *input, size_t length, Buffer *out) {
+ubool encodeBase64(const u8 *input, size_t length, StringBuilder *out) {
   size_t i;
   size_t lenRem = length % 3;
   size_t roundLen = length - lenRem;
@@ -147,25 +147,25 @@ ubool encodeBase64(const u8 *input, size_t length, Buffer *out) {
         (((u32)input[i]) << 16) |
         (((u32)input[i + 1]) << 8) |
         (((u32)input[i + 2]));
-    bputchar(out, base64Alphabet[chunk >> 18]);
-    bputchar(out, base64Alphabet[(chunk >> 12) & 63]);
-    bputchar(out, base64Alphabet[(chunk >> 6) & 63]);
-    bputchar(out, base64Alphabet[chunk & 63]);
+    sbputchar(out, base64Alphabet[chunk >> 18]);
+    sbputchar(out, base64Alphabet[(chunk >> 12) & 63]);
+    sbputchar(out, base64Alphabet[(chunk >> 6) & 63]);
+    sbputchar(out, base64Alphabet[chunk & 63]);
   }
   if (lenRem == 1) {
     u32 chunk = ((u32)input[i]) << 16;
-    bputchar(out, base64Alphabet[chunk >> 18]);
-    bputchar(out, base64Alphabet[(chunk >> 12) & 63]);
-    bputchar(out, '=');
-    bputchar(out, '=');
+    sbputchar(out, base64Alphabet[chunk >> 18]);
+    sbputchar(out, base64Alphabet[(chunk >> 12) & 63]);
+    sbputchar(out, '=');
+    sbputchar(out, '=');
   } else if (lenRem == 2) {
     u32 chunk =
         (((u32)input[i]) << 16) |
         (((u32)input[i + 1]) << 8);
-    bputchar(out, base64Alphabet[chunk >> 18]);
-    bputchar(out, base64Alphabet[(chunk >> 12) & 63]);
-    bputchar(out, base64Alphabet[(chunk >> 6) & 63]);
-    bputchar(out, '=');
+    sbputchar(out, base64Alphabet[chunk >> 18]);
+    sbputchar(out, base64Alphabet[(chunk >> 12) & 63]);
+    sbputchar(out, base64Alphabet[(chunk >> 6) & 63]);
+    sbputchar(out, '=');
   }
   return STATUS_OK;
 }

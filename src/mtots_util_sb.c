@@ -27,6 +27,17 @@ void freeStringBuilder(StringBuilder *sb) {
   free(sb->buffer);
 }
 
+void sbclear(StringBuilder *sb) {
+  if (sb->buffer) {
+    sb->length = 0;
+    sb->buffer[0] = '\0';
+  }
+}
+
+String *sbstring(StringBuilder *sb) {
+  return internString(sb->buffer, sb->length);
+}
+
 void sbputnumber(StringBuilder *sb, double number) {
   if (number != number) {
     sbprintf(sb, "nan");

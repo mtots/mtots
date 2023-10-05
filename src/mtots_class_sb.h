@@ -7,7 +7,7 @@
 
 typedef struct ObjStringBuilder {
   ObjNative obj;
-  Buffer buf;
+  StringBuilder handle;
 } ObjStringBuilder;
 
 ObjStringBuilder *asStringBuilder(Value value);

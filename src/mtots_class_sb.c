@@ -4,12 +4,12 @@ static void sbBlacken(ObjNative *n) {}
 
 static void sbFree(ObjNative *n) {
   ObjStringBuilder *sb = (ObjStringBuilder *)n;
-  freeBuffer(&sb->buf);
+  freeStringBuilder(&sb->handle);
 }
 
 ObjStringBuilder *newStringBuilder(void) {
   ObjStringBuilder *sb = NEW_NATIVE(ObjStringBuilder, &descriptorStringBuilder);
-  initBuffer(&sb->buf);
+  initStringBuilder(&sb->handle);
   return sb;
 }
 
@@ -25,7 +25,7 @@ static CFunction funcInstantiateStringBuilder = {
 
 static Status implStringBuilderClear(i16 argCount, Value *args, Value *out) {
   ObjStringBuilder *sb = asStringBuilder(args[-1]);
-  bufferClear(&sb->buf);
+  sbclear(&sb->handle);
   return STATUS_OK;
 }
 
@@ -37,7 +37,7 @@ static CFunction funcStringBuilderClear = {
 static Status implStringBuilderAdd(i16 argCount, Value *args, Value *out) {
   ObjStringBuilder *sb = asStringBuilder(args[-1]);
   String *string = asString(args[0]);
-  bputstrlen(&sb->buf, string->chars, string->byteLength);
+  sbputstrlen(&sb->handle, string->chars, string->byteLength);
   return STATUS_OK;
 }
 
@@ -46,7 +46,7 @@ static CFunction funcStringBuilderAdd = {implStringBuilderAdd, "add", 1, 0};
 static Status implStringBuilderAddBase64(i16 argCount, Value *args, Value *out) {
   ObjStringBuilder *sb = asStringBuilder(args[-1]);
   ObjBuffer *buffer = asBuffer(args[0]);
-  if (!encodeBase64(buffer->handle.data, buffer->handle.length, &sb->buf)) {
+  if (!encodeBase64(buffer->handle.data, buffer->handle.length, &sb->handle)) {
     return STATUS_ERROR;
   }
   return STATUS_OK;
@@ -56,7 +56,7 @@ static CFunction funcSringBuilderAddBase64 = {implStringBuilderAddBase64, "addBa
 
 static Status implStringBuilderBuild(i16 argCount, Value *args, Value *out) {
   ObjStringBuilder *sb = (ObjStringBuilder *)AS_OBJ_UNSAFE(args[-1]);
-  *out = valString(bufferToString(&sb->buf));
+  *out = valString(sbstring(&sb->handle));
   return STATUS_OK;
 }
 
