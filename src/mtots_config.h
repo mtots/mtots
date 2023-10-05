@@ -76,6 +76,8 @@
 #endif
 #else
 #define MTOTS_IS_DARWIN 0
+#define MTOTS_IS_MACOS 0
+#define MTOTS_IS_IPHONE 0
 #endif
 
 #if defined(__ANDROID__)
