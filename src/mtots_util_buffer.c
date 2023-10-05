@@ -44,9 +44,8 @@ static void checkIndex(Buffer *buf, size_t pos, size_t length) {
 }
 
 static void addByte(Buffer *buf, u8 byte) {
-  bufferSetMinCapacity(buf, buf->length + 2);
+  bufferSetMinCapacity(buf, buf->length + 1);
   buf->data[buf->length++] = byte;
-  buf->data[buf->length] = '\0';
 }
 
 static void addBytesWithByteOrder(Buffer *buf, u8 *bytes, size_t length) {
@@ -110,18 +109,14 @@ void bufferSetMinCapacity(Buffer *buf, size_t minCap) {
 void bufferSetLength(Buffer *buf, size_t newLength) {
   size_t oldLength = buf->length;
   if (oldLength < newLength) {
-    bufferSetMinCapacity(buf, newLength + 1);
+    bufferSetMinCapacity(buf, newLength);
     memset(buf->data + oldLength, 0, newLength - oldLength);
-    buf->data[newLength] = '\0';
   }
   buf->length = newLength;
 }
 
 void bufferClear(Buffer *buf) {
   buf->length = 0;
-  if (buf->capacity) {
-    buf->data[0] = '\0';
-  }
 }
 
 void freeBuffer(Buffer *buf) {
@@ -246,8 +241,7 @@ void bufferAddF64(Buffer *buf, f64 value) {
 }
 
 void bufferAddBytes(Buffer *buf, const void *data, size_t length) {
-  bufferSetMinCapacity(buf, buf->length + length + 1);
+  bufferSetMinCapacity(buf, buf->length + length);
   memcpy(buf->data + buf->length, data, length);
   buf->length += length;
-  buf->data[buf->length] = '\0';
 }
