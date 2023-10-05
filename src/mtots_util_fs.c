@@ -97,29 +97,29 @@ Status listDirectory(
 #elif MTOTS_IS_WINDOWS
   HANDLE hFind;
   WIN32_FIND_DATAA entry;
-  Buffer query;
-  initBuffer(&query);
-  bprintf(&query, "%s\\*", dirpath);
-  hFind = FindFirstFileA((char *)query.data, &entry);
+  StringBuilder query;
+  initStringBuilder(&query);
+  sbprintf(&query, "%s\\*", dirpath);
+  hFind = FindFirstFileA(query.buffer, &entry);
   if (hFind == INVALID_HANDLE_VALUE) {
-    freeBuffer(&query);
+    freeStringBuilder(&query);
     runtimeError("Could not open path as a directory: %s", dirpath);
     return STATUS_ERROR;
   }
   do {
     if (!callback(userData, entry.cFileName)) {
-      freeBuffer(&query);
+      freeStringBuilder(&query);
       FindClose(hFind);
       return STATUS_ERROR;
     }
   } while (FindNextFileA(hFind, &entry));
   if (GetLastError() != ERROR_NO_MORE_FILES) {
-    freeBuffer(&query);
+    freeStringBuilder(&query);
     FindClose(hFind);
     runtimeError("Error while listing directory");
     return STATUS_ERROR;
   }
-  freeBuffer(&query);
+  freeStringBuilder(&query);
   FindClose(hFind);
   return STATUS_OK;
 #else
