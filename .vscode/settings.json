@@ -56,7 +56,8 @@
         "editor.formatOnSave": true,
         "diffEditor.ignoreTrimWhitespace": false,
         "editor.formatOnType": true,
-        "editor.wordBasedSuggestions": false
+        "editor.wordBasedSuggestions": false,
+        "editor.defaultFormatter": "ms-python.black-formatter"
     },
     "[c]": {
         "editor.formatOnSave": true,
@@ -81,5 +82,6 @@
         "MTOTS_ENABLE_SDL=1"
     ],
     "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 2, ColumnLimit: 0}",
-    "python.analysis.typeCheckingMode": "strict"
+    "python.analysis.typeCheckingMode": "strict",
+    "python.formatting.provider": "none"
 }

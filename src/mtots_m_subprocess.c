@@ -2,7 +2,7 @@
 
 #include "mtots_vm.h"
 
-#ifdef MTOTS_IS_POSIX
+#if MTOTS_IS_POSIX
 #include <errno.h>
 #include <spawn.h>
 #include <stdlib.h>
