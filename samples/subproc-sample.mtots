@@ -10,7 +10,20 @@ subprocess.run(['ls', 'lib'], check=true)
 
 # subprocess.run(['cat', './make.py'])
 
+final proc1 = subprocess.Popen(['ls', 'src'], check=true, captureOutput=true)
+final out1 = proc1.communicate()
+print("out1 = %r" % [out1])
+print("proc1.returncode = %r" % [proc1.returncode])
 
-final proc = subprocess.Popen(['ls', 'src'], check=true, captureOutput=true)
-final out = proc.communicate()
-print("out = %r" % [out])
+final proc2 = subprocess.Popen(['false'], check=false, captureOutput=true)
+final out2 = proc2.communicate()
+print("out2 = %r" % [out2])
+print("proc2.returncode = %r" % [proc2.returncode])
+
+subprocess.run(['cat'], input="cat-input\nsecond line\n")
+# subprocess.run(['cat'])
+
+final proc3 = subprocess.Popen(['cat'], stdin=subprocess.PIPE, captureOutput=true)
+final out3 = proc3.communicate('some data through communicate')
+print("out3 = %r" % [out3])
+print("proc3.returncode = %r" % [proc3.returncode])

@@ -11,7 +11,11 @@ class CompletedProcess:
   final stderr String
 
 
-def run(args List[String], check Bool=false, captureOutput Bool=false) CompletedProcess:
+def run(
+    args List[String],
+    check Bool=false,
+    input String?=nil,
+    captureOutput Bool=false) CompletedProcess:
   """
   Spawn a subprocess and wait for it to finish.
 
@@ -23,8 +27,46 @@ def run(args List[String], check Bool=false, captureOutput Bool=false) Completed
     to pass to the subprocess.
   * check - if set to `true`, this function will throw if the subprocess returns
     a non-zero exit code.
+  * input - some data to pass to stdin of the child process. Any non-nil value here
+    will cause this function to PIPE the stdin of the child.
   * captureOutput - by default, when set to `false`, `run` will inherit stdout and
     stderr from the parent. However, when this parameter is set to `true`, stdout
     and stderr will be piped and stored as a `String` in the returned `CompletedProcess`'s
     `stdout` and `stderr` fields.
   """
+
+
+final PIPE """
+Flag used to indicate a Popen stream should be captured.
+"""= -1
+
+
+class Popen:
+  """
+  Execute a child program in a new process. On POSIX, the class uses
+  os.execvpe()-like behavior to execute the child program. On Windows,
+  the class uses the Windows CreateProcess() function.
+  """
+
+  final returncode Int
+
+  def __init__(
+      args List[String],
+      check Bool = false,
+      stdin Int?=nil,
+      captureOutput Bool = false):
+    """
+    Start a new subprocess.
+    """
+
+  def communicate(input String?=nil) List[String]:
+    """
+    Interact with process: Read data from stdout and stderr, until end-of-file
+    is reached. Wait for process to terminate and set the returncode
+    attribute. Returns a pair stdout, stderr. If they were not captured/PIPEd,
+    the results will be empty strings.
+
+    Parameters:
+    * input - String data to pass to stdin of this subprocess. If this parameter
+      is not nil, this Popen must have been created with stdin=PIPE.
+    """

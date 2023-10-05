@@ -11,6 +11,8 @@
 #include <unistd.h>
 #endif
 
+#define MTOTS_PIPE (-1)
+
 #define RETURNCODE_PENDING (-1) /* subprocess still running */
 #define RETURNCODE_MISSING (-2) /* finished, but no clear returncode */
 
@@ -22,13 +24,16 @@
 typedef struct Popen {
 #if MTOTS_IS_POSIX
   pid_t pid;
-  FILE *stdoutFile, *stderrFile;
+  FILE *stdinFile, *stdoutFile, *stderrFile;
+  int stdinfd[2];
   int stdoutfd[2];
   int stderrfd[2];
   int status;
   int returncode;
+  ubool pipeStdin;
+  ubool pipeStdout;
+  ubool pipeStderr;
   ubool check;
-  ubool captureOutput;
 #else
   int unused;
 #endif
@@ -58,49 +63,78 @@ static Status listToArgs(ObjList *argsList, const char **args) {
 }
 
 static Status popenInitFileActions(Popen *proc, posix_spawn_file_actions_t *actions) {
-  if (proc->captureOutput) {
-    if (0 != pipe(proc->stdoutfd)) {
-      runtimeError("pipe(stdoutfd) failed");
-      return STATUS_ERROR;
-    }
-
-    if (0 != pipe(proc->stderrfd)) {
-      runtimeError("pipe(stderrfd) failed");
-      return STATUS_ERROR;
-    }
-
+  if (proc->pipeStdin || proc->pipeStdout || proc->pipeStderr) {
     if (0 != posix_spawn_file_actions_init(actions)) {
       runtimeError("posix_spawn_file_actions_init failed");
       return STATUS_ERROR;
     }
 
-    /* Close the stdout read end */
-    if (0 != posix_spawn_file_actions_addclose(actions, proc->stdoutfd[0])) {
-      posix_spawn_file_actions_destroy(actions);
-      runtimeError("posix_spawn_file_actions_addclose(.., stdoutfd[0]) failed");
-      return STATUS_ERROR;
+    if (proc->pipeStdin) {
+      if (0 != pipe(proc->stdinfd)) {
+        posix_spawn_file_actions_destroy(actions);
+        runtimeError("pipe(stdinfd) failed");
+        return STATUS_ERROR;
+      }
+
+      /* Close the stdin write end */
+      if (0 != posix_spawn_file_actions_addclose(actions, proc->stdinfd[1])) {
+        posix_spawn_file_actions_destroy(actions);
+        runtimeError("posix_spawn_file_actions_addclose(.., stdinfd[1]) failed");
+        return STATUS_ERROR;
+      }
+
+      /* Map the read end to stdin */
+      if (0 !=
+          posix_spawn_file_actions_adddup2(actions, proc->stdinfd[0], STDIN_FILENO)) {
+        posix_spawn_file_actions_destroy(actions);
+        runtimeError("posix_spawn_file_actions_adddup2(.., stdinfd[0]) failed");
+        return STATUS_ERROR;
+      }
     }
 
-    /* Map the write end to stdout */
-    if (0 != posix_spawn_file_actions_adddup2(actions, proc->stdoutfd[1], STDOUT_FILENO)) {
-      posix_spawn_file_actions_destroy(actions);
-      runtimeError("posix_spawn_file_actions_adddup2(.., stdoutfd[1]) failed");
-      return STATUS_ERROR;
+    if (proc->pipeStdout) {
+      if (0 != pipe(proc->stdoutfd)) {
+        posix_spawn_file_actions_destroy(actions);
+        runtimeError("pipe(stdoutfd) failed");
+        return STATUS_ERROR;
+      }
+
+      /* Close the stdout read end */
+      if (0 != posix_spawn_file_actions_addclose(actions, proc->stdoutfd[0])) {
+        posix_spawn_file_actions_destroy(actions);
+        runtimeError("posix_spawn_file_actions_addclose(.., stdoutfd[0]) failed");
+        return STATUS_ERROR;
+      }
+
+      /* Map the write end to stdout */
+      if (0 != posix_spawn_file_actions_adddup2(actions, proc->stdoutfd[1], STDOUT_FILENO)) {
+        posix_spawn_file_actions_destroy(actions);
+        runtimeError("posix_spawn_file_actions_adddup2(.., stdoutfd[1]) failed");
+        return STATUS_ERROR;
+      }
     }
 
-    /* Close the stderr read end */
-    if (0 != posix_spawn_file_actions_addclose(actions, proc->stderrfd[0])) {
-      posix_spawn_file_actions_destroy(actions);
-      runtimeError("posix_spawn_file_actions_addclose(.., stderrfd[0]) failed");
-      return STATUS_ERROR;
-    }
+    if (proc->pipeStderr) {
+      if (proc->pipeStderr && 0 != pipe(proc->stderrfd)) {
+        posix_spawn_file_actions_destroy(actions);
+        runtimeError("pipe(stderrfd) failed");
+        return STATUS_ERROR;
+      }
 
-    /* Map the write end to stdout */
-    if (0 != posix_spawn_file_actions_adddup2(actions, proc->stderrfd[1],
-                                              STDERR_FILENO)) {
-      posix_spawn_file_actions_destroy(actions);
-      runtimeError("posix_spawn_file_actions_adddup2(.., stderrfd[1]) failed");
-      return STATUS_ERROR;
+      /* Close the stderr read end */
+      if (0 != posix_spawn_file_actions_addclose(actions, proc->stderrfd[0])) {
+        posix_spawn_file_actions_destroy(actions);
+        runtimeError("posix_spawn_file_actions_addclose(.., stderrfd[0]) failed");
+        return STATUS_ERROR;
+      }
+
+      /* Map the write end to stderr */
+      if (0 != posix_spawn_file_actions_adddup2(actions, proc->stderrfd[1],
+                                                STDERR_FILENO)) {
+        posix_spawn_file_actions_destroy(actions);
+        runtimeError("posix_spawn_file_actions_adddup2(.., stderrfd[1]) failed");
+        return STATUS_ERROR;
+      }
     }
   }
 
@@ -121,7 +155,10 @@ static Status popenStart(Popen *proc, const char **args) {
 #endif
   if (0 != posix_spawnp(
                &proc->pid, args[0],
-               proc->captureOutput ? &actions : NULL, NULL,
+               proc->pipeStdin || proc->pipeStdout || proc->pipeStderr
+                   ? &actions
+                   : NULL,
+               NULL,
                (char *const *)args, NULL)) {
     posix_spawn_file_actions_destroy(&actions);
     runtimeError("posix_spawnp failed");
@@ -131,20 +168,32 @@ static Status popenStart(Popen *proc, const char **args) {
 #pragma clang diagnostic pop
 #endif
 
-  if (proc->captureOutput) {
+  if (proc->pipeStdin || proc->pipeStdout || proc->pipeStderr) {
     posix_spawn_file_actions_destroy(&actions);
 
-    /* Close the stdout write end */
-    close(proc->stdoutfd[1]);
+    if (proc->pipeStdin) {
+      /* Close the stdin read end */
+      close(proc->stdinfd[0]);
 
-    /* Store the stdout read end */
-    proc->stdoutFile = fdopen(proc->stdoutfd[0], "rb");
+      /* Store the stdin write end */
+      proc->stdinFile = fdopen(proc->stdinfd[1], "wb");
+    }
 
-    /* Close the stderr write end */
-    close(proc->stderrfd[1]);
+    if (proc->pipeStdout) {
+      /* Close the stdout write end */
+      close(proc->stdoutfd[1]);
 
-    /* Store the stderr read end */
-    proc->stderrFile = fdopen(proc->stderrfd[0], "rb");
+      /* Store the stdout read end */
+      proc->stdoutFile = fdopen(proc->stdoutfd[0], "rb");
+    }
+
+    if (proc->pipeStderr) {
+      /* Close the stderr write end */
+      close(proc->stderrfd[1]);
+
+      /* Store the stderr read end */
+      proc->stderrFile = fdopen(proc->stderrfd[0], "rb");
+    }
   }
 
   return STATUS_OK;
@@ -153,9 +202,31 @@ static Status popenStart(Popen *proc, const char **args) {
 static Status popenWait(
     Popen *proc,
     int *returncode,
+    String *stdinString,
     String **stdoutString,
     String **stderrString) {
   pid_t p;
+
+  if (stdinString) {
+    if (proc->pipeStdin) {
+      if (fwrite(
+              stdinString->chars,
+              1,
+              stdinString->byteLength,
+              proc->stdinFile) < stdinString->byteLength) {
+        runtimeError("fwrite(): %s", strerror(errno));
+        return STATUS_ERROR;
+      }
+    } else {
+      runtimeError(
+          "input provided to subprocess.Popen, but stdin is not piped");
+      return STATUS_ERROR;
+    }
+  }
+
+  if (proc->pipeStdin) {
+    fclose(proc->stdinFile);
+  }
 
   do {
     proc->status = 0;
@@ -195,28 +266,40 @@ static Status popenWait(
     return STATUS_ERROR;
   }
 
-  if (proc->captureOutput) {
+  if (proc->pipeStdout || proc->pipeStderr) {
     size_t size = 0, capacity = 0;
     char *buffer = NULL;
 
-    do {
-      capacity = capacity == 0 ? 512 : capacity * 2;
-      buffer = (char *)realloc(buffer, capacity);
-      size += fread(buffer + size, 1, capacity - size, proc->stdoutFile);
-    } while (size == capacity && !feof(proc->stdoutFile) && !ferror(proc->stdoutFile));
+    if (proc->pipeStdout) {
+      do {
+        capacity = capacity == 0 ? 512 : capacity * 2;
+        buffer = (char *)realloc(buffer, capacity);
+        size += fread(buffer + size, 1, capacity - size, proc->stdoutFile);
+      } while (size == capacity && !feof(proc->stdoutFile) && !ferror(proc->stdoutFile));
 
-    *stdoutString = internString(buffer, size);
+      fclose(proc->stdoutFile);
 
-    size = 0;
-    do {
-      capacity = capacity == 0 ? 512
-                 : size == 0   ? capacity
-                               : capacity * 2;
-      buffer = (char *)realloc(buffer, capacity);
-      size += fread(buffer + size, 1, capacity - size, proc->stderrFile);
-    } while (size == capacity && !feof(proc->stderrFile) && !ferror(proc->stderrFile));
+      *stdoutString = internString(buffer, size);
+    } else {
+      *stdoutString = vm.emptyString;
+    }
 
-    *stderrString = internString(buffer, size);
+    if (proc->pipeStderr) {
+      size = 0;
+      do {
+        capacity = capacity == 0 ? 512
+                   : size == 0   ? capacity
+                                 : capacity * 2;
+        buffer = (char *)realloc(buffer, capacity);
+        size += fread(buffer + size, 1, capacity - size, proc->stderrFile);
+      } while (size == capacity && !feof(proc->stderrFile) && !ferror(proc->stderrFile));
+
+      fclose(proc->stderrFile);
+
+      *stderrString = internString(buffer, size);
+    } else {
+      *stderrString = vm.emptyString;
+    }
 
     free(buffer);
   } else {
@@ -295,11 +378,14 @@ static ObjPopen *newPopen(void) {
 }
 
 static Status implPopenStaticCall(i16 argc, Value *argv, Value *out) {
+  ubool captureOutput;
   ObjPopen *proc = newPopen();
   const char *args[MAX_RUN_ARGC + 1] = {NULL};
   ObjList *argsList = asList(argv[0]);
   proc->handle.check = argc > 1 && !isNil(argv[1]) ? asBool(argv[1]) : UFALSE;
-  proc->handle.captureOutput = argc > 2 && !isNil(argv[2]) ? asBool(argv[2]) : UFALSE;
+  proc->handle.pipeStdin = argc > 2 && !isNil(argv[2]) && asNumber(argv[2]) == MTOTS_PIPE;
+  captureOutput = argc > 3 && !isNil(argv[3]) ? asBool(argv[3]) : UFALSE;
+  proc->handle.pipeStderr = proc->handle.pipeStdout = captureOutput;
   if (!listToArgs(argsList, args)) {
     return STATUS_ERROR;
   }
@@ -313,6 +399,7 @@ static Status implPopenStaticCall(i16 argc, Value *argv, Value *out) {
 static const char *argsPopenStaticCall[] = {
     "args",
     "check",
+    "stdin",
     "captureOutput",
     NULL,
 };
@@ -325,12 +412,27 @@ static CFunction funcPopenStaticCall = {
     argsPopenStaticCall,
 };
 
+static Status implPopenGetattr(i16 argc, Value *argv, Value *out) {
+  ObjPopen *proc = asPopen(argv[-1]);
+  String *name = asString(argv[0]);
+  if (name == stringReturncode) {
+    *out = valNumber(proc->handle.returncode);
+  } else {
+    runtimeError("Field '%s' not found on %s", name->chars, getKindName(argv[-1]));
+    return STATUS_ERROR;
+  }
+  return STATUS_OK;
+}
+
+static CFunction funcPopenGetattr = {implPopenGetattr, "__getattr__", 1};
+
 static Status implPopenCommunicate(i16 argc, Value *argv, Value *out) {
   ObjPopen *proc = asPopen(argv[-1]);
+  String *input = argc > 0 && !isNil(argv[0]) ? asString(argv[0]) : NULL;
   ObjList *pair = newList(2);
   String *stdoutString, *stderrString;
   int returncode;
-  if (!popenWait(&proc->handle, &returncode, &stdoutString, &stderrString)) {
+  if (!popenWait(&proc->handle, &returncode, input, &stdoutString, &stderrString)) {
     return STATUS_ERROR;
   }
   pair->buffer[0] = valString(stdoutString);
@@ -339,10 +441,7 @@ static Status implPopenCommunicate(i16 argc, Value *argv, Value *out) {
   return STATUS_OK;
 }
 
-static CFunction funcPopenCommunicate = {
-    implPopenCommunicate,
-    "communicate",
-};
+static CFunction funcPopenCommunicate = {implPopenCommunicate, "communicate", 0, 1};
 
 static Status implCompletedProcessGetattr(i16 argc, Value *argv, Value *out) {
   ObjCompletedProcess *cp = asCompletedProcess(argv[-1]);
@@ -368,11 +467,17 @@ static CFunction funcCompletedProcessGetattr = {
 
 static Status implRun(i16 argc, Value *argv, Value *out) {
 #if MTOTS_IS_POSIX
+  String *input;
+  ubool captureOutput;
   Popen proc = {0};
   const char *args[MAX_RUN_ARGC + 1] = {NULL};
   ObjList *argsList = asList(argv[0]);
   proc.check = argc > 1 && !isNil(argv[1]) ? asBool(argv[1]) : UFALSE;
-  proc.captureOutput = argc > 2 && !isNil(argv[2]) ? asBool(argv[2]) : UFALSE;
+  input = argc > 2 && !isNil(argv[2]) ? asString(argv[2]) : NULL;
+  captureOutput = argc > 3 && !isNil(argv[3]) ? asBool(argv[3]) : UFALSE;
+
+  proc.pipeStdin = !!input;
+  proc.pipeStderr = proc.pipeStdout = captureOutput;
 
   if (!listToArgs(argsList, args)) {
     return STATUS_ERROR;
@@ -385,6 +490,7 @@ static Status implRun(i16 argc, Value *argv, Value *out) {
   if (!popenWait(
           &proc,
           &completedProcess->returncode,
+          input,
           &completedProcess->stdoutString,
           &completedProcess->stderrString)) {
     return STATUS_ERROR;
@@ -402,6 +508,7 @@ static Status implRun(i16 argc, Value *argv, Value *out) {
 static const char *argsRun[] = {
     "args",
     "check",
+    "input",
     "captureOutput",
     NULL,
 };
@@ -425,6 +532,7 @@ static Status impl(i16 argc, Value *argv, Value *out) {
       NULL,
   };
   CFunction *popenMethods[] = {
+      &funcPopenGetattr,
       &funcPopenCommunicate,
       NULL,
   };
@@ -456,6 +564,9 @@ static Status impl(i16 argc, Value *argv, Value *out) {
   moduleRetain(module, valString(stringReturncode = internCString("returncode")));
   moduleRetain(module, valString(stringStdout = internCString("stdout")));
   moduleRetain(module, valString(stringStderr = internCString("stderr")));
+
+  mapSetN(&module->fields, "PIPE", valNumber(MTOTS_PIPE));
+
   return STATUS_OK;
 }
 
