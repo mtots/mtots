@@ -9,7 +9,7 @@
 #include <android/log.h>
 #endif
 
-static void (*errorContextProvider)(Buffer *);
+static void (*errorContextProvider)(StringBuilder *);
 static char *errorString;
 static char *savedErrorString;
 
@@ -25,15 +25,15 @@ NORETURN void panic(const char *format, ...) {
 #endif
   va_end(args);
   if (errorContextProvider) {
-    Buffer buf;
-    initBuffer(&buf);
-    errorContextProvider(&buf);
+    StringBuilder sb;
+    initStringBuilder(&sb);
+    errorContextProvider(&sb);
 #ifdef __ANDROID__
-    __android_log_print(ANDROID_LOG_ERROR, "MTOTS_RT", "%s", bufferToString(&buf)->chars);
+    __android_log_print(ANDROID_LOG_ERROR, "MTOTS_RT", "%s", bufferToString(&sb)->chars);
 #else
-    fprintf(stderr, "%.*s", (int)buf.length, (char *)buf.data);
+    fprintf(stderr, "%.*s", (int)sb.length, sb.buffer);
 #endif
-    freeBuffer(&buf);
+    freeStringBuilder(&sb);
   }
   abort();
 }
@@ -43,12 +43,12 @@ void runtimeError(const char *format, ...) {
   size_t len = 0;
   va_list args;
   char *ptr;
-  Buffer buf;
+  StringBuilder sb;
 
-  initBuffer(&buf);
+  initStringBuilder(&sb);
 
   if (errorContextProvider) {
-    errorContextProvider(&buf);
+    errorContextProvider(&sb);
   }
 
   va_start(args, format);
@@ -56,7 +56,7 @@ void runtimeError(const char *format, ...) {
   va_end(args);
   len++; /* '\n' */
 
-  len += buf.length;
+  len += sb.length;
 
   ptr = errorString = (char *)realloc(errorString, sizeof(char) * (len + 1));
 
@@ -64,13 +64,13 @@ void runtimeError(const char *format, ...) {
   ptr += vsnprintf(ptr, (len + 1), format, args);
   va_end(args);
   ptr += snprintf(ptr, (len + 1) - (ptr - errorString), "\n");
-  if (buf.length) {
-    memcpy(ptr, buf.data, buf.length);
-    ptr += buf.length;
+  if (sb.length) {
+    memcpy(ptr, sb.buffer, sb.length);
+    ptr += sb.length;
   }
   *ptr = '\0';
 
-  freeBuffer(&buf);
+  freeStringBuilder(&sb);
 }
 
 const char *getErrorString(void) {
@@ -82,7 +82,7 @@ void clearErrorString(void) {
   errorString = NULL;
 }
 
-void setErrorContextProvider(void (*contextProvider)(Buffer *)) {
+void setErrorContextProvider(void (*contextProvider)(StringBuilder *)) {
   errorContextProvider = contextProvider;
 }
 

@@ -31,26 +31,26 @@ static void resetStack(void) {
   vm.trySnapshotsCount = 0;
 }
 
-static void printStackToStringBuffer(Buffer *out) {
+static void printStackToStringBuffer(StringBuilder *out) {
   i16 i;
   for (i = vm.frameCount - 1; i >= 0; i--) {
     CallFrame *frame = &vm.frames[i];
     ObjThunk *thunk = frame->closure->thunk;
     size_t instruction = frame->ip - thunk->chunk.code - 1;
-    bprintf(
+    sbprintf(
         out, "[line %d] in ", thunk->chunk.lines[instruction]);
     if (thunk->name == NULL) {
       if (thunk->moduleName == NULL) {
-        bprintf(out, "[script]\n");
+        sbprintf(out, "[script]\n");
       } else {
-        bprintf(out, "%s\n", thunk->moduleName->chars);
+        sbprintf(out, "%s\n", thunk->moduleName->chars);
       }
     } else {
       if (thunk->moduleName == NULL) {
-        bprintf(out, "%s()\n", thunk->name->chars);
+        sbprintf(out, "%s()\n", thunk->name->chars);
       } else {
-        bprintf(out, "%s:%s()\n",
-                thunk->moduleName->chars, thunk->name->chars);
+        sbprintf(out, "%s:%s()\n",
+                 thunk->moduleName->chars, thunk->name->chars);
       }
     }
   }
@@ -669,7 +669,7 @@ static Status run(void) {
       double b = pop().as.number;                    \
       double a = pop().as.number;                    \
       /* TODO: Forgive myself for this evil macro */ \
-      push(valNumber(opexpr));                      \
+      push(valNumber(opexpr));                       \
     } else {                                         \
       INVOKE(invokeStr, 1);                          \
     }                                                \
@@ -685,7 +685,7 @@ static Status run(void) {
     {                                                          \
       u32 b = asU32Bits(pop());                                \
       u32 a = asU32Bits(pop());                                \
-      push(valNumber(a op b));                                \
+      push(valNumber(a op b));                                 \
     }                                                          \
   } while (0)
 

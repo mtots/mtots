@@ -1,7 +1,7 @@
 #ifndef mtots_util_error_h
 #define mtots_util_error_h
 
-#include "mtots_util_buffer.h"
+#include "mtots_util_sb.h"
 
 /* Flag a fatal error. The message is written to stderr and the program exits
  * with non-zero return code */
@@ -19,7 +19,7 @@ void clearErrorString(void);
 
 /* Adds a context provider that can add additional context to error messages.
  * The provider will be called for both 'panic' and 'runtimeError'. */
-void setErrorContextProvider(void (*contextProvider)(Buffer *));
+void setErrorContextProvider(void (*contextProvider)(StringBuilder *));
 
 /* Basically a panic with a standandardized error message */
 NORETURN void assertionError(const char *message);

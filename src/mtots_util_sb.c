@@ -23,6 +23,10 @@ void initStringBuilder(StringBuilder *sb) {
   sb->capacity = sb->length = 0;
 }
 
+void freeStringBuilder(StringBuilder *sb) {
+  free(sb->buffer);
+}
+
 void sbputnumber(StringBuilder *sb, double number) {
   if (number != number) {
     sbprintf(sb, "nan");

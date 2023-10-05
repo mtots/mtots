@@ -10,6 +10,7 @@ typedef struct StringBuilder {
 } StringBuilder;
 
 void initStringBuilder(StringBuilder *sb);
+void freeStringBuilder(StringBuilder *sb);
 void sbputnumber(StringBuilder *sb, double number);
 void sbputchar(StringBuilder *sb, char ch);
 void sbputstrlen(StringBuilder *sb, const char *chars, size_t byteLength);
