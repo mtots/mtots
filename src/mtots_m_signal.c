@@ -30,6 +30,20 @@ static Status implNop(i16 argc, Value *argv, Value *out) {
 static CFunction funcSIG_IGN = {implNop, "SIG_IGN", 1};
 static CFunction funcSIG_DFL = {implNop, "SIG_DFL", 1};
 
+void setupDefaultMtotsSIGINTHandler(void) {
+#if MTOTS_IS_POSIX
+  struct sigaction action;
+  action.sa_handler = signalHandler;
+  sigemptyset(&action.sa_mask);
+  action.sa_flags = 0;
+  if (sigaction(SIGINT, &action, NULL) != 0) {
+    panic("sigaction (for setupDefaultMtotsSIGINTHandler): %s",
+          strerror(errno));
+  }
+  vm.signalHandlers[SIGINT] = valNil();
+#endif
+}
+
 static Status implSignal(i16 argc, Value *argv, Value *out) {
 #if MTOTS_IS_POSIX
   int sig = asInt(argv[0]);
@@ -42,7 +56,9 @@ static Status implSignal(i16 argc, Value *argv, Value *out) {
   vm.signalHandlers[sig] = callback;
   if (isCFunction(callback) && callback.as.cfunction == &funcSIG_IGN) {
     signal(sig, SIG_IGN);
-  } else if (isCFunction(callback) && callback.as.cfunction == &funcSIG_DFL) {
+  } else if (isCFunction(callback) &&
+             callback.as.cfunction == &funcSIG_DFL &&
+             sig != SIGINT) {
     signal(sig, SIG_DFL);
   } else {
     struct sigaction action;

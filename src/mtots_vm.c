@@ -18,6 +18,7 @@
 #include "mtots_class_str.h"
 #include "mtots_class_vector.h"
 #include "mtots_globals.h"
+#include "mtots_m_signal.h"
 #include "mtots_modules.h"
 #include "mtots_parser.h"
 
@@ -187,6 +188,8 @@ void initVM(void) {
 
   defineDefaultGlobals();
   addNativeModules();
+
+  setupDefaultMtotsSIGINTHandler();
 }
 
 void freeVM(void) {
@@ -1444,7 +1447,16 @@ Status checkAndHandleSignals(void) {
   vm.signal = 0;
   vm.trap = UFALSE;
   if (isNil(signalHandler)) {
+#if MTOTS_IS_POSIX
+    if (signal == SIGINT) {
+      runtimeError("KeyboardInterrupt");
+      return STATUS_ERROR;
+    } else {
+      panic("nil signal handler (signal = %d)", signal);
+    }
+#else
     panic("nil signal handler (signal = %d)", signal);
+#endif
   }
   push(signalHandler);
   push(valNumber(signal));

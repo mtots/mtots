@@ -5,4 +5,6 @@
 
 void addNativeModuleSignal(void);
 
+void setupDefaultMtotsSIGINTHandler(void);
+
 #endif /*mtots_m_signal_h*/

@@ -23,15 +23,21 @@ termios.tcgetattr(0, attrs)
 attrs.c_lflag = attrs.c_lflag & ~termios.ECHO
 termios.tcsetattr(0, termios.TCSAFLUSH, attrs)
 
-for i in range(10):
-  print("\e[2J") # clear the screen
-  print("\e[H") # move cursor to home position (0, 0)
-  print("Hello")
-  print("   world")
-  print("\e[?25l") # hide cursor
-  print("HELLO AGAIN")
-  print("       i = %s" % [i])
-  time.sleep(1)
+def main():
+  for i in range(10):
+    print("\e[2J") # clear the screen
+    print("\e[H") # move cursor to home position (0, 0)
+    print("Hello")
+    print("   world")
+    print("\e[?25l") # hide cursor
+    print("HELLO AGAIN")
+    print("       i = %s" % [i])
+    time.sleep(1)
 
 
-print("\e[?25h") # restore cursor
+def restore():
+  print("Inside restore")
+  print("\e[?25h") # restore cursor
+
+
+tryFinally(main, restore)
