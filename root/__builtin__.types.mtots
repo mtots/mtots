@@ -687,7 +687,7 @@ class Vector:
   final y Number
   final z Number
 
-  def __init__(x Number, y Number, z Number = 0):
+  def __init__(x Number = 0, y Number = 0, z Number = 0):
     ""
 
   def __eq__(other Vector) Bool:
@@ -699,27 +699,33 @@ class Vector:
   def __sub__(other Vector) Vector:
     "Vector subtraction"
 
-  def dot(other Vector) Number:
-    "Vector dot product"
-
   def __mul__(scale Number) Vector:
     "Vector-scalar multiplication"
 
-  def rotateX(angle Number) Vector:
+  def scale(fx Float, fy Float, fz Float = 1.0) Vector:
+    "Scale each component of this vector independently"
+
+  def dot(other Vector) Number:
+    "Vector dot product"
+
+  def getLength() Float:
+    "Returns the length of the vector (i.e. Pythagorean theorem)"
+
+  def rotateX(angle Number, center Vector? = nil) Vector:
     """
     Rotate the vector counterclockwise around the X axis by `angle` radians.
     Standard right handed 3D coordinate system where positive x points right,
     positive y points up, and positive z points towards the viewer is assumed.
     """
 
-  def rotateY(angle Number) Vector:
+  def rotateY(angle Number, center Vector? = nil) Vector:
     """
     Rotate the vector counterclockwise around the Y axis by `angle` radians.
     Standard right handed 3D coordinate system where positive x points right,
     positive y points up, and positive z points towards the viewer is assumed.
     """
 
-  def rotateZ(angle Number) Vector:
+  def rotateZ(angle Number, center Vector? = nil) Vector:
     """
     Rotate the vector counterclockwise around the Z axis by `angle` radians.
     Standard right handed 3D coordinate system where positive x points right,
@@ -729,6 +735,9 @@ class Vector:
     and the positive X direction is right, this function will rotate
     the vector in the clockwise direction.
     """
+
+  def rotate(angle Number, center Vector? = nil) Vector:
+    "Alias for rotateZ (effectively 2D rotation)"
 
 
 class Matrix:

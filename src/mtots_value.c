@@ -168,6 +168,16 @@ RangeIterator asRangeIterator(Value value) {
   rangeIter.step = value.as.range.step;
   return rangeIter;
 }
+Vector asVector(Value value) {
+  Vector vector;
+  if (!isVector(value)) {
+    panic("Expected Vector but got %s", getKindName(value));
+  }
+  vector.x = value.extra.floatingPoint;
+  vector.y = value.as.vector.y;
+  vector.z = value.as.vector.z;
+  return vector;
+}
 Obj *asObj(Value value) {
   if (!isObj(value)) {
     panic("Expected Obj but got %s", getKindName(value));
@@ -218,10 +228,29 @@ Value valRangeIterator(RangeIterator rangeIterator) {
   v.as.range.step = rangeIterator.step;
   return v;
 }
+Value valVector(Vector vector) {
+  Value v = {VAL_VECTOR};
+  v.extra.floatingPoint = vector.x;
+  v.as.vector.y = vector.y;
+  v.as.vector.z = vector.z;
+  return v;
+}
 Value valObjExplicit(Obj *object) {
   Value v = {VAL_OBJ};
   v.as.obj = object;
   return v;
+}
+
+Vector newVector(float x, float y, float z) {
+  Vector vector;
+  vector.x = x;
+  vector.y = y;
+  vector.z = z;
+  return vector;
+}
+
+void fieldNotFoundError(Value owner, const char *fieldName) {
+  runtimeError("Field '%s' not found on %s", fieldName, getKindName(owner));
 }
 
 void initValueArray(ValueArray *array) {
@@ -268,6 +297,8 @@ const char *getKindName(Value value) {
       return "Range";
     case VAL_RANGE_ITERATOR:
       return "RangeIterator";
+    case VAL_VECTOR:
+      return "Vector";
     case VAL_OBJ:
       switch (value.as.obj->type) {
         case OBJ_CLASS:

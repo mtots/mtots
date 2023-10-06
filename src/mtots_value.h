@@ -23,6 +23,9 @@ typedef enum ValueType {
   VAL_RANGE,
   VAL_RANGE_ITERATOR,
 
+  /* other useful types */
+  VAL_VECTOR,
+
   VAL_OBJ
 } ValueType;
 
@@ -43,13 +46,25 @@ typedef struct RangePartial {
   i32 step;
 } RangePartial;
 
+typedef struct Vector {
+  float x;
+  float y;
+  float z;
+} Vector;
+
+typedef struct VectorPartial {
+  float y;
+  float z;
+} VectorPartial;
+
 /* Value struct should be 16-bytes on all supported platforms */
 typedef struct Value {
   ValueType type; /* 4-bytes */
 
   union {
-    i32 integer; /* placeholder, for now */
-  } extra;       /* 4-bytes */
+    i32 integer;         /* for Range and RangeIterator */
+    float floatingPoint; /* for Vector */
+  } extra;               /* 4-bytes */
 
   /*
    * All members of this union are either:
@@ -63,6 +78,7 @@ typedef struct Value {
     CFunction *cfunction;
     Sentinel sentinel;
     RangePartial range;
+    VectorPartial vector;
     Obj *obj;
   } as; /* 8-bytes */
 } Value;
@@ -90,6 +106,7 @@ typedef struct ValueArray {
 #define isSentinel(value) ((value).type == VAL_SENTINEL)
 #define isRange(value) ((value).type == VAL_RANGE)
 #define isRangeIterator(value) ((value).type == VAL_RANGE_ITERATOR)
+#define isVector(value) ((value).type == VAL_VECTOR)
 #define isObj(value) ((value).type == VAL_OBJ)
 #define AS_OBJ_UNSAFE(value) ((value).as.obj)
 
@@ -110,6 +127,7 @@ String *asString(Value value);
 CFunction *asCFunction(Value value);
 Range asRange(Value value);
 RangeIterator asRangeIterator(Value value);
+Vector asVector(Value value);
 Obj *asObj(Value value);
 
 Value valNil(void);
@@ -120,7 +138,12 @@ Value valCFunction(CFunction *func);
 Value valSentinel(Sentinel sentinel);
 Value valRange(Range range);
 Value valRangeIterator(RangeIterator rangeIterator);
+Value valVector(Vector vector);
 Value valObjExplicit(Obj *object);
+
+Vector newVector(float x, float y, float z);
+
+void fieldNotFoundError(Value owner, const char *fieldName);
 
 #define isStopIteration(value) ( \
     isSentinel(value) &&         \

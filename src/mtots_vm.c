@@ -16,6 +16,7 @@
 #include "mtots_class_list.h"
 #include "mtots_class_number.h"
 #include "mtots_class_str.h"
+#include "mtots_class_vector.h"
 #include "mtots_globals.h"
 #include "mtots_modules.h"
 #include "mtots_parser.h"
@@ -106,6 +107,7 @@ void initVM(void) {
   vm.boolClass = NULL;
   vm.numberClass = NULL;
   vm.stringClass = NULL;
+  vm.vectorClass = NULL;
   vm.listClass = NULL;
   vm.frozenListClass = NULL;
   vm.dictClass = NULL;
@@ -169,6 +171,7 @@ void initVM(void) {
   initNoMethodClass(&vm.boolClass, "Bool");
   initNumberClass();
   initStringClass();
+  initVectorClass();
   initBufferClass();
   initListClass();
   initFrozenListClass();

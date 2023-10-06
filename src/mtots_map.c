@@ -18,6 +18,42 @@ void freeMap(Map *map) {
   initMap(map);
 }
 
+static u32 hashNumber(double x) {
+  union {
+    double number;
+    u32 parts[2];
+  } pun;
+  i32 ix = (i32)x;
+  if (x == (double)ix) {
+    return (u32)ix;
+  }
+  pun.number = x;
+  /* TODO: smarter hashing */
+  return pun.parts[0] ^ pun.parts[1];
+}
+
+static u32 hashVector(Vector vector) {
+  /* FNV-1a as presented in the Crafting Interpreters book */
+  size_t i;
+  u32 hash = 2166136261u;
+  u32 hashes[3];
+  hashes[0] = hashNumber(vector.x);
+  hashes[1] = hashNumber(vector.y);
+  hashes[2] = hashNumber(vector.z);
+  for (i = 0; i < 3; i++) {
+    u32 itemhash = hashes[i];
+    hash ^= (u8)(itemhash);
+    hash *= 16777619;
+    hash ^= (u8)(itemhash >> 8);
+    hash *= 16777619;
+    hash ^= (u8)(itemhash >> 16);
+    hash *= 16777619;
+    hash ^= (u8)(itemhash >> 24);
+    hash *= 16777619;
+  }
+  return hash;
+}
+
 u32 hashval(Value value) {
   switch (value.type) {
     /* hash values for bool taken from Java */
@@ -25,20 +61,8 @@ u32 hashval(Value value) {
       return 17;
     case VAL_BOOL:
       return value.as.boolean ? 1231 : 1237;
-    case VAL_NUMBER: {
-      double x = value.as.number;
-      union {
-        double number;
-        u32 parts[2];
-      } pun;
-      i32 ix = (i32)x;
-      if (x == (double)ix) {
-        return (u32)ix;
-      }
-      pun.number = x;
-      /* TODO: smarter hashing */
-      return pun.parts[0] ^ pun.parts[1];
-    }
+    case VAL_NUMBER:
+      return hashNumber(value.as.number);
     case VAL_STRING:
       return value.as.string->hash;
     case VAL_CFUNCTION:
@@ -49,6 +73,8 @@ u32 hashval(Value value) {
       break;
     case VAL_RANGE_ITERATOR:
       break;
+    case VAL_VECTOR:
+      return hashVector(asVector(value));
     case VAL_OBJ:
       switch (AS_OBJ_UNSAFE(value)->type) {
         case OBJ_FROZEN_LIST:

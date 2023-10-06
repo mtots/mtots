@@ -9,6 +9,10 @@ static ubool rangesEqual(Range a, Range b) {
   return a.start == b.start && a.stop == b.stop && a.step == b.step;
 }
 
+static ubool vectorsEqual(Vector a, Vector b) {
+  return a.x == b.x && a.y == b.y && a.z == b.z;
+}
+
 ubool valuesIs(Value a, Value b) {
   if (a.type != b.type) {
     return STATUS_ERROR;
@@ -30,6 +34,8 @@ ubool valuesIs(Value a, Value b) {
       return rangesEqual(asRange(a), asRange(b));
     case VAL_RANGE_ITERATOR:
       return rangesEqual(asRange(a), asRange(b));
+    case VAL_VECTOR:
+      return vectorsEqual(asVector(a), asVector(b));
     case VAL_OBJ:
       return a.as.obj == b.as.obj;
   }
@@ -79,6 +85,8 @@ ubool valuesEqual(Value a, Value b) {
       return rangesEqual(asRange(a), asRange(b));
     case VAL_RANGE_ITERATOR:
       return rangesEqual(asRange(a), asRange(b));
+    case VAL_VECTOR:
+      return vectorsEqual(asVector(a), asVector(b));
     case VAL_OBJ: {
       Obj *objA = a.as.obj;
       Obj *objB = b.as.obj;
@@ -172,6 +180,12 @@ ubool valueLessThan(Value a, Value b) {
       break;
     case VAL_RANGE_ITERATOR:
       break;
+    case VAL_VECTOR: {
+      Vector va = asVector(a);
+      Vector vb = asVector(b);
+      return va.x < vb.x ||
+             (va.x == vb.x && (va.y < vb.y || (va.y == vb.y && va.z < vb.z)));
+    }
     case VAL_OBJ: {
       Obj *objA = AS_OBJ_UNSAFE(a);
       Obj *objB = AS_OBJ_UNSAFE(b);
@@ -374,6 +388,17 @@ ubool valueRepr(StringBuilder *out, Value value) {
     case VAL_RANGE_ITERATOR:
       sbprintf(out, "<RangeIterator instance>");
       return STATUS_OK;
+    case VAL_VECTOR: {
+      Vector vector = asVector(value);
+      sbprintf(out, "Vector(");
+      sbputnumber(out, vector.x);
+      sbprintf(out, ", ");
+      sbputnumber(out, vector.y);
+      sbprintf(out, ", ");
+      sbputnumber(out, vector.z);
+      sbprintf(out, ")");
+      return STATUS_OK;
+    }
     case VAL_OBJ: {
       Obj *obj = AS_OBJ_UNSAFE(value);
       switch (obj->type) {

@@ -1,0 +1,29 @@
+
+final v0 = Vector()
+print("v0 = %s" % [v0])
+
+final v1 = Vector(1, 2, 3)
+print("v1 = %s" % [v1])
+print("v1.x = %s" % [v1.x])
+print("v1.y = %s" % [v1.y])
+print("v1.z = %s" % [v1.z])
+
+final v2 = Vector(5, 5, 5)
+print("v2 = %s" % [v2])
+
+print("v1 + v2 = %s" % [v1 + v2])
+print("v1 - v2 = %s" % [v1 - v2])
+print("v1 * 2.5 = %s" % [v1 * 2.5])
+print("v1.dot(v2) = %s" % [v1.dot(v2)])
+print("v2.scale(4, 7, 10) = %s" % [v2.scale(4, 7, 10)])
+print("v2.scale(4, 7, 10) == v1                 -> %s" %
+      [v2.scale(4, 7, 10) == v1])
+print("v2.scale(4, 7, 10) == Vector(20, 35, 50) -> %s" %
+      [v2.scale(4, 7, 10) == Vector(20, 35, 50)])
+
+final v3 = Vector(3, 4)
+print("v3 = %s" % [v3])
+print("v3.getLength() = %s" % [v3.getLength()])
+
+print("Vector(5, 0, 12).getLength() = %s" % [Vector(5, 0, 12).getLength()])
+

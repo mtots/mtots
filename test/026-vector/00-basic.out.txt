@@ -1,0 +1,16 @@
+v0 = Vector(0, 0, 0)
+v1 = Vector(1, 2, 3)
+v1.x = 1
+v1.y = 2
+v1.z = 3
+v2 = Vector(5, 5, 5)
+v1 + v2 = Vector(6, 7, 8)
+v1 - v2 = Vector(-4, -3, -2)
+v1 * 2.5 = Vector(2.5, 5, 7.5)
+v1.dot(v2) = 30
+v2.scale(4, 7, 10) = Vector(20, 35, 50)
+v2.scale(4, 7, 10) == v1                 -> false
+v2.scale(4, 7, 10) == Vector(20, 35, 50) -> true
+v3 = Vector(3, 4, 0)
+v3.getLength() = 5
+Vector(5, 0, 12).getLength() = 13

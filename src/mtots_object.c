@@ -605,6 +605,8 @@ ObjClass *getClassOfValue(Value value) {
       return vm.rangeClass;
     case VAL_RANGE_ITERATOR:
       return vm.rangeIteratorClass;
+    case VAL_VECTOR:
+      return vm.vectorClass;
     case VAL_OBJ: {
       switch (AS_OBJ_UNSAFE(value)->type) {
         case OBJ_CLASS:

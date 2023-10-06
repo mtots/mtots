@@ -631,6 +631,7 @@ void defineDefaultGlobals(void) {
       &vm.boolClass,
       &vm.numberClass,
       &vm.stringClass,
+      &vm.vectorClass,
       &vm.bufferClass,
       &vm.listClass,
       &vm.frozenListClass,
