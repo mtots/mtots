@@ -21,6 +21,28 @@ Similar to `__name__` in Python
 final StopIteration Iteration[Never] = raise 0
 
 
+def pcall(f Function[Any]) Bool:
+  """
+  Protected call for catching exceptions. Modeled after Lua's pcall.
+  (See https://www.lua.org/pil/8.4.html)
+
+  Runs the function `f`. If there are no errors or exceptions,
+  this function returns true. If an exception is raised, this
+  function returns false, and does not propagate the exception.
+  """
+
+def tryFinally[R](tryFunc Function[R], onFinally Function[Any]) R:
+  """
+  Simulates a "try-finally".
+
+  Runs the function `tryFunc`. Ensures that `onFinally` is always
+  run, regardless of whether or not `tryFunc` raises an exception.
+
+  If `tryFunc` or `onFinally` raises an exception, that exception is
+  propagated as is.
+  """
+
+
 class Nil:
   def __bmon__() Any:
     ""

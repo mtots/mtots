@@ -1,0 +1,5 @@
+Before tryFinally(tryFunc, onFinally)
+Before throwsError
+Inside throwsError
+Inside onFinally
+pcall(main) = false

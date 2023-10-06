@@ -1,0 +1,8 @@
+Before pcall(f)
+Before foo(5)
+pcall(f) = false
+After pcall(f)
+Before pcall(noProblem)
+inside noProblem()
+pcall(noProblem) = true
+After pcall(noProblem)

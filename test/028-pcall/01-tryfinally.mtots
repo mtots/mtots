@@ -1,0 +1,26 @@
+
+
+
+def throwsError() Never:
+  print("Inside throwsError")
+  final x Any = "hello"
+  print(x.bar)
+
+
+def main():
+
+  def tryFunc() String:
+    print("Before throwsError")
+    throwsError()
+    print("After throwsError")
+
+  def onFinally():
+    print("Inside onFinally")
+
+  print("Before tryFinally(tryFunc, onFinally)")
+  final result = tryFinally(tryFunc, onFinally)
+  print("After tryFinally(tryFunc, onFinally)")
+  print("result = %s" % [result])
+
+
+print("pcall(main) = %s" % [pcall(main)])

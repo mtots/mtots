@@ -1,0 +1,19 @@
+
+def noProblem() Any:
+  print("inside noProblem()")
+
+def foo(x Any) Any:
+  return x.noSuchField
+
+def f():
+  print("Before foo(5)")
+  foo(5)
+  print("After foo(5)")
+
+print("Before pcall(f)")
+print("pcall(f) = %s" % [pcall(f)])
+print("After pcall(f)")
+
+print("Before pcall(noProblem)")
+print("pcall(noProblem) = %s" % [pcall(noProblem)])
+print("After pcall(noProblem)")
