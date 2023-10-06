@@ -50,6 +50,7 @@ int mtotsMain(int argc, const char *argv[]) {
     }
   }
   initVM();
+  atexit(freeVM);
 
   if (argc == 1) {
     repl();
@@ -66,6 +67,5 @@ int mtotsMain(int argc, const char *argv[]) {
     fprintf(stderr, "Usage: mtots [path]\n");
   }
 
-  freeVM();
   return 0;
 }

@@ -269,6 +269,8 @@ static void markRoots(void) {
     markValue(*slot);
   }
 
+  markObject((Obj *)vm.atExitCallbacks);
+
   for (i = 0; i < SIGNAL_HANDLERS_COUNT; i++) {
     markValue(vm.signalHandlers[i]);
   }

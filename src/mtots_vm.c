@@ -97,6 +97,7 @@ void initVM(void) {
   vm.trap = UFALSE;
   vm.signal = 0;
   memset(&vm.signalHandlers, 0, sizeof(vm.signalHandlers));
+  vm.atExitCallbacks = NULL;
 
   if (sizeof(Value) != 16) {
     panic("sizeof(Value) != 16 (got %lu)", (unsigned long)sizeof(Value));
@@ -189,6 +190,16 @@ void initVM(void) {
 }
 
 void freeVM(void) {
+  if (vm.atExitCallbacks) {
+    size_t i;
+    for (i = vm.atExitCallbacks->length; i > 0; i--) {
+      push(vm.atExitCallbacks->buffer[i - 1]);
+      if (!callFunction(0)) {
+        panic("%s", getErrorString());
+      }
+      pop(); /* return value */
+    }
+  }
   freeMap(&vm.globals);
   freeMap(&vm.modules);
   freeMap(&vm.nativeModuleThunks);
@@ -616,6 +627,13 @@ void closeUpvalues(Value *last) {
     upvalue->location = &upvalue->closed;
     vm.openUpvalues = upvalue->next;
   }
+}
+
+void registerMtotsAtExitCallback(Value callback) {
+  if (!vm.atExitCallbacks) {
+    vm.atExitCallbacks = newList(0);
+  }
+  listAppend(vm.atExitCallbacks, callback);
 }
 
 static void defineMethod(String *name) {

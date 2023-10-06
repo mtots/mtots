@@ -1,0 +1,85 @@
+"""
+## POSIX style tty control
+
+This module provides an interface to the POSIX calls for tty I/O control.
+For a complete description of these calls, see termios(3) Unix manual page.
+It is only available for those Unix versions that support POSIX termios
+style tty I/O control configured during installation.
+
+You may find https://pubs.opengroup.org/onlinepubs/7908799/xsh/termios.h.html
+rather helpful here.
+
+Implements a subset of Python's termios module
+(Compare with https://docs.python.org/3/library/termios.html)
+"""
+
+# values for tcsetattr
+final TCSANOW Int = raise 0
+final TCSADRAIN Int = raise 0
+final TCSAFLUSH Int = raise 0
+
+# Input Modes
+final BRKINT Int = raise 0
+final ICRNL Int = raise 0
+final IGNBRK Int = raise 0
+final IGNCR Int = raise 0
+final IGNPAR Int = raise 0
+final INLCR Int = raise 0
+final INPCK Int = raise 0
+final ISTRIP Int = raise 0
+final IXANY Int = raise 0
+final IXOFF Int = raise 0
+final IXON Int = raise 0
+final PARMRK Int = raise 0
+
+# Local Modes
+final ECHO Int = raise 0
+final ECHOE Int = raise 0
+final ECHOK Int = raise 0
+final ECHONL Int = raise 0
+final ICANON Int = raise 0
+final IEXTEN Int = raise 0
+final ISIG Int = raise 0
+final NOFLSH Int = raise 0
+final TOSTOP Int = raise 0
+
+class Termios:
+  var c_iflag Int "input modes"
+  var c_oflag Int "output modes"
+  var c_cflag Int "control modes"
+  var c_lflag Int "local modes"
+
+
+def tcgetattr(fd Int, ret Termios?=nil) Termios:
+  """
+  Return a `Termios` instance containing the tty attributes for
+  file descriptor `fd`.
+
+  if the `ret` argument is provided, it is filled in and
+  `ret` is returned.
+
+  If `ret` is omitted or nil, this function will return
+  a shared `Termios` instance - future calls to `tcgetattr` will
+  overwrite the fields in the returned instance.
+
+  (the main purpose of the `ret` field is to avoid
+  any sort of dynamic memory allocation when calling this function).
+  """
+
+
+def tcsetattr(fd Int, when Int, attributes Termios) nil:
+  """
+  Set the tty attributes for file descriptor fd from the attributes
+
+  The when argument determines when the attributes are changed:
+  TCSANOW to change immediately, TCSADRAIN to change after
+  transmitting all queued output, or TCSAFLUSH to change after
+  transmitting all queued output and discarding all queued input.
+  """
+
+
+def restoreAtExit() nil:
+  """
+  Save the current termios attributes (with tcgetattr) and
+  restore these values when the program exits (with tcsetattr)
+  """

@@ -1,0 +1,37 @@
+import termios
+import time
+
+termios.restoreAtExit()
+
+final attrs = termios.Termios()
+
+def query(fd Int) nil:
+  termios.tcgetattr(fd, attrs)
+  print("fd = %s" % [fd])
+  print("attrs.c_iflag = %s" % [hex(attrs.c_iflag)])
+  print("attrs.c_oflag = %s" % [hex(attrs.c_oflag)])
+  print("attrs.c_cflag = %s" % [hex(attrs.c_cflag)])
+  print("attrs.c_lflag = %s" % [hex(attrs.c_lflag)])
+
+query(0)
+print("")
+query(1)
+print("")
+query(2)
+
+termios.tcgetattr(0, attrs)
+attrs.c_lflag = attrs.c_lflag & ~termios.ECHO
+termios.tcsetattr(0, termios.TCSAFLUSH, attrs)
+
+for i in range(10):
+  print("\e[2J") # clear the screen
+  print("\e[H") # move cursor to home position (0, 0)
+  print("Hello")
+  print("   world")
+  print("\e[?25l") # hide cursor
+  print("HELLO AGAIN")
+  print("       i = %s" % [i])
+  time.sleep(1)
+
+
+print("\e[?25h") # restore cursor

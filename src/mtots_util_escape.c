@@ -365,6 +365,10 @@ ubool unescapeString2(
           str++;
           sbputchar(out, '\b');
           break;
+        case 'e':
+          str++;
+          sbputchar(out, '\x1B');
+          break;
         case 'f':
           str++;
           sbputchar(out, '\f');

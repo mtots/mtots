@@ -127,6 +127,8 @@ typedef struct VM {
 
   int signal;
   Value signalHandlers[SIGNAL_HANDLERS_COUNT];
+
+  ObjList *atExitCallbacks;
 } VM;
 
 extern VM vm;
@@ -136,6 +138,8 @@ void freeVM(void);
 Status interpret(const char *source, ObjModule *module);
 void defineGlobal(const char *name, Value value);
 void closeUpvalues(Value *last);
+
+void registerMtotsAtExitCallback(Value callback);
 
 /* NOTE: Deprecated. Use addNativeModuleCFunc instead.
  *

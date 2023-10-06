@@ -13,6 +13,7 @@
 #include "mtots_m_stat.h"
 #include "mtots_m_subprocess.h"
 #include "mtots_m_sys.h"
+#include "mtots_m_termios.h"
 #include "mtots_m_time.h"
 
 void addNativeModules(void) {
@@ -29,5 +30,6 @@ void addNativeModules(void) {
   addNativeModuleStat();
   addNativeModuleSubprocess();
   addNativeModuleSys();
+  addNativeModuleTermios();
   addNativeModuleTime();
 }

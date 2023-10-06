@@ -1,0 +1,18 @@
+"""
+## Exit handlers
+
+The atexit module defines functions to register cleanup functions.
+
+atexit runs these functions in the reverse order in which they were
+registered; if you register A, B, and C, at interpreter termination
+time they will be run in the order C, B, A.
+
+Implements a subset of Python's atexit module
+(Compare with https://docs.python.org/3/library/atexit.html)
+"""
+
+
+def register(func Function[Any]) nil:
+  """
+  Register `func` as a function to be executed at termination
+  """
