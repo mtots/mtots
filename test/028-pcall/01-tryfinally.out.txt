@@ -1,5 +1,5 @@
-Before tryFinally(tryFunc, onFinally)
+Before tryCatch(tryFunc, nil, onFinally)
 Before throwsError
 Inside throwsError
 Inside onFinally
-pcall(main) = false
+tryCatch(main, ..) = threw

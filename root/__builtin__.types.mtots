@@ -21,25 +21,25 @@ Similar to `__name__` in Python
 final StopIteration Iteration[Never] = raise 0
 
 
-def pcall(f Function[Any]) Bool:
+def tryCatch[R](
+    tryFunc Function[R],
+    catchFunc Function[String, R]?,
+    finallyFunc Function[Any]? = nil) R:
   """
-  Protected call for catching exceptions. Modeled after Lua's pcall.
-  (See https://www.lua.org/pil/8.4.html)
+  Simulates a "try-catch-finally".
 
-  Runs the function `f`. If there are no errors or exceptions,
-  this function returns true. If an exception is raised, this
-  function returns false, and does not propagate the exception.
-  """
+  Runs the function `tryFunc`. If `tryFunc` does not throw, its
+  return value is returned, and all other arguments are ignored.
 
-def tryFinally[R](tryFunc Function[R], onFinally Function[Any]) R:
-  """
-  Simulates a "try-finally".
+  If `tryFunc` throws and `catchFunc` is not nil,
+  `catchFunc` is called. If `catchFunc` does not throw, its
+  return value is returned. If it throws, the exception is propagated.
 
-  Runs the function `tryFunc`. Ensures that `onFinally` is always
-  run, regardless of whether or not `tryFunc` raises an exception.
-
-  If `tryFunc` or `onFinally` raises an exception, that exception is
-  propagated as is.
+  `finallyFunc` if provided and not nil, always runs, regardless
+  of whether `tryFunc` or `catchFunc` threw an exception.
+  However, if `finallyFunc` throws, this function will throw
+  the exception from `finallyFunc` and drop any exceptions that
+  `tryFunc` or `catchFunc` might have thrown.
   """
 
 
@@ -152,7 +152,15 @@ class String:
     "Tests if two strings are equal"
 
   def strip(stripSet String="") String:
-    ""
+    """
+    Return a copy of the string with the leading and trailing characters
+    removed.
+
+    The stripSet argument is a string specifying the set of characters to be
+    removed. If omitted or nil, the stripSet argument defaults to removing
+    whitespace. The stripSet argument is not a prefix or suffix; rather,
+    all combinations of its values are stripped
+    """
 
   def replace(old String, new String) String:
     ""

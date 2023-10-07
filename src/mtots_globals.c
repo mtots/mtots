@@ -579,74 +579,92 @@ static Status implSort(i16 argCount, Value *args, Value *out) {
 
 static CFunction funcSort = {implSort, "__sort__", 1, 2};
 
-typedef struct SavedState {
+typedef struct TryState {
   Value *stackTop;
   i16 frameCount;
-} SavedState;
+} TryState;
 
-static void initSavedState(SavedState *state) {
+static void saveTryState(TryState *state) {
   state->stackTop = vm.stackTop;
   state->frameCount = vm.frameCount;
 }
 
-static void restoreSavedState(SavedState *state) {
+static void restoreTryState(TryState *state) {
   closeUpvalues(state->stackTop);
   vm.stackTop = state->stackTop;
   vm.frameCount = state->frameCount;
 }
 
-static Status implPcall(i16 argc, Value *argv, Value *out) {
-  /* WARNING: this is an extra hairy function - since pcall
-   * needs to know how to recover when we enter potentially
-   * inconsistent states, pcall needs to poke at internals
-   * that most other functions wouldn't know about */
-  Status status;
-  SavedState state;
-  initSavedState(&state);
-  push(argv[0]);
-  status = callFunction(0);
-  *out = valBool(!!status);
-  if (status) {
-    /* Exit OK */
-    pop(); /* return value */
-  } else {
-    /* Exit with error - we need to do a recovery */
-    saveCurrentErrorString();
-    restoreSavedState(&state);
-  }
-  return STATUS_OK;
-}
-
-static CFunction funcPcall = {implPcall, "pcall", 1};
-
-static Status implTryFinally(i16 argc, Value *argv, Value *out) {
-  Value tryFunc = argv[0];
-  Value onFinally = argv[1];
-  SavedState state;
-  initSavedState(&state);
+static Status tryCatchWithoutFinally(Value tryFunc, Value catchFunc, TryState *state) {
   push(tryFunc);
   if (callFunction(0)) {
-    push(onFinally);
-    if (!callFunction(0)) {
-      return STATUS_ERROR;
-    }
-    pop();        /* return value of onFinally */
-    *out = pop(); /* return value of tryFunc */
+    /* tryFunc encountered no errors */
     return STATUS_OK;
   }
-  /* Exit with error - we need to do a recovery */
-  restoreSavedState(&state);
-  push(onFinally);
-  /* TODO: think through whether I have to save the
-   * exception/error string at this point */
-  if (!callFunction(0)) {
-    return STATUS_ERROR;
+  if (!isNil(catchFunc)) {
+    /* attempt to save with a catchFunc */
+    Value exceptionValue = valString(internCString(getErrorString()));
+    restoreTryState(state);
+    push(catchFunc);
+    push(exceptionValue);
+    if (callFunction(1)) {
+      /* catchFunc handled the exception successfully */
+      return STATUS_OK;
+    }
   }
-  pop(); /* return vaule of onFinally */
+  /* there is a pending error to be propagated */
   return STATUS_ERROR;
 }
 
-static CFunction funcTryFinally = {implTryFinally, "tryFinally", 2};
+static Status implTryCatch(i16 argc, Value *argv, Value *out) {
+  /* WARNING: this is an extra hairy function - since tryCatch
+   * needs to know how to recover when we enter potentially
+   * inconsistent states, this function needs to poke at internals
+   * that most other CFunctions wouldn't know about */
+  Value tryFunc = argv[0];
+  Value catchFunc = argc > 1 && !isNil(argv[1]) ? argv[1] : valNil();
+  Value finallyFunc = argc > 2 && !isNil(argv[2]) ? argv[2] : valNil();
+  TryState state;
+  saveTryState(&state);
+
+  if (tryCatchWithoutFinally(tryFunc, catchFunc, &state)) {
+    /* try-catch had no errors or successfully recovered -
+     * the return value should be on the top of stack at this point */
+    if (!isNil(finallyFunc)) {
+      /* if a finallyFunc is present, we need to run this */
+      push(finallyFunc);
+      if (!callFunction(0)) {
+        return STATUS_ERROR;
+      }
+      pop(); /* return value (finallyFunc) */
+    }
+    *out = pop(); /* try-catch */
+    return STATUS_OK;
+  }
+
+  /* if the try-catch still propagates an error, we need
+   * to propagate it. However, we still need to run finallyFunc */
+  if (!isNil(finallyFunc)) {
+    restoreTryState(&state);
+
+    /* we need to store the error string, because finallyFunc could
+     * clobber it (with an inner tryCatch of its own) */
+    push(valString(internCString(getErrorString())));
+
+    push(finallyFunc);
+    if (callFunction(0)) {
+      pop(); /* return value (finallyFunc) */
+
+      /* If finallyFunc does not throw, we need to restore
+       * the previous exception -
+       * pop the value we pushed earlier with getErrorString() */
+      setErrorString(asString(pop())->chars);
+    }
+  }
+  return STATUS_ERROR;
+}
+
+static CFunction funcTryCatch = {implTryCatch, "tryCatch", 2, 3};
 
 void defineDefaultGlobals(void) {
   NativeObjectDescriptor *descriptors[] = {
@@ -687,8 +705,7 @@ void defineDefaultGlobals(void) {
       &funcFlog2,
       &funcIsInstance,
       &funcSort,
-      &funcPcall,
-      &funcTryFinally,
+      &funcTryCatch,
       NULL,
   },
             **function;

@@ -1,8 +1,12 @@
 Before pcall(f)
 Before foo(5)
-pcall(f) = false
+pcall(f) = e=Number values do not have have fields
+[line 6] in __main__:foo()
+[line 10] in __main__:f()
+[line 15] in __main__:pcall()
+[line 19] in __main__
 After pcall(f)
 Before pcall(noProblem)
 inside noProblem()
-pcall(noProblem) = true
+pcall(noProblem) = nil
 After pcall(noProblem)

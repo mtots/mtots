@@ -1,0 +1,8 @@
+add7(12) = 19
+add55(-90) = -35
+add7(-90) = -83
+getter() = 123
+setter(-30) = -30
+getter() = -30
+setter(777) = 777
+getter() = 777

@@ -17,10 +17,9 @@ def main():
   def onFinally():
     print("Inside onFinally")
 
-  print("Before tryFinally(tryFunc, onFinally)")
-  final result = tryFinally(tryFunc, onFinally)
-  print("After tryFinally(tryFunc, onFinally)")
+  print("Before tryCatch(tryFunc, nil, onFinally)")
+  final result = tryCatch(tryFunc, nil, onFinally)
+  print("After tryCatch(tryFunc, nil, onFinally)")
   print("result = %s" % [result])
 
-
-print("pcall(main) = %s" % [pcall(main)])
+print("tryCatch(main, ..) = %s" % [tryCatch(main, def(_): "threw")])

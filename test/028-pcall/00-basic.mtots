@@ -10,6 +10,11 @@ def f():
   foo(5)
   print("After foo(5)")
 
+
+def pcall(f Function[Any]) Any:
+  return tryCatch(f, def(e String): 'e=%s' % [e.strip()])
+
+
 print("Before pcall(f)")
 print("pcall(f) = %s" % [pcall(f)])
 print("After pcall(f)")

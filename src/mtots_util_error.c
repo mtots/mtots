@@ -73,6 +73,11 @@ void runtimeError(const char *format, ...) {
   freeStringBuilder(&sb);
 }
 
+void setErrorString(const char *newErrorString) {
+  errorString = (char *)realloc(errorString, strlen(newErrorString) + 1);
+  strcpy(errorString, newErrorString);
+}
+
 const char *getErrorString(void) {
   return errorString;
 }

@@ -10,6 +10,11 @@ NORETURN void panic(const char *format, ...) MTOTS_PRINTFLIKE(1, 2);
 /* Potentially recoverable error. */
 void runtimeError(const char *format, ...) MTOTS_PRINTFLIKE(1, 2);
 
+/* Set the exact error string that can be retrieved with getErrorString
+ * unlike runtimeERror, setErrorString will ignore the current
+ * contextProvider. */
+void setErrorString(const char *newErrorString);
+
 /* Returns the current error string.
  * Returns NULL if runtimeError has never been called .*/
 const char *getErrorString(void);

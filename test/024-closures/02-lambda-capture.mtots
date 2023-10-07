@@ -1,0 +1,29 @@
+
+
+def adder(amount Int) Function[Int, Int]:
+  return def(x Int): x + amount
+
+
+final add7 = adder(7)
+
+print("add7(12) = %s" %[add7(12)])
+
+final add55 = adder(55)
+print("add55(-90) = %s" %[add55(-90)])
+print("add7(-90) = %s" %[add7(-90)])
+
+
+def main1():
+  var x = 123
+
+  final setter = def(newX Int): x = newX
+  final getter = def(): x
+
+  print("getter() = %s" % [getter()])
+  print("setter(-30) = %s" % [setter(-30)])
+  print("getter() = %s" % [getter()])
+  print("setter(777) = %s" % [setter(777)])
+  print("getter() = %s" % [getter()])
+
+
+main1()
