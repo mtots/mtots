@@ -6,5 +6,5 @@ class SomeClass:
 
 
 final inst = SomeClass()
-print(try print(inst) else 'failed to print')
+print(tryCatch(def(): print(inst), def(): 'failed to print'))
 print(inst)

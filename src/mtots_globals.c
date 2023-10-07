@@ -25,19 +25,6 @@ static Status implExit(i16 argCount, Value *args, Value *out) {
 
 static CFunction cfuncExit = {implExit, "exit", 0, 1};
 
-static Status implGetErrorString(i16 argCount, Value *args, Value *out) {
-  const char *errorString = getSavedErrorString();
-  if (errorString == NULL) {
-    runtimeError("No error string found");
-    return STATUS_ERROR;
-  }
-  *out = valString(internCString(errorString));
-  clearSavedErrorString();
-  return STATUS_OK;
-}
-
-static CFunction cfuncGetErrorString = {implGetErrorString, "getErrorString"};
-
 static Status implLen(i16 argCount, Value *args, Value *out) {
   Value recv = args[0];
   size_t len;
@@ -603,11 +590,10 @@ static Status tryCatchWithoutFinally(Value tryFunc, Value catchFunc, TryState *s
   }
   if (!isNil(catchFunc)) {
     /* attempt to save with a catchFunc */
-    Value exceptionValue = valString(internCString(getErrorString()));
     restoreTryState(state);
+    saveCurrentErrorString();
     push(catchFunc);
-    push(exceptionValue);
-    if (callFunction(1)) {
+    if (callFunction(0)) {
       /* catchFunc handled the exception successfully */
       return STATUS_OK;
     }
@@ -666,6 +652,19 @@ static Status implTryCatch(i16 argc, Value *argv, Value *out) {
 
 static CFunction funcTryCatch = {implTryCatch, "tryCatch", 2, 3};
 
+static Status implGetErrorString(i16 argc, Value *argv, Value *out) {
+  const char *errorString = getSavedErrorString();
+  if (errorString == NULL) {
+    runtimeError("No error string found");
+    return STATUS_ERROR;
+  }
+  *out = valString(internCString(errorString));
+  clearSavedErrorString();
+  return STATUS_OK;
+}
+
+static CFunction cfuncGetErrorString = {implGetErrorString, "getErrorString"};
+
 void defineDefaultGlobals(void) {
   NativeObjectDescriptor *descriptors[] = {
       &descriptorStringBuilder,
@@ -675,7 +674,6 @@ void defineDefaultGlobals(void) {
   CFunction *functions[] = {
       &cfunctionClock,
       &cfuncExit,
-      &cfuncGetErrorString,
       &cfuncLen,
       &cfuncSum,
       &funcHex,
@@ -706,6 +704,7 @@ void defineDefaultGlobals(void) {
       &funcIsInstance,
       &funcSort,
       &funcTryCatch,
+      &cfuncGetErrorString,
       NULL,
   },
             **function;

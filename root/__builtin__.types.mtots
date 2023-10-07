@@ -23,7 +23,7 @@ final StopIteration Iteration[Never] = raise 0
 
 def tryCatch[R](
     tryFunc Function[R],
-    catchFunc Function[String, R]?,
+    catchFunc Function[R]?,
     finallyFunc Function[Any]? = nil) R:
   """
   Simulates a "try-catch-finally".

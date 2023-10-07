@@ -22,4 +22,4 @@ def main():
   print("After tryCatch(tryFunc, nil, onFinally)")
   print("result = %s" % [result])
 
-print("tryCatch(main, ..) = %s" % [tryCatch(main, def(_): "threw")])
+print("tryCatch(main, ..) = %s" % [tryCatch(main, def(): "threw")])

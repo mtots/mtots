@@ -677,7 +677,6 @@ static void concatenate(void) {
 static Status run(void) {
   i16 returnFrameCount = vm.frameCount - 1;
   CallFrame *frame = &vm.frames[vm.frameCount - 1];
-  i16 trySnapShotCountAtStart = vm.trySnapshotsCount;
 
 #define READ_BYTE() (*frame->ip++)
 #define READ_SHORT() \
@@ -685,18 +684,8 @@ static Status run(void) {
 #define READ_CONSTANT() \
   (frame->closure->thunk->chunk.constants.values[READ_SHORT()])
 #define READ_STRING() (READ_CONSTANT().as.string)
-#define RETURN_RUNTIME_ERROR()                                                \
-  do {                                                                        \
-    TrySnapshot *snap;                                                        \
-    if (vm.trySnapshotsCount <= trySnapShotCountAtStart) return STATUS_ERROR; \
-    snap = &vm.trySnapshots[--vm.trySnapshotsCount];                          \
-    vm.stackTop = snap->stackTop;                                             \
-    vm.frameCount = snap->frameCount;                                         \
-    frame = &vm.frames[vm.frameCount - 1];                                    \
-    frame->ip = snap->ip;                                                     \
-    saveCurrentErrorString();                                                 \
-    goto loop;                                                                \
-  } while (0)
+#define RETURN_RUNTIME_ERROR() \
+  { return STATUS_ERROR; }
 #define INVOKE(methodName, argCount)       \
   do {                                     \
     if (!invoke(methodName, argCount)) {   \
@@ -755,7 +744,6 @@ static Status run(void) {
 
   for (;;) {
     u8 instruction;
-  loop:
     if (vm.trap) {
       if (!checkAndHandleSignals()) {
         RETURN_RUNTIME_ERROR();
@@ -920,7 +908,6 @@ static Status run(void) {
         runtimeError(
             "%s values do not have have fields", getKindName(peek(1)));
         RETURN_RUNTIME_ERROR();
-        break;
       }
       case OP_IS: {
         Value b = pop();
@@ -1043,30 +1030,6 @@ static Status run(void) {
         if (isStopIteration(peek(0))) {
           frame->ip += offset;
         }
-        break;
-      }
-      case OP_TRY_START: {
-        u16 offset = READ_SHORT();
-        TrySnapshot *snapshot;
-        if (vm.trySnapshotsCount >= TRY_SNAPSHOTS_MAX) {
-          panic("try snapshot overflow");
-        }
-        snapshot = &vm.trySnapshots[vm.trySnapshotsCount++];
-        snapshot->frameCount = vm.frameCount;
-        snapshot->ip = frame->ip + offset;
-        snapshot->stackTop = vm.stackTop;
-        if (frame != &vm.frames[vm.frameCount - 1]) {
-          panic("internal vm frame error");
-        }
-        break;
-      }
-      case OP_TRY_END: {
-        u16 offset = READ_SHORT();
-        if (vm.trySnapshotsCount == 0) {
-          panic("try snapshot underflow");
-        }
-        frame->ip += offset;
-        vm.trySnapshotsCount--;
         break;
       }
       case OP_RAISE: {

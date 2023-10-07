@@ -7,9 +7,9 @@ print(repr(json.loads('7')))
 print(repr(json.loads('7e9')))
 print(repr(json.loads('7.2')))
 print(repr(json.loads('7.2E2')))
-print(try json.loads('"hell') else 'failed unterminated string literal')
-print(try json.loads('"hell') else 'failed unterminated string literal')
-print(try json.loads('"hello" "world"') else 'failed parse with extra')
+print(tryCatch(def(): json.loads('"hell'), def(): 'failed unterminated string literal'))
+print(tryCatch(def(): json.loads('"hell'), def(): 'failed unterminated string literal'))
+print(tryCatch(def(): json.loads('"hello" "world"'), def(): 'failed parse with extra'))
 
 
 print(json.loads('[1, 2,3]'))

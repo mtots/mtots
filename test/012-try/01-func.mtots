@@ -1,13 +1,11 @@
 
 
-def foo():
+def foo() Never:
   raise "Some Error"
 
 var total = 0
 for i in range(1000):
-  total = total + (
-    try  foo()
-    else 1)
+  total = total + tryCatch(foo, def(): 1)
 
 var k = 12 + total
 print('total = %r' % [total])

@@ -12,7 +12,7 @@ def f():
 
 
 def pcall(f Function[Any]) Any:
-  return tryCatch(f, def(e String): 'e=%s' % [e.strip()])
+  return tryCatch(f, def(): 'e=%s' % [getErrorString().strip()])
 
 
 print("Before pcall(f)")

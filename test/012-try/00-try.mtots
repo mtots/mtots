@@ -1,8 +1,8 @@
 
-print(
-  try  raise "fail"
-  else "foo")
+print(tryCatch(
+  def(): raise "fail",
+  def(): "foo"))
 
-print(
-  try  "success"
-  else "foo")
+print(tryCatch(
+  def(): "success",
+  def(): "foo"))

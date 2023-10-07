@@ -3,5 +3,5 @@
 def func():
   raise "Some Error Message"
 
-final modstr = try func() else "(prefix)%s(suffix)" % [getErrorString()]
+final modstr = tryCatch(func, def(): "(prefix)%s(suffix)" % [getErrorString()])
 print(modstr)
