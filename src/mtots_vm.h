@@ -10,7 +10,6 @@
 
 #define FRAMES_MAX 64
 #define STACK_MAX (FRAMES_MAX * U8_COUNT)
-#define TRY_SNAPSHOTS_MAX 64
 #define MAX_ERROR_STRING_LENGTH 2048
 #define SIGNAL_HANDLERS_COUNT 32
 
@@ -31,19 +30,11 @@ typedef struct CallFrame {
   Value *slots;
 } CallFrame;
 
-typedef struct TrySnapshot {
-  u8 *ip;
-  Value *stackTop;
-  i16 frameCount;
-} TrySnapshot;
-
 typedef struct VM {
   CallFrame frames[FRAMES_MAX];
   i16 frameCount;
   Value stack[STACK_MAX];
   Value *stackTop;
-  TrySnapshot trySnapshots[TRY_SNAPSHOTS_MAX];
-  i16 trySnapshotsCount;
   Map globals;
   Map modules;            /* all preloaded modules */
   Map nativeModuleThunks; /* Map of CFunctions */

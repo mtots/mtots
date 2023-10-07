@@ -41,8 +41,6 @@ typedef enum OpCode {
   OP_JUMP,
   OP_JUMP_IF_FALSE,
   OP_JUMP_IF_STOP_ITERATION,
-  OP_TRY_START,
-  OP_TRY_END,
   OP_RAISE,
   OP_GET_ITER, /* iterable TOS, replaces with iterator */
   OP_GET_NEXT, /* iterator TOS, pushes next item */
@@ -54,6 +52,7 @@ typedef enum OpCode {
   OP_INVOKE_KW,
   OP_CLOSURE,
   OP_CLOSE_UPVALUE,
+  OP_CLOSE_UPVALUES,
   OP_RETURN,
   OP_IMPORT,
   OP_NEW_LIST,

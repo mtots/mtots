@@ -30,7 +30,6 @@ static void resetStack(void) {
   vm.stackTop = vm.stack;
   vm.frameCount = 0;
   vm.openUpvalues = NULL;
-  vm.trySnapshotsCount = 0;
 }
 
 static void printStackToStringBuffer(StringBuilder *out) {
@@ -1124,6 +1123,10 @@ static Status run(void) {
       case OP_CLOSE_UPVALUE:
         closeUpvalues(vm.stackTop - 1);
         pop();
+        break;
+      case OP_CLOSE_UPVALUES:
+        vm.stackTop -= READ_BYTE();
+        closeUpvalues(vm.stackTop);
         break;
       case OP_RETURN: {
         Value result = pop();

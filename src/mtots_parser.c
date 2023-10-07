@@ -380,15 +380,32 @@ static ubool beginScope(Parser *parser) {
 
 static ubool endScope(Parser *parser) {
   /* TODO: Coalesce multiple of these pops into a single instruction */
+  ubool hasUpvalue = UFALSE;
+  u16 count = 0;
   ENV->scopeDepth--;
   while (ENV->localsCount > 0 &&
          ENV->locals[ENV->localsCount - 1].scopeDepth > ENV->scopeDepth) {
     if (ENV->locals[ENV->localsCount - 1].isCaptured) {
+      hasUpvalue = UTRUE;
+    }
+    count++;
+    ENV->localsCount--;
+  }
+  if (count > U8_MAX) {
+    /* We *probably* won't ever get here, because of the limits on
+     * local variable count, but not sure - better safe than sorry */
+    panic("INTERNAL ERROR: Popping too many local variables in one go");
+  }
+  if (count == 0) {
+    /* nothing to do */
+  } else if (count == 1) {
+    if (hasUpvalue) {
       EMIT1(OP_CLOSE_UPVALUE);
     } else {
       EMIT1(OP_POP);
     }
-    ENV->localsCount--;
+  } else {
+    EMIT2(OP_CLOSE_UPVALUES, count);
   }
   return STATUS_OK;
 }
@@ -1277,19 +1294,6 @@ static ubool parseLambda(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseTry(Parser *parser) {
-  i32 startJump, endJump;
-  EXPECT(TOKEN_TRY);
-  CHECK2(emitJump, OP_TRY_START, &startJump);
-  CHECK(parseExpression);
-  CHECK2(emitJump, OP_TRY_END, &endJump);
-  EXPECT(TOKEN_ELSE);
-  CHECK1(patchJump, startJump);
-  CHECK(parseExpression);
-  CHECK1(patchJump, endJump);
-  return STATUS_OK;
-}
-
 static ubool parseRaise(Parser *parser) {
   EXPECT(TOKEN_RAISE);
   CHECK(parseExpression);
@@ -2036,7 +2040,6 @@ static void initParseRulesPrivate(void) {
   rules[TOKEN_IS] = newRule(NULL, parseBinary, PREC_COMPARISON);
   rules[TOKEN_NOT] = newRule(parseUnary, parseBinary, PREC_COMPARISON);
   rules[TOKEN_RAISE] = newRule(parseRaise, NULL, PREC_NONE);
-  rules[TOKEN_TRY] = newRule(parseTry, NULL, PREC_NONE);
 }
 
 void markParserRoots(void) {
