@@ -36,23 +36,6 @@
     memset(&ret->handle, 0, sizeof(ret->handle));                                 \
     return ret;                                                                   \
   }                                                                               \
-  static Status impl##name##Getattr(i16 argc, Value *argv, Value *out);           \
-  static Status impl##name##Setattr(i16 argc, Value *argv, Value *out);           \
-  static CFunction func##name##Getattr = {                                        \
-      impl##name##Getattr,                                                        \
-      "__getattr__",                                                              \
-      1,                                                                          \
-  };                                                                              \
-  static CFunction func##name##Setattr = {                                        \
-      impl##name##Setattr,                                                        \
-      "__setattr__",                                                              \
-      2,                                                                          \
-  };                                                                              \
-  static CFunction *name##Methods[] = {                                           \
-      &func##name##Getattr,                                                       \
-      &func##name##Setattr,                                                       \
-      NULL,                                                                       \
-  };                                                                              \
   static Status impl##name##StaticCall(i16 argc, Value *argv, Value *out) {       \
     *out = val##name(alloc##name());                                              \
     return STATUS_OK;                                                             \
@@ -84,191 +67,152 @@
 #define WRAP_SDL_POD_TYPE(name) \
   WRAP_SDL_COMMON(name, SDL_##name, nopFree)
 
-#define DEFINE_NOP_GETATTR(name)                                         \
-  static Status impl##name##Getattr(i16 argc, Value *argv, Value *out) { \
-    as##name(argv[-1]); /* suppress unused warning */                    \
-    fieldNotFoundError(argv[-1], asString(argv[0])->chars);              \
-    return STATUS_ERROR;                                                 \
-  }
+#define DEFINE_METHOD_COPY(className)                                       \
+  static Status impl##className##_copy(i16 argc, Value *argv, Value *out) { \
+    Obj##className *owner = as##className(argv[-1]);                        \
+    Obj##className *other = as##className(argv[0]);                         \
+    owner->handle = other->handle;                                          \
+    return STATUS_OK;                                                       \
+  }                                                                         \
+  static CFunction func##className##_copy = {impl##className##_copy, "copy", 2};
 
-#define DEFINE_NOP_SETATTR(name)                                         \
-  static Status impl##name##Setattr(i16 argc, Value *argv, Value *out) { \
-    as##name(argv[-1]); /* suppress unused warning */                    \
-    fieldNotFoundError(argv[-1], asString(argv[0])->chars);              \
-    return STATUS_ERROR;                                                 \
-  }
+#define DEFINE_FIELD_GETTER(className, fieldName, getterExpression)                   \
+  static Status impl##className##_get##fieldName(i16 argc, Value *argv, Value *out) { \
+    Obj##className *owner = as##className(argv[-1]);                                  \
+    *out = getterExpression;                                                          \
+    return STATUS_OK;                                                                 \
+  }                                                                                   \
+  static CFunction func##className##_get##fieldName = {                               \
+      impl##className##_get##fieldName,                                               \
+      "__get_" #fieldName,                                                            \
+  };
 
-#define PROLOGUE_GETATTR(className)                                           \
-  static Status impl##className##Getattr(i16 argc, Value *argv, Value *out) { \
-    Obj##className *owner = as##className(argv[-1]);                          \
-    String *name = asString(argv[0]);
-#define EPILOGUE_GETATTR(className)          \
-  fieldNotFoundError(argv[-1], name->chars); \
-  return STATUS_ERROR;                       \
-  }
-
-#define ENTRY_GETATTR_NUMBER(className, attrName) \
-  if (name == vm.attrName##String) {              \
-    *out = valNumber(owner->handle.attrName);     \
-    return STATUS_OK;                             \
-  }
-
-#define ENTRY_GETATTR_REF_NUMBER(className, attrName) \
-  if (name == vm.attrName##String) {                  \
-    *out = valNumber(owner->handle->attrName);        \
-    return STATUS_OK;                                 \
-  }
-
-#define PROLOGUE_SETATTR(className)                                           \
-  static Status impl##className##Setattr(i16 argc, Value *argv, Value *out) { \
-    Obj##className *owner = as##className(argv[-1]);                          \
-    String *name = asString(argv[0]);                                         \
-    Value value = argv[1];
-#define EPILOGUE_SETATTR(className)          \
-  fieldNotFoundError(argv[-1], name->chars); \
-  return STATUS_ERROR;                       \
-  }
-
-#define ENTRY_SETATTR_INT(className, attrName) \
-  if (name == vm.attrName##String == 0) {      \
-    owner->handle.attrName = asInt(value);     \
-    return STATUS_OK;                          \
-  }
-
-#define ENTRY_SETATTR_FLOAT(className, attrName) \
-  if (name == vm.attrName##String == 0) {        \
-    owner->handle.attrName = asFloat(value);     \
-    return STATUS_OK;                            \
-  }
-
-#define DEFINE_GETATTR_REF_N(className, a1) \
-  PROLOGUE_GETATTR(className)               \
-  ENTRY_GETATTR_REF_NUMBER(className, a1)   \
-  EPILOGUE_GETATTR(className)
-
-#define DEFINE_GETATTR_REF_NN(className, a1, a2) \
-  PROLOGUE_GETATTR(className)                    \
-  ENTRY_GETATTR_REF_NUMBER(className, a1)        \
-  ENTRY_GETATTR_REF_NUMBER(className, a2)        \
-  EPILOGUE_GETATTR(className)
-
-#define DEFINE_GETATTR_N(className, a1) \
-  PROLOGUE_GETATTR(className)           \
-  ENTRY_GETATTR_NUMBER(className, a1)   \
-  EPILOGUE_GETATTR(className)
-
-#define DEFINE_GETATTR_NN(className, a1, a2) \
-  PROLOGUE_GETATTR(className)                \
-  ENTRY_GETATTR_NUMBER(className, a1)        \
-  ENTRY_GETATTR_NUMBER(className, a2)        \
-  EPILOGUE_GETATTR(className)
-
-#define DEFINE_GETATTR_NNN(className, a1, a2, a3) \
-  PROLOGUE_GETATTR(className)                     \
-  ENTRY_GETATTR_NUMBER(className, a1)             \
-  ENTRY_GETATTR_NUMBER(className, a2)             \
-  ENTRY_GETATTR_NUMBER(className, a3)             \
-  EPILOGUE_GETATTR(className)
-
-#define DEFINE_GETATTR_NNNN(className, a1, a2, a3, a4) \
-  PROLOGUE_GETATTR(className)                          \
-  ENTRY_GETATTR_NUMBER(className, a1)                  \
-  ENTRY_GETATTR_NUMBER(className, a2)                  \
-  ENTRY_GETATTR_NUMBER(className, a3)                  \
-  ENTRY_GETATTR_NUMBER(className, a4)                  \
-  EPILOGUE_GETATTR(className)
-
-#define DEFINE_SETATTR_I(className, a1) \
-  PROLOGUE_SETATTR(className)           \
-  ENTRY_SETATTR_INT(className, a1)      \
-  EPILOGUE_SETATTR(className)
-
-#define DEFINE_SETATTR_II(className, a1, a2) \
-  PROLOGUE_SETATTR(className)                \
-  ENTRY_SETATTR_INT(className, a1)           \
-  ENTRY_SETATTR_INT(className, a2)           \
-  EPILOGUE_SETATTR(className)
-
-#define DEFINE_SETATTR_III(className, a1, a2, a3) \
-  PROLOGUE_SETATTR(className)                     \
-  ENTRY_SETATTR_INT(className, a1)                \
-  ENTRY_SETATTR_INT(className, a2)                \
-  ENTRY_SETATTR_INT(className, a3)                \
-  EPILOGUE_SETATTR(className)
-
-#define DEFINE_SETATTR_IIII(className, a1, a2, a3, a4) \
-  PROLOGUE_SETATTR(className)                          \
-  ENTRY_SETATTR_INT(className, a1)                     \
-  ENTRY_SETATTR_INT(className, a2)                     \
-  ENTRY_SETATTR_INT(className, a3)                     \
-  ENTRY_SETATTR_INT(className, a4)                     \
-  EPILOGUE_SETATTR(className)
-
-#define DEFINE_SETATTR_F(className, a1) \
-  PROLOGUE_SETATTR(className)           \
-  ENTRY_SETATTR_FLOAT(className, a1)    \
-  EPILOGUE_SETATTR(className)
-
-#define DEFINE_SETATTR_FF(className, a1, a2) \
-  PROLOGUE_SETATTR(className)                \
-  ENTRY_SETATTR_FLOAT(className, a1)         \
-  ENTRY_SETATTR_FLOAT(className, a2)         \
-  EPILOGUE_SETATTR(className)
-
-#define DEFINE_SETATTR_FFF(className, a1, a2, a3) \
-  PROLOGUE_SETATTR(className)                     \
-  ENTRY_SETATTR_FLOAT(className, a1)              \
-  ENTRY_SETATTR_FLOAT(className, a2)              \
-  ENTRY_SETATTR_FLOAT(className, a3)              \
-  EPILOGUE_SETATTR(className)
-
-#define DEFINE_SETATTR_FFFF(className, a1, a2, a3, a4) \
-  PROLOGUE_SETATTR(className)                          \
-  ENTRY_SETATTR_FLOAT(className, a1)                   \
-  ENTRY_SETATTR_FLOAT(className, a2)                   \
-  ENTRY_SETATTR_FLOAT(className, a3)                   \
-  ENTRY_SETATTR_FLOAT(className, a4)                   \
-  EPILOGUE_SETATTR(className)
+#define DEFINE_FIELD_SETTER(className, fieldName, setterExpression)                   \
+  static Status impl##className##_set##fieldName(i16 argc, Value *argv, Value *out) { \
+    Obj##className *owner = as##className(argv[-1]);                                  \
+    Value value = *out = argv[0];                                                     \
+    setterExpression;                                                                 \
+    return STATUS_OK;                                                                 \
+  }                                                                                   \
+  static CFunction func##className##_set##fieldName = {                               \
+      impl##className##_set##fieldName,                                               \
+      "__set_" #fieldName,                                                            \
+      1,                                                                              \
+  };
 
 #define ADD_TYPE_TO_MODULE(name) \
   newNativeClass(module, &descriptor##name, name##Methods, name##StaticMethods)
 
 WRAP_SDL_POD_TYPE(Point)
-DEFINE_GETATTR_NN(Point, x, y)
-DEFINE_SETATTR_II(Point, x, y)
+DEFINE_METHOD_COPY(Point)
+DEFINE_FIELD_GETTER(Point, x, valNumber(owner->handle.x))
+DEFINE_FIELD_GETTER(Point, y, valNumber(owner->handle.y))
+DEFINE_FIELD_SETTER(Point, x, owner->handle.x = asInt(value))
+DEFINE_FIELD_SETTER(Point, y, owner->handle.y = asInt(value))
+static CFunction *PointMethods[] = {
+    &funcPoint_copy,
+    &funcPoint_getx,
+    &funcPoint_gety,
+    &funcPoint_setx,
+    &funcPoint_sety,
+    NULL,
+};
 
 WRAP_SDL_POD_TYPE(FPoint)
-DEFINE_GETATTR_NN(FPoint, x, y)
-DEFINE_SETATTR_FF(FPoint, x, y)
+DEFINE_METHOD_COPY(FPoint)
+DEFINE_FIELD_GETTER(FPoint, x, valNumber(owner->handle.x))
+DEFINE_FIELD_GETTER(FPoint, y, valNumber(owner->handle.y))
+DEFINE_FIELD_SETTER(FPoint, x, owner->handle.x = asFloat(value))
+DEFINE_FIELD_SETTER(FPoint, y, owner->handle.y = asFloat(value))
+static CFunction *FPointMethods[] = {
+    &funcFPoint_copy,
+    &funcFPoint_getx,
+    &funcFPoint_gety,
+    &funcFPoint_setx,
+    &funcFPoint_sety,
+    NULL,
+};
 
 WRAP_SDL_POD_TYPE(Rect)
-DEFINE_GETATTR_NNNN(Rect, x, y, w, h)
-DEFINE_SETATTR_IIII(Rect, x, y, w, h)
+DEFINE_METHOD_COPY(Rect)
+DEFINE_FIELD_GETTER(Rect, x, valNumber(owner->handle.x))
+DEFINE_FIELD_GETTER(Rect, y, valNumber(owner->handle.y))
+DEFINE_FIELD_GETTER(Rect, w, valNumber(owner->handle.w))
+DEFINE_FIELD_GETTER(Rect, h, valNumber(owner->handle.h))
+DEFINE_FIELD_SETTER(Rect, x, owner->handle.x = asInt(value))
+DEFINE_FIELD_SETTER(Rect, y, owner->handle.y = asInt(value))
+DEFINE_FIELD_SETTER(Rect, w, owner->handle.w = asInt(value))
+DEFINE_FIELD_SETTER(Rect, h, owner->handle.h = asInt(value))
+static CFunction *RectMethods[] = {
+    &funcRect_copy,
+    &funcRect_getx,
+    &funcRect_gety,
+    &funcRect_getw,
+    &funcRect_geth,
+    &funcRect_setx,
+    &funcRect_sety,
+    &funcRect_setw,
+    &funcRect_seth,
+    NULL,
+};
 
 WRAP_SDL_POD_TYPE(FRect)
-DEFINE_GETATTR_NNNN(FRect, x, y, w, h)
-DEFINE_SETATTR_FFFF(FRect, x, y, w, h)
+DEFINE_METHOD_COPY(FRect)
+DEFINE_FIELD_GETTER(FRect, x, valNumber(owner->handle.x))
+DEFINE_FIELD_GETTER(FRect, y, valNumber(owner->handle.y))
+DEFINE_FIELD_GETTER(FRect, w, valNumber(owner->handle.w))
+DEFINE_FIELD_GETTER(FRect, h, valNumber(owner->handle.h))
+DEFINE_FIELD_SETTER(FRect, x, owner->handle.x = asFloat(value))
+DEFINE_FIELD_SETTER(FRect, y, owner->handle.y = asFloat(value))
+DEFINE_FIELD_SETTER(FRect, w, owner->handle.w = asFloat(value))
+DEFINE_FIELD_SETTER(FRect, h, owner->handle.h = asFloat(value))
+static CFunction *FRectMethods[] = {
+    &funcFRect_copy,
+    &funcFRect_getx,
+    &funcFRect_gety,
+    &funcFRect_getw,
+    &funcFRect_geth,
+    &funcFRect_setx,
+    &funcFRect_sety,
+    &funcFRect_setw,
+    &funcFRect_seth,
+    NULL,
+};
 
 WRAP_SDL_POD_TYPE(Color)
-DEFINE_GETATTR_NNNN(Color, r, g, b, a)
-DEFINE_SETATTR_IIII(Color, r, g, b, a)
+DEFINE_METHOD_COPY(Color)
+DEFINE_FIELD_GETTER(Color, r, valNumber(owner->handle.r))
+DEFINE_FIELD_GETTER(Color, g, valNumber(owner->handle.g))
+DEFINE_FIELD_GETTER(Color, b, valNumber(owner->handle.b))
+DEFINE_FIELD_GETTER(Color, a, valNumber(owner->handle.a))
+DEFINE_FIELD_SETTER(Color, r, owner->handle.r = asFloat(value))
+DEFINE_FIELD_SETTER(Color, g, owner->handle.g = asFloat(value))
+DEFINE_FIELD_SETTER(Color, b, owner->handle.b = asFloat(value))
+DEFINE_FIELD_SETTER(Color, a, owner->handle.a = asFloat(value))
+static CFunction *ColorMethods[] = {
+    &funcColor_copy,
+    &funcColor_getr,
+    &funcColor_getg,
+    &funcColor_getb,
+    &funcColor_geta,
+    &funcColor_setr,
+    &funcColor_setg,
+    &funcColor_setb,
+    &funcColor_seta,
+    NULL,
+};
 
 WRAP_SDL_REF_TYPE(Surface, SDL_FreeSurface)
-DEFINE_GETATTR_REF_NN(Surface, w, h)
-DEFINE_NOP_SETATTR(Surface)
+DEFINE_FIELD_GETTER(Surface, w, valNumber(owner->handle->w))
+DEFINE_FIELD_GETTER(Surface, h, valNumber(owner->handle->h))
+static CFunction *SurfaceMethods[] = {
+    &funcSurface_getw,
+    &funcSurface_geth,
+    NULL,
+};
 
 WRAP_SDL_REF_TYPE(Window, SDL_DestroyWindow)
-DEFINE_NOP_GETATTR(Window)
-DEFINE_NOP_SETATTR(Window)
-
-#define isPoint(value) (getNativeObjectDescriptor(value) == &descriptorPoint)
-#define isFPoint(value) (getNativeObjectDescriptor(value) == &descriptorFPoint)
-#define isRect(value) (getNativeObjectDescriptor(value) == &descriptorRect)
-#define isFRect(value) (getNativeObjectDescriptor(value) == &descriptorFRect)
-#define isColor(value) (getNativeObjectDescriptor(value) == &descriptorColor)
-#define isVertex(value) (getNativeObjectDescriptor(value) == &descriptorVertex)
-#define isEvent(value) (getNativeObjectDescriptor(value) == &descriptorEvent)
-#define isWindow(value) (getNativeObjectDescriptor(value) == &descriptorWindow)
+static CFunction *WindowMethods[] = {NULL};
 
 static Status sdlError(const char *functionName) {
   runtimeError("%s: %s", functionName, SDL_GetError());
@@ -288,6 +232,11 @@ static Status impl(i16 argCount, Value *args, Value *out) {
   CFunction *functions[] = {
       NULL,
   };
+
+  if (UFALSE) {
+    asWindow(valNil()); /* Suppress warning */
+  }
+
   if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
     return sdlError("SDL_Init");
   }

@@ -174,6 +174,8 @@ ObjClass *newClass(String *name) {
   klass->name = name;
   initMap(&klass->methods);
   initMap(&klass->staticMethods);
+  initMap(&klass->fieldGetters);
+  initMap(&klass->fieldSetters);
   klass->isModuleClass = UFALSE;
   klass->isBuiltinClass = UFALSE;
   klass->descriptor = NULL;
@@ -206,6 +208,11 @@ ObjClass *newClassForModule(ObjModule *module, const char *name) {
   return cls;
 }
 
+static ubool startsWith(const char *string, const char *prefix) {
+  size_t prefixLen = strlen(prefix), stringLen = strlen(string);
+  return stringLen >= prefixLen && memcmp(string, prefix, prefixLen) == 0;
+}
+
 static void addMethodsToNativeOrBuiltinClass(
     ObjClass *cls,
     NativeObjectDescriptor *descriptor,
@@ -215,18 +222,30 @@ static void addMethodsToNativeOrBuiltinClass(
 
   if (methods) {
     for (function = methods; *function; function++) {
-      String *name = internCString((*function)->name);
-      push(valString(name));
-      if (name == vm.callString) {
-        cls->call = *function;
-      } else if (name == vm.getattrString) {
-        cls->getattr = *function;
-      } else if (name == vm.setattrString) {
-        cls->setattr = *function;
+      if (startsWith((*function)->name, "__get_")) {
+        String *name = internCString((*function)->name + strlen("__get_"));
+        push(valString(name));
+        mapSetStr(&cls->fieldGetters, name, valCFunction(*function));
+        pop(); /* name */
+      } else if (startsWith((*function)->name, "__set_")) {
+        String *name = internCString((*function)->name + strlen("__set_"));
+        push(valString(name));
+        mapSetStr(&cls->fieldSetters, name, valCFunction(*function));
+        pop(); /* name */
       } else {
-        mapSetStr(&cls->methods, name, valCFunction(*function));
+        String *name = internCString((*function)->name);
+        push(valString(name));
+        if (name == vm.callString) {
+          cls->call = *function;
+        } else if (name == vm.getattrString) {
+          cls->getattr = *function;
+        } else if (name == vm.setattrString) {
+          cls->setattr = *function;
+        } else {
+          mapSetStr(&cls->methods, name, valCFunction(*function));
+        }
+        pop(); /* name */
       }
-      pop(); /* name */
     }
   }
 
@@ -248,7 +267,9 @@ ObjClass *newNativeClass(
     NativeObjectDescriptor *descriptor,
     CFunction **methods,
     CFunction **staticMethods) {
-  ObjClass *cls = descriptor->klass = module ? newClassForModule(module, descriptor->name) : newForeverClassFromCString(descriptor->name);
+  ObjClass *cls = descriptor->klass = module
+                                          ? newClassForModule(module, descriptor->name)
+                                          : newForeverClassFromCString(descriptor->name);
   cls->descriptor = descriptor;
   addMethodsToNativeOrBuiltinClass(
       cls, descriptor, methods, staticMethods);

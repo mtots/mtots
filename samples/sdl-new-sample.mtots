@@ -1,0 +1,10 @@
+import sdl
+
+
+final point = sdl.Point()
+print("point.x = %s" % [point.x])
+print("point.y = %s" % [point.y])
+point.x = 5
+point.y = 12
+print("point.x = %s" % [point.x])
+print("point.y = %s" % [point.y])

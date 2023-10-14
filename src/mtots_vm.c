@@ -856,12 +856,22 @@ static Status run(void) {
 
         {
           ObjClass *cls = getClassOfValue(peek(0));
-          if (cls->getattr) {
-            push(valString(READ_STRING()));
+          Value getter;
+          name = READ_STRING();
+          if (mapGet(&cls->fieldGetters, valString(name), &getter)) {
+            if (!callFunctionOrMethod(getter, 0, UFALSE)) {
+              RETURN_RUNTIME_ERROR();
+            }
+            break;
+          } else if (cls->getattr) {
+            push(valString(name));
             if (!callCFunction(cls->getattr, 1)) {
               RETURN_RUNTIME_ERROR();
             }
             break;
+          } else if (cls->fieldGetters.size > 0) {
+            fieldNotFoundError(peek(0), name->chars);
+            RETURN_RUNTIME_ERROR();
           }
         }
 
@@ -893,14 +903,24 @@ static Status run(void) {
 
         {
           ObjClass *cls = getClassOfValue(peek(1));
-          if (cls->setattr) {
+          String *name = READ_STRING();
+          Value setter;
+          if (mapGet(&cls->fieldSetters, valString(name), &setter)) {
+            if (!callFunctionOrMethod(setter, 1, UFALSE)) {
+              RETURN_RUNTIME_ERROR();
+            }
+            break;
+          } else if (cls->setattr) {
             value = pop();
-            push(valString(READ_STRING()));
+            push(valString(name));
             push(value);
             if (!callCFunction(cls->setattr, 2)) {
               RETURN_RUNTIME_ERROR();
             }
             break;
+          } else if (cls->fieldSetters.size > 0) {
+            fieldNotFoundError(peek(1), name->chars);
+            RETURN_RUNTIME_ERROR();
           }
         }
 
