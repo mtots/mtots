@@ -46,10 +46,6 @@
       NULL,                                                                       \
   };
 
-/** Required functions:
- *   - impl##name##Getattr
- *   - impl##name##Setattr
- */
 #define WRAP_SDL_REF_TYPE(name, freeFunc)         \
   static void free##name(ObjNative *n);           \
   WRAP_SDL_COMMON(name, SDL_##name *, free##name) \
@@ -60,10 +56,6 @@
     }                                             \
   }
 
-/** Required functions:
- *   - impl##name##Getattr
- *   - impl##name##Setattr
- */
 #define WRAP_SDL_POD_TYPE(name) \
   WRAP_SDL_COMMON(name, SDL_##name, nopFree)
 
@@ -240,11 +232,6 @@ static Status impl(i16 argCount, Value *args, Value *out) {
   if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
     return sdlError("SDL_Init");
   }
-  /*
-  moduleRetain(module, valString(positionString = internCString("position")));
-  moduleRetain(module, valString(colorString = internCString("color")));
-  moduleRetain(module, valString(texCoordString = internCString("texCoord")));
-  */
   moduleAddFunctions(module, functions);
   ADD_TYPE_TO_MODULE(Point);
   ADD_TYPE_TO_MODULE(FPoint);
@@ -253,16 +240,6 @@ static Status impl(i16 argCount, Value *args, Value *out) {
   ADD_TYPE_TO_MODULE(Color);
   ADD_TYPE_TO_MODULE(Surface);
   ADD_TYPE_TO_MODULE(Window);
-  /*
-  newNativeClass(module, &descriptorPoint, pointMethods, pointStaticMethods);
-  newNativeClass(module, &descriptorFPoint, fpointMethods, fpointStaticMethods);
-  newNativeClass(module, &descriptorRect, rectMethods, rectStaticMethods);
-  newNativeClass(module, &descriptorFRect, frectMethods, frectStaticMethods);
-  newNativeClass(module, &descriptorColor, colorMethods, colorStaticMethods);
-  newNativeClass(module, &descriptorVertex, vertexMethods, vertexStaticMethods);
-  newNativeClass(module, &descriptorEvent, eventMethods, eventStaticMethods);
-  newNativeClass(module, &descriptorWindow, windowMethods, windowStaticMethods);
-  */
   mapSetN(&module->fields, "QUIT", valNumber(SDL_QUIT));
   return STATUS_OK;
 }
