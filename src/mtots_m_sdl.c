@@ -95,6 +95,60 @@
 #define ADD_TYPE_TO_MODULE(name) \
   newNativeClass(module, &descriptor##name, name##Methods, name##StaticMethods)
 
+#define WRAP_SDL_FUNCTION_V0(name)                              \
+  static Status impl##name(i16 argc, Value *argv, Value *out) { \
+    SDL_##name();                                               \
+    return STATUS_OK;                                           \
+  }                                                             \
+  static CFunction func##name = {impl##name, #name, 0};
+
+#define WRAP_SDL_FUNCTION_0(name)                               \
+  static Status impl##name(i16 argc, Value *argv, Value *out) { \
+    if (SDL_##name() != 0) {                                    \
+      sdlError("SDL_" #name);                                   \
+      return STATUS_ERROR;                                      \
+    }                                                           \
+    return STATUS_OK;                                           \
+  }                                                             \
+  static CFunction func##name = {impl##name, #name, 0};
+
+#define WRAP_SDL_FUNCTION_B1(name, arg0)                        \
+  static Status impl##name(i16 argc, Value *argv, Value *out) { \
+    *out = valBool(!!SDL_##name(arg0));                         \
+    return STATUS_OK;                                           \
+  }                                                             \
+  static CFunction func##name = {impl##name, #name, 1};
+
+#define WRAP_SDL_FUNCTION_I1(name, arg0)                        \
+  static Status impl##name(i16 argc, Value *argv, Value *out) { \
+    if (SDL_##name(arg0) != 0) {                                \
+      sdlError("SDL_" #name);                                   \
+      return STATUS_ERROR;                                      \
+    }                                                           \
+    return STATUS_OK;                                           \
+  }                                                             \
+  static CFunction func##name = {impl##name, #name, 1};
+
+#define WRAP_SDL_FUNCTION_I2(name, arg0, arg1)                  \
+  static Status impl##name(i16 argc, Value *argv, Value *out) { \
+    if (SDL_##name(arg0, arg1) != 0) {                          \
+      sdlError("SDL_" #name);                                   \
+      return STATUS_ERROR;                                      \
+    }                                                           \
+    return STATUS_OK;                                           \
+  }                                                             \
+  static CFunction func##name = {impl##name, #name, 2};
+
+#define WRAP_SDL_FUNCTION_I3(name, arg0, arg1, arg2)            \
+  static Status impl##name(i16 argc, Value *argv, Value *out) { \
+    if (SDL_##name(arg0, arg1, arg2) != 0) {                    \
+      sdlError("SDL_" #name);                                   \
+      return STATUS_ERROR;                                      \
+    }                                                           \
+    return STATUS_OK;                                           \
+  }                                                             \
+  static CFunction func##name = {impl##name, #name, 3};
+
 WRAP_SDL_POD_TYPE(Point)
 DEFINE_METHOD_COPY(Point)
 DEFINE_FIELD_GETTER(Point, x, valNumber(owner->handle.x))
@@ -194,6 +248,15 @@ static CFunction *ColorMethods[] = {
     NULL,
 };
 
+WRAP_SDL_POD_TYPE(Event)
+DEFINE_METHOD_COPY(Event)
+DEFINE_FIELD_GETTER(Event, type, valNumber(owner->handle.type))
+static CFunction *EventMethods[] = {
+    &funcEvent_copy,
+    &funcEvent_gettype,
+    NULL,
+};
+
 WRAP_SDL_REF_TYPE(Surface, SDL_FreeSurface)
 DEFINE_FIELD_GETTER(Surface, w, valNumber(owner->handle->w))
 DEFINE_FIELD_GETTER(Surface, h, valNumber(owner->handle->h))
@@ -211,6 +274,10 @@ static Status sdlError(const char *functionName) {
   return STATUS_ERROR;
 }
 
+WRAP_SDL_FUNCTION_I1(Init, asU32(argv[0]))
+WRAP_SDL_FUNCTION_V0(Quit)
+WRAP_SDL_FUNCTION_B1(PollEvent, &asEvent(argv[0])->handle)
+
 /*
  * ███    ███  ██████  ██████  ██    ██ ██      ███████
  * ████  ████ ██    ██ ██   ██ ██    ██ ██      ██
@@ -222,6 +289,9 @@ static Status sdlError(const char *functionName) {
 static Status impl(i16 argCount, Value *args, Value *out) {
   ObjModule *module = asModule(args[0]);
   CFunction *functions[] = {
+      &funcInit,
+      &funcQuit,
+      &funcPollEvent,
       NULL,
   };
 
@@ -233,14 +303,29 @@ static Status impl(i16 argCount, Value *args, Value *out) {
     return sdlError("SDL_Init");
   }
   moduleAddFunctions(module, functions);
+
   ADD_TYPE_TO_MODULE(Point);
   ADD_TYPE_TO_MODULE(FPoint);
   ADD_TYPE_TO_MODULE(Rect);
   ADD_TYPE_TO_MODULE(FRect);
   ADD_TYPE_TO_MODULE(Color);
+  ADD_TYPE_TO_MODULE(Event);
   ADD_TYPE_TO_MODULE(Surface);
   ADD_TYPE_TO_MODULE(Window);
-  mapSetN(&module->fields, "QUIT", valNumber(SDL_QUIT));
+
+#define ADD_INT(name) mapSetN(&module->fields, #name, valNumber(SDL_##name))
+  ADD_INT(QUIT);
+  ADD_INT(INIT_TIMER);
+  ADD_INT(INIT_AUDIO);
+  ADD_INT(INIT_VIDEO);
+  ADD_INT(INIT_JOYSTICK);
+  ADD_INT(INIT_HAPTIC);
+  ADD_INT(INIT_HAPTIC);
+  ADD_INT(INIT_GAMECONTROLLER);
+  ADD_INT(INIT_EVENTS);
+  ADD_INT(INIT_EVERYTHING);
+#undef ADD_INT
+
   return STATUS_OK;
 }
 

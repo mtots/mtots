@@ -1,5 +1,10 @@
 import sdl
 
+print("BEFORE INIT")
+sdl.Init(sdl.INIT_EVERYTHING)
+print("AFTER INIT")
+
+
 
 final point = sdl.Point()
 print("point.x = %s" % [point.x])
@@ -8,3 +13,13 @@ point.x = 5
 point.y = 12
 print("point.x = %s" % [point.x])
 print("point.y = %s" % [point.y])
+
+def main():
+  final event = sdl.Event()
+  while true:
+    while sdl.PollEvent(event):
+      if event.type == sdl.QUIT:
+        sdl.Quit()
+        return nil
+
+main()
