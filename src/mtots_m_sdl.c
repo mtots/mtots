@@ -8,189 +8,19 @@
 #if MTOTS_ENABLE_SDL
 #include <SDL2/SDL.h>
 
-#define WRAP_SDL_COMMON(name, ctype, freeFunc)                                    \
-  typedef struct Obj##name {                                                      \
-    ObjNative obj;                                                                \
-    ctype handle;                                                                 \
-  } Obj##name;                                                                    \
-  static NativeObjectDescriptor descriptor##name = {                              \
-      nopBlacken,                                                                 \
-      freeFunc,                                                                   \
-      sizeof(Obj##name),                                                          \
-      #name,                                                                      \
-  };                                                                              \
-  static ubool is##name(Value value) {                                            \
-    return getNativeObjectDescriptor(value) == &descriptor##name;                 \
-  }                                                                               \
-  static Value val##name(Obj##name *x) {                                          \
-    return valObjExplicit((Obj *)x);                                              \
-  }                                                                               \
-  static Obj##name *as##name(Value value) {                                       \
-    if (!is##name(value)) {                                                       \
-      panic("Expected " #name " but got %s", getKindName(value));                 \
-    }                                                                             \
-    return (Obj##name *)AS_OBJ_UNSAFE(value);                                     \
-  }                                                                               \
-  static Obj##name *alloc##name() {                                               \
-    Obj##name *ret = NEW_NATIVE(Obj##name, &descriptor##name);                    \
-    memset(&ret->handle, 0, sizeof(ret->handle));                                 \
-    return ret;                                                                   \
-  }                                                                               \
-  static Status impl##name##StaticCall(i16 argc, Value *argv, Value *out) {       \
-    *out = val##name(alloc##name());                                              \
-    return STATUS_OK;                                                             \
-  }                                                                               \
-  static CFunction func##name##StaticCall = {impl##name##StaticCall, "__call__"}; \
-  static CFunction *name##StaticMethods[] = {                                     \
-      &func##name##StaticCall,                                                    \
-      NULL,                                                                       \
-  };
+#include "mtots_macros.h"
 
-#define WRAP_SDL_REF_TYPE(name, freeFunc)         \
-  static void free##name(ObjNative *n);           \
-  WRAP_SDL_COMMON(name, SDL_##name *, free##name) \
-  static void free##name(ObjNative *n) {          \
-    Obj##name *p = (Obj##name *)n;                \
-    if (p->handle) {                              \
-      freeFunc(p->handle);                        \
-    }                                             \
-  }
-
-#define WRAP_SDL_POD_TYPE(name) \
-  WRAP_SDL_COMMON(name, SDL_##name, nopFree)
-
-#define DEFINE_METHOD_COPY(className)                                       \
-  static Status impl##className##_copy(i16 argc, Value *argv, Value *out) { \
-    Obj##className *owner = as##className(argv[-1]);                        \
-    Obj##className *other = as##className(argv[0]);                         \
-    owner->handle = other->handle;                                          \
-    return STATUS_OK;                                                       \
-  }                                                                         \
-  static CFunction func##className##_copy = {impl##className##_copy, "copy", 2};
-
-#define DEFINE_FIELD_GETTER(className, fieldName, getterExpression)                   \
-  static Status impl##className##_get##fieldName(i16 argc, Value *argv, Value *out) { \
-    Obj##className *owner = as##className(argv[-1]);                                  \
-    *out = getterExpression;                                                          \
-    return STATUS_OK;                                                                 \
-  }                                                                                   \
-  static CFunction func##className##_get##fieldName = {                               \
-      impl##className##_get##fieldName,                                               \
-      "__get_" #fieldName,                                                            \
-  };
-
-#define DEFINE_FIELD_SETTER(className, fieldName, setterExpression)                   \
-  static Status impl##className##_set##fieldName(i16 argc, Value *argv, Value *out) { \
-    Obj##className *owner = as##className(argv[-1]);                                  \
-    Value value = *out = argv[0];                                                     \
-    setterExpression;                                                                 \
-    return STATUS_OK;                                                                 \
-  }                                                                                   \
-  static CFunction func##className##_set##fieldName = {                               \
-      impl##className##_set##fieldName,                                               \
-      "__set_" #fieldName,                                                            \
-      1,                                                                              \
-  };
-
-#define ADD_TYPE_TO_MODULE(name) \
-  newNativeClass(module, &descriptor##name, name##Methods, name##StaticMethods)
-
-#define WRAP_SDL_FUNCTION_V0(name)                              \
+#define WRAP_SDL_FUNCTION(name, minArgc, maxArgc, expression)   \
   static Status impl##name(i16 argc, Value *argv, Value *out) { \
-    SDL_##name();                                               \
-    return STATUS_OK;                                           \
-  }                                                             \
-  static CFunction func##name = {impl##name, #name, 0};
-
-#define WRAP_SDL_FUNCTION_V1(name, arg0)                        \
-  static Status impl##name(i16 argc, Value *argv, Value *out) { \
-    SDL_##name(arg0);                                           \
-    return STATUS_OK;                                           \
-  }                                                             \
-  static CFunction func##name = {impl##name, #name, 1};
-
-#define WRAP_SDL_FUNCTION_V2(name, arg0, arg1)                  \
-  static Status impl##name(i16 argc, Value *argv, Value *out) { \
-    SDL_##name(arg0, arg1);                                     \
-    return STATUS_OK;                                           \
-  }                                                             \
-  static CFunction func##name = {impl##name, #name, 2};
-
-#define WRAP_SDL_FUNCTION_B1(name, arg0)                        \
-  static Status impl##name(i16 argc, Value *argv, Value *out) { \
-    *out = valBool(!!SDL_##name(arg0));                         \
-    return STATUS_OK;                                           \
-  }                                                             \
-  static CFunction func##name = {impl##name, #name, 1};
-
-#define WRAP_SDL_FUNCTION_N0(name)                              \
-  static Status impl##name(i16 argc, Value *argv, Value *out) { \
-    *out = valNumber(SDL_##name());                             \
-    return STATUS_OK;                                           \
-  }                                                             \
-  static CFunction func##name = {impl##name, #name, 0};
-
-#define WRAP_SDL_FUNCTION_I0(name)                              \
-  static Status impl##name(i16 argc, Value *argv, Value *out) { \
-    if (SDL_##name() != 0) {                                    \
+    if ((expression) != 0) {                                    \
       sdlError("SDL_" #name);                                   \
       return STATUS_ERROR;                                      \
     }                                                           \
     return STATUS_OK;                                           \
   }                                                             \
-  static CFunction func##name = {impl##name, #name, 0};
+  static CFunction func##name = {impl##name, #name, minArgc, maxArgc};
 
-#define WRAP_SDL_FUNCTION_I1(name, arg0)                        \
-  static Status impl##name(i16 argc, Value *argv, Value *out) { \
-    if (SDL_##name(arg0) != 0) {                                \
-      sdlError("SDL_" #name);                                   \
-      return STATUS_ERROR;                                      \
-    }                                                           \
-    return STATUS_OK;                                           \
-  }                                                             \
-  static CFunction func##name = {impl##name, #name, 1};
-
-#define WRAP_SDL_FUNCTION_I2(name, arg0, arg1)                  \
-  static Status impl##name(i16 argc, Value *argv, Value *out) { \
-    if (SDL_##name(arg0, arg1) != 0) {                          \
-      sdlError("SDL_" #name);                                   \
-      return STATUS_ERROR;                                      \
-    }                                                           \
-    return STATUS_OK;                                           \
-  }                                                             \
-  static CFunction func##name = {impl##name, #name, 2};
-
-#define WRAP_SDL_FUNCTION_I3(name, arg0, arg1, arg2)            \
-  static Status impl##name(i16 argc, Value *argv, Value *out) { \
-    if (SDL_##name(arg0, arg1, arg2) != 0) {                    \
-      sdlError("SDL_" #name);                                   \
-      return STATUS_ERROR;                                      \
-    }                                                           \
-    return STATUS_OK;                                           \
-  }                                                             \
-  static CFunction func##name = {impl##name, #name, 3};
-
-#define WRAP_SDL_FUNCTION_I4(name, arg0, arg1, arg2, arg3)      \
-  static Status impl##name(i16 argc, Value *argv, Value *out) { \
-    if (SDL_##name(arg0, arg1, arg2, arg3) != 0) {              \
-      sdlError("SDL_" #name);                                   \
-      return STATUS_ERROR;                                      \
-    }                                                           \
-    return STATUS_OK;                                           \
-  }                                                             \
-  static CFunction func##name = {impl##name, #name, 4};
-
-#define WRAP_SDL_FUNCTION_I5(name, arg0, arg1, arg2, arg3, arg4) \
-  static Status impl##name(i16 argc, Value *argv, Value *out) {  \
-    if (SDL_##name(arg0, arg1, arg2, arg3, arg4) != 0) {         \
-      sdlError("SDL_" #name);                                    \
-      return STATUS_ERROR;                                       \
-    }                                                            \
-    return STATUS_OK;                                            \
-  }                                                              \
-  static CFunction func##name = {impl##name, #name, 5};
-
-WRAP_SDL_POD_TYPE(Point)
+WRAP_C_TYPE(Point, SDL_Point)
 DEFINE_METHOD_COPY(Point)
 DEFINE_FIELD_GETTER(Point, x, valNumber(owner->handle.x))
 DEFINE_FIELD_GETTER(Point, y, valNumber(owner->handle.y))
@@ -205,7 +35,7 @@ static CFunction *PointMethods[] = {
     NULL,
 };
 
-WRAP_SDL_POD_TYPE(FPoint)
+WRAP_C_TYPE(FPoint, SDL_FPoint)
 DEFINE_METHOD_COPY(FPoint)
 DEFINE_FIELD_GETTER(FPoint, x, valNumber(owner->handle.x))
 DEFINE_FIELD_GETTER(FPoint, y, valNumber(owner->handle.y))
@@ -220,7 +50,7 @@ static CFunction *FPointMethods[] = {
     NULL,
 };
 
-WRAP_SDL_POD_TYPE(Rect)
+WRAP_C_TYPE(Rect, SDL_Rect)
 DEFINE_METHOD_COPY(Rect)
 DEFINE_FIELD_GETTER(Rect, x, valNumber(owner->handle.x))
 DEFINE_FIELD_GETTER(Rect, y, valNumber(owner->handle.y))
@@ -243,7 +73,7 @@ static CFunction *RectMethods[] = {
     NULL,
 };
 
-WRAP_SDL_POD_TYPE(FRect)
+WRAP_C_TYPE(FRect, SDL_FRect)
 DEFINE_METHOD_COPY(FRect)
 DEFINE_FIELD_GETTER(FRect, x, valNumber(owner->handle.x))
 DEFINE_FIELD_GETTER(FRect, y, valNumber(owner->handle.y))
@@ -266,7 +96,7 @@ static CFunction *FRectMethods[] = {
     NULL,
 };
 
-WRAP_SDL_POD_TYPE(Color)
+WRAP_C_TYPE(Color, SDL_Color)
 DEFINE_METHOD_COPY(Color)
 DEFINE_FIELD_GETTER(Color, r, valNumber(owner->handle.r))
 DEFINE_FIELD_GETTER(Color, g, valNumber(owner->handle.g))
@@ -289,7 +119,7 @@ static CFunction *ColorMethods[] = {
     NULL,
 };
 
-WRAP_SDL_POD_TYPE(Event)
+WRAP_C_TYPE(Event, SDL_Event)
 DEFINE_METHOD_COPY(Event)
 DEFINE_FIELD_GETTER(Event, type, valNumber(owner->handle.type))
 static CFunction *EventMethods[] = {
@@ -298,7 +128,7 @@ static CFunction *EventMethods[] = {
     NULL,
 };
 
-WRAP_SDL_REF_TYPE(Surface, SDL_FreeSurface)
+WRAP_C_TYPE(Surface, SDL_Surface *)
 DEFINE_FIELD_GETTER(Surface, w, valNumber(owner->handle->w))
 DEFINE_FIELD_GETTER(Surface, h, valNumber(owner->handle->h))
 static CFunction *SurfaceMethods[] = {
@@ -307,13 +137,13 @@ static CFunction *SurfaceMethods[] = {
     NULL,
 };
 
-WRAP_SDL_REF_TYPE(Texture, SDL_DestroyTexture)
+WRAP_C_TYPE(Texture, SDL_Texture *)
 static CFunction *TextureMethods[] = {NULL};
 
-WRAP_SDL_REF_TYPE(Window, SDL_DestroyWindow)
+WRAP_C_TYPE(Window, SDL_Window *)
 static CFunction *WindowMethods[] = {NULL};
 
-WRAP_SDL_REF_TYPE(Renderer, SDL_DestroyRenderer)
+WRAP_C_TYPE(Renderer, SDL_Renderer *)
 static CFunction *RendererMethods[] = {NULL};
 
 static Status sdlError(const char *functionName) {
@@ -321,42 +151,51 @@ static Status sdlError(const char *functionName) {
   return STATUS_ERROR;
 }
 
-WRAP_SDL_FUNCTION_I1(Init, asU32(argv[0]))
-WRAP_SDL_FUNCTION_V0(Quit)
-WRAP_SDL_FUNCTION_B1(PollEvent, isNil(argv[0]) ? NULL : &asEvent(argv[0])->handle)
-WRAP_SDL_FUNCTION_V1(Delay, asU32(argv[0]))
-WRAP_SDL_FUNCTION_N0(GetPerformanceCounter)
-WRAP_SDL_FUNCTION_N0(GetPerformanceFrequency)
-WRAP_SDL_FUNCTION_I5(
-    CreateWindowAndRenderer,
-    asInt(argv[0]) /* width */,
-    asInt(argv[1]) /* height */,
-    asU32Bits(argv[2]) /* window_flags */,
-    &asWindow(argv[3])->handle,
-    &asRenderer(argv[4])->handle)
-WRAP_SDL_FUNCTION_I5(
-    SetRenderDrawColor,
-    asRenderer(argv[0])->handle,
-    asU8(argv[1]) /* r */,
-    asU8(argv[2]) /* g */,
-    asU8(argv[3]) /* b */,
-    asU8(argv[4]) /* a */)
-WRAP_SDL_FUNCTION_I1(RenderClear, asRenderer(argv[0])->handle)
-WRAP_SDL_FUNCTION_I2(
-    RenderFillRect,
-    asRenderer(argv[0])->handle,
-    &asRect(argv[1])->handle)
-WRAP_SDL_FUNCTION_I4(
-    RenderCopy,
-    asRenderer(argv[0])->handle,
-    asTexture(argv[1])->handle,
-    isNil(argv[2]) ? NULL : &asRect(argv[2])->handle /* srcrect */,
-    isNil(argv[3]) ? NULL : &asRect(argv[3])->handle /* dstrect */)
-WRAP_SDL_FUNCTION_V1(RenderPresent, asRenderer(argv[0])->handle)
-WRAP_SDL_FUNCTION_V2(
-    RenderGetViewport,
-    asRenderer(argv[0])->handle,
-    &asRect(argv[1])->handle)
+WRAP_SDL_FUNCTION(Init, 1, 0, SDL_Init(asU32(argv[0])))
+WRAP_C_FUNCTION(Quit, 0, 0, SDL_Quit())
+WRAP_C_FUNCTION(
+    PollEvent, 1, 0,
+    *out = valBool(SDL_PollEvent(isNil(argv[0]) ? NULL : &asEvent(argv[0])->handle)))
+WRAP_C_FUNCTION(Delay, 1, 0, SDL_Delay(asU32(argv[0])))
+WRAP_C_FUNCTION(GetPerformanceCounter, 0, 0, *out = valNumber(SDL_GetPerformanceCounter()))
+WRAP_C_FUNCTION(GetPerformanceFrequency, 0, 0, *out = valNumber(SDL_GetPerformanceFrequency()))
+WRAP_SDL_FUNCTION(
+    CreateWindowAndRenderer, 5, 0,
+    SDL_CreateWindowAndRenderer(
+        asInt(argv[0]) /* width */,
+        asInt(argv[1]) /* height */,
+        asU32Bits(argv[2]) /* window_flags */,
+        &asWindow(argv[3])->handle,
+        &asRenderer(argv[4])->handle))
+WRAP_SDL_FUNCTION(
+    SetRenderDrawColor, 5, 0,
+    SDL_SetRenderDrawColor(
+        asRenderer(argv[0])->handle,
+        asU8(argv[1]) /* r */,
+        asU8(argv[2]) /* g */,
+        asU8(argv[3]) /* b */,
+        asU8(argv[4]) /* a */))
+WRAP_SDL_FUNCTION(
+    RenderClear, 1, 0,
+    SDL_RenderClear(asRenderer(argv[0])->handle))
+WRAP_SDL_FUNCTION(
+    RenderFillRect, 2, 0,
+    SDL_RenderFillRect(
+        asRenderer(argv[0])->handle,
+        &asRect(argv[1])->handle))
+WRAP_SDL_FUNCTION(
+    RenderCopy, 4, 0,
+    SDL_RenderCopy(
+        asRenderer(argv[0])->handle,
+        asTexture(argv[1])->handle,
+        isNil(argv[2]) ? NULL : &asRect(argv[2])->handle /* srcrect */,
+        isNil(argv[3]) ? NULL : &asRect(argv[3])->handle /* dstrect */))
+WRAP_C_FUNCTION(RenderPresent, 1, 0, SDL_RenderPresent(asRenderer(argv[0])->handle))
+WRAP_C_FUNCTION(
+    RenderGetViewport, 2, 0,
+    SDL_RenderGetViewport(
+        asRenderer(argv[0])->handle,
+        &asRect(argv[1])->handle))
 
 /* ==================================================
  * Hand-implemented functions / ad-hoc functions
