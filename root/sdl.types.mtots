@@ -5,9 +5,32 @@ Mtots bindings for SDL2
 
 final QUIT "Event type: SDL_QUIT" = 0x100
 
+final INIT_TIMER Int = raise 0
+final INIT_AUDIO Int = raise 0
+final INIT_VIDEO Int = raise 0
+final INIT_JOYSTICK Int = raise 0
+final INIT_HAPTIC Int = raise 0
+final INIT_GAMECONTROLLER Int = raise 0
+final INIT_EVENTS Int = raise 0
+final INIT_EVERYTHING Int = raise 0
 
-def pollEvent(event Event?) Bool:
+
+def Init(flags Int) nil:
   """
+  Wraps `SDL_Init` https://wiki.libsdl.org/SDL2/SDL_Init
+  """
+
+
+def Quit() nil:
+  """
+  Wraps `SDL_Quit` https://wiki.libsdl.org/SDL2/SDL_Quit
+  """
+
+
+def PollEvent(event Event?) Bool:
+  """
+  Wraps `SDL_PollEvent` https://wiki.libsdl.org/SDL2/SDL_PollEvent
+
   ### SDL Docs for `SDL_PollEvent`
 
   Poll for currently pending events.
@@ -47,8 +70,10 @@ def pollEvent(event Event?) Bool:
   """
 
 
-def delay(ms Int) nil:
+def Delay(ms Int) nil:
   """
+  Wraps `SDL_Delay` https://wiki.libsdl.org/SDL2/SDL_Delay
+
   ### SDL Docs for `SDL_Delay`
 
   This function waits a specified number of milliseconds before returning. It
@@ -59,8 +84,10 @@ def delay(ms Int) nil:
   """
 
 
-def getPerformanceCounter() Int:
+def GetPerformanceCounter() Int:
   """
+  Wraps `SDL_GetPerformanceCounter` https://wiki.libsdl.org/SDL2/SDL_GetPerformanceCounter
+
   NOTE: There may be some issues here because the returned Uint64 may not
   fit in a double value.
 
@@ -78,8 +105,10 @@ def getPerformanceCounter() Int:
   """
 
 
-def getPerformanceFrequency() Int:
+def GetPerformanceFrequency() Int:
   """
+  Wraps `SDL_GetPerformanceFrequency` https://wiki.libsdl.org/SDL2/SDL_GetPerformanceFrequency
+
   NOTE: There may be some issues here because the returned Uint64 may not
   fit in a double value.
 
@@ -91,8 +120,61 @@ def getPerformanceFrequency() Int:
   """
 
 
-def getMouseState(position Point?=nil) Int:
+def CreateWindowAndRenderer(
+    width Int,
+    height Int,
+    windowFlags Int,
+    window Window,
+    renderer Renderer) nil:
   """
+  Wraps `SDL_CreateWindowAndRenderer` https://wiki.libsdl.org/SDL2/SDL_CreateWindowAndRenderer
+  """
+
+
+def SetRenderDrawColor(renderer Renderer, r Int, g Int, b Int, a Int) nil:
+  """
+  Wraps `SDL_SetRenderDrawColor` https://wiki.libsdl.org/SDL2/SDL_SetRenderDrawColor
+  """
+
+
+def RenderClear(renderer Renderer) nil:
+  """
+  Wraps `SDL_RenderClear` https://wiki.libsdl.org/SDL2/SDL_RenderClear
+  """
+
+
+def RenderFillRect(renderer Renderer, rect Rect) nil:
+  """
+  Wraps `SDL_RenderFillRect` https://wiki.libsdl.org/SDL2/SDL_RenderFillRect
+  """
+
+
+def RenderCopy(renderer Renderer, texture Texture, srcrect Rect?, dstrect Rect?) nil:
+  """
+  Wraps `SDL_RenderCopy` https://wiki.libsdl.org/SDL2/SDL_RenderCopy
+  """
+
+
+def RenderPresent(renderer Renderer) nil:
+  """
+  Wraps `SDL_RenderPresent` https://wiki.libsdl.org/SDL2/SDL_RenderPresent
+  """
+
+
+def RenderGetViewport(renderer Renderer, rect Rect) nil:
+  """
+  Wraps `SDL_RenderGetViewport` https://wiki.libsdl.org/SDL2/SDL_RenderGetViewport
+  """
+
+
+def GetMouseState(xy Point=nil) Int:
+  """
+  Wraps `SDL_GetMouseState` https://wiki.libsdl.org/SDL2/SDL_GetMouseState
+
+  NOTE: Because pointers to int values are not supported in Mtots,
+  the signature is modified to accept a `Point` instance rather than two
+  integer pointers.
+
   ### SDL Docs for `SDL_GetMouseState`
   Retrieve the current state of the mouse.
 
@@ -110,149 +192,87 @@ def getMouseState(position Point?=nil) Int:
   """
 
 
+def CreateTextureFromSurface(renderer Renderer, surface Surface) Texture:
+  """
+  Wraps `SDL_CreateTextureFromSurface` https://wiki.libsdl.org/SDL2/SDL_CreateTextureFromSurface
+  """
+
+
 class Point:
   """
-  Wraps `SDL_Point`
+  Wraps `SDL_Point` https://wiki.libsdl.org/SDL2/SDL_Point
   """
   var x Int
   var y Int
 
-  def __init__(x Int=0, y Int=0) nil:
-    ""
-
 
 class FPoint:
   """
-  Wraps `SDL_FPoint`
+  Wraps `SDL_FPoint` https://wiki.libsdl.org/SDL2/SDL_FPoint
   """
   var x Float
   var y Float
 
-  def __init__(x Float=0, y Float=0) nil:
-    ""
-
 
 class Rect:
   """
-  Wraps `SDL_Rect`
+  Wraps `SDL_Rect` https://wiki.libsdl.org/SDL2/SDL_Rect
   """
   var x Int
   var y Int
   var w Int
   var h Int
 
-  def __init__(x Int, y Int, w Int, h Int) nil:
-    ""
-
 
 class FRect:
   """
-  Wraps `SDL_FRect`
+  Wraps `SDL_FRect` https://wiki.libsdl.org/SDL2/SDL_FRect
   """
   var x Float
   var y Float
   var w Float
   var h Float
 
-  def __init__(x Float, y Float, w Float, h Float) nil:
-    ""
+
+class Color:
+  """
+  Wraps `SDL_Color` https://wiki.libsdl.org/SDL2/SDL_Color
+  """
+  var r Int
+  var g Int
+  var b Int
+  var a Int
 
 
 class Event:
   """
-  Wraps `SDL_Event`
+  Wraps `SDL_Event` https://wiki.libsdl.org/SDL2/SDL_Event
   """
 
   final type Int "Indicates the type of this event"
 
 
+class Surface:
+  """
+  Wraps `SDL_Surface` https://wiki.libsdl.org/SDL2/SDL_Surface
+  """
+  final w Int
+  final h Int
+
+
+class Texture:
+  """
+  Wraps `SDL_Texture` https://wiki.libsdl.org/SDL2/SDL_Texture
+  """
+
+
 class Window:
   """
-  Wraps `SDL_Window` and `SDL_Renderer`.
-
-  When using the Mtots bindings for SDL, an `SDL_Renderer` is always created
-  together with `SDL_Window` using `SDL_CreateWindowAndRenderer`.
-
-  Most if not all `SDL_Render*` functions map to methods on this class.
+  Wraps `SDL_Window` https://wiki.libsdl.org/SDL2/SDL_Window
   """
 
-  def __init__(title String, width Int, height Int):
-    pass
 
-  def setDrawColor(r Int, g Int, b Int, a Int = 255) nil:
-    """
-    ### SDL Docs for `SDL_SetRenderDrawColor`
-    Set the color used for drawing operations (Rect, Line and Clear).
-
-    Set the color for drawing or filling rectangles, lines, and points, and for
-    SDL_RenderClear().
-
-    * param `renderer` the rendering context
-    * param `r` the red value used to draw on the rendering target
-    * param `g` the green value used to draw on the rendering target
-    * param `b` the blue value used to draw on the rendering target
-    * param `a` the alpha value used to draw on the rendering target; usually
-             `SDL_ALPHA_OPAQUE` (255). Use SDL_SetRenderDrawBlendMode to
-             specify how the alpha channel is used
-    * returns 0 on success or a negative error code on failure; call
-             SDL_GetError() for more information.
-    """
-
-  def clear() nil:
-    """
-    ### SDL Docs for `SDL_RenderClear`
-
-    Clear the current rendering target with the drawing color.
-
-    This function clears the entire rendering target, ignoring the viewport and
-    the clip rectangle.
-
-    * param `renderer` the rendering context
-    * returns 0 on success or a negative error code on failure; call
-             SDL_GetError() for more information.
-    """
-
-  def fillRect(rect Rect) nil:
-    """
-    ### SDL Docs for `SDL_RenderFillRect`
-    Fill a rectangle on the current rendering target with the drawing color.
-
-    The current drawing color is set by SDL_SetRenderDrawColor(), and the
-    color's alpha value is ignored unless blending is enabled with the
-    appropriate call to SDL_SetRenderDrawBlendMode().
-
-    * param renderer the rendering context
-    * param rect the SDL_Rect structure representing the rectangle to fill, or
-                NULL for the entire rendering target
-    * returns 0 on success or a negative error code on failure; call
-             SDL_GetError() for more information.
-    """
-
-  def present() nil:
-    """
-    ### SDL Docs for `SDL_RenderPresent`
-    Update the screen with any rendering performed since the previous call.
-
-    SDL's rendering functions operate on a backbuffer; that is, calling a
-    rendering function such as SDL_RenderDrawLine() does not directly put a
-    line on the screen, but rather updates the backbuffer. As such, you compose
-    your entire scene and *present* the composed backbuffer to the screen as a
-    complete picture.
-
-    Therefore, when using SDL's rendering API, one does all drawing intended
-    for the frame, and then calls this function once per frame to present the
-    final drawing to the user.
-
-    The backbuffer should be considered invalidated after each present; do not
-    assume that previous contents will exist between frames. You are strongly
-    encouraged to call SDL_RenderClear() to initialize the backbuffer before
-    starting each new frame's drawing, even if you plan to overwrite every
-    pixel.
-
-    * param `renderer` the rendering context
-
-    * threadsafety You may only call this function on the main thread. If this
-                  happens to work on a background thread on any given platform
-                  or backend, it's purely by luck and you should not rely on it
-                  to work next time.
-    """
+class Renderer:
+  """
+  Wraps `SDL_Renderer` https://wiki.libsdl.org/SDL2/SDL_Renderer
+  """

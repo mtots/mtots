@@ -1,6 +1,7 @@
 import sdl
 
 print("BEFORE INIT")
+print("INIT_EVERYTHING = %s" % [sdl.INIT_EVERYTHING])
 sdl.Init(sdl.INIT_EVERYTHING)
 print("AFTER INIT")
 
@@ -15,11 +16,41 @@ print("point.x = %s" % [point.x])
 print("point.y = %s" % [point.y])
 
 def main():
+  final W = 512
+  final H = 512
+  final window = sdl.Window()
+  final renderer = sdl.Renderer()
   final event = sdl.Event()
+  final rect = sdl.Rect()
+  final viewport = sdl.Rect()
+  final point = sdl.Point()
+  final FPS = 60
+  final delayms = 1000 / FPS
+  print("delayms = %s" % [delayms])
+  sdl.CreateWindowAndRenderer(W, H, 0, window, renderer)
+  rect.w = 256
+  rect.h = 256
+  sdl.RenderGetViewport(renderer, viewport)
+  print("viewport = [%s, %s, %s, %s]" %
+        [viewport.x, viewport.y, viewport.w, viewport.h])
   while true:
     while sdl.PollEvent(event):
       if event.type == sdl.QUIT:
         sdl.Quit()
         return nil
+
+    sdl.GetMouseState(point)
+    rect.x = point.x - rect.w / 2
+    rect.y = point.y - rect.h / 2
+
+    sdl.SetRenderDrawColor(renderer, 40, 40, 80, 255)
+    sdl.RenderClear(renderer)
+
+    sdl.SetRenderDrawColor(renderer, 120, 120, 80, 100)
+    sdl.RenderFillRect(renderer, rect)
+
+    sdl.RenderPresent(renderer)
+
+    sdl.Delay(delayms)
 
 main()
