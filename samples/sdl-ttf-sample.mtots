@@ -1,0 +1,56 @@
+import sdl as SDL
+import sdl.ttf as TTF
+
+print("BEFORE INIT")
+print("INIT_EVERYTHING = %s" % [SDL.INIT_EVERYTHING])
+SDL.Init(SDL.INIT_EVERYTHING)
+TTF.Init()
+print("AFTER INIT")
+
+final WHITE = SDL.Color()
+WHITE.r = WHITE.g = WHITE.b = WHITE.a = 255
+
+def main():
+  final W = 512
+  final H = 512
+  final window = SDL.Window()
+  final renderer = SDL.Renderer()
+  final event = SDL.Event()
+  final rect = SDL.Rect()
+  final viewport = SDL.Rect()
+  final point = SDL.Point()
+  final FPS = 60
+  final delayms = 1000 / FPS
+  final font = TTF.OpenFont("misc/RobotoMono.ttf", 24)
+  final textSurface = TTF.RenderUTF8_Blended_Wrapped(font, "Hello\n  WORLD", WHITE, 128)
+
+  print("delayms = %s" % [delayms])
+  SDL.CreateWindowAndRenderer(W, H, 0, window, renderer)
+  final textTexture = SDL.CreateTextureFromSurface(renderer, textSurface)
+  rect.w = textSurface.w
+  rect.h = textSurface.h
+  SDL.RenderGetViewport(renderer, viewport)
+  print("viewport = [%s, %s, %s, %s]" %
+        [viewport.x, viewport.y, viewport.w, viewport.h])
+  while true:
+    while SDL.PollEvent(event):
+      if event.type == SDL.QUIT:
+        SDL.Quit()
+        return nil
+
+    SDL.GetMouseState(point)
+    rect.x = point.x - rect.w / 2
+    rect.y = point.y - rect.h / 2
+
+    SDL.SetRenderDrawColor(renderer, 40, 40, 80, 255)
+    SDL.RenderClear(renderer)
+
+    SDL.SetRenderDrawColor(renderer, 120, 120, 80, 100)
+    SDL.RenderFillRect(renderer, rect)
+    SDL.RenderCopy(renderer, textTexture, nil, rect)
+
+    SDL.RenderPresent(renderer)
+
+    SDL.Delay(delayms)
+
+main()

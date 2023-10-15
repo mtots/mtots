@@ -167,6 +167,12 @@ def RenderGetViewport(renderer Renderer, rect Rect) nil:
   """
 
 
+def CreateTextureFromSurface(renderer Renderer, surface Surface) Texture:
+  """
+  Wraps `SDL_CreateTextureFromSurface` https://wiki.libsdl.org/SDL2/SDL_CreateTextureFromSurface
+  """
+
+
 def GetMouseState(xy Point=nil) Int:
   """
   Wraps `SDL_GetMouseState` https://wiki.libsdl.org/SDL2/SDL_GetMouseState
@@ -189,12 +195,6 @@ def GetMouseState(xy Point=nil) Int:
   * param y the y coordinate of the mouse cursor position relative to the
            focus window
   * returns a 32-bit button bitmask of the current button state.
-  """
-
-
-def CreateTextureFromSurface(renderer Renderer, surface Surface) Texture:
-  """
-  Wraps `SDL_CreateTextureFromSurface` https://wiki.libsdl.org/SDL2/SDL_CreateTextureFromSurface
   """
 
 

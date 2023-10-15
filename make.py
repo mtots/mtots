@@ -80,6 +80,9 @@ MACOS_SDL_FLAGS = [
     "-framework",
     "SDL2",
     "-DMTOTS_ENABLE_SDL=1",
+    "-framework",
+    "SDL2_ttf",
+    "-DMTOTS_ENABLE_SDL_TTF=1",
 ]
 
 aparser = argparse.ArgumentParser()

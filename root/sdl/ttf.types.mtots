@@ -1,0 +1,43 @@
+import sdl
+
+
+class Font:
+  """
+  Wraps `TTF_Font` https://wiki.libsdl.org/SDL2_ttf/TTF_Font
+  """
+
+
+def Init() nil:
+  """
+  Wraps `TTF_Init` https://wiki.libsdl.org/SDL2_ttf/TTF_Init
+  """
+
+
+def Quit() nil:
+  """
+  Wraps `TTF_Quit` https://wiki.libsdl.org/SDL2_ttf/TTF_Quit
+  """
+
+
+def OpenFont(file String, ptsize Int) Font:
+  """
+  Wraps `TTF_OpenFont` https://wiki.libsdl.org/SDL2_ttf/TTF_OpenFont
+  """
+
+
+def CloseFont(font Font) nil:
+  """
+  Wraps `TTF_CloseFont` https://wiki.libsdl.org/SDL2_ttf/TTF_CloseFont
+  """
+
+
+def RenderUTF8_Blended(font Font, text String, fg sdl.Color) sdl.Surface:
+  """
+  Wraps `TTF_RenderUTF8_Blended` https://wiki.libsdl.org/SDL2_ttf/TTF_RenderUTF8_Blended
+  """
+
+
+def RenderUTF8_Blended_Wrapped(font Font, text String, fg sdl.Color, wrapLength Int) sdl.Surface:
+  """
+  Wraps `TTF_RenderUTF8_Blended_Wrapped` https://wiki.libsdl.org/SDL2_ttf/TTF_RenderUTF8_Blended_Wrapped
+  """

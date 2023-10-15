@@ -79,6 +79,7 @@
         "**/.vs": true
     },
     "C_Cpp.default.defines": [
+        "MTOTS_ENABLE_SDL_TTF=1",
         "MTOTS_ENABLE_SDL=1"
     ],
     "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 2, ColumnLimit: 0}",

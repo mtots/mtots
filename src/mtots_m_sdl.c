@@ -8,17 +8,24 @@
 #if MTOTS_ENABLE_SDL
 #include <SDL2/SDL.h>
 
+#if MTOTS_ENABLE_SDL_TTF
+#include <SDL2_ttf/SDL_ttf.h>
+#endif
+
 #include "mtots_macros.h"
 
-#define WRAP_SDL_FUNCTION(name, minArgc, maxArgc, expression)   \
-  static Status impl##name(i16 argc, Value *argv, Value *out) { \
-    if ((expression) != 0) {                                    \
-      sdlError("SDL_" #name);                                   \
-      return STATUS_ERROR;                                      \
-    }                                                           \
-    return STATUS_OK;                                           \
-  }                                                             \
-  static CFunction func##name = {impl##name, #name, minArgc, maxArgc};
+#define WRAP_SDL_FUNCTION_EX(module, mtotsName, cname, minArgc, maxArgc, expression) \
+  static Status impl##cname(i16 argc, Value *argv, Value *out) {                     \
+    if ((expression) != 0) {                                                         \
+      sdlError(#module "_" #mtotsName);                                              \
+      return STATUS_ERROR;                                                           \
+    }                                                                                \
+    return STATUS_OK;                                                                \
+  }                                                                                  \
+  static CFunction func##cname = {impl##cname, #mtotsName, minArgc, maxArgc};
+
+#define WRAP_SDL_FUNCTION(name, minArgc, maxArgc, expression) \
+  WRAP_SDL_FUNCTION_EX(SDL, name, name, minArgc, maxArgc, expression)
 
 WRAP_C_TYPE(Point, SDL_Point)
 DEFINE_METHOD_COPY(Point)
@@ -196,27 +203,7 @@ WRAP_C_FUNCTION(
     SDL_RenderGetViewport(
         asRenderer(argv[0])->handle,
         &asRect(argv[1])->handle))
-
-/* ==================================================
- * Hand-implemented functions / ad-hoc functions
- * ================================================== */
-
-static Status implGetMouseState(i16 argc, Value *argv, Value *out) {
-  ObjPoint *point = asPoint(argv[0]);
-  int x, y;
-  *out = valNumber(SDL_GetMouseState(&x, &y));
-  point->handle.x = x;
-  point->handle.y = y;
-  return STATUS_OK;
-}
-
-static CFunction funcGetMouseState = {
-    implGetMouseState,
-    "GetMouseState",
-    1,
-};
-
-static Status implCreateTextureFromSurface(i16 argc, Value *argv, Value *out) {
+WRAP_C_FUNCTION(CreateTextureFromSurface, 2, 0, {
   SDL_Renderer *renderer = asRenderer(argv[0])->handle;
   SDL_Surface *surface = asSurface(argv[1])->handle;
   SDL_Texture *handle = SDL_CreateTextureFromSurface(renderer, surface);
@@ -227,14 +214,78 @@ static Status implCreateTextureFromSurface(i16 argc, Value *argv, Value *out) {
   texture = allocTexture();
   texture->handle = handle;
   *out = valTexture(texture);
-  return STATUS_OK;
-}
+})
+WRAP_C_FUNCTION(GetMouseState, 1, 0, {
+  ObjPoint *point = asPoint(argv[0]);
+  *out = valNumber(SDL_GetMouseState(&point->handle.x, &point->handle.y));
+})
 
-static CFunction funcCreateTextureFromSurface = {
-    implCreateTextureFromSurface,
-    "CreateTextureFromSurface",
-    2,
-};
+/*
+ * ████████ ████████ ███████
+ *    ██       ██    ██
+ *    ██       ██    █████
+ *    ██       ██    ██
+ *    ██       ██    ██
+ * TTF module
+ */
+#if MTOTS_ENABLE_SDL_TTF
+
+WRAP_C_TYPE(Font, TTF_Font *)
+static CFunction *FontMethods[] = {NULL};
+
+WRAP_C_FUNCTION_EX(Init, TTFInit, 0, 0, {
+  if (TTF_Init() != 0) {
+    return sdlError("TTF_Init");
+  }
+})
+
+WRAP_C_FUNCTION_EX(Quit, TTFQuit, 0, 0, TTF_Quit())
+
+WRAP_C_FUNCTION(OpenFont, 2, 0, {
+  const char *file = asString(argv[0])->chars;
+  int ptsize = asInt(argv[1]);
+  TTF_Font *handle = TTF_OpenFont(file, ptsize);
+  ObjFont *font;
+  if (!handle) {
+    return sdlError("TTF_OpenFont");
+  }
+  font = allocFont();
+  font->handle = handle;
+  *out = valFont(font);
+})
+
+WRAP_C_FUNCTION(CloseFont, 1, 0, TTF_CloseFont(asFont(argv[0])->handle))
+
+WRAP_C_FUNCTION(RenderUTF8_Blended, 3, 0, {
+  TTF_Font *font = asFont(argv[0])->handle;
+  const char *text = asString(argv[1])->chars;
+  SDL_Color fg = asColor(argv[2])->handle;
+  SDL_Surface *handle = TTF_RenderUTF8_Blended(font, text, fg);
+  ObjSurface *surface;
+  if (!handle) {
+    return sdlError("TTF_RenderUTF8_Blended");
+  }
+  surface = allocSurface();
+  surface->handle = handle;
+  *out = valSurface(surface);
+})
+
+WRAP_C_FUNCTION(RenderUTF8_Blended_Wrapped, 4, 0, {
+  TTF_Font *font = asFont(argv[0])->handle;
+  const char *text = asString(argv[1])->chars;
+  SDL_Color fg = asColor(argv[2])->handle;
+  Uint32 wrapLength = asU32(argv[3]);
+  SDL_Surface *handle = TTF_RenderUTF8_Blended_Wrapped(font, text, fg, wrapLength);
+  ObjSurface *surface;
+  if (!handle) {
+    return sdlError("TTF_RenderUTF8_Blended_Wrapped");
+  }
+  surface = allocSurface();
+  surface->handle = handle;
+  *out = valSurface(surface);
+})
+
+#endif
 
 /*
  * ███    ███  ██████  ██████  ██    ██ ██      ███████
@@ -242,10 +293,11 @@ static CFunction funcCreateTextureFromSurface = {
  * ██ ████ ██ ██    ██ ██   ██ ██    ██ ██      █████
  * ██  ██  ██ ██    ██ ██   ██ ██    ██ ██      ██
  * ██      ██  ██████  ██████   ██████  ███████ ███████
+ * module impls
  */
 
-static Status impl(i16 argCount, Value *args, Value *out) {
-  ObjModule *module = asModule(args[0]);
+static Status impl(i16 argc, Value *argv, Value *out) {
+  ObjModule *module = asModule(argv[0]);
   CFunction *functions[] = {
       &funcInit,
       &funcQuit,
@@ -260,16 +312,10 @@ static Status impl(i16 argCount, Value *args, Value *out) {
       &funcRenderCopy,
       &funcRenderPresent,
       &funcRenderGetViewport,
-
-      /* hand implemented functions */
-      &funcGetMouseState,
       &funcCreateTextureFromSurface,
+      &funcGetMouseState,
       NULL,
   };
-
-  if (UFALSE) {
-    asWindow(valNil()); /* Suppress warning */
-  }
 
   moduleAddFunctions(module, functions);
 
@@ -301,13 +347,36 @@ static Status impl(i16 argCount, Value *args, Value *out) {
 
 static CFunction func = {impl, "sdl", 1};
 
+#if MTOTS_ENABLE_SDL_TTF
+static Status implSDLTTF(i16 argc, Value *argv, Value *out) {
+  ObjModule *module = asModule(argv[0]);
+  CFunction *functions[] = {
+      &funcTTFInit,
+      &funcTTFQuit,
+      &funcOpenFont,
+      &funcCloseFont,
+      &funcRenderUTF8_Blended,
+      &funcRenderUTF8_Blended_Wrapped,
+      NULL,
+  };
+  moduleAddFunctions(module, functions);
+  ADD_TYPE_TO_MODULE(Font);
+  return STATUS_OK;
+}
+static CFunction funcSDLTTF = {implSDLTTF, "sdl.ttf", 1};
+#endif
+
 void addNativeModuleSDL(void) {
   addNativeModule(&func);
+
+#if MTOTS_ENABLE_SDL_TTF
+  addNativeModule(&funcSDLTTF);
+#endif
 }
 
 #else
 
-static Status impl(i16 argCount, Value *args, Value *out) {
+static Status impl(i16 argc, Value *argv, Value *out) {
   runtimeError("No SDL support");
   return STATUS_ERROR;
 }

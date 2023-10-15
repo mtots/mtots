@@ -79,11 +79,14 @@
 #define ADD_TYPE_TO_MODULE(name) \
   newNativeClass(module, &descriptor##name, name##Methods, name##StaticMethods)
 
-#define WRAP_C_FUNCTION(name, minArgc, maxArgc, expression)     \
-  static Status impl##name(i16 argc, Value *argv, Value *out) { \
-    expression;                                                 \
-    return STATUS_OK;                                           \
-  }                                                             \
-  static CFunction func##name = {impl##name, #name, minArgc, maxArgc};
+#define WRAP_C_FUNCTION_EX(mtotsName, cname, minArgc, maxArgc, expression) \
+  static Status impl##cname(i16 argc, Value *argv, Value *out) {           \
+    expression;                                                            \
+    return STATUS_OK;                                                      \
+  }                                                                        \
+  static CFunction func##cname = {impl##cname, #mtotsName, minArgc, maxArgc};
+
+#define WRAP_C_FUNCTION(name, minArgc, maxArgc, expression) \
+  WRAP_C_FUNCTION_EX(name, name, minArgc, maxArgc, expression)
 
 #endif /*mtots_macros_h*/
