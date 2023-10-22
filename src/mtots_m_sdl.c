@@ -267,6 +267,24 @@ WRAP_SDL_FUNCTION(
         &asWindow(argv[3])->handle,
         &asRenderer(argv[4])->handle))
 WRAP_SDL_FUNCTION(
+    SetWindowFullscreen, 2, 0,
+    SDL_SetWindowFullscreen(asWindow(argv[0])->handle, asU32Bits(argv[1])))
+WRAP_SDL_FUNCTION(
+    SetWindowOpacity, 2, 0,
+    SDL_SetWindowOpacity(asWindow(argv[0])->handle, asFloat(argv[1])))
+WRAP_C_FUNCTION(
+    SetWindowPosition, 3, 0,
+    SDL_SetWindowPosition(asWindow(argv[0])->handle, asInt(argv[1]), asInt(argv[2])))
+WRAP_C_FUNCTION(
+    SetWindowResizable, 2, 0,
+    SDL_SetWindowResizable(asWindow(argv[0])->handle, asBool(argv[1])))
+WRAP_C_FUNCTION(
+    SetWindowSize, 3, 0,
+    SDL_SetWindowSize(asWindow(argv[0])->handle, asInt(argv[1]), asInt(argv[2])))
+WRAP_C_FUNCTION(
+    SetWindowTitle, 2, 0,
+    SDL_SetWindowTitle(asWindow(argv[0])->handle, asString(argv[1])->chars))
+WRAP_SDL_FUNCTION(
     SetRenderDrawColor, 5, 0,
     SDL_SetRenderDrawColor(
         asRenderer(argv[0])->handle,
@@ -500,6 +518,12 @@ static Status impl(i16 argc, Value *argv, Value *out) {
       &funcRWclose,
       &funcRWsize,
       &funcCreateWindowAndRenderer,
+      &funcSetWindowFullscreen,
+      &funcSetWindowOpacity,
+      &funcSetWindowPosition,
+      &funcSetWindowResizable,
+      &funcSetWindowSize,
+      &funcSetWindowTitle,
       &funcSetRenderDrawColor,
       &funcRenderClear,
       &funcRenderFillRect,
@@ -537,6 +561,10 @@ static Status impl(i16 argc, Value *argv, Value *out) {
   WRAP_CONST(INIT_GAMECONTROLLER, SDL_INIT_GAMECONTROLLER);
   WRAP_CONST(INIT_EVENTS, SDL_INIT_EVENTS);
   WRAP_CONST(INIT_EVERYTHING, SDL_INIT_EVERYTHING);
+  WRAP_CONST(WINDOW_FULLSCREEN, SDL_WINDOW_FULLSCREEN);
+  WRAP_CONST(WINDOW_FULLSCREEN_DESKTOP, SDL_WINDOW_FULLSCREEN_DESKTOP);
+  WRAP_CONST(WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+  WRAP_CONST(WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED);
 
   return STATUS_OK;
 }

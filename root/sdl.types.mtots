@@ -15,6 +15,11 @@ final INIT_GAMECONTROLLER Int = raise 0
 final INIT_EVENTS Int = raise 0
 final INIT_EVERYTHING Int = raise 0
 
+final WINDOW_FULLSCREEN Int = raise 0
+final WINDOW_FULLSCREEN_DESKTOP Int = raise 0
+
+final WINDOWPOS_CENTERED Int = raise 0
+final WINDOWPOS_UNDEFINED Int = raise 0
 
 def Init(flags Int) nil:
   """
@@ -165,6 +170,42 @@ def CreateWindowAndRenderer(
     renderer Renderer) nil:
   """
   Wraps `SDL_CreateWindowAndRenderer` https://wiki.libsdl.org/SDL2/SDL_CreateWindowAndRenderer
+  """
+
+
+def SetWindowFullscreen(window Window, flags Int) nil:
+  """
+  Wraps `SDL_SetWindowFullscreen` https://wiki.libsdl.org/SDL2/SDL_SetWindowFullscreen
+  """
+
+
+def SetWindowOpacity(window Window, opacity Float) nil:
+  """
+  Wraps `SDL_SetWindowOpacity` https://wiki.libsdl.org/SDL2/SDL_SetWindowOpacity
+  """
+
+
+def SetWindowPosition(window Window, x Int, y Int) nil:
+  """
+  Wraps `SDL_SetWindowPosition` https://wiki.libsdl.org/SDL2/SDL_SetWindowPosition
+  """
+
+
+def SetWindowResizable(window Window, resizable Bool) nil:
+  """
+  Wraps `SDL_SetWindowResizable` https://wiki.libsdl.org/SDL2/SDL_SetWindowResizable
+  """
+
+
+def SetWindowSize(window Window, w Int, h Int) nil:
+  """
+  Wraps `SDL_SetWindowSize` https://wiki.libsdl.org/SDL2/SDL_SetWindowSize
+  """
+
+
+def SetWindowTitle(window Window, title String) nil:
+  """
+  Wraps `SDL_SetWindowTitle` https://wiki.libsdl.org/SDL2/SDL_SetWindowTitle
   """
 
 
