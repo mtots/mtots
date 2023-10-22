@@ -30,7 +30,19 @@ def Load(file String) sdl.Surface:
   """
 
 
+def Load_RW(src sdl.RWops, freesrc Bool) sdl.Surface:
+  """
+  Wraps `IMG_Load_RW` https://wiki.libsdl.org/SDL2_image/IMG_Load_RW
+  """
+
+
 def LoadTexture(renderer sdl.Renderer, file String) sdl.Texture:
   """
   Wraps `IMG_LoadTexture` https://wiki.libsdl.org/SDL2_image/IMG_LoadTexture
+  """
+
+
+def LoadTexture_RW(renderer sdl.Renderer, src sdl.RWops, freesrc Bool) sdl.Texture:
+  """
+  Wraps `IMG_LoadTexture_RW` https://wiki.libsdl.org/SDL2_image/IMG_LoadTexture_RW
   """

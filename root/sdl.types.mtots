@@ -121,6 +121,42 @@ def GetPerformanceFrequency() Int:
   """
 
 
+def RWFromFile(file String, mode String) RWops:
+  """
+  Wraps `SDL_RWFromFile` https://wiki.libsdl.org/SDL2/SDL_RWFromFile
+  """
+
+
+def RWFromString(data String) RWops:
+  """
+  Wraps `SDL_RWFromConstMem` https://wiki.libsdl.org/SDL2/SDL_RWFromConstMem
+  but only works with `String`s.
+
+  The returned `RWops` will hold a reference to `data` keeping it alive.
+  """
+
+
+def RWFromBuffer(data Buffer) RWops:
+  """
+  Wraps `SDL_RWFromMem` https://wiki.libsdl.org/SDL2/SDL_RWFromMem
+  but only works with `Buffer`s.
+
+  The returned `RWops` will hold a reference to `data` keeping it alive.
+  """
+
+
+def RWclose(context RWops) nil:
+  """
+  Wraps `SDL_RWclose` https://wiki.libsdl.org/SDL2/SDL_RWclose
+  """
+
+
+def RWsize(context RWops) Int:
+  """
+  Wraps `SDL_RWsize` https://wiki.libsdl.org/SDL2/SDL_RWsize
+  """
+
+
 def CreateWindowAndRenderer(
     width Int,
     height Int,
@@ -129,15 +165,6 @@ def CreateWindowAndRenderer(
     renderer Renderer) nil:
   """
   Wraps `SDL_CreateWindowAndRenderer` https://wiki.libsdl.org/SDL2/SDL_CreateWindowAndRenderer
-  """
-
-
-def QueryTexture(
-    texture Texture,
-    format c.U32Cell?, access c.IntCell?,
-    w c.IntCell?, h c.IntCell?) nil:
-  """
-  Wraps `SDL_QueryTexture` https://wiki.libsdl.org/SDL2/SDL_QueryTexture
   """
 
 
@@ -180,6 +207,21 @@ def RenderGetViewport(renderer Renderer, rect Rect) nil:
 def CreateTextureFromSurface(renderer Renderer, surface Surface) Texture:
   """
   Wraps `SDL_CreateTextureFromSurface` https://wiki.libsdl.org/SDL2/SDL_CreateTextureFromSurface
+  """
+
+
+def DestroyTexture(texture Texture) nil:
+  """
+  Wraps `SDL_DestroyTexture` https://wiki.libsdl.org/SDL2/SDL_DestroyTexture
+  """
+
+
+def QueryTexture(
+    texture Texture,
+    format c.U32Cell?, access c.IntCell?,
+    w c.IntCell?, h c.IntCell?) nil:
+  """
+  Wraps `SDL_QueryTexture` https://wiki.libsdl.org/SDL2/SDL_QueryTexture
   """
 
 
@@ -285,4 +327,9 @@ class Window:
 class Renderer:
   """
   Wraps `SDL_Renderer` https://wiki.libsdl.org/SDL2/SDL_Renderer
+  """
+
+class RWops:
+  """
+  Wraps `SDL_RWops` https://wiki.libsdl.org/SDL2/SDL_RWops
   """

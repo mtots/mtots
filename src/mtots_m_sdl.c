@@ -156,7 +156,19 @@ static CFunction *SurfaceMethods[] = {
     NULL,
 };
 
-WRAP_C_TYPE(Texture, SDL_Texture *)
+typedef struct ObjTexture {
+  ObjNative obj;
+  SDL_Texture *handle;
+} ObjTexture;
+static void freeTexture(ObjNative *n) {
+  ObjTexture *texture = (ObjTexture *)n;
+  if (texture->handle) {
+    SDL_DestroyTexture(texture->handle);
+    texture->handle = NULL;
+  }
+}
+WRAP_C_TYPE_EX(Texture, SDL_Texture *, static, nopBlacken, freeTexture)
+static CFunction *TextureStaticMethods[] = {NULL};
 static CFunction *TextureMethods[] = {NULL};
 
 WRAP_C_TYPE(Window, SDL_Window *)
@@ -164,6 +176,26 @@ static CFunction *WindowMethods[] = {NULL};
 
 WRAP_C_TYPE(Renderer, SDL_Renderer *)
 static CFunction *RendererMethods[] = {NULL};
+
+typedef struct ObjRWops {
+  ObjNative obj;
+  SDL_RWops *handle;
+  Value dataOwner;
+} ObjRWops;
+static void blackenRWops(ObjNative *n) {
+  ObjRWops *ops = (ObjRWops *)n;
+  markValue(ops->dataOwner);
+}
+static void freeRWops(ObjNative *n) {
+  ObjRWops *ops = (ObjRWops *)n;
+  if (ops->handle) {
+    SDL_RWclose(ops->handle);
+    ops->handle = NULL;
+  }
+}
+WRAP_C_TYPE_EX(RWops, SDL_RWops *, static, blackenRWops, freeRWops)
+static CFunction *RWopsStaticMethods[] = {NULL};
+static CFunction *RWopsMethods[] = {NULL};
 
 static Status sdlError(const char *functionName) {
   runtimeError("%s: %s", functionName, SDL_GetError());
@@ -178,6 +210,54 @@ WRAP_C_FUNCTION(
 WRAP_C_FUNCTION(Delay, 1, 0, SDL_Delay(asU32(argv[0])))
 WRAP_C_FUNCTION(GetPerformanceCounter, 0, 0, *out = valNumber(SDL_GetPerformanceCounter()))
 WRAP_C_FUNCTION(GetPerformanceFrequency, 0, 0, *out = valNumber(SDL_GetPerformanceFrequency()))
+WRAP_C_FUNCTION(RWFromFile, 2, 0, {
+  const char *file = asString(argv[0])->chars;
+  const char *mode = asString(argv[1])->chars;
+  SDL_RWops *handle = SDL_RWFromFile(file, mode);
+  ObjRWops *rwops;
+  if (!handle) {
+    return sdlError("SDL_RWFromFile");
+  }
+  rwops = allocRWops();
+  rwops->handle = handle;
+  *out = valRWops(rwops);
+})
+WRAP_C_FUNCTION(RWFromString, 1, 0, {
+  String *string = asString(argv[0]);
+  SDL_RWops *handle = SDL_RWFromConstMem(string->chars, (int)string->byteLength);
+  ObjRWops *rwops;
+  if (!handle) {
+    return sdlError("SDL_RWFromConstMem (RWFromString)");
+  }
+  rwops = allocRWops();
+  rwops->handle = handle;
+  rwops->dataOwner = valString(string);
+  *out = valRWops(rwops);
+})
+WRAP_C_FUNCTION(RWFromBuffer, 1, 0, {
+  ObjBuffer *buffer = asBuffer(argv[0]);
+  SDL_RWops *handle = SDL_RWFromMem(buffer->handle.data, (int)buffer->handle.length);
+  ObjRWops *rwops;
+  if (!handle) {
+    return sdlError("SDL_RWFromMem (RWFromBuffer)");
+  }
+  bufferLock(&buffer->handle);
+  rwops = allocRWops();
+  rwops->handle = handle;
+  rwops->dataOwner = valBuffer(buffer);
+  *out = valRWops(rwops);
+})
+WRAP_C_FUNCTION(RWclose, 1, 0, {
+  ObjRWops *rwops = asRWops(argv[0]);
+  if (rwops->handle != NULL) {
+    if (SDL_RWclose(rwops->handle) != 0) {
+      return sdlError("SDL_RWclose");
+    }
+    rwops->handle = NULL;
+    rwops->dataOwner = valNil();
+  }
+})
+WRAP_C_FUNCTION(RWsize, 1, 0, *out = valNumber(SDL_RWsize(asRWops(argv[0])->handle)))
 WRAP_SDL_FUNCTION(
     CreateWindowAndRenderer, 5, 0,
     SDL_CreateWindowAndRenderer(
@@ -186,14 +266,6 @@ WRAP_SDL_FUNCTION(
         asU32Bits(argv[2]) /* window_flags */,
         &asWindow(argv[3])->handle,
         &asRenderer(argv[4])->handle))
-WRAP_SDL_FUNCTION(
-    QueryTexture, 5, 0,
-    SDL_QueryTexture(
-        asTexture(argv[0])->handle,
-        isNil(argv[1]) ? NULL : &asU32Cell(argv[1])->handle,
-        isNil(argv[2]) ? NULL : &asIntCell(argv[2])->handle,
-        isNil(argv[3]) ? NULL : &asIntCell(argv[3])->handle,
-        isNil(argv[4]) ? NULL : &asIntCell(argv[4])->handle))
 WRAP_SDL_FUNCTION(
     SetRenderDrawColor, 5, 0,
     SDL_SetRenderDrawColor(
@@ -235,6 +307,21 @@ WRAP_C_FUNCTION(CreateTextureFromSurface, 2, 0, {
   texture->handle = handle;
   *out = valTexture(texture);
 })
+WRAP_C_FUNCTION(DestroyTexture, 1, 0, {
+  ObjTexture *texture = asTexture(argv[0]);
+  if (texture->handle) {
+    SDL_DestroyTexture(texture->handle);
+    texture->handle = NULL;
+  }
+})
+WRAP_SDL_FUNCTION(
+    QueryTexture, 5, 0,
+    SDL_QueryTexture(
+        asTexture(argv[0])->handle,
+        isNil(argv[1]) ? NULL : &asU32Cell(argv[1])->handle,
+        isNil(argv[2]) ? NULL : &asIntCell(argv[2])->handle,
+        isNil(argv[3]) ? NULL : &asIntCell(argv[3])->handle,
+        isNil(argv[4]) ? NULL : &asIntCell(argv[4])->handle))
 WRAP_C_FUNCTION(GetMouseState, 1, 0, {
   ObjPoint *point = asPoint(argv[0]);
   *out = valNumber(SDL_GetMouseState(&point->handle.x, &point->handle.y));
@@ -338,6 +425,23 @@ WRAP_C_FUNCTION_EX(Load, IMGLoad, 1, 0, {
   *out = valSurface(surface);
 })
 
+WRAP_C_FUNCTION_EX(Load_RW, IMGLoad_RW, 2, 0, {
+  ObjRWops *src = asRWops(argv[0]);
+  ubool freesrc = asBool(argv[1]);
+  SDL_Surface *handle = IMG_Load_RW(src->handle, freesrc);
+  ObjSurface *surface;
+  if (freesrc) {
+    src->handle = NULL;
+    src->dataOwner = valNil();
+  }
+  if (!handle) {
+    return sdlError("IMG_Load_RW");
+  }
+  surface = allocSurface();
+  surface->handle = handle;
+  *out = valSurface(surface);
+})
+
 WRAP_C_FUNCTION_EX(LoadTexture, IMGLoadTexture, 2, 0, {
   SDL_Renderer *renderer = asRenderer(argv[0])->handle;
   const char *file = asString(argv[1])->chars;
@@ -345,6 +449,24 @@ WRAP_C_FUNCTION_EX(LoadTexture, IMGLoadTexture, 2, 0, {
   ObjTexture *texture;
   if (!handle) {
     return sdlError("IMG_LoadTexture");
+  }
+  texture = allocTexture();
+  texture->handle = handle;
+  *out = valTexture(texture);
+})
+
+WRAP_C_FUNCTION_EX(LoadTexture_RW, IMGLoadTexture_RW, 3, 0, {
+  SDL_Renderer *renderer = asRenderer(argv[0])->handle;
+  ObjRWops *src = asRWops(argv[1]);
+  ubool freesrc = asBool(argv[2]);
+  SDL_Texture *handle = IMG_LoadTexture_RW(renderer, src->handle, freesrc);
+  ObjTexture *texture;
+  if (freesrc) {
+    src->handle = NULL;
+    src->dataOwner = valNil();
+  }
+  if (!handle) {
+    return sdlError("IMG_LoadTexture_RW");
   }
   texture = allocTexture();
   texture->handle = handle;
@@ -371,8 +493,12 @@ static Status impl(i16 argc, Value *argv, Value *out) {
       &funcDelay,
       &funcGetPerformanceCounter,
       &funcGetPerformanceFrequency,
+      &funcRWFromFile,
+      &funcRWFromString,
+      &funcRWFromBuffer,
+      &funcRWclose,
+      &funcRWsize,
       &funcCreateWindowAndRenderer,
-      &funcQueryTexture,
       &funcSetRenderDrawColor,
       &funcRenderClear,
       &funcRenderFillRect,
@@ -380,6 +506,8 @@ static Status impl(i16 argc, Value *argv, Value *out) {
       &funcRenderPresent,
       &funcRenderGetViewport,
       &funcCreateTextureFromSurface,
+      &funcDestroyTexture,
+      &funcQueryTexture,
       &funcGetMouseState,
       NULL,
   };
@@ -396,6 +524,7 @@ static Status impl(i16 argc, Value *argv, Value *out) {
   ADD_TYPE_TO_MODULE(Texture);
   ADD_TYPE_TO_MODULE(Window);
   ADD_TYPE_TO_MODULE(Renderer);
+  ADD_TYPE_TO_MODULE(RWops);
 
   WRAP_CONST(QUIT, SDL_QUIT);
   WRAP_CONST(QUIT, SDL_QUIT);
@@ -439,7 +568,9 @@ static Status implSDLImage(i16 argc, Value *argv, Value *out) {
       &funcIMGInit,
       &funcIMGQuit,
       &funcIMGLoad,
+      &funcIMGLoad_RW,
       &funcIMGLoadTexture,
+      &funcIMGLoadTexture_RW,
       NULL,
   };
   moduleAddFunctions(module, functions);
