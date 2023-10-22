@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "mtots_m_c.h"
 #include "mtots_vm.h"
 
 #if MTOTS_ENABLE_SDL
@@ -12,7 +13,18 @@
 #include <SDL2_ttf/SDL_ttf.h>
 #endif
 
+#if MTOTS_ENABLE_SDL_IMAGE
+#include <SDL2_image/SDL_image.h>
+#endif
+
+#if MTOTS_ENABLE_SDL_MIXER
+#include <SDL2_mixer/SDL_mixer.h>
+#endif
+
 #include "mtots_macros.h"
+
+#define WRAP_CONST(name, value) \
+  mapSetN(&module->fields, #name, valNumber(value))
 
 #define WRAP_SDL_FUNCTION_EX(module, mtotsName, cname, minArgc, maxArgc, expression) \
   static Status impl##cname(i16 argc, Value *argv, Value *out) {                     \
@@ -175,6 +187,14 @@ WRAP_SDL_FUNCTION(
         &asWindow(argv[3])->handle,
         &asRenderer(argv[4])->handle))
 WRAP_SDL_FUNCTION(
+    QueryTexture, 5, 0,
+    SDL_QueryTexture(
+        asTexture(argv[0])->handle,
+        isNil(argv[1]) ? NULL : &asU32Cell(argv[1])->handle,
+        isNil(argv[2]) ? NULL : &asIntCell(argv[2])->handle,
+        isNil(argv[3]) ? NULL : &asIntCell(argv[3])->handle,
+        isNil(argv[4]) ? NULL : &asIntCell(argv[4])->handle))
+WRAP_SDL_FUNCTION(
     SetRenderDrawColor, 5, 0,
     SDL_SetRenderDrawColor(
         asRenderer(argv[0])->handle,
@@ -288,6 +308,52 @@ WRAP_C_FUNCTION(RenderUTF8_Blended_Wrapped, 4, 0, {
 #endif
 
 /*
+ * ██ ███    ███  █████   ██████  ███████
+ * ██ ████  ████ ██   ██ ██       ██
+ * ██ ██ ████ ██ ███████ ██   ███ █████
+ * ██ ██  ██  ██ ██   ██ ██    ██ ██
+ * ██ ██      ██ ██   ██  ██████  ███████
+ * Image module
+ */
+#if MTOTS_ENABLE_SDL_IMAGE
+
+WRAP_C_FUNCTION_EX(Init, IMGInit, 1, 0, {
+  u32 flags = asU32Bits(argv[0]);
+  if ((IMG_Init(flags) & flags) != flags) {
+    return sdlError("IMG_Init");
+  }
+})
+
+WRAP_C_FUNCTION_EX(Quit, IMGQuit, 0, 0, IMG_Quit())
+
+WRAP_C_FUNCTION_EX(Load, IMGLoad, 1, 0, {
+  const char *file = asString(argv[0])->chars;
+  SDL_Surface *handle = IMG_Load(file);
+  ObjSurface *surface;
+  if (!handle) {
+    return sdlError("IMG_Load");
+  }
+  surface = allocSurface();
+  surface->handle = handle;
+  *out = valSurface(surface);
+})
+
+WRAP_C_FUNCTION_EX(LoadTexture, IMGLoadTexture, 2, 0, {
+  SDL_Renderer *renderer = asRenderer(argv[0])->handle;
+  const char *file = asString(argv[1])->chars;
+  SDL_Texture *handle = IMG_LoadTexture(renderer, file);
+  ObjTexture *texture;
+  if (!handle) {
+    return sdlError("IMG_LoadTexture");
+  }
+  texture = allocTexture();
+  texture->handle = handle;
+  *out = valTexture(texture);
+})
+
+#endif
+
+/*
  * ███    ███  ██████  ██████  ██    ██ ██      ███████
  * ████  ████ ██    ██ ██   ██ ██    ██ ██      ██
  * ██ ████ ██ ██    ██ ██   ██ ██    ██ ██      █████
@@ -306,6 +372,7 @@ static Status impl(i16 argc, Value *argv, Value *out) {
       &funcGetPerformanceCounter,
       &funcGetPerformanceFrequency,
       &funcCreateWindowAndRenderer,
+      &funcQueryTexture,
       &funcSetRenderDrawColor,
       &funcRenderClear,
       &funcRenderFillRect,
@@ -330,17 +397,16 @@ static Status impl(i16 argc, Value *argv, Value *out) {
   ADD_TYPE_TO_MODULE(Window);
   ADD_TYPE_TO_MODULE(Renderer);
 
-#define ADD_INT(name) mapSetN(&module->fields, #name, valNumber(SDL_##name))
-  ADD_INT(QUIT);
-  ADD_INT(INIT_TIMER);
-  ADD_INT(INIT_AUDIO);
-  ADD_INT(INIT_VIDEO);
-  ADD_INT(INIT_JOYSTICK);
-  ADD_INT(INIT_HAPTIC);
-  ADD_INT(INIT_GAMECONTROLLER);
-  ADD_INT(INIT_EVENTS);
-  ADD_INT(INIT_EVERYTHING);
-#undef ADD_INT
+  WRAP_CONST(QUIT, SDL_QUIT);
+  WRAP_CONST(QUIT, SDL_QUIT);
+  WRAP_CONST(INIT_TIMER, SDL_INIT_TIMER);
+  WRAP_CONST(INIT_AUDIO, SDL_INIT_AUDIO);
+  WRAP_CONST(INIT_VIDEO, SDL_INIT_VIDEO);
+  WRAP_CONST(INIT_JOYSTICK, SDL_INIT_JOYSTICK);
+  WRAP_CONST(INIT_HAPTIC, SDL_INIT_HAPTIC);
+  WRAP_CONST(INIT_GAMECONTROLLER, SDL_INIT_GAMECONTROLLER);
+  WRAP_CONST(INIT_EVENTS, SDL_INIT_EVENTS);
+  WRAP_CONST(INIT_EVERYTHING, SDL_INIT_EVERYTHING);
 
   return STATUS_OK;
 }
@@ -366,11 +432,39 @@ static Status implSDLTTF(i16 argc, Value *argv, Value *out) {
 static CFunction funcSDLTTF = {implSDLTTF, "sdl.ttf", 1};
 #endif
 
+#if MTOTS_ENABLE_SDL_IMAGE
+static Status implSDLImage(i16 argc, Value *argv, Value *out) {
+  ObjModule *module = asModule(argv[0]);
+  CFunction *functions[] = {
+      &funcIMGInit,
+      &funcIMGQuit,
+      &funcIMGLoad,
+      &funcIMGLoadTexture,
+      NULL,
+  };
+  moduleAddFunctions(module, functions);
+
+  WRAP_CONST(INIT_JPG, IMG_INIT_JPG);
+  WRAP_CONST(INIT_PNG, IMG_INIT_PNG);
+  WRAP_CONST(INIT_TIF, IMG_INIT_TIF);
+  WRAP_CONST(INIT_WEBP, IMG_INIT_WEBP);
+  WRAP_CONST(INIT_JXL, IMG_INIT_JXL);
+  WRAP_CONST(INIT_AVIF, IMG_INIT_AVIF);
+
+  return STATUS_OK;
+}
+static CFunction funcSDLImage = {implSDLImage, "sdl.image", 1};
+#endif
+
 void addNativeModuleSDL(void) {
   addNativeModule(&func);
 
 #if MTOTS_ENABLE_SDL_TTF
   addNativeModule(&funcSDLTTF);
+#endif
+
+#if MTOTS_ENABLE_SDL_IMAGE
+  addNativeModule(&funcSDLImage);
 #endif
 }
 

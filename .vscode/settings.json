@@ -79,6 +79,8 @@
         "**/.vs": true
     },
     "C_Cpp.default.defines": [
+        "MTOTS_ENABLE_SDL_MIXER=1",
+        "MTOTS_ENABLE_SDL_IMAGE=1",
         "MTOTS_ENABLE_SDL_TTF=1",
         "MTOTS_ENABLE_SDL=1"
     ],

@@ -1,0 +1,36 @@
+import sdl
+
+
+final INIT_JPG Int = raise 0
+final INIT_PNG Int = raise 0
+final INIT_TIF Int = raise 0
+final INIT_WEBP Int = raise 0
+final INIT_JXL Int = raise 0
+final INIT_AVIF Int = raise 0
+
+
+def Init(flags Int) nil:
+  """
+  Wraps `IMG_Init` https://wiki.libsdl.org/SDL2_image/IMG_Init
+
+  This function throws if any of the values requested in the flags
+  fail to initialize.
+  """
+
+
+def Quit(flags Int) nil:
+  """
+  Wraps `IMG_Quit` https://wiki.libsdl.org/SDL2_image/IMG_Quit
+  """
+
+
+def Load(file String) sdl.Surface:
+  """
+  Wraps `IMG_Load` https://wiki.libsdl.org/SDL2_image/IMG_Load
+  """
+
+
+def LoadTexture(renderer sdl.Renderer, file String) sdl.Texture:
+  """
+  Wraps `IMG_LoadTexture` https://wiki.libsdl.org/SDL2_image/IMG_LoadTexture
+  """

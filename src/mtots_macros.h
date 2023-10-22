@@ -1,34 +1,34 @@
 #ifndef mtots_macros_h
 #define mtots_macros_h
 
+#include <string.h>
+
+#include "mtots_macros_public.h"
 #include "mtots_vm.h"
 
-/* Helper macros for creating bindings */
+#define MTOTS_NOTHING
 
-#define WRAP_C_TYPE(name, ctype)                                                  \
-  typedef struct Obj##name {                                                      \
-    ObjNative obj;                                                                \
-    ctype handle;                                                                 \
-  } Obj##name;                                                                    \
-  static NativeObjectDescriptor descriptor##name = {                              \
+/* Helper macros for creating bindings */
+#define WRAP_C_TYPE_EX(name, ctype, prefix)                                       \
+  prefix NativeObjectDescriptor descriptor##name = {                              \
       nopBlacken,                                                                 \
       nopFree,                                                                    \
       sizeof(Obj##name),                                                          \
       #name,                                                                      \
   };                                                                              \
-  static ubool is##name(Value value) {                                            \
+  prefix ubool is##name(Value value) {                                            \
     return getNativeObjectDescriptor(value) == &descriptor##name;                 \
   }                                                                               \
-  static Value val##name(Obj##name *x) {                                          \
+  prefix Value val##name(Obj##name *x) {                                          \
     return valObjExplicit((Obj *)x);                                              \
   }                                                                               \
-  static Obj##name *as##name(Value value) {                                       \
+  prefix Obj##name *as##name(Value value) {                                       \
     if (!is##name(value)) {                                                       \
       panic("Expected " #name " but got %s", getKindName(value));                 \
     }                                                                             \
     return (Obj##name *)AS_OBJ_UNSAFE(value);                                     \
   }                                                                               \
-  static Obj##name *alloc##name() {                                               \
+  prefix Obj##name *alloc##name(void) {                                           \
     Obj##name *ret = NEW_NATIVE(Obj##name, &descriptor##name);                    \
     memset(&ret->handle, 0, sizeof(ret->handle));                                 \
     return ret;                                                                   \
@@ -42,6 +42,16 @@
       &func##name##StaticCall,                                                    \
       NULL,                                                                       \
   };
+
+#define WRAP_PUBLIC_C_TYPE(name, ctype) \
+  WRAP_C_TYPE_EX(name, ctype, MTOTS_NOTHING)
+
+#define WRAP_C_TYPE(name, ctype) \
+  typedef struct Obj##name {     \
+    ObjNative obj;               \
+    ctype handle;                \
+  } Obj##name;                   \
+  WRAP_C_TYPE_EX(name, ctype, static)
 
 #define DEFINE_METHOD_COPY(className)                                       \
   static Status impl##className##_copy(i16 argc, Value *argv, Value *out) { \

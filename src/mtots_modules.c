@@ -1,6 +1,7 @@
 #include "mtots_modules.h"
 
 #include "mtots_m_bmon.h"
+#include "mtots_m_c.h"
 #include "mtots_m_data.h"
 #include "mtots_m_fs.h"
 #include "mtots_m_json.h"
@@ -18,6 +19,7 @@
 
 void addNativeModules(void) {
   addNativeModuleBmon();
+  addNativeModuleC();
   addNativeModuleData();
   addNativeModuleFs();
   addNativeModuleJson();

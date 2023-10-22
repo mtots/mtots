@@ -1,0 +1,35 @@
+"""
+Helper classes for interacting with C APIs
+"""
+
+
+class IntCell:
+  """
+  An object containing a single C `int` value.
+  """
+
+  def get() Int:
+    """
+    Gets the value in this cell
+    """
+
+  def set(value Int) nil:
+    """
+    Sets the value in this cell
+    """
+
+
+class U32Cell:
+  """
+  An object containing a single 32-bit unsigned integer value.
+  """
+
+  def get() Int:
+    """
+    Gets the value in this cell
+    """
+
+  def set(value Int) nil:
+    """
+    Sets the value in this cell
+    """

@@ -1,6 +1,7 @@
 """
 Mtots bindings for SDL2
 """
+import c
 
 
 final QUIT "Event type: SDL_QUIT" = 0x100
@@ -128,6 +129,15 @@ def CreateWindowAndRenderer(
     renderer Renderer) nil:
   """
   Wraps `SDL_CreateWindowAndRenderer` https://wiki.libsdl.org/SDL2/SDL_CreateWindowAndRenderer
+  """
+
+
+def QueryTexture(
+    texture Texture,
+    format c.U32Cell?, access c.IntCell?,
+    w c.IntCell?, h c.IntCell?) nil:
+  """
+  Wraps `SDL_QueryTexture` https://wiki.libsdl.org/SDL2/SDL_QueryTexture
   """
 
 
