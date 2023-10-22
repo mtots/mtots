@@ -322,10 +322,11 @@ WRAP_SDL_FUNCTION(
         isNil(argv[2]) ? NULL : &asIntCell(argv[2])->handle,
         isNil(argv[3]) ? NULL : &asIntCell(argv[3])->handle,
         isNil(argv[4]) ? NULL : &asIntCell(argv[4])->handle))
-WRAP_C_FUNCTION(GetMouseState, 1, 0, {
-  ObjPoint *point = asPoint(argv[0]);
-  *out = valNumber(SDL_GetMouseState(&point->handle.x, &point->handle.y));
-})
+WRAP_C_FUNCTION(
+    GetMouseState, 2, 0,
+    *out = valNumber(SDL_GetMouseState(
+        isNil(argv[0]) ? NULL : &asIntCell(argv[0])->handle,
+        isNil(argv[1]) ? NULL : &asIntCell(argv[1])->handle)))
 
 /*
  * ████████ ████████ ███████

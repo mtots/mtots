@@ -225,13 +225,9 @@ def QueryTexture(
   """
 
 
-def GetMouseState(xy Point=nil) Int:
+def GetMouseState(x c.IntCell?, y c.IntCell) Int:
   """
   Wraps `SDL_GetMouseState` https://wiki.libsdl.org/SDL2/SDL_GetMouseState
-
-  NOTE: Because pointers to int values are not supported in Mtots,
-  the signature is modified to accept a `Point` instance rather than two
-  integer pointers.
 
   ### SDL Docs for `SDL_GetMouseState`
   Retrieve the current state of the mouse.

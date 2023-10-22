@@ -1,36 +1,58 @@
 import sdl
-import sys
+import c
+
+print("BEFORE INIT")
+print("INIT_EVERYTHING = %s" % [sdl.INIT_EVERYTHING])
+sdl.Init(sdl.INIT_EVERYTHING)
+print("AFTER INIT")
 
 
-final window = sdl.Window('title', 512, 512)
-final event = sdl.Event()
+
+final point = sdl.Point()
+print("point.x = %s" % [point.x])
+print("point.y = %s" % [point.y])
+point.x = 5
+point.y = 12
+print("point.x = %s" % [point.x])
+print("point.y = %s" % [point.y])
 
 def main():
-  sys.enableLogOnGC(true)
-  final mouse = sdl.Point()
-  final rect = sdl.Rect(128, 128, 256, 256)
-  final freq = sdl.getPerformanceFrequency()
+  final W = 512
+  final H = 512
+  final window = sdl.Window()
+  final renderer = sdl.Renderer()
+  final event = sdl.Event()
+  final rect = sdl.Rect()
+  final viewport = sdl.Rect()
+  final xCell = c.IntCell()
+  final yCell = c.IntCell()
+  final FPS = 60
+  final delayms = 1000 / FPS
+  print("delayms = %s" % [delayms])
+  sdl.CreateWindowAndRenderer(W, H, 0, window, renderer)
+  rect.w = 256
+  rect.h = 256
+  sdl.RenderGetViewport(renderer, viewport)
+  print("viewport = [%s, %s, %s, %s]" %
+        [viewport.x, viewport.y, viewport.w, viewport.h])
   while true:
-    final start = sdl.getPerformanceCounter()
-
-    while sdl.pollEvent(event):
+    while sdl.PollEvent(event):
       if event.type == sdl.QUIT:
+        sdl.Quit()
         return nil
 
-    sdl.getMouseState(mouse)
+    sdl.GetMouseState(xCell, yCell)
+    rect.x = xCell.get() - rect.w / 2
+    rect.y = yCell.get() - rect.h / 2
 
-    window.setDrawColor(100, 200, 40)
-    window.clear()
-    window.setDrawColor(40, 40, 150)
-    rect.x = mouse.x - rect.w / 2
-    rect.y = mouse.y - rect.h / 2
-    window.fillRect(rect)
-    window.present()
+    sdl.SetRenderDrawColor(renderer, 40, 40, 80, 255)
+    sdl.RenderClear(renderer)
 
-    final end = sdl.getPerformanceCounter()
-    final elapsedMS = (end - start) / freq * 1000
-    # print("end = %s, start = %s, freq = %s, elapsedMS = %s" % [end, start, freq, elapsedMS])
-    # print(elapsedMS)
-    sdl.delay(max(0, 16.666 - elapsedMS))
+    sdl.SetRenderDrawColor(renderer, 120, 120, 80, 100)
+    sdl.RenderFillRect(renderer, rect)
+
+    sdl.RenderPresent(renderer)
+
+    sdl.Delay(delayms)
 
 main()

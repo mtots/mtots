@@ -14,7 +14,8 @@ def main():
   final event = SDL.Event()
   final rect = SDL.Rect()
   final viewport = SDL.Rect()
-  final point = SDL.Point()
+  final xCell = c.IntCell()
+  final yCell = c.IntCell()
   final FPS = 60
   final delayms = 1000 / FPS
   print("delayms = %s" % [delayms])
@@ -35,9 +36,9 @@ def main():
         SDL.Quit()
         return nil
 
-    SDL.GetMouseState(point)
-    rect.x = point.x - rect.w / 2
-    rect.y = point.y - rect.h / 2
+    SDL.GetMouseState(xCell, yCell)
+    rect.x = xCell.get() - rect.w / 2
+    rect.y = yCell.get() - rect.h / 2
 
     SDL.SetRenderDrawColor(renderer, 40, 40, 80, 255)
     SDL.RenderClear(renderer)
