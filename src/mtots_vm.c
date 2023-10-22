@@ -25,6 +25,7 @@
 VM vm;
 
 static ubool invoke(String *name, i16 argCount);
+static Status callClosure(ObjClosure *closure, i16 argCount);
 
 static void resetStack(void) {
   vm.stackTop = vm.stack;
@@ -1281,16 +1282,6 @@ ubool valueIsCString(Value value, const char *string) {
   return isString(value) && strcmp(value.as.string->chars, string) == 0;
 }
 
-void listAppend(ObjList *list, Value value) {
-  if (list->capacity < list->length + 1) {
-    size_t oldCapacity = list->capacity;
-    list->capacity = GROW_CAPACITY(list->capacity);
-    list->buffer = GROW_ARRAY(
-        Value, list->buffer, oldCapacity, list->capacity);
-  }
-  list->buffer[list->length++] = value;
-}
-
 static Status callClass(ObjClass *klass, i16 argCount, ubool consummate) {
   Value initializer;
 
@@ -1329,7 +1320,15 @@ static Status callClass(ObjClass *klass, i16 argCount, ubool consummate) {
   }
 }
 
-Status callClosure(ObjClosure *closure, i16 argCount) {
+/* Like callFunction, but a closure is provided explicitly as a C
+ * argument rather than implicitly passed on the stack.
+ *
+ * However, there should still be a slot on the stack where the
+ * closure would have gone. If the closure is a method, this slot
+ * must container the receiver. Otherwise, the slot may contain
+ * any value.
+ */
+static Status callClosure(ObjClosure *closure, i16 argCount) {
   return setupCallClosure(closure, argCount) && run();
 }
 

@@ -4,7 +4,7 @@
 #include <string.h>
 #include <time.h>
 
-#include "mtots_vm.h"
+#include "mtots.h"
 
 static Random defaultInstance;
 

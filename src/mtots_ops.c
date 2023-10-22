@@ -138,6 +138,16 @@ ubool valuesEqual(Value a, Value b) {
   abort();
 }
 
+void listAppend(ObjList *list, Value value) {
+  if (list->capacity < list->length + 1) {
+    size_t oldCapacity = list->capacity;
+    list->capacity = GROW_CAPACITY(list->capacity);
+    list->buffer = GROW_ARRAY(
+        Value, list->buffer, oldCapacity, list->capacity);
+  }
+  list->buffer[list->length++] = value;
+}
+
 ubool valueLessThan(Value a, Value b) {
   if (a.type != b.type) {
     panic(

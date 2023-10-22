@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "mtots_vm.h"
+#include "mtots.h"
 
 static Status implIsfile(i16 argc, Value *argv, Value *out) {
   String *path = asString(argv[0]);

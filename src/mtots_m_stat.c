@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "mtots_vm.h"
+#include "mtots.h"
 
 #if MTOTS_IS_POSIX
 #include <fcntl.h>

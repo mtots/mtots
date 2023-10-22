@@ -6,6 +6,9 @@
 
 #include "mtots_config.h"
 
+/* A macro that is `#define`d to nothing */
+#define MTOTS_NOTHING
+
 #define U8_MAX 0xFF
 #define U16_MAX 65535
 #define U32_MAX 4294967295U

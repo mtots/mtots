@@ -2,8 +2,8 @@
 
 #include <stdlib.h>
 
+#include "mtots.h"
 #include "mtots_macros.h"
-#include "mtots_vm.h"
 
 WRAP_PUBLIC_C_TYPE(IntCell, int)
 WRAP_C_FUNCTION_EX(get, IntCellGet, 0, 0, *out = valNumber(asIntCell(argv[-1])->handle))

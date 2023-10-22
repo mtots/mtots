@@ -5,7 +5,7 @@
 #include <string.h>
 
 #include "mtots_common.h"
-#include "mtots_vm.h"
+#include "mtots.h"
 
 static Status implReadString(i16 argCount, Value *args, Value *out) {
   String *fileName = asString(args[0]);

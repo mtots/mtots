@@ -62,7 +62,7 @@ Status importModuleWithPathAndSource(
 
   push(valClosure(closure));
 
-  if (callClosure(closure, 0)) {
+  if (callFunction(0)) {
     pop(); /* return value from run */
 
     push(valModule(module));

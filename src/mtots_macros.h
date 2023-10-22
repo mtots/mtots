@@ -6,13 +6,11 @@
 #include "mtots_macros_public.h"
 #include "mtots_vm.h"
 
-#define MTOTS_NOTHING
-
 /* Helper macros for creating bindings */
-#define WRAP_C_TYPE_EX(name, ctype, prefix)                                       \
+#define WRAP_C_TYPE_EX(name, ctype, prefix, blackenFunc, freeFunc)                \
   prefix NativeObjectDescriptor descriptor##name = {                              \
-      nopBlacken,                                                                 \
-      nopFree,                                                                    \
+      blackenFunc,                                                                \
+      freeFunc,                                                                   \
       sizeof(Obj##name),                                                          \
       #name,                                                                      \
   };                                                                              \
@@ -44,14 +42,14 @@
   };
 
 #define WRAP_PUBLIC_C_TYPE(name, ctype) \
-  WRAP_C_TYPE_EX(name, ctype, MTOTS_NOTHING)
+  WRAP_C_TYPE_EX(name, ctype, MTOTS_NOTHING, nopBlacken, nopFree)
 
 #define WRAP_C_TYPE(name, ctype) \
   typedef struct Obj##name {     \
     ObjNative obj;               \
     ctype handle;                \
   } Obj##name;                   \
-  WRAP_C_TYPE_EX(name, ctype, static)
+  WRAP_C_TYPE_EX(name, ctype, static, nopBlacken, nopFree)
 
 #define DEFINE_METHOD_COPY(className)                                       \
   static Status impl##className##_copy(i16 argc, Value *argv, Value *out) { \

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "mtots_vm.h"
+#include "mtots.h"
 
 static Status implSystem(i16 argc, Value *argv, Value *out) {
   *out = valString(internCString(MTOTS_PLATFORM_SYSTEM));

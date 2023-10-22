@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "mtots.h"
 #include "mtots_m_c.h"
-#include "mtots_vm.h"
 
 #if MTOTS_ENABLE_SDL
 #include <SDL2/SDL.h>

@@ -1,12 +1,11 @@
 #ifndef mtots_vm_h
 #define mtots_vm_h
 
+#include "mtots.h"
 #include "mtots_class_range.h"
 #include "mtots_class_sb.h"
-#include "mtots_import.h"
 #include "mtots_m_bmon.h"
 #include "mtots_m_sys.h"
-#include "mtots_ops.h"
 
 #define FRAMES_MAX 64
 #define STACK_MAX (FRAMES_MAX * U8_COUNT)
@@ -129,70 +128,6 @@ void freeVM(void);
 Status interpret(const char *source, ObjModule *module);
 void defineGlobal(const char *name, Value value);
 void closeUpvalues(Value *last);
-
-void registerMtotsAtExitCallback(Value callback);
-
-/* NOTE: Deprecated. Use addNativeModuleCFunc instead.
- *
- * Native module bodies should be a CFunction that accepts
- * Exactly one argument, the module
- */
-void addNativeModule(CFunction *func);
-
-/* Stack manipulation.
- * Alternative to using the Ref API. */
-void push(Value value);
-Value pop(void);
-
-void listAppend(ObjList *list, Value value);
-
-/* Functions for calling mtots functions and methods from C */
-
-/* Like callFunction, but a closure is provided explicitly as a C
- * argument rather than implicitly passed on the stack.
- *
- * However, there should still be a slot on the stack where the
- * closure would have gone. If the closure is a method, this slot
- * must container the receiver. Otherwise, the slot may contain
- * any value.
- */
-Status callClosure(ObjClosure *closure, i16 argCount);
-
-/* Given that a function and its arguments are on the stack,
- * call the given function.
- *
- * Before calling this function, the stack must look like:
- *   TOP
- *     lastArg
- *     ...
- *     firstArg
- *     functionValue
- *   BOT
- *
- * Once the function is called, all arguments and the function
- * itself will be popped from the stack and replaced by the single
- * return value.
- *
- */
-Status callFunction(i16 argCount);
-
-/* Given that a value and its method's arguments are on the stack,
- * call a method on the given value.
- *
- * Before calling this function, the stack must look like:
- *   TOP
- *     lastArg
- *     ...
- *     firstArg
- *     receiverValue
- *   BOT
- *
- * Once the method is called, all arguments and the receiver
- * itself will be popped from the stack and replaced by the single
- * return value.
- *
- */
-Status callMethod(String *methodName, i16 argCount);
 
 Status checkAndHandleSignals(void);
 

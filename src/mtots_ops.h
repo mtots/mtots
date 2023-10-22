@@ -7,6 +7,7 @@ ubool valuesIs(Value a, Value b);
 ubool mapsEqual(Map *a, Map *b);
 ubool valuesEqual(Value a, Value b);
 ubool valueLessThan(Value a, Value b);
+void listAppend(ObjList *list, Value value);
 void sortList(ObjList *list, ObjList *keys);
 ubool sortListWithKeyFunc(ObjList *list, Value keyfunc);
 ubool valueRepr(StringBuilder *out, Value value);
