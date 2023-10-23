@@ -346,10 +346,10 @@ WRAP_C_FUNCTION(
 WRAP_C_FUNCTION(GetKeyboardState, 0, 0, {
   int n;
   const u8 *state = SDL_GetKeyboardState(&n);
-  ObjConstU8Array *array = allocConstU8Array();
-  array->handle.buffer = state;
-  array->handle.count = (size_t)n;
-  *out = valConstU8Array(array);
+  ObjConstU8Slice *slice = allocConstU8Slice();
+  slice->handle.buffer = state;
+  slice->handle.count = (size_t)n;
+  *out = valConstU8Slice(slice);
 })
 
 /*
@@ -630,7 +630,6 @@ static Status impl(i16 argc, Value *argv, Value *out) {
   WRAP_CONST(SCANCODE_RIGHTBRACKET, SDL_SCANCODE_RIGHTBRACKET);
   WRAP_CONST(SCANCODE_BACKSLASH, SDL_SCANCODE_BACKSLASH);
   WRAP_CONST(SCANCODE_NONUSHASH, SDL_SCANCODE_NONUSHASH);
-  WRAP_CONST(SCANCODE_BACKSLASH, SDL_SCANCODE_BACKSLASH);
   WRAP_CONST(SCANCODE_SEMICOLON, SDL_SCANCODE_SEMICOLON);
   WRAP_CONST(SCANCODE_APOSTROPHE, SDL_SCANCODE_APOSTROPHE);
   WRAP_CONST(SCANCODE_GRAVE, SDL_SCANCODE_GRAVE);

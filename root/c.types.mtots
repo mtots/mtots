@@ -35,9 +35,9 @@ class U32Cell:
     """
 
 
-class ConstU8Array:
+class ConstU8Slice:
   """
-  An array of const u8
+  A slice of const u8
   """
 
   def __len__() Int:
