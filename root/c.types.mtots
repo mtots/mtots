@@ -33,3 +33,19 @@ class U32Cell:
     """
     Sets the value in this cell
     """
+
+
+class ConstU8Array:
+  """
+  An array of const u8
+  """
+
+  def __len__() Int:
+    """
+    Returns the number of elements in this array
+    """
+
+  def __getitem__(index Int) Int:
+    """
+    Retrieve the element at the given index
+    """

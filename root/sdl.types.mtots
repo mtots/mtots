@@ -21,6 +21,105 @@ final WINDOW_FULLSCREEN_DESKTOP Int = raise 0
 final WINDOWPOS_CENTERED Int = raise 0
 final WINDOWPOS_UNDEFINED Int = raise 0
 
+final SCANCODE_A Int = raise 0
+final SCANCODE_B Int = raise 0
+final SCANCODE_C Int = raise 0
+final SCANCODE_D Int = raise 0
+final SCANCODE_E Int = raise 0
+final SCANCODE_F Int = raise 0
+final SCANCODE_G Int = raise 0
+final SCANCODE_H Int = raise 0
+final SCANCODE_I Int = raise 0
+final SCANCODE_J Int = raise 0
+final SCANCODE_K Int = raise 0
+final SCANCODE_L Int = raise 0
+final SCANCODE_M Int = raise 0
+final SCANCODE_N Int = raise 0
+final SCANCODE_O Int = raise 0
+final SCANCODE_P Int = raise 0
+final SCANCODE_Q Int = raise 0
+final SCANCODE_R Int = raise 0
+final SCANCODE_S Int = raise 0
+final SCANCODE_T Int = raise 0
+final SCANCODE_U Int = raise 0
+final SCANCODE_V Int = raise 0
+final SCANCODE_W Int = raise 0
+final SCANCODE_X Int = raise 0
+final SCANCODE_Y Int = raise 0
+final SCANCODE_Z Int = raise 0
+final SCANCODE_1 Int = raise 0
+final SCANCODE_2 Int = raise 0
+final SCANCODE_3 Int = raise 0
+final SCANCODE_4 Int = raise 0
+final SCANCODE_5 Int = raise 0
+final SCANCODE_6 Int = raise 0
+final SCANCODE_7 Int = raise 0
+final SCANCODE_8 Int = raise 0
+final SCANCODE_9 Int = raise 0
+final SCANCODE_0 Int = raise 0
+final SCANCODE_RETURN Int = raise 0
+final SCANCODE_ESCAPE Int = raise 0
+final SCANCODE_BACKSPACE Int = raise 0
+final SCANCODE_TAB Int = raise 0
+final SCANCODE_SPACE Int = raise 0
+final SCANCODE_MINUS Int = raise 0
+final SCANCODE_EQUALS Int = raise 0
+final SCANCODE_LEFTBRACKET Int = raise 0
+final SCANCODE_RIGHTBRACKET Int = raise 0
+final SCANCODE_BACKSLASH Int = raise 0
+final SCANCODE_NONUSHASH Int = raise 0
+final SCANCODE_BACKSLASH Int = raise 0
+final SCANCODE_SEMICOLON Int = raise 0
+final SCANCODE_APOSTROPHE Int = raise 0
+final SCANCODE_GRAVE Int = raise 0
+final SCANCODE_COMMA Int = raise 0
+final SCANCODE_PERIOD Int = raise 0
+final SCANCODE_SLASH Int = raise 0
+final SCANCODE_CAPSLOCK Int = raise 0
+final SCANCODE_F1 Int = raise 0
+final SCANCODE_F2 Int = raise 0
+final SCANCODE_F3 Int = raise 0
+final SCANCODE_F4 Int = raise 0
+final SCANCODE_F5 Int = raise 0
+final SCANCODE_F6 Int = raise 0
+final SCANCODE_F7 Int = raise 0
+final SCANCODE_F8 Int = raise 0
+final SCANCODE_F9 Int = raise 0
+final SCANCODE_F10 Int = raise 0
+final SCANCODE_F11 Int = raise 0
+final SCANCODE_F12 Int = raise 0
+final SCANCODE_PRINTSCREEN Int = raise 0
+final SCANCODE_SCROLLLOCK Int = raise 0
+final SCANCODE_PAUSE Int = raise 0
+final SCANCODE_INSERT Int = raise 0
+final SCANCODE_HOME Int = raise 0
+final SCANCODE_PAGEUP Int = raise 0
+final SCANCODE_DELETE Int = raise 0
+final SCANCODE_END Int = raise 0
+final SCANCODE_PAGEDOWN Int = raise 0
+final SCANCODE_RIGHT Int = raise 0
+final SCANCODE_LEFT Int = raise 0
+final SCANCODE_DOWN Int = raise 0
+final SCANCODE_UP Int = raise 0
+final SCANCODE_NUMLOCKCLEAR Int = raise 0
+final SCANCODE_KP_DIVIDE Int = raise 0
+final SCANCODE_KP_MULTIPLY Int = raise 0
+final SCANCODE_KP_MINUS Int = raise 0
+final SCANCODE_KP_PLUS Int = raise 0
+final SCANCODE_KP_ENTER Int = raise 0
+final SCANCODE_KP_1 Int = raise 0
+final SCANCODE_KP_2 Int = raise 0
+final SCANCODE_KP_3 Int = raise 0
+final SCANCODE_KP_4 Int = raise 0
+final SCANCODE_KP_5 Int = raise 0
+final SCANCODE_KP_6 Int = raise 0
+final SCANCODE_KP_7 Int = raise 0
+final SCANCODE_KP_8 Int = raise 0
+final SCANCODE_KP_9 Int = raise 0
+final SCANCODE_KP_0 Int = raise 0
+final SCANCODE_KP_PERIOD Int = raise 0
+
+
 def Init(flags Int) nil:
   """
   Wraps `SDL_Init` https://wiki.libsdl.org/SDL2/SDL_Init
@@ -284,6 +383,12 @@ def GetMouseState(x c.IntCell?, y c.IntCell) Int:
   * param y the y coordinate of the mouse cursor position relative to the
            focus window
   * returns a 32-bit button bitmask of the current button state.
+  """
+
+
+def GetKeyboardState() c.ConstU8Array:
+  """
+  Wraps `SDL_GetKeyboardState` https://wiki.libsdl.org/SDL2/SDL_GetKeyboardState
   """
 
 

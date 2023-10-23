@@ -42,9 +42,12 @@
       NULL,                                                                       \
   };
 
-#define WRAP_PUBLIC_C_TYPE(name, ctype)                           \
-  WRAP_C_TYPE_EX(name, ctype, MTOTS_NOTHING, nopBlacken, nopFree) \
+#define WRAP_PUBLIC_C_TYPE_EX(name, ctype, blackenFunc, freeFunc)   \
+  WRAP_C_TYPE_EX(name, ctype, MTOTS_NOTHING, blackenFunc, freeFunc) \
   WRAP_C_TYPE_DEFAULT_STATIC_METHODS(name)
+
+#define WRAP_PUBLIC_C_TYPE(name, ctype) \
+  WRAP_PUBLIC_C_TYPE_EX(name, ctype, nopBlacken, nopFree)
 
 #define WRAP_C_TYPE(name, ctype)                           \
   typedef struct Obj##name {                               \

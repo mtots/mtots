@@ -1,0 +1,47 @@
+import sdl as SDL
+import c
+
+SDL.Init(SDL.INIT_EVERYTHING)
+
+
+def main():
+  final W = 512
+  final H = 512
+  final window = SDL.Window()
+  final renderer = SDL.Renderer()
+  final event = SDL.Event()
+  final rect = SDL.Rect()
+  final viewport = SDL.Rect()
+  final xCell = c.IntCell()
+  final yCell = c.IntCell()
+  final FPS = 60
+  final delayms = 1000 / FPS
+  final keyboardState = SDL.GetKeyboardState()
+  print("len(keyboardState) = %s" % [len(keyboardState)])
+  rect.w = rect.h = 40
+  print("delayms = %s" % [delayms])
+  SDL.CreateWindowAndRenderer(W, H, 0, window, renderer)
+  while true:
+    while SDL.PollEvent(event):
+      if event.type == SDL.QUIT:
+        SDL.Quit()
+        return nil
+
+    SDL.GetMouseState(xCell, yCell)
+    rect.x = xCell.get() - rect.w / 2
+    rect.y = yCell.get() - rect.h / 2
+
+    SDL.SetRenderDrawColor(renderer, 40, 40, 80, 255)
+    SDL.RenderClear(renderer)
+
+    if keyboardState[SDL.SCANCODE_F]:
+      SDL.SetRenderDrawColor(renderer, 40, 200, 40, 100)
+    else:
+      SDL.SetRenderDrawColor(renderer, 120, 120, 80, 100)
+    SDL.RenderFillRect(renderer, rect)
+
+    SDL.RenderPresent(renderer)
+
+    SDL.Delay(delayms)
+
+main()
