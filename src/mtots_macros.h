@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include "mtots_macros_public.h"
-#include "mtots_vm.h"
 
 /* Helper macros for creating bindings */
 #define WRAP_C_TYPE_EX(name, ctype, prefix, blackenFunc, freeFunc) \

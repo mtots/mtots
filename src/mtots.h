@@ -2,6 +2,7 @@
 #define mtots_h
 
 #include "mtots_import.h"
+#include "mtots_macros.h"
 #include "mtots_ops.h"
 
 /* Functions for calling mtots functions and methods from C
