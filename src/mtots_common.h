@@ -62,6 +62,12 @@ typedef unsigned long long u64;
 #error "neither long nor long long are 64-bits"
 #endif
 
+#if defined(LLONG_MAX)
+#define MTOTS_HAS_LONG_LONG 1
+#else
+#define MTOTS_HAS_LONG_LONG 0
+#endif
+
 typedef u8 ubool;
 
 typedef float f32;

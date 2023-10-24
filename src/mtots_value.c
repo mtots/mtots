@@ -19,6 +19,21 @@ size_t asSize(Value value) {
   return (size_t)x;
 }
 
+ptrdiff_t asPtrdiff(Value value) {
+  double x = asNumber(value);
+
+  /* There are actually some ptrdiff_t values that cannot fit into
+   * a double in a 64-bit platform. However, when specifying
+   * size, this should be pretty rare since in a double we
+   * still have over 50-bits, and so can address over
+   * a petabyte */
+  if (x != (double)(ptrdiff_t)x) {
+    panic("Expected size, but got a %f", x);
+  }
+
+  return (ptrdiff_t)x;
+}
+
 int asInt(Value value) {
   double x = asNumber(value);
   if (x < (double)INT_MIN) {
@@ -74,6 +89,17 @@ i32 asI32(Value value) {
     panic("Expected i32, but value is greater than I32_MAX (%f)", x);
   }
   return (i32)x;
+}
+
+u16 asU16(Value value) {
+  double x = asNumber(value);
+  if (x < 0) {
+    panic("Expected u16, but value is less than zero (%f)", x);
+  }
+  if (x > U16_MAX) {
+    panic("Expected u16, but value is greater than U16_MAX (%f)", x);
+  }
+  return (u16)x;
 }
 
 u8 asU8(Value value) {

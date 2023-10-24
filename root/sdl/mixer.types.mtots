@@ -1,0 +1,18 @@
+import sdl
+
+final INIT_FLAC = raise 0
+final INIT_MOD = raise 0
+final INIT_MP3 = raise 0
+final INIT_OGG = raise 0
+final INIT_MID = raise 0
+final INIT_OPUS = raise 0
+final INIT_WAVPACK = raise 0
+
+
+def Init(flags Int) nil:
+  """
+  Wraps `Mix_Init` https://wiki.libsdl.org/SDL2_mixer/Mix_Init
+
+  This function throws if any of the values requested in the flags
+  fail to initialize.
+  """

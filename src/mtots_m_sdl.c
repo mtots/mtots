@@ -362,8 +362,20 @@ WRAP_C_FUNCTION(GetKeyboardState, 0, 0, {
  */
 #if MTOTS_ENABLE_SDL_TTF
 
-WRAP_C_TYPE(Font, TTF_Font *)
+typedef struct ObjFont {
+  ObjNative obj;
+  TTF_Font *handle;
+} ObjFont;
+static void freeFont(ObjNative *n) {
+  ObjFont *font = (ObjFont *)n;
+  if (font->handle) {
+    TTF_CloseFont(font->handle);
+    font->handle = NULL;
+  }
+}
+WRAP_C_TYPE_EX(Font, TTF_Font *, static, nopBlacken, freeFont)
 static CFunction *FontMethods[] = {NULL};
+static CFunction *FontStaticMethods[] = {NULL};
 
 WRAP_C_FUNCTION_EX(Init, TTFInit, 0, 0, {
   if (TTF_Init() != 0) {
@@ -386,7 +398,11 @@ WRAP_C_FUNCTION(OpenFont, 2, 0, {
   *out = valFont(font);
 })
 
-WRAP_C_FUNCTION(CloseFont, 1, 0, TTF_CloseFont(asFont(argv[0])->handle))
+WRAP_C_FUNCTION(CloseFont, 1, 0, {
+  ObjFont *font = asFont(argv[0]);
+  TTF_CloseFont(font->handle);
+  font->handle = NULL;
+})
 
 WRAP_C_FUNCTION(RenderUTF8_Blended, 3, 0, {
   TTF_Font *font = asFont(argv[0])->handle;
@@ -508,6 +524,107 @@ WRAP_C_FUNCTION_EX(LoadTexture_RW, IMGLoadTexture_RW, 3, 0, {
  * ██      ██ ██ ██   ██ ███████ ██   ██
  */
 #if MTOTS_ENABLE_SDL_MIXER
+
+typedef struct ObjChunk {
+  ObjNative obj;
+  Mix_Chunk *handle;
+} ObjChunk;
+static void freeMixerChunk(ObjNative *n) {
+  ObjChunk *chunk = (ObjChunk *)n;
+  if (chunk->handle) {
+    Mix_FreeChunk(chunk->handle);
+    chunk->handle = NULL;
+  }
+}
+WRAP_C_TYPE_EX(Chunk, Mix_Chunk *, static, nopBlacken, freeMixerChunk)
+static CFunction *ChunkMethods[] = {NULL};
+static CFunction *ChunkStaticMethods[] = {NULL};
+
+WRAP_C_FUNCTION_EX(Init, MixInit, 1, 0, {
+  u32 flags = asU32Bits(argv[0]);
+  if ((Mix_Init(flags) & flags) != flags) {
+    return sdlError("Mix_Init");
+  }
+})
+
+WRAP_C_FUNCTION_EX(Quit, MixQuit, 0, 0, Mix_Quit())
+
+WRAP_C_FUNCTION_EX(OpenAudio, MixOpenAudio, 4, 0, {
+  int frequency = asInt(argv[0]);
+  Uint16 format = asU16(argv[1]);
+  int channels = asInt(argv[2]);
+  int chunksize = asInt(argv[3]);
+  if (Mix_OpenAudio(frequency, format, channels, chunksize) != 0) {
+    return sdlError("Mix_OpenAudio");
+  }
+})
+
+WRAP_C_FUNCTION_EX(CloseAudio, MixCloseAudio, 0, 0, Mix_CloseAudio())
+
+WRAP_C_FUNCTION_EX(QuerySpec, MixQuerySpec, 3, 0,
+                   *out = valNumber(Mix_QuerySpec(
+                       &asIntCell(argv[0])->handle,
+                       &asU16Cell(argv[1])->handle,
+                       &asIntCell(argv[2])->handle)))
+
+WRAP_C_FUNCTION_EX(AllocateChannels, MixAllocateChannels, 1, 0, {
+  *out = valNumber(Mix_AllocateChannels(asNumber(argv[0])));
+})
+
+WRAP_C_FUNCTION_EX(LoadWAV, MixLoadWav, 1, 0, {
+  const char *file = asString(argv[0])->chars;
+  Mix_Chunk *handle = Mix_LoadWAV(file);
+  ObjChunk *chunk;
+  if (!handle) {
+    return sdlError("Mix_LoadWAV");
+  }
+  chunk = allocChunk();
+  chunk->handle = handle;
+  *out = valChunk(chunk);
+})
+
+WRAP_C_FUNCTION_EX(LoadWAV_RW, MixLoadWAV_RW, 2, 0, {
+  ObjRWops *src = asRWops(argv[0]);
+  ubool freesrc = asBool(argv[1]);
+  Mix_Chunk *handle = Mix_LoadWAV_RW(src->handle, freesrc);
+  ObjChunk *chunk;
+  if (!handle) {
+    return sdlError("Mix_LoadWAV_RW");
+  }
+  chunk = allocChunk();
+  chunk->handle = handle;
+  *out = valChunk(chunk);
+})
+
+WRAP_C_FUNCTION_EX(FreeChunk, MixFreeChunk, 1, 0, {
+  ObjChunk *chunk = asChunk(argv[0]);
+  if (chunk->handle) {
+    Mix_FreeChunk(chunk->handle);
+    chunk->handle = NULL;
+  }
+})
+
+WRAP_C_FUNCTION_EX(PlayChannel, MixPlayChannel, 3, 0, {
+  int channel = asInt(argv[0]);
+  ObjChunk *chunk = asChunk(argv[1]);
+  int loops = asInt(argv[2]);
+  int actualChannel = Mix_PlayChannel(channel, chunk->handle, loops);
+  if (actualChannel < 0) {
+    return sdlError("Mix_PlayChannel");
+  }
+  *out = valNumber(actualChannel);
+})
+
+WRAP_C_FUNCTION_EX(Playing, MixPlaying, 1, 0,
+                   *out = valBool(Mix_Playing(asInt(argv[0]))))
+
+WRAP_C_FUNCTION_EX(Pause, MixPause, 1, 0, Mix_Pause(asInt(argv[0])))
+
+WRAP_C_FUNCTION_EX(Paused, MixPaused, 1, 0,
+                   *out = valNumber(Mix_Paused(asInt(argv[0]))))
+
+WRAP_C_FUNCTION_EX(Resume, MixResume, 1, 0, Mix_Resume(asInt(argv[0])))
+
 #endif
 
 /*
@@ -582,6 +699,12 @@ static Status impl(i16 argc, Value *argv, Value *out) {
   WRAP_CONST(WINDOW_FULLSCREEN_DESKTOP, SDL_WINDOW_FULLSCREEN_DESKTOP);
   WRAP_CONST(WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
   WRAP_CONST(WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED);
+
+  WRAP_CONST(BUTTON_LMASK, SDL_BUTTON_LMASK);
+  WRAP_CONST(BUTTON_MMASK, SDL_BUTTON_MMASK);
+  WRAP_CONST(BUTTON_RMASK, SDL_BUTTON_RMASK);
+  WRAP_CONST(BUTTON_X1MASK, SDL_BUTTON_X1MASK);
+  WRAP_CONST(BUTTON_X2MASK, SDL_BUTTON_X2MASK);
 
   WRAP_CONST(SCANCODE_A, SDL_SCANCODE_A);
   WRAP_CONST(SCANCODE_B, SDL_SCANCODE_B);
@@ -679,6 +802,17 @@ static Status impl(i16 argc, Value *argv, Value *out) {
   WRAP_CONST(SCANCODE_KP_9, SDL_SCANCODE_KP_9);
   WRAP_CONST(SCANCODE_KP_0, SDL_SCANCODE_KP_0);
   WRAP_CONST(SCANCODE_KP_PERIOD, SDL_SCANCODE_KP_PERIOD);
+  WRAP_CONST(SCANCODE_LCTRL, SDL_SCANCODE_LCTRL);
+  WRAP_CONST(SCANCODE_LSHIFT, SDL_SCANCODE_LSHIFT);
+  WRAP_CONST(SCANCODE_LALT, SDL_SCANCODE_LALT);
+  WRAP_CONST(SCANCODE_LGUI, SDL_SCANCODE_LGUI);
+  WRAP_CONST(SCANCODE_RCTRL, SDL_SCANCODE_RCTRL);
+  WRAP_CONST(SCANCODE_RSHIFT, SDL_SCANCODE_RSHIFT);
+  WRAP_CONST(SCANCODE_RALT, SDL_SCANCODE_RALT);
+  WRAP_CONST(SCANCODE_RGUI, SDL_SCANCODE_RGUI);
+
+  WRAP_CONST(AUDIO_S16SYS, AUDIO_S16SYS);
+  WRAP_CONST(AUDIO_F32SYS, AUDIO_F32SYS);
 
   return STATUS_OK;
 }
@@ -730,6 +864,39 @@ static Status implSDLImage(i16 argc, Value *argv, Value *out) {
 static CFunction funcSDLImage = {implSDLImage, "sdl.image", 1};
 #endif
 
+#if MTOTS_ENABLE_SDL_MIXER
+static Status implSDLMixer(i16 argc, Value *argv, Value *out) {
+  ObjModule *module = asModule(argv[0]);
+  CFunction *functions[] = {
+      &funcMixInit,
+      &funcMixQuit,
+      &funcMixOpenAudio,
+      &funcMixCloseAudio,
+      &funcMixQuerySpec,
+      &funcMixAllocateChannels,
+      &funcMixLoadWav,
+      &funcMixLoadWAV_RW,
+      &funcMixFreeChunk,
+      &funcMixPlayChannel,
+      &funcMixPlaying,
+      &funcMixPause,
+      &funcMixPaused,
+      &funcMixResume,
+      NULL,
+  };
+  moduleAddFunctions(module, functions);
+  ADD_TYPE_TO_MODULE(Chunk);
+  WRAP_CONST(INIT_FLAC, MIX_INIT_FLAC);
+  WRAP_CONST(INIT_MOD, MIX_INIT_MOD);
+  WRAP_CONST(INIT_MP3, MIX_INIT_MP3);
+  WRAP_CONST(INIT_OGG, MIX_INIT_OGG);
+  WRAP_CONST(INIT_MID, MIX_INIT_MID);
+  WRAP_CONST(INIT_OPUS, MIX_INIT_OPUS);
+  return STATUS_OK;
+}
+static CFunction funcSDLMixer = {implSDLMixer, "sdl.mixer", 1};
+#endif
+
 void addNativeModuleSDL(void) {
   addNativeModule(&func);
 
@@ -739,6 +906,10 @@ void addNativeModuleSDL(void) {
 
 #if MTOTS_ENABLE_SDL_IMAGE
   addNativeModule(&funcSDLImage);
+#endif
+
+#if MTOTS_ENABLE_SDL_MIXER
+  addNativeModule(&funcSDLMixer);
 #endif
 }
 

@@ -21,6 +21,12 @@ final WINDOW_FULLSCREEN_DESKTOP Int = raise 0
 final WINDOWPOS_CENTERED Int = raise 0
 final WINDOWPOS_UNDEFINED Int = raise 0
 
+final BUTTON_LMASK Int = raise 0
+final BUTTON_MMASK Int = raise 0
+final BUTTON_RMASK Int = raise 0
+final BUTTON_X1MASK Int = raise 0
+final BUTTON_X2MASK Int = raise 0
+
 final SCANCODE_UNKNOWN = 0
 final SCANCODE_A = 4
 final SCANCODE_B = 5
@@ -118,6 +124,14 @@ final SCANCODE_KP_8 = 96
 final SCANCODE_KP_9 = 97
 final SCANCODE_KP_0 = 98
 final SCANCODE_KP_PERIOD = 99
+final SCANCODE_LCTRL = 224
+final SCANCODE_LSHIFT = 225
+final SCANCODE_LALT = 226
+final SCANCODE_LGUI = 227
+final SCANCODE_RCTRL = 228
+final SCANCODE_RSHIFT = 229
+final SCANCODE_RALT = 230
+final SCANCODE_RGUI = 231
 
 
 def Init(flags Int) nil:

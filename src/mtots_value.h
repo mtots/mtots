@@ -111,11 +111,13 @@ typedef struct ValueArray {
 #define AS_OBJ_UNSAFE(value) ((value).as.obj)
 
 size_t asSize(Value value);
+ptrdiff_t asPtrdiff(Value value);
 int asInt(Value value);
 float asFloat(Value value);
 u32 asU32Bits(Value value);
 u32 asU32(Value value);
 i32 asI32(Value value);
+u16 asU16(Value value);
 u8 asU8(Value value);
 size_t asIndex(Value value, size_t length);
 size_t asIndexLower(Value value, size_t length);
