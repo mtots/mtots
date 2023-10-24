@@ -568,7 +568,7 @@ WRAP_C_FUNCTION_EX(AllocateChannels, MixAllocateChannels, 1, 0, {
   *out = valNumber(Mix_AllocateChannels(asNumber(argv[0])));
 })
 
-WRAP_C_FUNCTION_EX(LoadWAV, MixLoadWav, 1, 0, {
+WRAP_C_FUNCTION_EX(LoadWAV, MixLoadWAV, 1, 0, {
   const char *file = asString(argv[0])->chars;
   Mix_Chunk *handle = Mix_LoadWAV(file);
   ObjChunk *chunk;
@@ -587,6 +587,19 @@ WRAP_C_FUNCTION_EX(LoadWAV_RW, MixLoadWAV_RW, 2, 0, {
   ObjChunk *chunk;
   if (!handle) {
     return sdlError("Mix_LoadWAV_RW");
+  }
+  chunk = allocChunk();
+  chunk->handle = handle;
+  *out = valChunk(chunk);
+})
+
+WRAP_C_FUNCTION_EX(QuickLoad_RAW, MixQuickLoad_RAW, 2, 0, {
+  u8 *mem = asU8Pointer(argv[0]);
+  u32 len = asU32(argv[1]);
+  Mix_Chunk *handle = Mix_QuickLoad_RAW(mem, len);
+  ObjChunk *chunk;
+  if (!handle) {
+    return sdlError("Mix_QuickLoad_RAW");
   }
   chunk = allocChunk();
   chunk->handle = handle;
@@ -614,6 +627,12 @@ WRAP_C_FUNCTION_EX(PlayChannel, MixPlayChannel, 3, 0, {
 
 WRAP_C_FUNCTION_EX(Playing, MixPlaying, 1, 0,
                    *out = valBool(Mix_Playing(asInt(argv[0]))))
+
+WRAP_C_FUNCTION_EX(HaltChannel, MixHaltChannel, 1, 0, {
+  if (Mix_HaltChannel(asInt(argv[0])) != 0) {
+    return sdlError("Mix_HaltChannel");
+  }
+})
 
 WRAP_C_FUNCTION_EX(Pause, MixPause, 1, 0, Mix_Pause(asInt(argv[0])))
 
@@ -871,11 +890,13 @@ static Status implSDLMixer(i16 argc, Value *argv, Value *out) {
       &funcMixCloseAudio,
       &funcMixQuerySpec,
       &funcMixAllocateChannels,
-      &funcMixLoadWav,
+      &funcMixLoadWAV,
       &funcMixLoadWAV_RW,
+      &funcMixQuickLoad_RAW,
       &funcMixFreeChunk,
       &funcMixPlayChannel,
       &funcMixPlaying,
+      &funcMixHaltChannel,
       &funcMixPause,
       &funcMixPaused,
       &funcMixResume,

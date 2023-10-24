@@ -250,6 +250,15 @@ int *asIntPointer(Value value) {
   }
   return (int *)pointer.as.voidPointer;
 }
+u8 *asU8Pointer(Value value) {
+  TypedPointer pointer = asPointer(value);
+  if (pointer.metadata.isConst || pointer.metadata.type != POINTER_TYPE_U8) {
+    panic("Expected u8 pointer but got %s%s",
+          pointer.metadata.isConst ? "const " : "",
+          getPointerTypeName(pointer.metadata.type));
+  }
+  return (u8 *)pointer.as.voidPointer;
+}
 u16 *asU16Pointer(Value value) {
   TypedPointer pointer = asPointer(value);
   if (pointer.metadata.isConst || pointer.metadata.type != POINTER_TYPE_U16) {

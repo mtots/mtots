@@ -186,6 +186,7 @@ Obj *asObj(Value value);
 
 void *asVoidPointer(Value value);
 int *asIntPointer(Value value);
+u8 *asU8Pointer(Value value);
 u16 *asU16Pointer(Value value);
 u32 *asU32Pointer(Value value);
 

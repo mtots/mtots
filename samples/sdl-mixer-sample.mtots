@@ -1,0 +1,76 @@
+import sdl as SDL
+import sdl.mixer as Mix
+import c
+
+SDL.Init(SDL.INIT_EVERYTHING)
+Mix.Init(Mix.INIT_MP3)
+
+
+def genAudio() Mix.Chunk:
+  ""
+  final n = 48000
+  final mem = c.mallocSizeof(c.FLOAT, n)
+  for i in range(n):
+    mem[i] = sin((440 * i / 48000) * TAU)
+  return Mix.QuickLoad_RAW(mem.cast(c.U8), n * c.sizeof(c.FLOAT))
+
+
+def main():
+  final W = 512
+  final H = 512
+  final window = SDL.Window()
+  final renderer = SDL.Renderer()
+  final event = SDL.Event()
+  final rect = SDL.Rect()
+  final viewport = SDL.Rect()
+  final xPtr = c.mallocSizeof(c.INT)
+  final yPtr = c.mallocSizeof(c.INT)
+  final FPS = 60
+  final delayms = 1000 / FPS
+  final keyboardStateLenPtr = c.mallocSizeof(c.INT)
+  final keyboardState = SDL.GetKeyboardState(keyboardStateLenPtr)
+  final keyboardStateLen = keyboardStateLenPtr[0]
+  # print("len(keyboardState) = %s" % [len(keyboardState)])
+  print("keyboardStateLen = %s" % [keyboardStateLen])
+  rect.w = rect.h = 40
+  print("delayms = %s" % [delayms])
+  SDL.CreateWindowAndRenderer(W, H, 0, window, renderer)
+
+  print("Opening audio...")
+  Mix.OpenAudio(48000, SDL.AUDIO_F32SYS, 1, 1024)
+  print("Finished opening audio")
+  final audioChunk = genAudio()
+
+  while true:
+    while SDL.PollEvent(event):
+      if event.type == SDL.QUIT:
+        SDL.Quit()
+        return nil
+
+    SDL.GetMouseState(xPtr, yPtr)
+    rect.x = xPtr[0] - rect.w / 2
+    rect.y = yPtr[0] - rect.h / 2
+
+    SDL.SetRenderDrawColor(renderer, 40, 40, 80, 255)
+    SDL.RenderClear(renderer)
+
+    if keyboardState[SDL.SCANCODE_H]:
+      if not Mix.Playing(0):
+        print("Playing on channel 0")
+        Mix.PlayChannel(0, audioChunk, 0)
+    else:
+      if Mix.Playing(0):
+        print("Halting on channel 0")
+        Mix.HaltChannel(0)
+
+    if keyboardState[SDL.SCANCODE_F]:
+      SDL.SetRenderDrawColor(renderer, 40, 200, 40, 100)
+    else:
+      SDL.SetRenderDrawColor(renderer, 120, 120, 80, 100)
+    SDL.RenderFillRect(renderer, rect)
+
+    SDL.RenderPresent(renderer)
+
+    SDL.Delay(delayms)
+
+main()

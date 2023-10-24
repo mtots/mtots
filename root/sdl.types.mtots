@@ -133,6 +133,9 @@ final SCANCODE_RSHIFT = 229
 final SCANCODE_RALT = 230
 final SCANCODE_RGUI = 231
 
+final AUDIO_S16SYS Int = raise 0
+final AUDIO_F32SYS Int = raise 0
+
 
 def Init(flags Int) nil:
   """

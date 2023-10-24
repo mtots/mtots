@@ -1,13 +1,15 @@
 import sdl
 
-final INIT_FLAC = raise 0
-final INIT_MOD = raise 0
-final INIT_MP3 = raise 0
-final INIT_OGG = raise 0
-final INIT_MID = raise 0
-final INIT_OPUS = raise 0
-final INIT_WAVPACK = raise 0
+final INIT_FLAC Int = raise 0
+final INIT_MOD Int = raise 0
+final INIT_MP3 Int = raise 0
+final INIT_OGG Int = raise 0
+final INIT_MID Int = raise 0
+final INIT_OPUS Int = raise 0
+final INIT_WAVPACK Int = raise 0
 
+class Chunk:
+  ""
 
 def Init(flags Int) nil:
   """
@@ -15,4 +17,95 @@ def Init(flags Int) nil:
 
   This function throws if any of the values requested in the flags
   fail to initialize.
+  """
+
+
+def Quit() nil:
+  """
+  Wraps `Mix_Quit` https://wiki.libsdl.org/SDL2_mixer/Mix_Quit
+  """
+
+
+def OpenAudio(frequency Int, format Int, channels Int, chunksize Int) nil:
+  """
+  Wraps `Mix_OpenAudio` https://wiki.libsdl.org/SDL2_mixer/Mix_OpenAudio
+  """
+
+
+def CloseAudio() nil:
+  """
+  Wraps `Mix_CloseAudio` https://wiki.libsdl.org/SDL2_mixer/Mix_CloseAudio
+  """
+
+
+def QuerySpec(frequency IntPointer, format U16Pointer, channels IntPointer) Int:
+  """
+  Wraps `Mix_QuerySpec` https://wiki.libsdl.org/SDL2_mixer/Mix_QuerySpec
+  """
+
+
+def AllocateChannels(numchans Int) Int:
+  """
+  Wraps `Mix_AllocateChannels` https://wiki.libsdl.org/SDL2_mixer/Mix_AllocateChannels
+  """
+
+
+
+def LoadWAV(file String) Chunk:
+  """
+  Wraps `Mix_LoadWAV` https://wiki.libsdl.org/SDL2_mixer/Mix_LoadWAV
+  """
+
+
+def LoadWAV_RW(src sdl.RWops, freesrc Bool) Chunk:
+  """
+  Wraps `Mix_LoadWAV_RW` https://wiki.libsdl.org/SDL2_mixer/Mix_LoadWAV_RW
+  """
+
+
+def QuickLoad_RAW(mem U8Pointer, len Int) Chunk:
+  """
+  Wraps `Mix_QuickLoad_RAW` https://wiki.libsdl.org/SDL2_mixer/Mix_QuickLoad_RAW
+  """
+
+
+def FreeChunk(chunk Chunk) nil:
+  """
+  Wraps `Mix_FreeChunk` https://wiki.libsdl.org/SDL2_mixer/Mix_FreeChunk
+  """
+
+
+def PlayChannel(channel Int, chunk Chunk, loops Int) Int:
+  """
+  Wraps `Mix_PlayChannel` https://wiki.libsdl.org/SDL2_mixer/Mix_PlayChannel
+  """
+
+
+def Playing(channel Int) Int:
+  """
+  Wraps `Mix_Playing` https://wiki.libsdl.org/SDL2_mixer/Mix_Playing
+  """
+
+
+def HaltChannel(channel Int) nil:
+  """
+  Wraps `Mix_HaltChannel` https://wiki.libsdl.org/SDL2_mixer/Mix_HaltChannel
+  """
+
+
+def Pause(channel Int) nil:
+  """
+  Wraps `Mix_Pause` https://wiki.libsdl.org/SDL2_mixer/Mix_Pause
+  """
+
+
+def Paused(channel Int) Int:
+  """
+  Wraps `Mix_Paused` https://wiki.libsdl.org/SDL2_mixer/Mix_Paused
+  """
+
+
+def Resume(channel Int) nil:
+  """
+  Wraps `Mix_Resume` https://wiki.libsdl.org/SDL2_mixer/Mix_Resume
   """

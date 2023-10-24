@@ -1198,6 +1198,10 @@ trait IntPointer(Pointer):
   "int pointer"
 
 
+trait U8Pointer(Pointer):
+  "u8 pointer"
+
+
 trait U16Pointer(Pointer):
   "u16 pointer"
 
