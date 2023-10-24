@@ -150,6 +150,14 @@ size_t asIndexUpper(Value value, size_t length) {
   return (size_t)x;
 }
 
+PointerType asPointerType(Value value) {
+  u16 number = asU16(value);
+  if (number > POINTER_TYPE_DOUBLE) {
+    panic("Expected PointerType but got value out of range (%d)", (int)number);
+  }
+  return (PointerType)number;
+}
+
 ubool asBool(Value value) {
   if (!isBool(value)) {
     panic("Expected Bool but got %s", getKindName(value));
@@ -204,11 +212,61 @@ Vector asVector(Value value) {
   vector.z = value.as.vector.z;
   return vector;
 }
+TypedPointer asPointer(Value value) {
+  TypedPointer pointer;
+  if (!isPointer(value)) {
+    panic("Expected Pointer but got %s", getKindName(value));
+  }
+  pointer.metadata = value.extra.tpm;
+  if (pointer.metadata.isConst) {
+    pointer.as.constVoidPointer = value.as.constVoidPointer;
+  } else {
+    pointer.as.voidPointer = value.as.voidPointer;
+  }
+  return pointer;
+}
 Obj *asObj(Value value) {
   if (!isObj(value)) {
     panic("Expected Obj but got %s", getKindName(value));
   }
   return value.as.obj;
+}
+
+void *asVoidPointer(Value value) {
+  TypedPointer pointer = asPointer(value);
+  if (pointer.metadata.isConst) {
+    panic("Expected void pointer but got %s%s",
+          pointer.metadata.isConst ? "const " : "",
+          getPointerTypeName(pointer.metadata.type));
+  }
+  return pointer.as.voidPointer;
+}
+int *asIntPointer(Value value) {
+  TypedPointer pointer = asPointer(value);
+  if (pointer.metadata.isConst || pointer.metadata.type != POINTER_TYPE_INT) {
+    panic("Expected int pointer but got %s%s",
+          pointer.metadata.isConst ? "const " : "",
+          getPointerTypeName(pointer.metadata.type));
+  }
+  return (int *)pointer.as.voidPointer;
+}
+u16 *asU16Pointer(Value value) {
+  TypedPointer pointer = asPointer(value);
+  if (pointer.metadata.isConst || pointer.metadata.type != POINTER_TYPE_U16) {
+    panic("Expected u16 pointer but got %s%s",
+          pointer.metadata.isConst ? "const " : "",
+          getPointerTypeName(pointer.metadata.type));
+  }
+  return (u16 *)pointer.as.voidPointer;
+}
+u32 *asU32Pointer(Value value) {
+  TypedPointer pointer = asPointer(value);
+  if (pointer.metadata.isConst || pointer.metadata.type != POINTER_TYPE_U32) {
+    panic("Expected u32 pointer but got %s%s",
+          pointer.metadata.isConst ? "const " : "",
+          getPointerTypeName(pointer.metadata.type));
+  }
+  return (u32 *)pointer.as.voidPointer;
 }
 
 Value valNil(void) {
@@ -261,6 +319,16 @@ Value valVector(Vector vector) {
   v.as.vector.z = vector.z;
   return v;
 }
+Value valPointer(TypedPointer pointer) {
+  Value v = {VAL_POINTER};
+  v.extra.tpm = pointer.metadata;
+  if (pointer.metadata.isConst) {
+    v.as.constVoidPointer = pointer.as.constVoidPointer;
+  } else {
+    v.as.voidPointer = pointer.as.voidPointer;
+  }
+  return v;
+}
 Value valObjExplicit(Obj *object) {
   Value v = {VAL_OBJ};
   v.as.obj = object;
@@ -273,6 +341,22 @@ Vector newVector(float x, float y, float z) {
   vector.y = y;
   vector.z = z;
   return vector;
+}
+
+TypedPointer newConstTypedPointer(const void *pointer, PointerType type) {
+  TypedPointer ret;
+  ret.metadata.isConst = UTRUE;
+  ret.metadata.type = type;
+  ret.as.constVoidPointer = pointer;
+  return ret;
+}
+
+TypedPointer newTypedPointer(void *pointer, PointerType type) {
+  TypedPointer ret;
+  ret.metadata.isConst = UFALSE;
+  ret.metadata.type = type;
+  ret.as.voidPointer = pointer;
+  return ret;
 }
 
 void fieldNotFoundError(Value owner, const char *fieldName) {
@@ -325,6 +409,8 @@ const char *getKindName(Value value) {
       return "RangeIterator";
     case VAL_VECTOR:
       return "Vector";
+    case VAL_POINTER:
+      return "Pointer";
     case VAL_OBJ:
       switch (value.as.obj->type) {
         case OBJ_CLASS:
@@ -353,4 +439,249 @@ const char *getKindName(Value value) {
       return "<unrecognized-object>";
   }
   return "<unrecognized-value>";
+}
+
+const char *getPointerTypeName(PointerType type) {
+  switch (type) {
+    case POINTER_TYPE_VOID:
+      return "POINTER_TYPE_VOID";
+    case POINTER_TYPE_CHAR:
+      return "POINTER_TYPE_CHAR";
+    case POINTER_TYPE_SHORT:
+      return "POINTER_TYPE_SHORT";
+    case POINTER_TYPE_INT:
+      return "POINTER_TYPE_INT";
+    case POINTER_TYPE_LONG:
+      return "POINTER_TYPE_LONG";
+    case POINTER_TYPE_UNSIGNED_SHORT:
+      return "POINTER_TYPE_UNSIGNED_SHORT";
+    case POINTER_TYPE_UNSIGNED_INT:
+      return "POINTER_TYPE_UNSIGNED_INT";
+    case POINTER_TYPE_UNSIGNED_LONG:
+      return "POINTER_TYPE_UNSIGNED_LONG";
+    case POINTER_TYPE_U8:
+      return "POINTER_TYPE_U8";
+    case POINTER_TYPE_U16:
+      return "POINTER_TYPE_U16";
+    case POINTER_TYPE_U32:
+      return "POINTER_TYPE_U32";
+    case POINTER_TYPE_U64:
+      return "POINTER_TYPE_U64";
+    case POINTER_TYPE_I8:
+      return "POINTER_TYPE_I8";
+    case POINTER_TYPE_I16:
+      return "POINTER_TYPE_I16";
+    case POINTER_TYPE_I32:
+      return "POINTER_TYPE_I32";
+    case POINTER_TYPE_I64:
+      return "POINTER_TYPE_I64";
+    case POINTER_TYPE_SIZE_T:
+      return "POINTER_TYPE_SIZE_T";
+    case POINTER_TYPE_PTRDIFF_T:
+      return "POINTER_TYPE_PTRDIFF_T";
+    case POINTER_TYPE_FLOAT:
+      return "POINTER_TYPE_FLOAT";
+    case POINTER_TYPE_DOUBLE:
+      return "POINTER_TYPE_DOUBLE";
+  }
+  return "Unknown-Pointer-Type";
+}
+
+size_t getPointerItemSize(PointerType type) {
+  switch (type) {
+    case POINTER_TYPE_VOID:
+      return 0;
+    case POINTER_TYPE_CHAR:
+      return sizeof(char);
+    case POINTER_TYPE_SHORT:
+      return sizeof(short);
+    case POINTER_TYPE_INT:
+      return sizeof(int);
+    case POINTER_TYPE_LONG:
+      return sizeof(long);
+    case POINTER_TYPE_UNSIGNED_SHORT:
+      return sizeof(unsigned short);
+    case POINTER_TYPE_UNSIGNED_INT:
+      return sizeof(int);
+    case POINTER_TYPE_UNSIGNED_LONG:
+      return sizeof(long);
+    case POINTER_TYPE_U8:
+      return sizeof(u8);
+    case POINTER_TYPE_U16:
+      return sizeof(u16);
+    case POINTER_TYPE_U32:
+      return sizeof(u32);
+    case POINTER_TYPE_U64:
+      return sizeof(u64);
+    case POINTER_TYPE_I8:
+      return sizeof(i8);
+    case POINTER_TYPE_I16:
+      return sizeof(i16);
+    case POINTER_TYPE_I32:
+      return sizeof(i32);
+    case POINTER_TYPE_I64:
+      return sizeof(i64);
+    case POINTER_TYPE_SIZE_T:
+      return sizeof(size_t);
+    case POINTER_TYPE_PTRDIFF_T:
+      return sizeof(ptrdiff_t);
+    case POINTER_TYPE_FLOAT:
+      return sizeof(float);
+    case POINTER_TYPE_DOUBLE:
+      return sizeof(double);
+  }
+  return 0;
+}
+
+static const void *getConstPointer(TypedPointer ptr) {
+  return ptr.metadata.isConst ? ptr.as.constVoidPointer : ptr.as.voidPointer;
+}
+
+static void *getNonConstPointer(TypedPointer ptr) {
+  if (ptr.metadata.isConst) {
+    panic("Required non-const pointer but got const pointer");
+  }
+  return ptr.as.voidPointer;
+}
+
+double derefTypedPointer(TypedPointer ptr, ptrdiff_t offset) {
+  switch (ptr.metadata.type) {
+    case POINTER_TYPE_VOID:
+      panic("Cannot dereference a void pointer (derefTypedPointer)");
+    case POINTER_TYPE_CHAR:
+      return *((const char *)getConstPointer(ptr) + offset);
+    case POINTER_TYPE_SHORT:
+      return *((const short *)getConstPointer(ptr) + offset);
+    case POINTER_TYPE_INT:
+      return *((const int *)getConstPointer(ptr) + offset);
+    case POINTER_TYPE_LONG:
+      return *((const long *)getConstPointer(ptr) + offset);
+    case POINTER_TYPE_UNSIGNED_SHORT:
+      return *((const unsigned short *)getConstPointer(ptr) + offset);
+    case POINTER_TYPE_UNSIGNED_INT:
+      return *((const unsigned int *)getConstPointer(ptr) + offset);
+    case POINTER_TYPE_UNSIGNED_LONG:
+      return *((const unsigned long *)getConstPointer(ptr) + offset);
+    case POINTER_TYPE_U8:
+      return *((const u8 *)getConstPointer(ptr) + offset);
+    case POINTER_TYPE_U16:
+      return *((const u16 *)getConstPointer(ptr) + offset);
+    case POINTER_TYPE_U32:
+      return *((const u32 *)getConstPointer(ptr) + offset);
+    case POINTER_TYPE_U64:
+      return *((const u64 *)getConstPointer(ptr) + offset);
+    case POINTER_TYPE_I8:
+      return *((const i8 *)getConstPointer(ptr) + offset);
+    case POINTER_TYPE_I16:
+      return *((const i16 *)getConstPointer(ptr) + offset);
+    case POINTER_TYPE_I32:
+      return *((const i32 *)getConstPointer(ptr) + offset);
+    case POINTER_TYPE_I64:
+      return *((const i64 *)getConstPointer(ptr) + offset);
+    case POINTER_TYPE_SIZE_T:
+      return *((const size_t *)getConstPointer(ptr) + offset);
+    case POINTER_TYPE_PTRDIFF_T:
+      return *((const ptrdiff_t *)getConstPointer(ptr) + offset);
+    case POINTER_TYPE_FLOAT:
+      return *((const float *)getConstPointer(ptr) + offset);
+    case POINTER_TYPE_DOUBLE:
+      return *((const double *)getConstPointer(ptr) + offset);
+  }
+  panic("Invalid pointer type %d (derefTypedPointer)", ptr.metadata.type);
+}
+
+void assignToTypedPointer(TypedPointer ptr, ptrdiff_t offset, double value) {
+  switch (ptr.metadata.type) {
+    case POINTER_TYPE_VOID:
+      panic("Cannot dereference a void pointer (assignToTypedPointer)");
+    case POINTER_TYPE_CHAR:
+      *((char *)getNonConstPointer(ptr) + offset) = (char)value;
+      return;
+    case POINTER_TYPE_SHORT:
+      *((short *)getNonConstPointer(ptr) + offset) = (short)value;
+      return;
+    case POINTER_TYPE_INT:
+      *((int *)getNonConstPointer(ptr) + offset) = (int)value;
+      return;
+    case POINTER_TYPE_LONG:
+      *((long *)getNonConstPointer(ptr) + offset) = (long)value;
+      return;
+    case POINTER_TYPE_UNSIGNED_SHORT:
+      *((unsigned short *)getNonConstPointer(ptr) + offset) = (unsigned short)value;
+      return;
+    case POINTER_TYPE_UNSIGNED_INT:
+      *((unsigned int *)getNonConstPointer(ptr) + offset) = (unsigned int)value;
+      return;
+    case POINTER_TYPE_UNSIGNED_LONG:
+      *((unsigned long *)getNonConstPointer(ptr) + offset) = (unsigned long)value;
+      return;
+    case POINTER_TYPE_U8:
+      *((u8 *)getNonConstPointer(ptr) + offset) = (u8)value;
+      return;
+    case POINTER_TYPE_U16:
+      *((u16 *)getNonConstPointer(ptr) + offset) = (u16)value;
+      return;
+    case POINTER_TYPE_U32:
+      *((u32 *)getNonConstPointer(ptr) + offset) = (u32)value;
+      return;
+    case POINTER_TYPE_U64:
+      *((u64 *)getNonConstPointer(ptr) + offset) = (u64)value;
+      return;
+    case POINTER_TYPE_I8:
+      *((i8 *)getNonConstPointer(ptr) + offset) = (i8)value;
+      return;
+    case POINTER_TYPE_I16:
+      *((i16 *)getNonConstPointer(ptr) + offset) = (i16)value;
+      return;
+    case POINTER_TYPE_I32:
+      *((i32 *)getNonConstPointer(ptr) + offset) = (i32)value;
+      return;
+    case POINTER_TYPE_I64:
+      *((i64 *)getNonConstPointer(ptr) + offset) = (i64)value;
+      return;
+    case POINTER_TYPE_SIZE_T:
+      *((size_t *)getNonConstPointer(ptr) + offset) = (size_t)value;
+      return;
+    case POINTER_TYPE_PTRDIFF_T:
+      *((ptrdiff_t *)getNonConstPointer(ptr) + offset) = (ptrdiff_t)value;
+      return;
+    case POINTER_TYPE_FLOAT:
+      *((float *)getNonConstPointer(ptr) + offset) = (float)value;
+      return;
+    case POINTER_TYPE_DOUBLE:
+      *((double *)getNonConstPointer(ptr) + offset) = (double)value;
+      return;
+  }
+  panic("Invalid pointer type %d (assignToTypedPointer)", ptr.metadata.type);
+}
+
+TypedPointer addToTypedPointer(TypedPointer ptr, ptrdiff_t offset) {
+  TypedPointer ret = ptr;
+  size_t itemSize = getPointerItemSize(ptr.metadata.type);
+  ptrdiff_t byteOffset = offset * itemSize;
+  if (itemSize == 0) {
+    panic("Cannot perform addToTypedPointer on %s",
+          getPointerTypeName(ptr.metadata.type));
+  }
+  if (ret.metadata.isConst) {
+    ret.as.constVoidPointer = ((const u8 *)ptr.as.constVoidPointer) + byteOffset;
+  } else {
+    ret.as.voidPointer = ((u8 *)ptr.as.voidPointer) + byteOffset;
+  }
+  return ret;
+}
+
+ptrdiff_t subtractFromTypedPointer(TypedPointer p1, TypedPointer p2) {
+  size_t itemSize;
+  if (p1.metadata.type != p2.metadata.type) {
+    panic(
+        "Pointer types must match when subtracting pointers "
+        "(subtractFromTypedPointer)");
+  }
+  itemSize = getPointerItemSize(p1.metadata.type);
+  if (itemSize == 0) {
+    panic("Cannot perform subtractFromTypedPointer on %s",
+          getPointerTypeName(p1.metadata.type));
+  }
+  return ((const u8 *)getConstPointer(p1) - (const u8 *)getConstPointer(p2)) / itemSize;
 }

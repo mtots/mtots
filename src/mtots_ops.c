@@ -13,6 +13,10 @@ static ubool vectorsEqual(Vector a, Vector b) {
   return a.x == b.x && a.y == b.y && a.z == b.z;
 }
 
+static const void *getConstPointerUnsafe(Value v) {
+  return v.extra.tpm.isConst ? v.as.constVoidPointer : v.as.voidPointer;
+}
+
 ubool valuesIs(Value a, Value b) {
   if (a.type != b.type) {
     return STATUS_ERROR;
@@ -36,6 +40,8 @@ ubool valuesIs(Value a, Value b) {
       return rangesEqual(asRange(a), asRange(b));
     case VAL_VECTOR:
       return vectorsEqual(asVector(a), asVector(b));
+    case VAL_POINTER:
+      return getConstPointerUnsafe(a) == getConstPointerUnsafe(b);
     case VAL_OBJ:
       return a.as.obj == b.as.obj;
   }
@@ -87,6 +93,8 @@ ubool valuesEqual(Value a, Value b) {
       return rangesEqual(asRange(a), asRange(b));
     case VAL_VECTOR:
       return vectorsEqual(asVector(a), asVector(b));
+    case VAL_POINTER:
+      return getConstPointerUnsafe(a) == getConstPointerUnsafe(b);
     case VAL_OBJ: {
       Obj *objA = a.as.obj;
       Obj *objB = b.as.obj;
@@ -196,6 +204,8 @@ ubool valueLessThan(Value a, Value b) {
       return va.x < vb.x ||
              (va.x == vb.x && (va.y < vb.y || (va.y == vb.y && va.z < vb.z)));
     }
+    case VAL_POINTER:
+      return getConstPointerUnsafe(a) < getConstPointerUnsafe(b);
     case VAL_OBJ: {
       Obj *objA = AS_OBJ_UNSAFE(a);
       Obj *objB = AS_OBJ_UNSAFE(b);
@@ -409,6 +419,12 @@ ubool valueRepr(StringBuilder *out, Value value) {
       sbprintf(out, ")");
       return STATUS_OK;
     }
+    case VAL_POINTER:
+      sbprintf(out, "<%s%s %p>",
+               value.extra.tpm.isConst ? "const " : "",
+               getPointerTypeName(value.extra.tpm.type),
+               getConstPointerUnsafe(value));
+      return STATUS_OK;
     case VAL_OBJ: {
       Obj *obj = AS_OBJ_UNSAFE(value);
       switch (obj->type) {

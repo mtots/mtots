@@ -2,6 +2,55 @@
 Helper classes for interacting with C APIs
 """
 
+final VOID "Type ID for the C type `void`" = 0
+final CHAR "Type ID for the C type `char`" = 1
+final SHORT "Type ID for the C type `short`" = 2
+final INT "Type ID for the C type `int`" = 3
+final LONG "Type ID for the C type `long`" = 4
+final UNSIGNED_SHORT "Type ID for the C type `unsigned short`" = 5
+final UNSIGNED_INT "Type ID for the C type `unsigned int`" = 6
+final UNSIGNED_LONG "Type ID for the C type `unsigned long`" = 7
+final U8 "Type ID for the C type `u8`" = 8
+final U16 "Type ID for the C type `u16`" = 9
+final U32 "Type ID for the C type `u32`" = 10
+final U64 "Type ID for the C type `u64`" = 11
+final I8 "Type ID for the C type `i8`" = 12
+final I16 "Type ID for the C type `i16`" = 13
+final I32 "Type ID for the C type `i32`" = 14
+final I64 "Type ID for the C type `i64`" = 15
+final SIZE_T "Type ID for the C type `size_t`" = 16
+final PTRDIFF_T "Type ID for the C type `ptrdiff_t`" = 17
+final FLOAT "Type ID for the C type `float`" = 18
+final DOUBLE "Type ID for the C type `double`" = 19
+
+
+def sizeof(typeID Int) Int:
+  """
+  Returns the number of bytes the corresponding C type uses.
+
+  E.g. `c.sizeof(c.INT)` would evaluate the the number of bytes
+  in a C `int` for the current platform.
+  """
+
+
+def malloc(size Int) Pointer:
+  """
+  Wraps malloc from the C standard library.
+  """
+
+
+def mallocSizeof(itemType Int, count Int = 1) Pointer:
+  """
+  Convenience function that is roughly equivalent to
+  `malloc(c.sizeof(itemType) * count).cast(itemType)`
+  """
+
+
+def free(pointer Pointer) nil:
+  """
+  Wraps free from the C standard library.
+  """
+
 
 class IntCell:
   """

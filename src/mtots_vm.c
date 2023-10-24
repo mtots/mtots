@@ -15,6 +15,7 @@
 #include "mtots_class_frozenlist.h"
 #include "mtots_class_list.h"
 #include "mtots_class_number.h"
+#include "mtots_class_pointer.h"
 #include "mtots_class_str.h"
 #include "mtots_class_vector.h"
 #include "mtots_globals.h"
@@ -174,6 +175,7 @@ void initVM(void) {
   initNumberClass();
   initStringClass();
   initVectorClass();
+  initPointerClass();
   initBufferClass();
   initListClass();
   initFrozenListClass();
@@ -1276,10 +1278,6 @@ Status interpret(const char *source, ObjModule *module) {
   push(valClosure(closure));
 
   return callClosure(closure, 0);
-}
-
-ubool valueIsCString(Value value, const char *string) {
-  return isString(value) && strcmp(value.as.string->chars, string) == 0;
 }
 
 static Status callClass(ObjClass *klass, i16 argCount, ubool consummate) {

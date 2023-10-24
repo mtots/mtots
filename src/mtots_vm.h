@@ -98,6 +98,7 @@ typedef struct VM {
   ObjClass *rangeClass;
   ObjClass *rangeIteratorClass;
   ObjClass *vectorClass;
+  ObjClass *pointerClass;
   ObjClass *bufferClass;
   ObjClass *listClass;
   ObjClass *frozenListClass;

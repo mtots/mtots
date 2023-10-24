@@ -1135,3 +1135,72 @@ class Matrix:
 
     This method modifies `this` `Matrix`
     """
+
+
+trait Pointer:
+  """
+  Somewhat typed pointer. The pointer is aware of constness and is able to
+  point to most primitive numeric C types. However, for other kinds of pointers
+  the pointer's type may be a void pointer.
+
+  Dangerous, use with caution.
+  """
+
+  def __getitem__(offset Int) Number:
+    """
+    Dereferences the given pointer at the given offset
+    """
+
+  def __setitem__(offset Int, value Number) nil:
+    """
+    Assigns a value through the pointer at the given offset
+    """
+
+  def __add__(offset Int) Pointer:
+    """
+    Adds an offset to the given Pointer, to obtain a new Pointer.
+    """
+
+  def __sub__(other Pointer) Int:
+    """
+    Subtracts a pointer from this pointer to obtain the difference
+    between the two pointers.
+    """
+
+  def cast(newType Int) Pointer:
+    """
+    Cast this pointer to a new type
+    """
+
+  def isConst() Bool:
+    """
+    Returns true if this is a const pointer.
+    """
+
+  def getItemType() Int:
+    """
+    Gets a number representing the type of pointer this is.
+    The return value here will not tell you whether or not
+    this pointer is const. To determine whether or not the pointer
+    is const, see the `isConst` method.
+
+    See the `POINTER_TYPE_*` constants in the `c` module for
+    possible return values of this method.
+
+    A return value of `0` will always indicate a void pointer type.
+    """
+
+  def __marker_pointer__() nil:
+    "Marker method to uniquely identify this trait"
+
+
+trait IntPointer(Pointer):
+  "int pointer"
+
+
+trait U16Pointer(Pointer):
+  "u16 pointer"
+
+
+trait U32Pointer(Pointer):
+  "u32 pointer"

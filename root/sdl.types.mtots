@@ -372,14 +372,14 @@ def DestroyTexture(texture Texture) nil:
 
 def QueryTexture(
     texture Texture,
-    format c.U32Cell?, access c.IntCell?,
-    w c.IntCell?, h c.IntCell?) nil:
+    format U32Pointer?, access IntPointer?,
+    w IntPointer?, h IntPointer?) nil:
   """
   Wraps `SDL_QueryTexture` https://wiki.libsdl.org/SDL2/SDL_QueryTexture
   """
 
 
-def GetMouseState(x c.IntCell?, y c.IntCell) Int:
+def GetMouseState(x IntPointer?, y IntPointer?) Int:
   """
   Wraps `SDL_GetMouseState` https://wiki.libsdl.org/SDL2/SDL_GetMouseState
 
@@ -400,7 +400,7 @@ def GetMouseState(x c.IntCell?, y c.IntCell) Int:
   """
 
 
-def GetKeyboardState() c.ConstU8Slice:
+def GetKeyboardState(n IntPointer?) Pointer:
   """
   Wraps `SDL_GetKeyboardState` https://wiki.libsdl.org/SDL2/SDL_GetKeyboardState
   """

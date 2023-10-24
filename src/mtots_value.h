@@ -26,6 +26,9 @@ typedef enum ValueType {
   /* other useful types */
   VAL_VECTOR,
 
+  /* dangerous, but useful for interfacing with C */
+  VAL_POINTER,
+
   VAL_OBJ
 } ValueType;
 
@@ -57,14 +60,58 @@ typedef struct VectorPartial {
   float z;
 } VectorPartial;
 
+typedef enum PointerType {
+  POINTER_TYPE_VOID,
+
+  POINTER_TYPE_CHAR,
+  POINTER_TYPE_SHORT,
+  POINTER_TYPE_INT,
+  POINTER_TYPE_LONG,
+
+  POINTER_TYPE_UNSIGNED_SHORT,
+  POINTER_TYPE_UNSIGNED_INT,
+  POINTER_TYPE_UNSIGNED_LONG,
+
+  POINTER_TYPE_U8,
+  POINTER_TYPE_U16,
+  POINTER_TYPE_U32,
+  POINTER_TYPE_U64,
+
+  POINTER_TYPE_I8,
+  POINTER_TYPE_I16,
+  POINTER_TYPE_I32,
+  POINTER_TYPE_I64,
+
+  POINTER_TYPE_SIZE_T,
+  POINTER_TYPE_PTRDIFF_T,
+
+  POINTER_TYPE_FLOAT,
+  POINTER_TYPE_DOUBLE
+} PointerType;
+
+/* Must fit in 4-bytes */
+typedef struct TypedPointerMetadata {
+  u16 type; /* PointerType */
+  ubool isConst;
+} TypedPointerMetadata;
+
+typedef struct TypedPointer {
+  TypedPointerMetadata metadata;
+  union {
+    void *voidPointer;
+    const void *constVoidPointer;
+  } as;
+} TypedPointer;
+
 /* Value struct should be 16-bytes on all supported platforms */
 typedef struct Value {
   ValueType type; /* 4-bytes */
 
   union {
-    i32 integer;         /* for Range and RangeIterator */
-    float floatingPoint; /* for Vector */
-  } extra;               /* 4-bytes */
+    i32 integer;              /* for Range and RangeIterator */
+    float floatingPoint;      /* for Vector */
+    TypedPointerMetadata tpm; /* for TypedPointer */
+  } extra;                    /* 4-bytes */
 
   /*
    * All members of this union are either:
@@ -79,6 +126,8 @@ typedef struct Value {
     Sentinel sentinel;
     RangePartial range;
     VectorPartial vector;
+    void *voidPointer;            /* for TypedPointer */
+    const void *constVoidPointer; /* for TypedPointer */
     Obj *obj;
   } as; /* 8-bytes */
 } Value;
@@ -107,6 +156,7 @@ typedef struct ValueArray {
 #define isRange(value) ((value).type == VAL_RANGE)
 #define isRangeIterator(value) ((value).type == VAL_RANGE_ITERATOR)
 #define isVector(value) ((value).type == VAL_VECTOR)
+#define isPointer(value) ((value).type == VAL_POINTER)
 #define isObj(value) ((value).type == VAL_OBJ)
 #define AS_OBJ_UNSAFE(value) ((value).as.obj)
 
@@ -122,6 +172,7 @@ u8 asU8(Value value);
 size_t asIndex(Value value, size_t length);
 size_t asIndexLower(Value value, size_t length);
 size_t asIndexUpper(Value value, size_t length);
+PointerType asPointerType(Value value);
 
 ubool asBool(Value value);
 double asNumber(Value value);
@@ -130,7 +181,13 @@ CFunction *asCFunction(Value value);
 Range asRange(Value value);
 RangeIterator asRangeIterator(Value value);
 Vector asVector(Value value);
+TypedPointer asPointer(Value value);
 Obj *asObj(Value value);
+
+void *asVoidPointer(Value value);
+int *asIntPointer(Value value);
+u16 *asU16Pointer(Value value);
+u32 *asU32Pointer(Value value);
 
 Value valNil(void);
 Value valBool(ubool value);
@@ -140,10 +197,13 @@ Value valCFunction(CFunction *func);
 Value valSentinel(Sentinel sentinel);
 Value valRange(Range range);
 Value valRangeIterator(RangeIterator rangeIterator);
+Value valPointer(TypedPointer pointer);
 Value valVector(Vector vector);
 Value valObjExplicit(Obj *object);
 
 Vector newVector(float x, float y, float z);
+TypedPointer newConstTypedPointer(const void *pointer, PointerType type);
+TypedPointer newTypedPointer(void *pointer, PointerType type);
 
 void fieldNotFoundError(Value owner, const char *fieldName);
 
@@ -162,8 +222,11 @@ void writeValueArray(ValueArray *array, Value value);
 void freeValueArray(ValueArray *array);
 const char *getKindName(Value value);
 
-/* Just a convenience function to check that a Value is
- * equal to the given C-string */
-ubool valueIsCString(Value value, const char *string);
+const char *getPointerTypeName(PointerType type);
+size_t getPointerItemSize(PointerType type);
+double derefTypedPointer(TypedPointer ptr, ptrdiff_t offset);
+void assignToTypedPointer(TypedPointer ptr, ptrdiff_t offset, double value);
+TypedPointer addToTypedPointer(TypedPointer ptr, ptrdiff_t offset);
+ptrdiff_t subtractFromTypedPointer(TypedPointer p1, TypedPointer p2);
 
 #endif /*mtots_value_h*/

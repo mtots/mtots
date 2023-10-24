@@ -334,22 +334,19 @@ WRAP_SDL_FUNCTION(
     QueryTexture, 5, 0,
     SDL_QueryTexture(
         asTexture(argv[0])->handle,
-        isNil(argv[1]) ? NULL : &asU32Cell(argv[1])->handle,
-        isNil(argv[2]) ? NULL : &asIntCell(argv[2])->handle,
-        isNil(argv[3]) ? NULL : &asIntCell(argv[3])->handle,
-        isNil(argv[4]) ? NULL : &asIntCell(argv[4])->handle))
+        isNil(argv[1]) ? NULL : asU32Pointer(argv[1]),
+        isNil(argv[2]) ? NULL : asIntPointer(argv[2]),
+        isNil(argv[3]) ? NULL : asIntPointer(argv[3]),
+        isNil(argv[4]) ? NULL : asIntPointer(argv[4])))
 WRAP_C_FUNCTION(
     GetMouseState, 2, 0,
     *out = valNumber(SDL_GetMouseState(
-        isNil(argv[0]) ? NULL : &asIntCell(argv[0])->handle,
-        isNil(argv[1]) ? NULL : &asIntCell(argv[1])->handle)))
-WRAP_C_FUNCTION(GetKeyboardState, 0, 0, {
-  int n;
-  const u8 *state = SDL_GetKeyboardState(&n);
-  ObjConstU8Slice *slice = allocConstU8Slice();
-  slice->handle.buffer = state;
-  slice->handle.count = (size_t)n;
-  *out = valConstU8Slice(slice);
+        isNil(argv[0]) ? NULL : asIntPointer(argv[0]),
+        isNil(argv[1]) ? NULL : asIntPointer(argv[1]))))
+WRAP_C_FUNCTION(GetKeyboardState, 1, 0, {
+  int *nptr = isNil(argv[0]) ? NULL : asIntPointer(argv[0]);
+  const u8 *state = SDL_GetKeyboardState(nptr);
+  *out = valPointer(newConstTypedPointer(state, POINTER_TYPE_U8));
 })
 
 /*
@@ -563,9 +560,9 @@ WRAP_C_FUNCTION_EX(CloseAudio, MixCloseAudio, 0, 0, Mix_CloseAudio())
 
 WRAP_C_FUNCTION_EX(QuerySpec, MixQuerySpec, 3, 0,
                    *out = valNumber(Mix_QuerySpec(
-                       &asIntCell(argv[0])->handle,
-                       &asU16Cell(argv[1])->handle,
-                       &asIntCell(argv[2])->handle)))
+                       asIntPointer(argv[0]),
+                       asU16Pointer(argv[1]),
+                       asIntPointer(argv[2]))))
 
 WRAP_C_FUNCTION_EX(AllocateChannels, MixAllocateChannels, 1, 0, {
   *out = valNumber(Mix_AllocateChannels(asNumber(argv[0])));

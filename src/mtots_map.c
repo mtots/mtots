@@ -75,6 +75,11 @@ u32 hashval(Value value) {
       break;
     case VAL_VECTOR:
       return hashVector(asVector(value));
+    case VAL_POINTER:
+      /* TODO: come up with better hashing */
+      return (u32)(size_t)(value.extra.tpm.isConst
+                               ? value.as.constVoidPointer
+                               : value.as.voidPointer);
     case VAL_OBJ:
       switch (AS_OBJ_UNSAFE(value)->type) {
         case OBJ_FROZEN_LIST:

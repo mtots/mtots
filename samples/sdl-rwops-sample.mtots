@@ -14,19 +14,19 @@ def main():
   final event = SDL.Event()
   final rect = SDL.Rect()
   final viewport = SDL.Rect()
-  final xCell = c.IntCell()
-  final yCell = c.IntCell()
+  final xPtr = c.mallocSizeof(c.INT)
+  final yPtr = c.mallocSizeof(c.INT)
   final FPS = 60
   final delayms = 1000 / FPS
   print("delayms = %s" % [delayms])
   SDL.CreateWindowAndRenderer(W, H, 0, window, renderer)
   final imageRWops = SDL.RWFromFile("samples/sdl.png", "rb")
   final imageTexture = IMG.LoadTexture_RW(renderer, imageRWops, true)
-  final wCell = c.IntCell()
-  final hCell = c.IntCell()
-  SDL.QueryTexture(imageTexture, nil, nil, wCell, hCell)
-  rect.w = wCell.get()
-  rect.h = hCell.get()
+  final wPtr = c.mallocSizeof(c.INT)
+  final hPtr = c.mallocSizeof(c.INT)
+  SDL.QueryTexture(imageTexture, nil, nil, wPtr, hPtr)
+  rect.w = wPtr[0]
+  rect.h = hPtr[0]
   SDL.RenderGetViewport(renderer, viewport)
   print("viewport = [%s, %s, %s, %s]" %
         [viewport.x, viewport.y, viewport.w, viewport.h])
@@ -36,9 +36,9 @@ def main():
         SDL.Quit()
         return nil
 
-    SDL.GetMouseState(xCell, yCell)
-    rect.x = xCell.get() - rect.w / 2
-    rect.y = yCell.get() - rect.h / 2
+    SDL.GetMouseState(xPtr, yPtr)
+    rect.x = xPtr[0] - rect.w / 2
+    rect.y = yPtr[0] - rect.h / 2
 
     SDL.SetRenderDrawColor(renderer, 40, 40, 80, 255)
     SDL.RenderClear(renderer)
