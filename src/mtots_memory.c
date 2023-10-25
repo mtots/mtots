@@ -41,13 +41,15 @@ void *reallocate(void *pointer, size_t oldSize, size_t newSize) {
 
   vm.memory.bytesAllocated += newSize - oldSize;
   if (newSize > oldSize) {
-#if DEBUG_STRESS_GC
-    collectGarbage();
-#endif
     vm.memory.mallocCount++;
     if (vm.memory.bytesAllocated + getInternedStringsAllocationSize() > vm.memory.nextGC) {
       collectGarbage();
     }
+#if DEBUG_STRESS_GC
+    else {
+      collectGarbage();
+    }
+#endif
   }
 
   if (newSize == 0) {

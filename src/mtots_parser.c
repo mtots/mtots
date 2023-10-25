@@ -122,15 +122,28 @@ typedef struct ClassInfo {
   ubool hasSuperClass;
 } ClassInfo;
 
+typedef enum DefaultArgumentType {
+  DEFARG_NIL,
+  DEFARG_TRUE,
+  DEFARG_FALSE,
+  DEFARG_NUMBER,
+  DEFARG_STRING
+} DefaultArgumentType;
+
+typedef struct DefaultArgument {
+  DefaultArgumentType type;
+  union {
+    double number;
+    Token string;
+  } as;
+} DefaultArgument;
+
 typedef struct Parser {
   Environment *env;     /* the deepest currently active environment */
   ClassInfo *classInfo; /* information about the current class definition, if any */
   Lexer *lexer;         /* lexer to read tokens from */
   Token current;        /* currently considered token */
   Token previous;       /* previously considered token */
-
-  /* A list to use as a scratch buffer when parsing default arguments */
-  ObjList *defaultArgs;
 } Parser;
 
 typedef ubool (*ParseFn)(Parser *);
@@ -151,6 +164,7 @@ static ubool parseExpression(Parser *parser);
 static ubool parsePrec(Parser *parser, Precedence prec);
 static void initParseRulesPrivate(void);
 static ubool addConstValue(Parser *parser, Value value, ConstID *ref);
+static ubool stringTokenPtrToObjString(Parser *parser, Token *token, String **out);
 static ubool stringTokenToObjString(Parser *parser, String **out);
 static ubool parseBlock(Parser *parser, ubool newScope);
 static ubool loadVariableByName(Parser *parser, StringSlice name);
@@ -171,7 +185,6 @@ static void initParser(Parser *parser, Lexer *lexer, Environment *env) {
   parser->lexer = lexer;
   parser->current.type = TOKEN_NIL;
   parser->previous.type = TOKEN_NIL;
-  parser->defaultArgs = NULL;
 }
 
 static void initThunkContext(ThunkContext *thunkContext) {
@@ -725,29 +738,31 @@ static ubool parseTraitDeclaration(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseDefaultArgument(Parser *parser, Value *out) {
+static ubool parseDefaultArgument(Parser *parser, DefaultArgument *out) {
   switch (parser->current.type) {
     case TOKEN_NIL:
       ADVANCE();
-      *out = valNil();
+      out->type = DEFARG_NIL;
       return STATUS_OK;
     case TOKEN_TRUE:
       ADVANCE();
-      *out = valBool(UTRUE);
+      out->type = DEFARG_TRUE;
       return STATUS_OK;
     case TOKEN_FALSE:
       ADVANCE();
-      *out = valBool(UFALSE);
+      out->type = DEFARG_FALSE;
       return STATUS_OK;
     case TOKEN_NUMBER:
       ADVANCE();
-      *out = valNumber(strtod(parser->previous.start, NULL));
+      out->type = DEFARG_NUMBER;
+      out->as.number = strtod(parser->previous.start, NULL);
       return STATUS_OK;
     case TOKEN_MINUS:
       ADVANCE();
       if (AT(TOKEN_NUMBER)) {
         ADVANCE();
-        *out = valNumber(-strtod(parser->previous.start, NULL));
+        out->type = DEFARG_NUMBER;
+        out->as.number = -strtod(parser->previous.start, NULL);
         return STATUS_OK;
       } else {
         runtimeError(
@@ -757,13 +772,11 @@ static ubool parseDefaultArgument(Parser *parser, Value *out) {
             tokenTypeToName(parser->current.type));
         return STATUS_ERROR;
       }
-    case TOKEN_STRING: {
-      String *str;
+    case TOKEN_STRING:
       ADVANCE();
-      CHECK1(stringTokenToObjString, &str);
-      *out = valString(str);
+      out->type = DEFARG_STRING;
+      out->as.string = parser->previous;
       return STATUS_OK;
-    }
     default:
       break;
   }
@@ -776,21 +789,21 @@ static ubool parseDefaultArgument(Parser *parser, Value *out) {
 }
 
 static ubool parseParameterList(Parser *parser, ObjThunk *thunk) {
-  i16 argc = 0;
-  size_t parameterNameCapacity = 0;
-  parser->defaultArgs->length = 0;
+  i16 argc = 0, defArgc = 0;
+  String *parameterNames[MAX_ARG_COUNT];
+  DefaultArgument defArgs[MAX_ARG_COUNT];
+
   EXPECT(TOKEN_LEFT_PAREN);
   while (!AT(TOKEN_RIGHT_PAREN)) {
     Local *local;
-    if (((size_t)argc) + 1 >= parameterNameCapacity) {
-      size_t newCap = parameterNameCapacity < 8 ? 8 : 2 * parameterNameCapacity;
-      thunk->parameterNames = GROW_ARRAY(
-          String *, thunk->parameterNames, parameterNameCapacity, newCap);
-      parameterNameCapacity = newCap;
+    if (argc >= MAX_ARG_COUNT) {
+      runtimeError("[%s:%d] Too many parameters in function",
+                   MODULE_NAME_CHARS, CURRENT_LINE);
+      return STATUS_ERROR;
     }
     argc++;
     EXPECT(TOKEN_IDENTIFIER);
-    thunk->parameterNames[argc - 1] = internForeverString(
+    parameterNames[argc - 1] = internForeverString(
         parser->previous.start,
         parser->previous.length);
     CHECK2(newLocal, SLICE_PREVIOUS(), &local);
@@ -802,7 +815,7 @@ static ubool parseParameterList(Parser *parser, ObjThunk *thunk) {
     if (maybeAtTypeExpression(parser)) {
       CHECK(parseTypeExpression);
     }
-    if (parser->defaultArgs->length > 0 && !AT(TOKEN_EQUAL)) {
+    if (defArgc > 0 && !AT(TOKEN_EQUAL)) {
       runtimeError(
           "[%s:%d] Non-optional arguments may not follow any optional arguments",
           MODULE_NAME_CHARS,
@@ -810,11 +823,13 @@ static ubool parseParameterList(Parser *parser, ObjThunk *thunk) {
       return STATUS_ERROR;
     }
     if (AT(TOKEN_EQUAL)) {
+      /* NOTE: defArgc must be less than MAX_ARG_COUNT here, but
+       * we don't need to check that because argc must always be
+       * greater than or equal to defArgc, and we check that argc
+       * is less than MAX_ARG_COUNT at the top of this loop */
       ADVANCE();
-      listAppend(parser->defaultArgs, valNil());
-      CHECK1(
-          parseDefaultArgument,
-          &parser->defaultArgs->buffer[parser->defaultArgs->length - 1]);
+      defArgc++;
+      CHECK1(parseDefaultArgument, &defArgs[defArgc - 1]);
     }
     if (AT(TOKEN_COMMA)) {
       ADVANCE();
@@ -823,12 +838,48 @@ static ubool parseParameterList(Parser *parser, ObjThunk *thunk) {
     }
   }
   EXPECT(TOKEN_RIGHT_PAREN);
-  if (parameterNameCapacity > argc) {
-    /* really this is a 'shrink-array' */
-    thunk->parameterNames = GROW_ARRAY(
-        String *, thunk->parameterNames, parameterNameCapacity, argc);
-  }
+
+  /* NOTE: we assign `parameterNames` and `defaultArgs` before
+   * `defaultArgsCount` and `arity` because ALLOCATE can trigger
+   * a GC, and we do not want e.g. `arity` to be non-zero when
+   * `parameterNames` is still `NULL` */
+  thunk->parameterNames = ALLOCATE(String *, argc);
+  thunk->defaultArgs = ALLOCATE(Value, defArgc);
+  thunk->defaultArgsCount = defArgc;
   thunk->arity = argc;
+  {
+    i16 i;
+    for (i = 0; i < argc; i++) {
+      thunk->parameterNames[i] = parameterNames[i];
+    }
+    for (i = 0; i < defArgc; i++) {
+      DefaultArgument defArg = defArgs[i];
+      Value value;
+      switch (defArg.type) {
+        case DEFARG_NIL:
+          value = valNil();
+          break;
+        case DEFARG_FALSE:
+          value = valBool(UFALSE);
+          break;
+        case DEFARG_TRUE:
+          value = valBool(UTRUE);
+          break;
+        case DEFARG_NUMBER:
+          value = valNumber(defArg.as.number);
+          break;
+        case DEFARG_STRING: {
+          String *string;
+          CHECK2(stringTokenPtrToObjString, &defArg.as.string, &string);
+          value = valString(string);
+          break;
+        }
+        default:
+          panic("Invalid DefaultArgumentType %d", defArg.type);
+      }
+      thunk->defaultArgs[i] = value;
+    }
+  }
   return STATUS_OK;
 }
 
@@ -852,15 +903,6 @@ static ubool parseFunctionCore(Parser *parser, StringSlice name, ThunkContext *t
 
   /* parameter list */
   CHECK1(parseParameterList, thunk);
-  if (parser->defaultArgs->length > 0) {
-    thunk->defaultArgs = ALLOCATE(Value, parser->defaultArgs->length);
-    thunk->defaultArgsCount = parser->defaultArgs->length;
-    memcpy(
-        thunk->defaultArgs,
-        parser->defaultArgs->buffer,
-        sizeof(Value) * parser->defaultArgs->length);
-    parser->defaultArgs->length = 0; /* clear the defaultArgs list for next use */
-  }
 
   if (maybeAtTypeExpression(parser)) {
     CHECK(parseTypeExpression);
@@ -1016,14 +1058,14 @@ static ubool parseRawStringLiteral(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool stringTokenToObjString(Parser *parser, String **out) {
+static ubool stringTokenPtrToObjString(Parser *parser, Token *token, String **out) {
   size_t quoteLen;
-  char quoteChar = parser->previous.start[0];
+  char quoteChar = token->start[0];
   char quoteStr[4];
   StringBuilder sb;
 
-  if (quoteChar == parser->previous.start[1] &&
-      quoteChar == parser->previous.start[2]) {
+  if (quoteChar == token->start[1] &&
+      quoteChar == token->start[2]) {
     quoteStr[0] = quoteStr[1] = quoteStr[2] = quoteChar;
     quoteStr[3] = '\0';
     quoteLen = 3;
@@ -1034,7 +1076,7 @@ static ubool stringTokenToObjString(Parser *parser, String **out) {
   }
 
   initStringBuilder(&sb);
-  if (!unescapeString2(&sb, parser->previous.start + quoteLen, quoteStr, quoteLen)) {
+  if (!unescapeString2(&sb, token->start + quoteLen, quoteStr, quoteLen)) {
     return STATUS_ERROR;
   }
 
@@ -1043,6 +1085,10 @@ static ubool stringTokenToObjString(Parser *parser, String **out) {
   freeStringBuilder(&sb);
 
   return STATUS_OK;
+}
+
+static ubool stringTokenToObjString(Parser *parser, String **out) {
+  return stringTokenPtrToObjString(parser, &parser->previous, out);
 }
 
 static ubool parseStringLiteral(Parser *parser) {
@@ -1961,8 +2007,6 @@ ubool parse(const char *source, String *moduleName, ObjThunk **out) {
   initParser(&parser, &lexer, &env);
   activeParser = &parser;
 
-  parser.defaultArgs = newList(0);
-
   if (!lexerNext(&lexer, &parser.current)) {
     return STATUS_ERROR;
   }
@@ -2046,7 +2090,6 @@ void markParserRoots(void) {
   Parser *parser = activeParser;
   if (parser) {
     Environment *env = parser->env;
-    markObject((Obj *)parser->defaultArgs);
     for (; env; env = env->enclosing) {
       markObject((Obj *)env->thunk);
     }

@@ -46,6 +46,7 @@ MACOS_BASE_FLAGS = [
     "-Wno-float-equal",
     "-Wno-missing-field-initializers",
     "-Wno-switch-enum",
+    "-Wno-covered-switch-default",
     # flags I want to eventually remove
     "-Wno-implicit-int-conversion",
     "-Wno-shorten-64-to-32",
