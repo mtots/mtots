@@ -152,7 +152,7 @@ String *internOwnedString(char *chars, size_t length) {
   return string;
 }
 
-ubool internUTF32(const u32 *utf32, size_t codePointCount, String **out) {
+Status internUTF32(const u32 *utf32, size_t codePointCount, String **out) {
   size_t byteLength = 0, i, j;
   char *utf8;
   for (i = 0; i < codePointCount; i++) {
@@ -175,7 +175,7 @@ ubool internUTF32(const u32 *utf32, size_t codePointCount, String **out) {
   return STATUS_OK;
 }
 
-ubool sliceString(String *string, size_t start, size_t end, String **out) {
+Status sliceString(String *string, size_t start, size_t end, String **out) {
   if (end > string->codePointCount) {
     end = string->codePointCount;
   }

@@ -7,7 +7,7 @@
 /**
  * Utility for serializing values into BMON from native code.
  */
-ubool bmonDump(Value value, Buffer *out);
+Status bmonDump(Value value, Buffer *out);
 
 /**
  * BMON = Binary Mtots Object Notation.

@@ -324,7 +324,7 @@ void sortList(ObjList *list, ObjList *keys) {
   free(buffer);
 }
 
-ubool sortListWithKeyFunc(ObjList *list, Value keyfunc) {
+Status sortListWithKeyFunc(ObjList *list, Value keyfunc) {
   if (!isNil(keyfunc)) {
     ObjList *keys = newList(list->length);
     size_t i = 0;
@@ -347,7 +347,7 @@ ubool sortListWithKeyFunc(ObjList *list, Value keyfunc) {
   return STATUS_OK;
 }
 
-static ubool mapRepr(StringBuilder *out, Map *map) {
+static Status mapRepr(StringBuilder *out, Map *map) {
   MapIterator mi;
   MapEntry *entry;
   size_t i;
@@ -374,7 +374,7 @@ static ubool mapRepr(StringBuilder *out, Map *map) {
   return STATUS_OK;
 }
 
-ubool valueRepr(StringBuilder *out, Value value) {
+Status valueRepr(StringBuilder *out, Value value) {
   switch (value.type) {
     case VAL_NIL:
       sbprintf(out, "nil");
@@ -549,7 +549,7 @@ ubool valueRepr(StringBuilder *out, Value value) {
   panic("unrecognized value type %s", getKindName(value));
 }
 
-ubool valueStr(StringBuilder *out, Value value) {
+Status valueStr(StringBuilder *out, Value value) {
   if (isString(value)) {
     String *string = value.as.string;
     sbputstrlen(out, string->chars, string->byteLength);
@@ -558,7 +558,7 @@ ubool valueStr(StringBuilder *out, Value value) {
   return valueRepr(out, value);
 }
 
-ubool strMod(StringBuilder *out, const char *format, ObjList *args) {
+Status strMod(StringBuilder *out, const char *format, ObjList *args) {
   const char *p;
   size_t j;
 
@@ -601,7 +601,7 @@ ubool strMod(StringBuilder *out, const char *format, ObjList *args) {
   return STATUS_OK;
 }
 
-ubool valueLen(Value recv, size_t *out) {
+Status valueLen(Value recv, size_t *out) {
   if (isString(recv)) {
     *out = recv.as.string->codePointCount;
     return STATUS_OK;
@@ -708,7 +708,7 @@ Status valueFastIterNext(Value *iterator, Value *out) {
   return valueIterNext(*iterator, out);
 }
 
-ubool valueGetItem(Value owner, Value key, Value *out) {
+Status valueGetItem(Value owner, Value key, Value *out) {
   if (isList(owner) && isNumber(key)) {
     ObjList *list = AS_LIST_UNSAFE(owner);
     size_t i = asIndex(key, list->length);
@@ -724,7 +724,7 @@ ubool valueGetItem(Value owner, Value key, Value *out) {
   return STATUS_OK;
 }
 
-ubool valueSetItem(Value owner, Value key, Value value) {
+Status valueSetItem(Value owner, Value key, Value value) {
   if (isList(owner) && isNumber(key)) {
     ObjList *list = AS_LIST_UNSAFE(owner);
     size_t i = asIndex(key, list->length);

@@ -138,7 +138,7 @@ static const u8 base64Rmap[] = {
     INVALID_CHAR,
 };
 
-ubool encodeBase64(const u8 *input, size_t length, StringBuilder *out) {
+Status encodeBase64(const u8 *input, size_t length, StringBuilder *out) {
   size_t i;
   size_t lenRem = length % 3;
   size_t roundLen = length - lenRem;
@@ -170,7 +170,7 @@ ubool encodeBase64(const u8 *input, size_t length, StringBuilder *out) {
   return STATUS_OK;
 }
 
-static ubool decodeBase64Char(char ch, u32 *out) {
+static Status decodeBase64Char(char ch, u32 *out) {
   if (ch >= 43 && ch <= 122) {
     u32 value = (u32)base64Rmap[(u8)ch];
     if (value != INVALID_CHAR) {
@@ -183,7 +183,7 @@ static ubool decodeBase64Char(char ch, u32 *out) {
 }
 
 /* Decode a 4 char chunk from the input */
-static ubool decodeBase64Chunk(const char *input, Buffer *out) {
+static Status decodeBase64Chunk(const char *input, Buffer *out) {
   u32 chunk = 0, charVal;
 
   /* Validation */
@@ -225,7 +225,7 @@ static ubool decodeBase64Chunk(const char *input, Buffer *out) {
   return STATUS_OK;
 }
 
-ubool decodeBase64(const char *input, size_t length, Buffer *out) {
+Status decodeBase64(const char *input, size_t length, Buffer *out) {
   size_t i;
   if (length % 4 != 0) {
     runtimeError(

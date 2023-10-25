@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static ubool runMainModule(int argc, const char **argv) {
+static Status runMainModule(int argc, const char **argv) {
   String *mainModuleName;
   registerArgs(argc - 1, argv + 1);
   mainModuleName = internCString("__main__");

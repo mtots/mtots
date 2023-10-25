@@ -9,16 +9,16 @@ ubool valuesEqual(Value a, Value b);
 ubool valueLessThan(Value a, Value b);
 void listAppend(ObjList *list, Value value);
 void sortList(ObjList *list, ObjList *keys);
-ubool sortListWithKeyFunc(ObjList *list, Value keyfunc);
-ubool valueRepr(StringBuilder *out, Value value);
-ubool valueStr(StringBuilder *out, Value value);
-ubool strMod(StringBuilder *out, const char *format, ObjList *args);
-ubool valueLen(Value recv, size_t *out);
+Status sortListWithKeyFunc(ObjList *list, Value keyfunc);
+Status valueRepr(StringBuilder *out, Value value);
+Status valueStr(StringBuilder *out, Value value);
+Status strMod(StringBuilder *out, const char *format, ObjList *args);
+Status valueLen(Value recv, size_t *out);
 Status valueIter(Value iterable, Value *out);
 Status valueIterNext(Value iterator, Value *out);
 Status valueFastIter(Value iterable, Value *out);
 Status valueFastIterNext(Value *iterator, Value *out);
-ubool valueGetItem(Value owner, Value key, Value *out);
-ubool valueSetItem(Value owner, Value key, Value value);
+Status valueGetItem(Value owner, Value key, Value *out);
+Status valueSetItem(Value owner, Value key, Value value);
 
 #endif /*mtots_ops_h*/

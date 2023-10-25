@@ -9,7 +9,7 @@
  *
  * Existing content will be overwritten.
  */
-ubool writeFile(const void *data, size_t length, const char *path) {
+Status writeFile(const void *data, size_t length, const char *path) {
   FILE *file = fopen(path, "wb");
   if (!file) {
     runtimeError("Could not open file \"%s\" for writing", path);

@@ -25,7 +25,7 @@
 
 VM vm;
 
-static ubool invoke(String *name, i16 argCount);
+static Status invoke(String *name, i16 argCount);
 static Status callClosure(ObjClosure *closure, i16 argCount);
 
 static void resetStack(void) {
@@ -448,7 +448,7 @@ static Status invokeFromClassWithKwArgs(
   return callValueWithKwArgs(method, argCount);
 }
 
-static ubool invokeWithKwArgs(String *name, i16 argCount) {
+static Status invokeWithKwArgs(String *name, i16 argCount) {
   ObjClass *klass;
   Value receiver = peek(argCount + 1);
 
@@ -569,7 +569,7 @@ static Status invokeFromClass(
 }
 
 /* Prepares */
-static ubool invoke(String *name, i16 argCount) {
+static Status invoke(String *name, i16 argCount) {
   ObjClass *klass;
   Value receiver = peek(argCount);
 

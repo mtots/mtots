@@ -16,8 +16,8 @@ void initSpecialStrings(void);
 String *internString(const char *chars, size_t length);
 String *internCString(const char *string);
 String *internOwnedString(char *chars, size_t length);
-ubool internUTF32(const u32 *utf32, size_t codePointCount, String **out);
-ubool sliceString(String *string, size_t start, size_t end, String **out);
+Status internUTF32(const u32 *utf32, size_t codePointCount, String **out);
+Status sliceString(String *string, size_t start, size_t end, String **out);
 size_t getInternedStringsAllocationSize(void);
 void freeUnmarkedStrings(void);
 

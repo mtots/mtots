@@ -29,9 +29,9 @@ static ubool canOpen(const char *path) {
   FILE *file = fopen(path, "rb");
   if (file) {
     fclose(file);
-    return STATUS_OK;
+    return UTRUE;
   }
-  return STATUS_ERROR;
+  return UFALSE;
 }
 
 static ubool testPrefix(size_t prefixLen) {

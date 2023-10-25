@@ -17,7 +17,7 @@
 
 static String *stringBmon;
 
-static ubool runtimeErrorUnexpectedEOF(size_t i, size_t len, size_t limit) {
+static Status runtimeErrorUnexpectedEOF(size_t i, size_t len, size_t limit) {
   runtimeError(
       "Unexpected EOF when loading BMON (i=%lu len=%lu limit=%lu)",
       (unsigned long)i,
@@ -26,7 +26,7 @@ static ubool runtimeErrorUnexpectedEOF(size_t i, size_t len, size_t limit) {
   return STATUS_ERROR;
 }
 
-static ubool load(u8 *buffer, size_t limit, size_t *pos, Value *out) {
+static Status load(u8 *buffer, size_t limit, size_t *pos, Value *out) {
   u8 header;
   size_t i = *pos;
   if (i + 1 > limit) {
@@ -159,7 +159,7 @@ static Status implLoads(i16 argCount, Value *args, Value *out) {
 
 static CFunction funcLoads = {implLoads, "loads", 1};
 
-ubool bmonDump(Value value, Buffer *out) {
+Status bmonDump(Value value, Buffer *out) {
   switch (value.type) {
     case VAL_NIL:
       bufferAddU8(out, TAG_NIL);
