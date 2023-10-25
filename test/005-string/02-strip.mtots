@@ -12,3 +12,8 @@ print("repr(' hello world \\n'.strip()) = %s" % [repr(' hello world \n'.strip())
 print("repr('hello'.strip('h')) = %s" % [repr('hello'.strip('h'))])
 print("repr('hello'.strip('eh')) = %s" % [repr('hello'.strip('eh'))])
 print("repr('hello'.strip('he')) = %s" % [repr('hello'.strip('he'))])
+
+print("'hello world'.removeSuffix('world') = %s" % [repr('hello world'.removeSuffix('world'))])
+print("'hello world'.removePrefix('world') = %s" % [repr('hello world'.removePrefix('world'))])
+print("'hello world'.removeSuffix('hello') = %s" % [repr('hello world'.removeSuffix('hello'))])
+print("'hello world'.removePrefix('hello') = %s" % [repr('hello world'.removePrefix('hello'))])

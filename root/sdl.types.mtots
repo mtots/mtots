@@ -242,6 +242,12 @@ def GetPerformanceFrequency() Int:
   """
 
 
+def GetBasePath() String:
+  """
+  Wraps `SDL_GetBasePath` https://wiki.libsdl.org/SDL2/SDL_GetBasePath
+  """
+
+
 def RWFromFile(file String, mode String) RWops:
   """
   Wraps `SDL_RWFromFile` https://wiki.libsdl.org/SDL2/SDL_RWFromFile

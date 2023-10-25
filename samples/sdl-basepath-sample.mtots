@@ -1,0 +1,5 @@
+import sdl as SDL
+
+SDL.Init(SDL.INIT_EVERYTHING)
+
+print("SDL_GetBasePath = %s" % [SDL.GetBasePath()])

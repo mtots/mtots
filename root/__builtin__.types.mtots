@@ -162,6 +162,14 @@ class String:
     all combinations of its values are stripped
     """
 
+  def removePrefix(prefix String) String:
+    """
+    """
+
+  def removeSuffix(suffix String) String:
+    """
+    """
+
   def replace(old String, new String) String:
     ""
 

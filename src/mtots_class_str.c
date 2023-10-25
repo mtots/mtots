@@ -142,6 +142,40 @@ static Status implStrStrip(i16 argCount, Value *args, Value *out) {
 
 static CFunction funcStrStrip = {implStrStrip, "strip", 0, 1};
 
+static Status implStrRemovePrefix(i16 argc, Value *argv, Value *out) {
+  String *string = asString(argv[-1]);
+  String *prefix = asString(argv[0]);
+  if (string == prefix ||
+      (string->byteLength >= prefix->byteLength &&
+       memcmp(string->chars, prefix->chars, prefix->byteLength) == 0)) {
+    *out = valString(internString(
+        string->chars + prefix->byteLength,
+        string->byteLength - prefix->byteLength));
+  } else {
+    *out = valString(string);
+  }
+  return STATUS_OK;
+}
+
+static CFunction funcStrRemovePrefix = {implStrRemovePrefix, "removePrefix", 1};
+
+static Status implStrRemoveSuffix(i16 argc, Value *argv, Value *out) {
+  String *string = asString(argv[-1]);
+  String *suffix = asString(argv[0]);
+  if (string == suffix ||
+      (string->byteLength >= suffix->byteLength &&
+       memcmp(string->chars + (string->byteLength - suffix->byteLength),
+              suffix->chars, suffix->byteLength) == 0)) {
+    *out = valString(internString(
+        string->chars, string->byteLength - suffix->byteLength));
+  } else {
+    *out = valString(string);
+  }
+  return STATUS_OK;
+}
+
+static CFunction funcStrRemoveSuffix = {implStrRemoveSuffix, "removeSuffix", 1};
+
 static size_t cStrReplace(
     const char *s, const char *oldstr, const char *newstr, char *out) {
   char *outp = out;
@@ -378,6 +412,8 @@ void initStringClass(void) {
         &funcStrSlice,
         &funcStrMod,
         &funcStrStrip,
+        &funcStrRemovePrefix,
+        &funcStrRemoveSuffix,
         &funcStrReplace,
         &funcStrJoin,
         &funcStringUpper,

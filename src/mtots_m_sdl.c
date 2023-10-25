@@ -208,6 +208,13 @@ WRAP_C_FUNCTION(
 WRAP_C_FUNCTION(Delay, 1, 0, SDL_Delay(asU32(argv[0])))
 WRAP_C_FUNCTION(GetPerformanceCounter, 0, 0, *out = valNumber(SDL_GetPerformanceCounter()))
 WRAP_C_FUNCTION(GetPerformanceFrequency, 0, 0, *out = valNumber(SDL_GetPerformanceFrequency()))
+WRAP_C_FUNCTION(GetBasePath, 0, 0, {
+  const char *path = SDL_GetBasePath();
+  if (!path) {
+    return sdlError("SDL_GetBasePath");
+  }
+  *out = valString(internCString(path));
+})
 WRAP_C_FUNCTION(RWFromFile, 2, 0, {
   const char *file = asString(argv[0])->chars;
   const char *mode = asString(argv[1])->chars;
@@ -661,6 +668,7 @@ static Status impl(i16 argc, Value *argv, Value *out) {
       &funcDelay,
       &funcGetPerformanceCounter,
       &funcGetPerformanceFrequency,
+      &funcGetBasePath,
       &funcRWFromFile,
       &funcRWFromString,
       &funcRWFromBuffer,

@@ -1,6 +1,7 @@
 import sdl as SDL
 import sdl.ttf as TTF
 import c
+import fs
 
 print("BEFORE INIT")
 print("INIT_EVERYTHING = %s" % [SDL.INIT_EVERYTHING])
@@ -8,6 +9,7 @@ SDL.Init(SDL.INIT_EVERYTHING)
 TTF.Init()
 print("AFTER INIT")
 
+final BASE_PATH = SDL.GetBasePath().removeSuffix('/')
 final WHITE = SDL.Color()
 WHITE.r = WHITE.g = WHITE.b = WHITE.a = 255
 
@@ -24,7 +26,7 @@ def main():
   final yPtr = c.mallocSizeof(c.INT)
   final FPS = 60
   final delayms = 1000 / FPS
-  final font = TTF.OpenFont("misc/RobotoMono.ttf", 24)
+  final font = TTF.OpenFont(fs.join([BASE_PATH, "root", "sdl", "RobotoMono.ttf"]), 24)
   final textSurface = TTF.RenderUTF8_Blended_Wrapped(font, "Hello\n  WORLD", WHITE, 128)
 
   print("delayms = %s" % [delayms])
