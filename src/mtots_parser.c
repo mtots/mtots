@@ -164,8 +164,8 @@ static Status parseExpression(Parser *parser);
 static Status parsePrec(Parser *parser, Precedence prec);
 static void initParseRulesPrivate(void);
 static Status addConstValue(Parser *parser, Value value, ConstID *ref);
-static Status stringTokenPtrToObjString(Parser *parser, Token *token, String **out);
-static Status stringTokenToObjString(Parser *parser, String **out);
+static Status stringTokenToObjString(Parser *parser, Token *token, String **out);
+static Status lastStringTokenToObjString(Parser *parser, String **out);
 static Status parseBlock(Parser *parser, ubool newScope);
 static Status loadVariableByName(Parser *parser, StringSlice name);
 static Status storeVariableByName(Parser *parser, StringSlice name);
@@ -804,7 +804,7 @@ static Status defaultArgumentToValue(Parser *parser, DefaultArgument defArg, Val
       break;
     case DEFARG_STRING: {
       String *string;
-      CHECK2(stringTokenPtrToObjString, &defArg.as.string, &string);
+      CHECK2(stringTokenToObjString, &defArg.as.string, &string);
       *out = valString(string);
       break;
     }
@@ -1062,7 +1062,7 @@ static Status parseRawStringLiteral(Parser *parser) {
   return STATUS_OK;
 }
 
-static Status stringTokenPtrToObjString(Parser *parser, Token *token, String **out) {
+static Status stringTokenToObjString(Parser *parser, Token *token, String **out) {
   size_t quoteLen;
   char quoteChar = token->start[0];
   char quoteStr[4];
@@ -1080,7 +1080,7 @@ static Status stringTokenPtrToObjString(Parser *parser, Token *token, String **o
   }
 
   initStringBuilder(&sb);
-  if (!unescapeString2(&sb, token->start + quoteLen, quoteStr, quoteLen)) {
+  if (!unescapeString(&sb, token->start + quoteLen, quoteStr, quoteLen)) {
     return STATUS_ERROR;
   }
 
@@ -1091,8 +1091,8 @@ static Status stringTokenPtrToObjString(Parser *parser, Token *token, String **o
   return STATUS_OK;
 }
 
-static Status stringTokenToObjString(Parser *parser, String **out) {
-  return stringTokenPtrToObjString(parser, &parser->previous, out);
+static Status lastStringTokenToObjString(Parser *parser, String **out) {
+  return stringTokenToObjString(parser, &parser->previous, out);
 }
 
 static Status parseStringLiteral(Parser *parser) {
@@ -1100,7 +1100,7 @@ static Status parseStringLiteral(Parser *parser) {
 
   EXPECT(TOKEN_STRING);
 
-  if (!stringTokenToObjString(parser, &str)) {
+  if (!lastStringTokenToObjString(parser, &str)) {
     return STATUS_ERROR;
   }
 

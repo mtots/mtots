@@ -14,7 +14,7 @@ typedef struct JSONParseState {
   size_t line, col;
 } JSONParseState;
 
-static ubool parseOneBlob(JSONParseState *s);
+static Status parseOneBlob(JSONParseState *s);
 
 static void initJSONParseState(JSONParseState *s, const char *str) {
   s->start = s->ptr = str;
@@ -68,7 +68,7 @@ static int interpHexDigit(char ch) {
   return -1;
 }
 
-static ubool scanString(JSONParseState *s, size_t *outNBytes, char *out) {
+static Status scanString(JSONParseState *s, size_t *outNBytes, char *out) {
   size_t nbytes = 0;
   char *p = out;
 
@@ -171,7 +171,7 @@ static ubool scanString(JSONParseState *s, size_t *outNBytes, char *out) {
   return STATUS_OK;
 }
 
-static ubool parseString(JSONParseState *s) {
+static Status parseString(JSONParseState *s) {
   JSONParseState savedState;
   size_t len;
   char *chars;
@@ -212,7 +212,7 @@ static ubool parseString(JSONParseState *s) {
   return STATUS_OK;
 }
 
-static ubool parseObject(JSONParseState *s) {
+static Status parseObject(JSONParseState *s) {
   size_t count = 0, i;
   ObjDict *dict;
   if (peek(s) != '{') {
@@ -225,7 +225,9 @@ static ubool parseObject(JSONParseState *s) {
   skipWhitespace(s);
   while (peek(s) != '}' && peek(s) != '\0') {
     count++;
-    parseString(s);
+    if (!parseString(s)) {
+      return STATUS_ERROR;
+    }
     skipWhitespace(s);
     if (peek(s) != ':') {
       runtimeError(
@@ -263,7 +265,7 @@ static ubool parseObject(JSONParseState *s) {
   return STATUS_OK;
 }
 
-static ubool parseArray(JSONParseState *s) {
+static Status parseArray(JSONParseState *s) {
   size_t count = 0, i;
   ObjList *list;
   if (peek(s) != '[') {
@@ -304,7 +306,7 @@ static ubool isDigit(char c) {
   return c >= '0' && c <= '9';
 }
 
-static ubool parseNumber(JSONParseState *s) {
+static Status parseNumber(JSONParseState *s) {
   const char *start = s->ptr;
   if (peek(s) == '-') {
     incr(s);
@@ -337,7 +339,7 @@ static ubool parseNumber(JSONParseState *s) {
   return STATUS_OK;
 }
 
-static ubool parseOneBlob(JSONParseState *s) {
+static Status parseOneBlob(JSONParseState *s) {
   char c;
   skipWhitespace(s);
   c = peek(s);
@@ -388,7 +390,7 @@ static ubool parseOneBlob(JSONParseState *s) {
   return STATUS_ERROR;
 }
 
-static ubool parseJSON(JSONParseState *s) {
+static Status parseJSON(JSONParseState *s) {
   if (!parseOneBlob(s)) {
     return STATUS_ERROR;
   }

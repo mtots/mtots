@@ -388,7 +388,7 @@ ubool valueRepr(StringBuilder *out, Value value) {
     case VAL_STRING: {
       String *str = value.as.string;
       sbputchar(out, '"');
-      if (!escapeString2(out, str->chars, str->byteLength, NULL)) {
+      if (!escapeString(out, str->chars, str->byteLength, NULL)) {
         return STATUS_ERROR;
       }
       sbputchar(out, '"');
@@ -471,7 +471,7 @@ ubool valueRepr(StringBuilder *out, Value value) {
           opts.tryUnicode = UFALSE;
           sbputchar(out, 'b');
           sbputchar(out, '"');
-          escapeString2(out, (const char *)buf->data, buf->length, &opts);
+          escapeString(out, (const char *)buf->data, buf->length, &opts);
           sbputchar(out, '"');
           return STATUS_OK;
         }

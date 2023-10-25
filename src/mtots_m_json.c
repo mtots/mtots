@@ -23,20 +23,16 @@ static Status implLoad(i16 argc, Value *args, Value *out) {
 static CFunction funcLoad = {implLoad, "load", 1, 0};
 
 static Status implDump(i16 argc, Value *args, Value *out) {
+  StringBuilder sb;
   ObjDataSink *sink = asDataSink(args[0]);
-  size_t len;
-  char *chars;
   ubool status;
-  if (!writeJSON(args[0], &len, NULL)) {
-    /* TODO: Refactor error message API */
-    runtimeError("Failed to handle error");
+  initStringBuilder(&sb);
+  if (!writeJSON(args[0], &sb)) {
+    freeStringBuilder(&sb);
     return STATUS_ERROR;
   }
-  chars = malloc(sizeof(char) * (len + 1));
-  writeJSON(args[0], NULL, chars);
-  chars[len] = '\0';
-  status = dataSinkWriteBytes(sink, (const u8 *)chars, len);
-  free(chars);
+  status = dataSinkWriteBytes(sink, (const u8 *)sb.buffer, sb.length);
+  freeStringBuilder(&sb);
   return status;
 }
 
@@ -56,17 +52,14 @@ static Status implLoads(i16 argCount, Value *args, Value *out) {
 static CFunction funcLoads = {implLoads, "loads", 1, 0};
 
 static Status implDumps(i16 argCount, Value *args, Value *out) {
-  size_t len;
-  char *chars;
-  if (!writeJSON(args[0], &len, NULL)) {
-    /* TODO: Refactor error message API */
-    runtimeError("Failed to handle error");
+  StringBuilder sb;
+  initStringBuilder(&sb);
+  if (!writeJSON(args[0], &sb)) {
+    freeStringBuilder(&sb);
     return STATUS_ERROR;
   }
-  chars = malloc(sizeof(char) * (len + 1));
-  writeJSON(args[0], NULL, chars);
-  chars[len] = '\0';
-  *out = valString(internOwnedString(chars, len));
+  *out = valString(sbstring(&sb));
+  freeStringBuilder(&sb);
   return STATUS_OK;
 }
 
