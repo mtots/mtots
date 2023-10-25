@@ -120,7 +120,7 @@ typedef struct Lexer {
 } Lexer;
 
 void initLexer(Lexer *lexer, const char *source);
-ubool lexerNext(Lexer *lexer, Token *token);
+Status lexerNext(Lexer *lexer, Token *token);
 const char *tokenTypeToName(TokenType type);
 
 #endif /*mtots_lexer_h*/

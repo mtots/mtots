@@ -146,7 +146,7 @@ typedef struct Parser {
   Token previous;       /* previously considered token */
 } Parser;
 
-typedef ubool (*ParseFn)(Parser *);
+typedef Status (*ParseFn)(Parser *);
 
 typedef struct ParseRule {
   ParseFn prefix;
@@ -156,21 +156,21 @@ typedef struct ParseRule {
 
 static Parser *activeParser;
 static ParseRule rules[TOKEN_EOF + 1];
-static ubool parseRulesInitialized;
+static Status parseRulesInitialized;
 
-static ubool parseDeclaration(Parser *parser);
-static ubool parseStatement(Parser *parser);
-static ubool parseExpression(Parser *parser);
-static ubool parsePrec(Parser *parser, Precedence prec);
+static Status parseDeclaration(Parser *parser);
+static Status parseStatement(Parser *parser);
+static Status parseExpression(Parser *parser);
+static Status parsePrec(Parser *parser, Precedence prec);
 static void initParseRulesPrivate(void);
-static ubool addConstValue(Parser *parser, Value value, ConstID *ref);
-static ubool stringTokenPtrToObjString(Parser *parser, Token *token, String **out);
-static ubool stringTokenToObjString(Parser *parser, String **out);
-static ubool parseBlock(Parser *parser, ubool newScope);
-static ubool loadVariableByName(Parser *parser, StringSlice name);
-static ubool storeVariableByName(Parser *parser, StringSlice name);
-static ubool parseFunctionCore(Parser *parser, StringSlice name, ThunkContext *thunkContext);
-static ubool parseArgumentList(Parser *parser, u8 *out, ubool *hasKwArgs);
+static Status addConstValue(Parser *parser, Value value, ConstID *ref);
+static Status stringTokenPtrToObjString(Parser *parser, Token *token, String **out);
+static Status stringTokenToObjString(Parser *parser, String **out);
+static Status parseBlock(Parser *parser, ubool newScope);
+static Status loadVariableByName(Parser *parser, StringSlice name);
+static Status storeVariableByName(Parser *parser, StringSlice name);
+static Status parseFunctionCore(Parser *parser, StringSlice name, ThunkContext *thunkContext);
+static Status parseArgumentList(Parser *parser, u8 *out, ubool *hasKwArgs);
 
 static StringSlice newSlice(const char *chars, size_t length) {
   StringSlice ss;
@@ -193,7 +193,7 @@ static void initThunkContext(ThunkContext *thunkContext) {
   thunkContext->isLambda = UFALSE;
 }
 
-static ubool sliceEquals(StringSlice slice, const char *string) {
+static Status sliceEquals(StringSlice slice, const char *string) {
   return strlen(string) == slice.length && memcmp(slice.chars, string, slice.length) == 0;
 }
 
@@ -219,7 +219,7 @@ static void initEnvironment(Environment *env, ObjThunk *thunk, ThunkContext *thu
   }
 }
 
-static ubool newLocal(Parser *parser, StringSlice name, Local **out) {
+static Status newLocal(Parser *parser, StringSlice name, Local **out) {
   Local *local;
   if (ENV->localsCount == U8_MAX) {
     runtimeError(
@@ -243,12 +243,12 @@ static ubool maybeAtTypeExpression(Parser *parser) {
   return atToken(parser, TOKEN_IDENTIFIER) || atToken(parser, TOKEN_NIL);
 }
 
-static ubool advance(Parser *parser) {
+static Status advance(Parser *parser) {
   parser->previous = parser->current;
   return lexerNext(parser->lexer, &parser->current);
 }
 
-static ubool expectToken(Parser *parser, TokenType type) {
+static Status expectToken(Parser *parser, TokenType type) {
   if (!atToken(parser, type)) {
     runtimeError(
         "[%s:%d] Expected token %s but got %s",
@@ -261,7 +261,7 @@ static ubool expectToken(Parser *parser, TokenType type) {
   return advance(parser);
 }
 
-static ubool expectStatementDelimiter(Parser *parser) {
+static Status expectStatementDelimiter(Parser *parser) {
   if (AT(TOKEN_NEWLINE)) {
     ADVANCE();
   } else {
@@ -270,25 +270,25 @@ static ubool expectStatementDelimiter(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool emit1(Parser *parser, u8 byte1) {
+static Status emit1(Parser *parser, u8 byte1) {
   writeChunk(&THUNK->chunk, byte1, PREVIOUS_LINE);
   return STATUS_OK;
 }
 
-static ubool emit2(Parser *parser, u8 byte1, u8 byte2) {
+static Status emit2(Parser *parser, u8 byte1, u8 byte2) {
   EMIT1(byte1);
   EMIT1(byte2);
   return STATUS_OK;
 }
 
-static ubool emit3(Parser *parser, u8 byte1, u8 byte2, u8 byte3) {
+static Status emit3(Parser *parser, u8 byte1, u8 byte2, u8 byte3) {
   EMIT1(byte1);
   EMIT1(byte2);
   EMIT1(byte3);
   return STATUS_OK;
 }
 
-static ubool emitConstID(Parser *parser, ConstID id) {
+static Status emitConstID(Parser *parser, ConstID id) {
   return emit2(parser, (id.value >> 8) & 0xFF, id.value & 0xFF);
 }
 
@@ -297,7 +297,7 @@ static ubool emitConstID(Parser *parser, ConstID id) {
  *   1 byte, followed by
  *   1 ConstID
  */
-static ubool emit1C(Parser *parser, u8 opcode, ConstID id) {
+static Status emit1C(Parser *parser, u8 opcode, ConstID id) {
   EMIT1(opcode);
   return emitConstID(parser, id);
 }
@@ -308,12 +308,12 @@ static ubool emit1C(Parser *parser, u8 opcode, ConstID id) {
  *   1 ConstID, followed by
  *   1 byte
  */
-static ubool emit1C1(Parser *parser, u8 opcode, ConstID id, u8 arg) {
+static Status emit1C1(Parser *parser, u8 opcode, ConstID id, u8 arg) {
   EMIT1C(opcode, id);
   return emit1(parser, arg);
 }
 
-static ubool emitLoop(Parser *parser, i32 loopStart) {
+static Status emitLoop(Parser *parser, i32 loopStart) {
   i32 offset;
 
   EMIT1(OP_LOOP);
@@ -332,13 +332,13 @@ static ubool emitLoop(Parser *parser, i32 loopStart) {
   return STATUS_OK;
 }
 
-static ubool emitJump(Parser *parser, u8 instruction, i32 *jump) {
+static Status emitJump(Parser *parser, u8 instruction, i32 *jump) {
   EMIT3(instruction, 0xFF, 0xFF);
   *jump = CHUNK_POS - 2;
   return STATUS_OK;
 }
 
-static ubool patchJump(Parser *parser, i32 offset) {
+static Status patchJump(Parser *parser, i32 offset) {
   /* -2 to adjust for the bytecode for the jump offset itself */
   i32 jump = CHUNK_POS - offset - 2;
 
@@ -355,7 +355,7 @@ static ubool patchJump(Parser *parser, i32 offset) {
   return STATUS_OK;
 }
 
-static ubool emitConst(Parser *parser, Value value) {
+static Status emitConst(Parser *parser, Value value) {
   ConstID constID;
   ADD_CONST_VALUE(value, &constID);
   EMIT1C(OP_CONSTANT, constID);
@@ -364,7 +364,7 @@ static ubool emitConst(Parser *parser, Value value) {
 
 /* Add a new constant to the constant pool. The reference to the given value
  * will be stored in `ref`. */
-static ubool addConstValue(Parser *parser, Value value, ConstID *ref) {
+static Status addConstValue(Parser *parser, Value value, ConstID *ref) {
   size_t id = addConstant(&THUNK->chunk, value);
   if (id >= CONST_ID_MAX) {
     runtimeError("[%s:%d] Too many constants in thunk (count=%d, max=%d)",
@@ -378,7 +378,7 @@ static ubool addConstValue(Parser *parser, Value value, ConstID *ref) {
   return STATUS_OK;
 }
 
-static ubool addConstSlice(Parser *parser, StringSlice slice, ConstID *ref) {
+static Status addConstSlice(Parser *parser, StringSlice slice, ConstID *ref) {
   return addConstValue(parser, valString(internString(slice.chars, slice.length)), ref);
 }
 
@@ -386,12 +386,12 @@ static ubool inGlobalScope(Parser *parser) {
   return parser->env->enclosing == NULL && parser->env->scopeDepth == 0;
 }
 
-static ubool beginScope(Parser *parser) {
+static Status beginScope(Parser *parser) {
   ENV->scopeDepth++;
   return STATUS_OK;
 }
 
-static ubool endScope(Parser *parser) {
+static Status endScope(Parser *parser) {
   /* TODO: Coalesce multiple of these pops into a single instruction */
   ubool hasUpvalue = UFALSE;
   u16 count = 0;
@@ -431,7 +431,7 @@ static ubool endScope(Parser *parser) {
  * `isReady` indicates whether the variable is allowed to start appearing
  * in expressions.
  */
-static ubool declareVariable(
+static Status declareVariable(
     Parser *parser, StringSlice name, ubool isReady, VariableDeclaration *out) {
   if (inGlobalScope(parser)) {
     out->isLocal = UFALSE;
@@ -454,7 +454,7 @@ static ubool declareVariable(
  *   that it is ready to be used (this is already the case if `declareVariable`
  *   was called with `isReady` set to true).
  */
-static ubool defineVariable(Parser *parser, VariableDeclaration *decl) {
+static Status defineVariable(Parser *parser, VariableDeclaration *decl) {
   if (decl->isLocal) {
     MARK_LOCAL_READY(decl->as.local);
   } else {
@@ -463,7 +463,7 @@ static ubool defineVariable(Parser *parser, VariableDeclaration *decl) {
   return STATUS_OK;
 }
 
-static ubool parseTypeExpression(Parser *parser) {
+static Status parseTypeExpression(Parser *parser) {
   /* Type expressions are completely ignored by the runtime.
    * We just check for syntax here. */
   if (AT(TOKEN_NIL)) {
@@ -504,7 +504,7 @@ static ubool parseTypeExpression(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseTypeParameters(Parser *parser) {
+static Status parseTypeParameters(Parser *parser) {
   /* Type parameters - ignored at runtime */
   if (AT(TOKEN_LEFT_BRACKET)) {
     ADVANCE();
@@ -524,7 +524,7 @@ static ubool parseTypeParameters(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseImportStatement(Parser *parser) {
+static Status parseImportStatement(Parser *parser) {
   /* Imports will always assume global scope */
   ConstID moduleName, memberName, alias;
   ubool fromStmt;
@@ -577,7 +577,7 @@ static ubool parseImportStatement(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseFieldDeclaration(Parser *parser) {
+static Status parseFieldDeclaration(Parser *parser) {
   /* Field declarations have no runtime effect whatsoever
    * They are purely for documentation */
   if (AT(TOKEN_FINAL)) {
@@ -594,7 +594,7 @@ static ubool parseFieldDeclaration(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseMethodDeclaration(Parser *parser) {
+static Status parseMethodDeclaration(Parser *parser) {
   ThunkContext thunkContext;
   StringSlice name;
   ConstID nameID;
@@ -612,7 +612,7 @@ static ubool parseMethodDeclaration(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseStaticMethodDeclaration(Parser *parser) {
+static Status parseStaticMethodDeclaration(Parser *parser) {
   ThunkContext thunkContext;
   StringSlice name;
   ConstID nameID;
@@ -627,7 +627,7 @@ static ubool parseStaticMethodDeclaration(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseClassDeclaration(Parser *parser) {
+static Status parseClassDeclaration(Parser *parser) {
   ConstID classNameID;
   VariableDeclaration classVariable;
   StringSlice className;
@@ -712,7 +712,7 @@ static ubool parseClassDeclaration(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseTraitDeclaration(Parser *parser) {
+static Status parseTraitDeclaration(Parser *parser) {
   /* Traits have no runtime effect. So we skip them */
   EXPECT(TOKEN_TRAIT);
   while (!AT(TOKEN_EOF) && !AT(TOKEN_INDENT)) {
@@ -738,7 +738,7 @@ static ubool parseTraitDeclaration(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseDefaultArgument(Parser *parser, DefaultArgument *out) {
+static Status parseDefaultArgument(Parser *parser, DefaultArgument *out) {
   switch (parser->current.type) {
     case TOKEN_NIL:
       ADVANCE();
@@ -788,7 +788,33 @@ static ubool parseDefaultArgument(Parser *parser, DefaultArgument *out) {
   return STATUS_OK;
 }
 
-static ubool parseParameterList(Parser *parser, ObjThunk *thunk) {
+static Status defaultArgumentToValue(Parser *parser, DefaultArgument defArg, Value *out) {
+  switch (defArg.type) {
+    case DEFARG_NIL:
+      *out = valNil();
+      break;
+    case DEFARG_FALSE:
+      *out = valBool(UFALSE);
+      break;
+    case DEFARG_TRUE:
+      *out = valBool(UTRUE);
+      break;
+    case DEFARG_NUMBER:
+      *out = valNumber(defArg.as.number);
+      break;
+    case DEFARG_STRING: {
+      String *string;
+      CHECK2(stringTokenPtrToObjString, &defArg.as.string, &string);
+      *out = valString(string);
+      break;
+    }
+    default:
+      panic("Invalid DefaultArgumentType %d", defArg.type);
+  }
+  return STATUS_OK;
+}
+
+static Status parseParameterList(Parser *parser, ObjThunk *thunk) {
   i16 argc = 0, defArgc = 0;
   String *parameterNames[MAX_ARG_COUNT];
   DefaultArgument defArgs[MAX_ARG_COUNT];
@@ -853,38 +879,16 @@ static ubool parseParameterList(Parser *parser, ObjThunk *thunk) {
       thunk->parameterNames[i] = parameterNames[i];
     }
     for (i = 0; i < defArgc; i++) {
-      DefaultArgument defArg = defArgs[i];
-      Value value;
-      switch (defArg.type) {
-        case DEFARG_NIL:
-          value = valNil();
-          break;
-        case DEFARG_FALSE:
-          value = valBool(UFALSE);
-          break;
-        case DEFARG_TRUE:
-          value = valBool(UTRUE);
-          break;
-        case DEFARG_NUMBER:
-          value = valNumber(defArg.as.number);
-          break;
-        case DEFARG_STRING: {
-          String *string;
-          CHECK2(stringTokenPtrToObjString, &defArg.as.string, &string);
-          value = valString(string);
-          break;
-        }
-        default:
-          panic("Invalid DefaultArgumentType %d", defArg.type);
+      if (!defaultArgumentToValue(parser, defArgs[i], &thunk->defaultArgs[i])) {
+        return STATUS_ERROR;
       }
-      thunk->defaultArgs[i] = value;
     }
   }
   return STATUS_OK;
 }
 
 /* Parses a function starting from the argument list and leaves a closure on the top of the satck */
-static ubool parseFunctionCore(Parser *parser, StringSlice name, ThunkContext *thunkContext) {
+static Status parseFunctionCore(Parser *parser, StringSlice name, ThunkContext *thunkContext) {
   Environment env;
   ObjThunk *thunk;
   i16 i;
@@ -937,7 +941,7 @@ static ubool parseFunctionCore(Parser *parser, StringSlice name, ThunkContext *t
   return STATUS_OK;
 }
 
-static ubool parseDecoratorApplication(Parser *parser) {
+static Status parseDecoratorApplication(Parser *parser) {
   ThunkContext thunkContext;
   ubool methodCall = UFALSE;
   ConstID nameID;
@@ -962,7 +966,7 @@ static ubool parseDecoratorApplication(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseFunctionDeclaration(Parser *parser) {
+static Status parseFunctionDeclaration(Parser *parser) {
   VariableDeclaration variable;
   ThunkContext thunkContext;
 
@@ -980,7 +984,7 @@ static ubool parseFunctionDeclaration(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseVariableDeclaration(Parser *parser) {
+static Status parseVariableDeclaration(Parser *parser) {
   VariableDeclaration variable;
   ubool fin = AT(TOKEN_FINAL);
 
@@ -1014,7 +1018,7 @@ static ParseRule *getRule(TokenType type) {
   return &rules[type];
 }
 
-static ubool parsePrec(Parser *parser, Precedence prec) {
+static Status parsePrec(Parser *parser, Precedence prec) {
   ParseFn prefixRule;
   prefixRule = getRule(parser->current.type)->prefix;
   if (prefixRule == NULL) {
@@ -1036,11 +1040,11 @@ static ubool parsePrec(Parser *parser, Precedence prec) {
   return STATUS_OK;
 }
 
-static ubool parseExpression(Parser *parser) {
+static Status parseExpression(Parser *parser) {
   return parsePrec(parser, PREC_OR);
 }
 
-static ubool parseRawStringLiteral(Parser *parser) {
+static Status parseRawStringLiteral(Parser *parser) {
   EXPECT(TOKEN_RAW_STRING);
   {
     char quote = parser->previous.start[1];
@@ -1058,7 +1062,7 @@ static ubool parseRawStringLiteral(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool stringTokenPtrToObjString(Parser *parser, Token *token, String **out) {
+static Status stringTokenPtrToObjString(Parser *parser, Token *token, String **out) {
   size_t quoteLen;
   char quoteChar = token->start[0];
   char quoteStr[4];
@@ -1087,11 +1091,11 @@ static ubool stringTokenPtrToObjString(Parser *parser, Token *token, String **ou
   return STATUS_OK;
 }
 
-static ubool stringTokenToObjString(Parser *parser, String **out) {
+static Status stringTokenToObjString(Parser *parser, String **out) {
   return stringTokenPtrToObjString(parser, &parser->previous, out);
 }
 
-static ubool parseStringLiteral(Parser *parser) {
+static Status parseStringLiteral(Parser *parser) {
   String *str;
 
   EXPECT(TOKEN_STRING);
@@ -1104,7 +1108,7 @@ static ubool parseStringLiteral(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseNumber(Parser *parser) {
+static Status parseNumber(Parser *parser) {
   double value;
   EXPECT(TOKEN_NUMBER);
   value = strtod(parser->previous.start, NULL);
@@ -1112,7 +1116,7 @@ static ubool parseNumber(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseNumberHex(Parser *parser) {
+static Status parseNumberHex(Parser *parser) {
   double value = 0;
   size_t i, len;
   EXPECT(TOKEN_NUMBER_HEX);
@@ -1135,7 +1139,7 @@ static ubool parseNumberHex(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseNumberBin(Parser *parser) {
+static Status parseNumberBin(Parser *parser) {
   double value = 0;
   size_t i, len;
   EXPECT(TOKEN_NUMBER_BIN);
@@ -1154,7 +1158,7 @@ static ubool parseNumberBin(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool resolveLocalForEnv(
+static Status resolveLocalForEnv(
     Parser *parser, Environment *env, StringSlice name, i16 *out) {
   i16 i;
   for (i = 0; i < env->localsCount; i++) {
@@ -1178,11 +1182,11 @@ static ubool resolveLocalForEnv(
 
 /* Looks for a local variable matching the given name and returns the locals slot index.
  * If not found, out will be set to -1. */
-static ubool resolveLocal(Parser *parser, StringSlice name, i16 *out) {
+static Status resolveLocal(Parser *parser, StringSlice name, i16 *out) {
   return resolveLocalForEnv(parser, ENV, name, out);
 }
 
-static ubool addUpvalue(
+static Status addUpvalue(
     Parser *parser, Environment *env, i16 enclosingIndex, ubool isLocal, i16 *upvalueIndex) {
   i16 i, upvalueCount = env->thunk->upvalueCount;
   for (i = 0; i < upvalueCount; i++) {
@@ -1206,7 +1210,7 @@ static ubool addUpvalue(
   return STATUS_OK;
 }
 
-static ubool resolveUpvalueForEnv(
+static Status resolveUpvalueForEnv(
     Parser *parser, Environment *env, StringSlice name, i16 *outUpvalueIndex) {
   i16 parentLocalIndex, parentUpvalueIndex;
   if (env->enclosing == NULL) {
@@ -1237,12 +1241,12 @@ static ubool resolveUpvalueForEnv(
 
 /* Like resolveLocal, but will instead check the enclosing environment for an
  * upvalue */
-static ubool resolveUpvalue(Parser *parser, StringSlice name, i16 *out) {
+static Status resolveUpvalue(Parser *parser, StringSlice name, i16 *out) {
   return resolveUpvalueForEnv(parser, ENV, name, out);
 }
 
 /* Emits opcode to load the value of a variable on the stack */
-static ubool loadVariableByName(Parser *parser, StringSlice name) {
+static Status loadVariableByName(Parser *parser, StringSlice name) {
   i16 localIndex;
   CHECK2(resolveLocal, name, &localIndex);
   if (localIndex != -1) {
@@ -1262,7 +1266,7 @@ static ubool loadVariableByName(Parser *parser, StringSlice name) {
 }
 
 /* Emits opcode to pop TOS and store it in the variable */
-static ubool storeVariableByName(Parser *parser, StringSlice name) {
+static Status storeVariableByName(Parser *parser, StringSlice name) {
   i16 localIndex;
   CHECK2(resolveLocal, name, &localIndex);
   if (localIndex != -1) {
@@ -1281,7 +1285,7 @@ static ubool storeVariableByName(Parser *parser, StringSlice name) {
   return STATUS_OK;
 }
 
-static ubool parseName(Parser *parser, ubool canAssign) {
+static Status parseName(Parser *parser, ubool canAssign) {
   StringSlice name;
 
   EXPECT(TOKEN_IDENTIFIER);
@@ -1298,17 +1302,17 @@ static ubool parseName(Parser *parser, ubool canAssign) {
   return STATUS_OK;
 }
 
-static ubool parseNameWithAssignment(Parser *parser) {
+static Status parseNameWithAssignment(Parser *parser) {
   return parseName(parser, UTRUE);
 }
 
-static ubool parseThis(Parser *parser) {
+static Status parseThis(Parser *parser) {
   EXPECT(TOKEN_THIS);
   CHECK1(loadVariableByName, newSlice("this", 4));
   return STATUS_OK;
 }
 
-static ubool parseSuper(Parser *parser) {
+static Status parseSuper(Parser *parser) {
   ConstID methodNameID;
   u8 argCount;
   ubool hasKwArgs;
@@ -1331,7 +1335,7 @@ static ubool parseSuper(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseLambda(Parser *parser) {
+static Status parseLambda(Parser *parser) {
   ThunkContext thunkContext;
   initThunkContext(&thunkContext);
   thunkContext.isLambda = UTRUE;
@@ -1340,14 +1344,14 @@ static ubool parseLambda(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseRaise(Parser *parser) {
+static Status parseRaise(Parser *parser) {
   EXPECT(TOKEN_RAISE);
   CHECK(parseExpression);
   EMIT1(OP_RAISE);
   return STATUS_OK;
 }
 
-static ubool parseLiteral(Parser *parser) {
+static Status parseLiteral(Parser *parser) {
   ADVANCE();
   switch (parser->previous.type) {
     case TOKEN_FALSE:
@@ -1365,14 +1369,14 @@ static ubool parseLiteral(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseGrouping(Parser *parser) {
+static Status parseGrouping(Parser *parser) {
   EXPECT(TOKEN_LEFT_PAREN);
   CHECK(parseExpression);
   EXPECT(TOKEN_RIGHT_PAREN);
   return STATUS_OK;
 }
 
-static ubool parseUnary(Parser *parser) {
+static Status parseUnary(Parser *parser) {
   TokenType operatorType = parser->current.type;
   ADVANCE(); /* operator */
 
@@ -1397,7 +1401,7 @@ static ubool parseUnary(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseListDisplayBody(Parser *parser, u8 *out) {
+static Status parseListDisplayBody(Parser *parser, u8 *out) {
   u8 length = 0;
   for (;;) {
     if (AT(TOKEN_RIGHT_BRACKET)) {
@@ -1423,7 +1427,7 @@ static ubool parseListDisplayBody(Parser *parser, u8 *out) {
   return STATUS_OK;
 }
 
-static ubool parseListDisplay(Parser *parser) {
+static Status parseListDisplay(Parser *parser) {
   u8 length;
   EXPECT(TOKEN_LEFT_BRACKET);
   CHECK1(parseListDisplayBody, &length);
@@ -1432,7 +1436,7 @@ static ubool parseListDisplay(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseMapDisplayBody(Parser *parser, u8 *out) {
+static Status parseMapDisplayBody(Parser *parser, u8 *out) {
   u8 length = 0;
 
   for (;;) {
@@ -1469,7 +1473,7 @@ static ubool parseMapDisplayBody(Parser *parser, u8 *out) {
   return STATUS_OK;
 }
 
-static ubool parseMapDisplay(Parser *parser) {
+static Status parseMapDisplay(Parser *parser) {
   u8 length;
   EXPECT(TOKEN_LEFT_BRACE);
   CHECK1(parseMapDisplayBody, &length);
@@ -1478,7 +1482,7 @@ static ubool parseMapDisplay(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseFrozenDisplay(Parser *parser) {
+static Status parseFrozenDisplay(Parser *parser) {
   u8 length;
   EXPECT(TOKEN_FINAL);
   if (AT(TOKEN_LEFT_BRACE)) {
@@ -1506,7 +1510,7 @@ static ubool peekEqual(Parser *parser) {
   return *ptr == '=';
 }
 
-static ubool parseArgumentList(Parser *parser, u8 *out, ubool *hasKwArgs) {
+static Status parseArgumentList(Parser *parser, u8 *out, ubool *hasKwArgs) {
   u8 argCount = 0;
   u8 kwargc = 0;
 
@@ -1553,7 +1557,7 @@ static ubool parseArgumentList(Parser *parser, u8 *out, ubool *hasKwArgs) {
   return STATUS_OK;
 }
 
-static ubool parseFunctionCall(Parser *parser) {
+static Status parseFunctionCall(Parser *parser) {
   u8 argCount;
   ubool hasKwArgs;
   CHECK2(parseArgumentList, &argCount, &hasKwArgs);
@@ -1565,7 +1569,7 @@ static ubool parseFunctionCall(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseSubscript(Parser *parser) {
+static Status parseSubscript(Parser *parser) {
   EXPECT(TOKEN_LEFT_BRACKET);
   if (AT(TOKEN_COLON)) {
     /* Implicit nil when the first argument is missing */
@@ -1603,13 +1607,13 @@ static ubool parseSubscript(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseAs(Parser *parser) {
+static Status parseAs(Parser *parser) {
   /* 'as' expressions have zero runtime effect */
   EXPECT(TOKEN_AS);
   return parseTypeExpression(parser);
 }
 
-static ubool parseDot(Parser *parser) {
+static Status parseDot(Parser *parser) {
   ConstID nameID;
 
   EXPECT(TOKEN_DOT);
@@ -1636,7 +1640,7 @@ static ubool parseDot(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseAnd(Parser *parser) {
+static Status parseAnd(Parser *parser) {
   i32 endJump;
   EXPECT(TOKEN_AND);
   CHECK2(emitJump, OP_JUMP_IF_FALSE, &endJump);
@@ -1646,7 +1650,7 @@ static ubool parseAnd(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseOr(Parser *parser) {
+static Status parseOr(Parser *parser) {
   i32 elseJump;
   i32 endJump;
   EXPECT(TOKEN_OR);
@@ -1659,7 +1663,7 @@ static ubool parseOr(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseBinary(Parser *parser) {
+static Status parseBinary(Parser *parser) {
   TokenType operatorType = parser->current.type;
   ParseRule *rule = getRule(operatorType);
   ubool isNot = UFALSE, notIn = UFALSE;
@@ -1748,7 +1752,7 @@ static ubool parseBinary(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseConditional(Parser *parser) {
+static Status parseConditional(Parser *parser) {
   i32 elseJump, endJump;
 
   /* Condition */
@@ -1772,7 +1776,7 @@ static ubool parseConditional(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseBlock(Parser *parser, ubool newScope) {
+static Status parseBlock(Parser *parser, ubool newScope) {
   ubool atLeastOneDeclaration = UFALSE;
   if (newScope) {
     CHECK(beginScope);
@@ -1809,7 +1813,7 @@ static ubool parseBlock(Parser *parser, ubool newScope) {
   return STATUS_OK;
 }
 
-static ubool parseForInStatement(Parser *parser) {
+static Status parseForInStatement(Parser *parser) {
   i32 jump, loopStart;
   VariableDeclaration itemVariable, iterator;
   StringSlice itemVariableName;
@@ -1845,7 +1849,7 @@ static ubool parseForInStatement(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseIfStatement(Parser *parser) {
+static Status parseIfStatement(Parser *parser) {
   i32 thenJump;
   i32 endJumps[MAX_ELIF_CHAIN_COUNT], endJumpsCount = 0;
 
@@ -1893,7 +1897,7 @@ static ubool parseIfStatement(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseReturnStatement(Parser *parser) {
+static Status parseReturnStatement(Parser *parser) {
   ubool isInitializer = THUNK_CONTEXT->isInitializer;
 
   EXPECT(TOKEN_RETURN);
@@ -1913,7 +1917,7 @@ static ubool parseReturnStatement(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseWhileStatement(Parser *parser) {
+static Status parseWhileStatement(Parser *parser) {
   i32 exitJump, loopStart;
 
   EXPECT(TOKEN_WHILE);
@@ -1936,14 +1940,14 @@ static ubool parseWhileStatement(Parser *parser) {
   return STATUS_OK;
 }
 
-static ubool parseExpressionStatement(Parser *parser) {
+static Status parseExpressionStatement(Parser *parser) {
   CHECK(parseExpression);
   EXPECT_STATEMENT_DELIMITER();
   EMIT1(OP_POP);
   return STATUS_OK;
 }
 
-static ubool parseStatement(Parser *parser) {
+static Status parseStatement(Parser *parser) {
   switch (parser->current.type) {
     case TOKEN_FOR:
       return parseForInStatement(parser);
@@ -1970,7 +1974,7 @@ static ubool parseStatement(Parser *parser) {
   return parseExpressionStatement(parser);
 }
 
-static ubool parseDeclaration(Parser *parser) {
+static Status parseDeclaration(Parser *parser) {
   switch (parser->current.type) {
     case TOKEN_CLASS:
       return parseClassDeclaration(parser);

@@ -163,7 +163,7 @@ void initLexer(Lexer *lexer, const char *source) {
   lexer->fakeFinalNewlineEmitted = UFALSE;
 }
 
-ubool lexerNext(Lexer *lexer, Token *token) {
+Status lexerNext(Lexer *lexer, Token *token) {
   char first, second;
 
   if (lexer->indentTokenQueue > 0) {
