@@ -11,7 +11,6 @@
 #include "mtots_class_buffer.h"
 #include "mtots_class_class.h"
 #include "mtots_class_dict.h"
-#include "mtots_class_frozendict.h"
 #include "mtots_class_frozenlist.h"
 #include "mtots_class_list.h"
 #include "mtots_class_number.h"
@@ -180,7 +179,6 @@ void initVM(void) {
   initListClass();
   initFrozenListClass();
   initDictClass();
-  initFrozenDictClass();
   initNoMethodClass(&vm.functionClass, "Function");
   initClassClass();
 
