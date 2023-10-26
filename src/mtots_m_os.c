@@ -378,6 +378,26 @@ static Status implStat(i16 argc, Value *argv, Value *out) {
 
 static CFunction funcStat = {implStat, "stat", 1, 2};
 
+static Status implSysconf(i16 argc, Value *argv, Value *out) {
+#if MTOTS_IS_POSIX
+  int name = asInt(argv[0]);
+  long result;
+  errno = 0;
+  result = sysconf(name);
+  if (errno != 0) {
+    runtimeError("sysconf(): %s", strerror(errno));
+    return STATUS_ERROR;
+  }
+  *out = valNumber(result);
+  return STATUS_OK;
+#else
+  runtimeError("Unsupported platfom (os.sysconf())");
+  return STATUS_ERROR;
+#endif
+}
+
+static CFunction funcSysconf = {implSysconf, "sysconf", 1};
+
 static Status impl(i16 argc, Value *argv, Value *out) {
   ObjModule *module = asModule(argv[0]);
   CFunction *statResultStaticMethods[] = {
@@ -410,6 +430,7 @@ static Status impl(i16 argc, Value *argv, Value *out) {
       &funcClose,
       &funcFstat,
       &funcStat,
+      &funcSysconf,
       NULL,
   };
 
@@ -455,6 +476,70 @@ static Status impl(i16 argc, Value *argv, Value *out) {
 
     mapSetN(&module->fields, "path", valModule(osPathModule));
   }
+
+#if MTOTS_IS_POSIX
+  {
+    Map map;
+    ubool gcFlag;
+    locallyPauseGC(&gcFlag);
+    initMap(&map);
+    mapSetN(&map, "SC_ARG_MAX", valNumber(_SC_ARG_MAX));
+    mapSetN(&map, "SC_CHILD_MAX", valNumber(_SC_CHILD_MAX));
+    mapSetN(&map, "SC_CLK_TCK", valNumber(_SC_CLK_TCK));
+    mapSetN(&map, "SC_NGROUPS_MAX", valNumber(_SC_NGROUPS_MAX));
+    mapSetN(&map, "SC_OPEN_MAX", valNumber(_SC_OPEN_MAX));
+    mapSetN(&map, "SC_JOB_CONTROL", valNumber(_SC_JOB_CONTROL));
+    mapSetN(&map, "SC_SAVED_IDS", valNumber(_SC_SAVED_IDS));
+    mapSetN(&map, "SC_VERSION", valNumber(_SC_VERSION));
+    mapSetN(&map, "SC_BC_BASE_MAX", valNumber(_SC_BC_BASE_MAX));
+    mapSetN(&map, "SC_BC_DIM_MAX", valNumber(_SC_BC_DIM_MAX));
+    mapSetN(&map, "SC_BC_SCALE_MAX", valNumber(_SC_BC_SCALE_MAX));
+    mapSetN(&map, "SC_BC_STRING_MAX", valNumber(_SC_BC_STRING_MAX));
+    mapSetN(&map, "SC_COLL_WEIGHTS_MAX", valNumber(_SC_COLL_WEIGHTS_MAX));
+    mapSetN(&map, "SC_EXPR_NEST_MAX", valNumber(_SC_EXPR_NEST_MAX));
+    mapSetN(&map, "SC_LINE_MAX", valNumber(_SC_LINE_MAX));
+    mapSetN(&map, "SC_RE_DUP_MAX", valNumber(_SC_RE_DUP_MAX));
+    mapSetN(&map, "SC_2_VERSION", valNumber(_SC_2_VERSION));
+    mapSetN(&map, "SC_2_C_BIND", valNumber(_SC_2_C_BIND));
+    mapSetN(&map, "SC_2_C_DEV", valNumber(_SC_2_C_DEV));
+    mapSetN(&map, "SC_2_CHAR_TERM", valNumber(_SC_2_CHAR_TERM));
+    mapSetN(&map, "SC_2_FORT_DEV", valNumber(_SC_2_FORT_DEV));
+    mapSetN(&map, "SC_2_FORT_RUN", valNumber(_SC_2_FORT_RUN));
+    mapSetN(&map, "SC_2_LOCALEDEF", valNumber(_SC_2_LOCALEDEF));
+    mapSetN(&map, "SC_2_SW_DEV", valNumber(_SC_2_SW_DEV));
+    mapSetN(&map, "SC_2_UPE", valNumber(_SC_2_UPE));
+    mapSetN(&map, "SC_STREAM_MAX", valNumber(_SC_STREAM_MAX));
+    mapSetN(&map, "SC_TZNAME_MAX", valNumber(_SC_TZNAME_MAX));
+    mapSetN(&map, "SC_ASYNCHRONOUS_IO", valNumber(_SC_ASYNCHRONOUS_IO));
+    mapSetN(&map, "SC_PAGESIZE", valNumber(_SC_PAGESIZE));
+    mapSetN(&map, "SC_MEMLOCK", valNumber(_SC_MEMLOCK));
+    mapSetN(&map, "SC_MEMLOCK_RANGE", valNumber(_SC_MEMLOCK_RANGE));
+    mapSetN(&map, "SC_MEMORY_PROTECTION", valNumber(_SC_MEMORY_PROTECTION));
+    mapSetN(&map, "SC_MESSAGE_PASSING", valNumber(_SC_MESSAGE_PASSING));
+    mapSetN(&map, "SC_PRIORITIZED_IO", valNumber(_SC_PRIORITIZED_IO));
+    mapSetN(&map, "SC_PRIORITY_SCHEDULING", valNumber(_SC_PRIORITY_SCHEDULING));
+    mapSetN(&map, "SC_REALTIME_SIGNALS", valNumber(_SC_REALTIME_SIGNALS));
+    mapSetN(&map, "SC_SEMAPHORES", valNumber(_SC_SEMAPHORES));
+    mapSetN(&map, "SC_FSYNC", valNumber(_SC_FSYNC));
+    mapSetN(&map, "SC_SHARED_MEMORY_OBJECTS", valNumber(_SC_SHARED_MEMORY_OBJECTS));
+    mapSetN(&map, "SC_SYNCHRONIZED_IO", valNumber(_SC_SYNCHRONIZED_IO));
+    mapSetN(&map, "SC_TIMERS", valNumber(_SC_TIMERS));
+    mapSetN(&map, "SC_AIO_LISTIO_MAX", valNumber(_SC_AIO_LISTIO_MAX));
+    mapSetN(&map, "SC_AIO_MAX", valNumber(_SC_AIO_MAX));
+    mapSetN(&map, "SC_AIO_PRIO_DELTA_MAX", valNumber(_SC_AIO_PRIO_DELTA_MAX));
+    mapSetN(&map, "SC_DELAYTIMER_MAX", valNumber(_SC_DELAYTIMER_MAX));
+    mapSetN(&map, "SC_MQ_OPEN_MAX", valNumber(_SC_MQ_OPEN_MAX));
+    mapSetN(&map, "SC_MAPPED_FILES", valNumber(_SC_MAPPED_FILES));
+    mapSetN(&map, "SC_RTSIG_MAX", valNumber(_SC_RTSIG_MAX));
+    mapSetN(&map, "SC_SEM_NSEMS_MAX", valNumber(_SC_SEM_NSEMS_MAX));
+    mapSetN(&map, "SC_SEM_VALUE_MAX", valNumber(_SC_SEM_VALUE_MAX));
+    mapSetN(&map, "SC_SIGQUEUE_MAX", valNumber(_SC_SIGQUEUE_MAX));
+    mapSetN(&map, "SC_TIMER_MAX", valNumber(_SC_TIMER_MAX));
+    mapSetN(&module->fields, "sysconf_names", valFrozenDict(newFrozenDict(&map)));
+    freeMap(&map);
+    locallyUnpauseGC(gcFlag);
+  }
+#endif
 
   return STATUS_OK;
 }
