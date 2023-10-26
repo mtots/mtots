@@ -231,6 +231,8 @@ static Status popenWait(
     size_t size = 0, capacity = 0;
     char *buffer = NULL;
 
+    /* TODO: read from stdout and stderr in parallel with poll to ensure
+     * we do not get into deadlock */
     if (proc->pipeStdout) {
       do {
         capacity = capacity == 0 ? 512 : capacity * 2;
