@@ -1,0 +1,14 @@
+"""
+Make a sample HTTPS request with subprocess and curl
+"""
+import subprocess
+import fs
+
+
+print("STARTING SUBPROCESS")
+# with yahoo, this call will hang... TODO: find out why
+# final out = subprocess.run(['curl', 'https://www.yahoo.com'], captureOutput = true).stdout
+final out = subprocess.run(['curl', 'https://www.google.com'], captureOutput = true).stdout
+print("SUBPROCESS FINISHED")
+# print("response from www.google.com = %s" % [out])
+fs.writeString('sample.html', out)
