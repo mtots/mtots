@@ -686,19 +686,17 @@ static Status run(void) {
 #define READ_CONSTANT() \
   (frame->closure->thunk->chunk.constants.values[READ_SHORT()])
 #define READ_STRING() (READ_CONSTANT().as.string)
-#define RETURN_RUNTIME_ERROR() \
-  { return STATUS_ERROR; }
 #define INVOKE(methodName, argCount)       \
   do {                                     \
     if (!invoke(methodName, argCount)) {   \
-      RETURN_RUNTIME_ERROR();              \
+      return STATUS_ERROR;                 \
     }                                      \
     frame = &vm.frames[vm.frameCount - 1]; \
   } while (0)
 #define INVOKE_KW(methodName, argCount)            \
   do {                                             \
     if (!invokeWithKwArgs(methodName, argCount)) { \
-      RETURN_RUNTIME_ERROR();                      \
+      return STATUS_ERROR;                         \
     }                                              \
     frame = &vm.frames[vm.frameCount - 1];         \
   } while (0)
@@ -706,7 +704,7 @@ static Status run(void) {
   do {                                     \
     i16 ac = argCount;                     \
     if (!setupOrCallValue(peek(ac), ac)) { \
-      RETURN_RUNTIME_ERROR();              \
+      return STATUS_ERROR;                 \
     }                                      \
     frame = &vm.frames[vm.frameCount - 1]; \
   } while (0)
@@ -714,7 +712,7 @@ static Status run(void) {
   do {                                     \
     i16 ac = argCount;                     \
     if (!callFunctionWithKwArgs(ac)) {     \
-      RETURN_RUNTIME_ERROR();              \
+      return STATUS_ERROR;                 \
     }                                      \
     frame = &vm.frames[vm.frameCount - 1]; \
   } while (0)
@@ -735,7 +733,7 @@ static Status run(void) {
       runtimeError(                                            \
           "Operands to %s must be numbers but got %s and %s",  \
           opname, getKindName(peek(1)), getKindName(peek(0))); \
-      RETURN_RUNTIME_ERROR();                                  \
+      return STATUS_ERROR;                                     \
     }                                                          \
     {                                                          \
       u32 b = asU32Bits(pop());                                \
@@ -748,7 +746,7 @@ static Status run(void) {
     u8 instruction;
     if (vm.trap) {
       if (!checkAndHandleSignals()) {
-        RETURN_RUNTIME_ERROR();
+        return STATUS_ERROR;
       }
     }
     switch (instruction = READ_BYTE()) {
@@ -784,7 +782,7 @@ static Status run(void) {
         Value value;
         if (!mapGetStr(&frame->closure->module->fields, name, &value)) {
           runtimeError("Undefined variable '%s'", name->chars);
-          RETURN_RUNTIME_ERROR();
+          return STATUS_ERROR;
         }
         push(value);
         break;
@@ -800,7 +798,7 @@ static Status run(void) {
         if (mapSetStr(&frame->closure->module->fields, name, peek(0))) {
           mapDeleteStr(&frame->closure->module->fields, name);
           runtimeError("Undefined variable '%s'", name->chars);
-          RETURN_RUNTIME_ERROR();
+          return STATUS_ERROR;
         }
         break;
       }
@@ -830,7 +828,7 @@ static Status run(void) {
           runtimeError(
               "Field '%s' not found in %s",
               name->chars, instance->klass->name->chars);
-          RETURN_RUNTIME_ERROR();
+          return STATUS_ERROR;
         }
 
         if (isDict(peek(0))) {
@@ -842,7 +840,7 @@ static Status run(void) {
             break;
           }
           runtimeError("Field '%s' not found in Dict", name->chars);
-          RETURN_RUNTIME_ERROR();
+          return STATUS_ERROR;
         }
 
         if (isFrozenDict(peek(0))) {
@@ -854,7 +852,7 @@ static Status run(void) {
             break;
           }
           runtimeError("Field '%s' not found in FrozenDict", name->chars);
-          RETURN_RUNTIME_ERROR();
+          return STATUS_ERROR;
         }
 
         {
@@ -863,24 +861,24 @@ static Status run(void) {
           name = READ_STRING();
           if (mapGet(&cls->fieldGetters, valString(name), &getter)) {
             if (!callFunctionOrMethod(getter, 0, UFALSE)) {
-              RETURN_RUNTIME_ERROR();
+              return STATUS_ERROR;
             }
             break;
           } else if (cls->getattr) {
             push(valString(name));
             if (!callCFunction(cls->getattr, 1)) {
-              RETURN_RUNTIME_ERROR();
+              return STATUS_ERROR;
             }
             break;
           } else if (cls->fieldGetters.size > 0) {
             fieldNotFoundError(peek(0), name->chars);
-            RETURN_RUNTIME_ERROR();
+            return STATUS_ERROR;
           }
         }
 
         runtimeError(
             "%s values do not have have fields", getKindName(peek(0)));
-        RETURN_RUNTIME_ERROR();
+        return STATUS_ERROR;
       }
       case OP_SET_FIELD: {
         Value value;
@@ -910,7 +908,7 @@ static Status run(void) {
           Value setter;
           if (mapGet(&cls->fieldSetters, valString(name), &setter)) {
             if (!callFunctionOrMethod(setter, 1, UFALSE)) {
-              RETURN_RUNTIME_ERROR();
+              return STATUS_ERROR;
             }
             break;
           } else if (cls->setattr) {
@@ -918,18 +916,18 @@ static Status run(void) {
             push(valString(name));
             push(value);
             if (!callCFunction(cls->setattr, 2)) {
-              RETURN_RUNTIME_ERROR();
+              return STATUS_ERROR;
             }
             break;
           } else if (cls->fieldSetters.size > 0) {
             fieldNotFoundError(peek(1), name->chars);
-            RETURN_RUNTIME_ERROR();
+            return STATUS_ERROR;
           }
         }
 
         runtimeError(
             "%s values do not have have fields", getKindName(peek(1)));
-        RETURN_RUNTIME_ERROR();
+        return STATUS_ERROR;
       }
       case OP_IS: {
         Value b = pop();
@@ -1006,7 +1004,7 @@ static Status run(void) {
         u32 x;
         if (!isNumber(peek(0))) {
           runtimeError("Operand must be a number");
-          RETURN_RUNTIME_ERROR();
+          return STATUS_ERROR;
         }
         x = asU32Bits(pop());
         push(valNumber(~x));
@@ -1059,7 +1057,7 @@ static Status run(void) {
           panic("Only strings can be raised right now");
         }
         runtimeError("%s", peek(0).as.string->chars);
-        RETURN_RUNTIME_ERROR();
+        return STATUS_ERROR;
       }
       case OP_GET_ITER: {
         Value iterable = peek(0);
@@ -1110,7 +1108,7 @@ static Status run(void) {
         i16 argCount = READ_BYTE();
         ObjClass *superclass = AS_CLASS_UNSAFE(pop());
         if (!invokeFromClass(superclass, method, argCount)) {
-          RETURN_RUNTIME_ERROR();
+          return STATUS_ERROR;
         }
         frame = &vm.frames[vm.frameCount - 1];
         break;
@@ -1173,7 +1171,7 @@ static Status run(void) {
       case OP_IMPORT: {
         String *name = READ_STRING();
         if (!importModule(name)) {
-          RETURN_RUNTIME_ERROR();
+          return STATUS_ERROR;
         }
         break;
       }
@@ -1234,7 +1232,7 @@ static Status run(void) {
         superclass = peek(1);
         if (!isClass(superclass)) {
           runtimeError("Superclass must be a class");
-          RETURN_RUNTIME_ERROR();
+          return STATUS_ERROR;
         }
 
         subclass = AS_CLASS_UNSAFE(peek(0));
@@ -1256,7 +1254,6 @@ static Status run(void) {
 #undef CALL_KW
 #undef INVOKE
 #undef INVOKE_KW
-#undef RETURN_RUNTIME_ERROR
 #undef READ_STRING
 #undef READ_CONSTANT
 #undef READ_SHORT
