@@ -347,6 +347,20 @@ Status sortListWithKeyFunc(ObjList *list, Value keyfunc) {
   return STATUS_OK;
 }
 
+static Status listBodyRepr(StringBuilder *out, Value *buffer, size_t length) {
+  size_t i;
+  for (i = 0; i < length; i++) {
+    if (i > 0) {
+      sbputchar(out, ',');
+      sbputchar(out, ' ');
+    }
+    if (!valueRepr(out, buffer[i])) {
+      return STATUS_ERROR;
+    }
+  }
+  return STATUS_OK;
+}
+
 static Status mapRepr(StringBuilder *out, Map *map) {
   MapIterator mi;
   MapEntry *entry;
@@ -477,32 +491,18 @@ Status valueRepr(StringBuilder *out, Value value) {
         }
         case OBJ_LIST: {
           ObjList *list = AS_LIST_UNSAFE(value);
-          size_t i, len = list->length;
           sbputchar(out, '[');
-          for (i = 0; i < len; i++) {
-            if (i > 0) {
-              sbputchar(out, ',');
-              sbputchar(out, ' ');
-            }
-            if (!valueRepr(out, list->buffer[i])) {
-              return STATUS_ERROR;
-            }
+          if (!listBodyRepr(out, list->buffer, list->length)) {
+            return STATUS_ERROR;
           }
           sbputchar(out, ']');
           return STATUS_OK;
         }
         case OBJ_FROZEN_LIST: {
           ObjFrozenList *frozenList = AS_FROZEN_LIST_UNSAFE(value);
-          size_t i, len = frozenList->length;
           sbputchar(out, '(');
-          for (i = 0; i < len; i++) {
-            if (i > 0) {
-              sbputchar(out, ',');
-              sbputchar(out, ' ');
-            }
-            if (!valueRepr(out, frozenList->buffer[i])) {
-              return STATUS_ERROR;
-            }
+          if (!listBodyRepr(out, frozenList->buffer, frozenList->length)) {
+            return STATUS_ERROR;
           }
           sbputchar(out, ')');
           return STATUS_OK;

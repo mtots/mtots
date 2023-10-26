@@ -153,7 +153,14 @@ static Status implListAdd(i16 argc, Value *argv, Value *out) {
   ObjList *result = newList(lhs.length + rhs.length);
   memcpy(result->buffer, lhs.buffer, sizeof(Value) * lhs.length);
   memcpy(result->buffer + lhs.length, rhs.buffer, sizeof(Value) * rhs.length);
-  *out = valList(result);
+  if (isFrozenList(argv[-1])) {
+    ubool gcFlag;
+    locallyPauseGC(&gcFlag);
+    *out = valFrozenList(copyFrozenList(result->buffer, result->length));
+    locallyUnpauseGC(gcFlag);
+  } else {
+    *out = valList(result);
+  }
   return STATUS_OK;
 }
 

@@ -1,0 +1,7 @@
+
+
+final a = final[1, 2, 3]
+final b = final[2, 3, 4]
+final c = a + b
+
+print("c = %s" % [c])
