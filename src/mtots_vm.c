@@ -11,7 +11,6 @@
 #include "mtots_class_buffer.h"
 #include "mtots_class_class.h"
 #include "mtots_class_dict.h"
-#include "mtots_class_frozenlist.h"
 #include "mtots_class_list.h"
 #include "mtots_class_number.h"
 #include "mtots_class_pointer.h"
@@ -177,7 +176,6 @@ void initVM(void) {
   initPointerClass();
   initBufferClass();
   initListClass();
-  initFrozenListClass();
   initDictClass();
   initNoMethodClass(&vm.functionClass, "Function");
   initClassClass();
@@ -1443,4 +1441,12 @@ Status checkAndHandleSignals(void) {
   }
   pop(); /* return value */
   return STATUS_OK;
+}
+
+void locallyPauseGC(ubool *flag) {
+  LOCAL_GC_PAUSE(*flag);
+}
+
+void locallyUnpauseGC(ubool flag) {
+  LOCAL_GC_UNPAUSE(flag);
 }

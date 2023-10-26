@@ -56,4 +56,7 @@ void registerMtotsAtExitCallback(Value callback);
 void push(Value value);
 Value pop(void);
 
+void locallyPauseGC(ubool *flag);
+void locallyUnpauseGC(ubool flag);
+
 #endif /*mtots_h*/
