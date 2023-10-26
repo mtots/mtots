@@ -24,7 +24,7 @@
 typedef struct Popen {
 #if MTOTS_IS_POSIX
   pid_t pid;
-  FILE *stdinFile, *stdoutFile, *stderrFile;
+  int stdinFile, stdoutFile, stderrFile;
   int stdinfd[2];
   int stdoutfd[2];
   int stderrfd[2];
@@ -176,7 +176,7 @@ static Status popenStart(Popen *proc, const char **args) {
       close(proc->stdinfd[0]);
 
       /* Store the stdin write end */
-      proc->stdinFile = fdopen(proc->stdinfd[1], "wb");
+      proc->stdinFile = proc->stdinfd[1];
     }
 
     if (proc->pipeStdout) {
@@ -184,7 +184,7 @@ static Status popenStart(Popen *proc, const char **args) {
       close(proc->stdoutfd[1]);
 
       /* Store the stdout read end */
-      proc->stdoutFile = fdopen(proc->stdoutfd[0], "rb");
+      proc->stdoutFile = proc->stdoutfd[0];
     }
 
     if (proc->pipeStderr) {
@@ -192,7 +192,7 @@ static Status popenStart(Popen *proc, const char **args) {
       close(proc->stderrfd[1]);
 
       /* Store the stderr read end */
-      proc->stderrFile = fdopen(proc->stderrfd[0], "rb");
+      proc->stderrFile = proc->stderrfd[0];
     }
   }
 
@@ -209,12 +209,10 @@ static Status popenWait(
 
   if (stdinString) {
     if (proc->pipeStdin) {
-      if (fwrite(
-              stdinString->chars,
-              1,
-              stdinString->byteLength,
-              proc->stdinFile) < stdinString->byteLength) {
-        runtimeError("fwrite(): %s", strerror(errno));
+      if (write(proc->stdinFile,
+                stdinString->chars,
+                stdinString->byteLength) < stdinString->byteLength) {
+        runtimeError("write(): %s", strerror(errno));
         return STATUS_ERROR;
       }
     } else {
@@ -225,7 +223,49 @@ static Status popenWait(
   }
 
   if (proc->pipeStdin) {
-    fclose(proc->stdinFile);
+    close(proc->stdinFile);
+  }
+
+  if (proc->pipeStdout || proc->pipeStderr) {
+    ssize_t readSize;
+    size_t size = 0, capacity = 0;
+    char *buffer = NULL;
+
+    if (proc->pipeStdout) {
+      do {
+        capacity = capacity == 0 ? 512 : capacity * 2;
+        buffer = (char *)realloc(buffer, capacity);
+        size += readSize = read(proc->stdoutFile, buffer + size, capacity - size);
+      } while (size == capacity && readSize > 0);
+
+      close(proc->stdoutFile);
+
+      *stdoutString = internString(buffer, size);
+    } else {
+      *stdoutString = vm.emptyString;
+    }
+
+    if (proc->pipeStderr) {
+      size = 0;
+      do {
+        capacity = capacity == 0 ? 512
+                   : size == 0   ? capacity
+                                 : capacity * 2;
+        buffer = (char *)realloc(buffer, capacity);
+        size += read(proc->stderrFile, buffer + size, capacity - size);
+      } while (size == capacity && readSize > 0);
+
+      close(proc->stderrFile);
+
+      *stderrString = internString(buffer, size);
+    } else {
+      *stderrString = vm.emptyString;
+    }
+
+    free(buffer);
+  } else {
+    *stdoutString = vm.emptyString;
+    *stderrString = vm.emptyString;
   }
 
   do {
@@ -264,47 +304,6 @@ static Status popenWait(
         "(status = %d, errno = %d)",
         proc->status, (int)errno);
     return STATUS_ERROR;
-  }
-
-  if (proc->pipeStdout || proc->pipeStderr) {
-    size_t size = 0, capacity = 0;
-    char *buffer = NULL;
-
-    if (proc->pipeStdout) {
-      do {
-        capacity = capacity == 0 ? 512 : capacity * 2;
-        buffer = (char *)realloc(buffer, capacity);
-        size += fread(buffer + size, 1, capacity - size, proc->stdoutFile);
-      } while (size == capacity && !feof(proc->stdoutFile) && !ferror(proc->stdoutFile));
-
-      fclose(proc->stdoutFile);
-
-      *stdoutString = internString(buffer, size);
-    } else {
-      *stdoutString = vm.emptyString;
-    }
-
-    if (proc->pipeStderr) {
-      size = 0;
-      do {
-        capacity = capacity == 0 ? 512
-                   : size == 0   ? capacity
-                                 : capacity * 2;
-        buffer = (char *)realloc(buffer, capacity);
-        size += fread(buffer + size, 1, capacity - size, proc->stderrFile);
-      } while (size == capacity && !feof(proc->stderrFile) && !ferror(proc->stderrFile));
-
-      fclose(proc->stderrFile);
-
-      *stderrString = internString(buffer, size);
-    } else {
-      *stderrString = vm.emptyString;
-    }
-
-    free(buffer);
-  } else {
-    *stdoutString = vm.emptyString;
-    *stderrString = vm.emptyString;
   }
 
   if (proc->check && proc->status != 0) {
