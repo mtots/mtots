@@ -1,6 +1,6 @@
 #include "mtots_m_data.h"
 
-#include "mtots_vm.h"
+#include "mtots.h"
 
 static void blackenDataSource(ObjNative *n) {
   ObjDataSource *dataSource = (ObjDataSource *)n;
@@ -269,14 +269,14 @@ static Status implDataSourceToBuffer(i16 argc, Value *args, Value *out) {
   ObjBuffer *buf = newBuffer();
   ubool gcPause;
 
-  LOCAL_GC_PAUSE(gcPause);
+  locallyPauseGC(&gcPause);
 
   if (!dataSourceReadIntoBuffer(ds, &buf->handle)) {
-    LOCAL_GC_UNPAUSE(gcPause);
+    locallyUnpauseGC(gcPause);
     return STATUS_ERROR;
   }
 
-  LOCAL_GC_UNPAUSE(gcPause);
+  locallyUnpauseGC(gcPause);
 
   *out = valBuffer(buf);
   return STATUS_OK;
