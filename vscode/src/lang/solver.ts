@@ -343,6 +343,8 @@ function _solve(
               err(te.location, `Optional expects 1 arg but got ${typeArgs.length}`);
           }
           return ir.ANY_TYPE;
+        case 'Union':
+          return ir.UnionType.of(typeArgs);
         case 'Iteration':
           switch (typeArgs.length) {
             case 0:

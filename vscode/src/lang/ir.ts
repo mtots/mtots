@@ -40,8 +40,8 @@ export class Module {
     for (const sh of this.sighelps) {
       const shRange = sh.location.range;
       if (shRange.start.le(position) && position.le(shRange.end) &&
-          (bestSoFar == null ||
-            bestSoFar.location.range.start.lt(shRange.start))) {
+        (bestSoFar == null ||
+          bestSoFar.location.range.start.lt(shRange.start))) {
         bestSoFar = sh;
       }
     }
@@ -81,9 +81,9 @@ export abstract class Type {
       return this.itemType;
     }
     if (this instanceof FunctionType &&
-        this.typeParameters.length === 0 &&
-        this.parameters.length === 0 &&
-        this.returnType instanceof IterationType) {
+      this.typeParameters.length === 0 &&
+      this.parameters.length === 0 &&
+      this.returnType instanceof IterationType) {
       return this.returnType.itemType;
     }
     const getter = this.getMethod('__iter__')?.type.asFunctionType();
@@ -95,8 +95,8 @@ export abstract class Type {
       return null;
     }
     if (iterator.typeParameters.length === 0 &&
-        iterator.parameters.length === 0 &&
-        iterator.returnType instanceof IterationType) {
+      iterator.parameters.length === 0 &&
+      iterator.returnType instanceof IterationType) {
       return iterator.returnType.itemType;
     }
     return null;
@@ -175,8 +175,14 @@ export abstract class Type {
     if (other === ANY_TYPE || this === NEVER_TYPE || this.equals(other)) {
       return true;
     }
+    if (other instanceof UnionType) {
+      return other.types.some(entry => this.isAssignableTo(entry));
+    }
+    if (this instanceof UnionType) {
+      return this.types.every(entry => entry.isAssignableTo(other));
+    }
     if (other instanceof OptionalType && (
-        NIL_TYPE.equals(this) || this.isAssignableTo(other.itemType))) {
+      NIL_TYPE.equals(this) || this.isAssignableTo(other.itemType))) {
       return true;
     }
     if (other instanceof IterationType) {
@@ -189,8 +195,8 @@ export abstract class Type {
       }
     }
     if (other instanceof IterationType && (
-        STOP_ITERATION_TYPE.equals(this) ||
-        this.isAssignableTo(other.itemType))) {
+      STOP_ITERATION_TYPE.equals(this) ||
+      this.isAssignableTo(other.itemType))) {
       return true;
     }
     if (other === CLASS_TYPE && this instanceof ClassType) {
@@ -420,8 +426,8 @@ export class BoundInstanceType extends Type {
   readonly boundMethods = new Map<string, Variable<FunctionType>>();
   readonly boundFields = new Map<string, Variable>();
   constructor(
-      instanceType: InstanceType,
-      typeArgs: Type[]) {
+    instanceType: InstanceType,
+    typeArgs: Type[]) {
     super();
     this.instanceType = instanceType;
     this.typeArgs = typeArgs;
@@ -519,12 +525,12 @@ export class InstanceType extends Type {
   readonly methods = new Map<string, Variable<FunctionType>>();
   readonly builtinType: PrimitiveType | null;
   constructor(
-      _isTrait: boolean,
-      identifier: ast.Identifier,
-      typeParameters: Variable<TypeVariableTypeType>[],
-      bases: BaseInstanceType[],
-      documentation: string | null,
-      builtinType: PrimitiveType | null) {
+    _isTrait: boolean,
+    identifier: ast.Identifier,
+    typeParameters: Variable<TypeVariableTypeType>[],
+    bases: BaseInstanceType[],
+    documentation: string | null,
+    builtinType: PrimitiveType | null) {
     super();
     this._isTrait = _isTrait;
     this.identifier = identifier;
@@ -866,7 +872,7 @@ export class TupleType extends Type {
   }
 }
 
-export class DictType<K extends Type=Type, V extends Type=Type> extends Type {
+export class DictType<K extends Type = Type, V extends Type = Type> extends Type {
   static of<K extends Type, V extends Type>(k: K, v: V): DictType<K, V> {
     return new DictType(k, v);
   }
@@ -907,7 +913,7 @@ export class DictType<K extends Type=Type, V extends Type=Type> extends Type {
   }
 }
 
-export class FrozenDictType<K extends Type=Type, V extends Type=Type> extends Type {
+export class FrozenDictType<K extends Type = Type, V extends Type = Type> extends Type {
   static of<K extends Type, V extends Type>(k: K, v: V): FrozenDictType<K, V> {
     return new FrozenDictType(k, v);
   }
@@ -944,7 +950,7 @@ export class FrozenDictType<K extends Type=Type, V extends Type=Type> extends Ty
   }
 }
 
-export class FrozenDictLiteralType<K extends Type=Type, V extends Type=Type> extends Type {
+export class FrozenDictLiteralType<K extends Type = Type, V extends Type = Type> extends Type {
   readonly type: FrozenDictType<K, V>;
   readonly map = new Map<string, Variable<V>>();
   constructor(type: FrozenDictType<K, V>, variables: Variable<V>[]) {
@@ -991,15 +997,15 @@ export class Parameter {
   readonly type: Type;
   readonly defaultValue: ConstValue | undefined;
   constructor(
-      identifier: ast.Identifier,
-      type: Type,
-      defaultValue: ConstValue | undefined) {
+    identifier: ast.Identifier,
+    type: Type,
+    defaultValue: ConstValue | undefined) {
     this.identifier = identifier;
     this.type = type;
     this.defaultValue = defaultValue;
   }
   toString() {
-    return `${this.identifier.name}: ${this.type}` + (
+    return `${this.identifier.name} ${this.type}` + (
       this.defaultValue === undefined ?
         '' :
         ('=' + stringifyConstValue(this.defaultValue)));
@@ -1012,10 +1018,10 @@ export class FunctionType extends Type {
   readonly returnType: Type;
   readonly documentation: string | null;
   constructor(
-      typeParameters: Variable<TypeVariableTypeType>[],
-      parameters: Parameter[],
-      returnType: Type,
-      documentation: string | null) {
+    typeParameters: Variable<TypeVariableTypeType>[],
+    parameters: Parameter[],
+    returnType: Type,
+    documentation: string | null) {
     super();
     this.typeParameters = typeParameters;
     this.parameters = parameters;
@@ -1027,7 +1033,7 @@ export class FunctionType extends Type {
       return false;
     }
     if (this.typeParameters.length !== other.typeParameters.length ||
-        this.parameters.length !== other.parameters.length) {
+      this.parameters.length !== other.parameters.length) {
       return false;
     }
     for (let i = 0; i < this.typeParameters.length; i++) {
@@ -1051,7 +1057,7 @@ export class FunctionType extends Type {
     const typeOnlyParams = this.parameters.map(p => p.type).join(',');
     return this.typeParameters.length ?
       `def[${tparams}](${namedParams})${this.returnType}` :
-        this.parameters.length ?
+      this.parameters.length ?
         `Function[${typeOnlyParams},${this.returnType}]` :
         `Function[${this.returnType}]`;
   }
@@ -1060,13 +1066,91 @@ export class FunctionType extends Type {
   }
 }
 
+export class UnionType extends Type {
+  static of(types: Type[]): Type {
+    const pairs: [Type, string][] = [];
+    const seen = new Set<string>();
+    let isOptional = false;
+
+    types = [...types]; // make a copy so that we avoid modifying the original
+    for (let entryType = types.pop(); entryType; entryType = types.pop()) {
+      const entry = entryType;
+      if (entry instanceof AnyType) {
+        // If there is an Any type, none of the other types matter
+        return ANY_TYPE;
+      }
+      if (entry instanceof NeverType) {
+        // Never types don't matter
+        continue;
+      }
+      if (entry instanceof UnionType) {
+        // Unpack the union type
+        types.push(...entry.types);
+        continue;
+      }
+      if (entry instanceof OptionalType) {
+        // if an optional is there anywhere, the whole thing
+        // becomes optional.
+        isOptional = true;
+        types.push(entry.itemType);
+        continue;
+      }
+      if (pairs.some(pair => entry.isAssignableTo(pair[0]))) {
+        // if any of the previous types is broader than the
+        // current type, we can ignore the current type
+        continue;
+      }
+
+      for (let i = 0; i < pairs.length; i++) {
+        // If any of the already added types are a subtype of entry,
+        // we should remove them from the array.
+        if (pairs[i][0].isAssignableTo(entry)) {
+          pairs[i] = [NEVER_TYPE, '' + NEVER_TYPE];
+        }
+      }
+
+      // In all other cases, add the type if it's new
+      const typeName = entry.toString();
+      if (!seen.has(typeName)) {
+        seen.add(typeName);
+        pairs.push([entry, typeName]);
+      }
+    }
+    const processedTypes =
+      pairs
+        .filter(pair => pair[0] !== NEVER_TYPE)
+        .sort((a, b) => a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0)
+        .map(pair => pair[0]);
+    if (processedTypes.length === 0) {
+      return NEVER_TYPE;
+    }
+    if (processedTypes.length === 1) {
+      return isOptional ? processedTypes[0].getOptionalType() : processedTypes[0];
+    }
+    const unionType = new UnionType(processedTypes);
+    return isOptional ? unionType.getOptionalType() : unionType;
+  }
+  readonly types: Type[]
+  private constructor(types: Type[]) {
+    super();
+    this.types = types;
+  }
+  _equals(other: Type): boolean {
+    return other instanceof UnionType &&
+      this.types.every((entry, i) => entry.equals(other.types[i]));
+  }
+  toString(): string {
+    return `Union[${this.types.join(', ')}]`
+  }
+}
+
 export interface TypeBinder {
   bind(type: Type): Type;
 };
 
 export function newTypeBinder(
-    typeMap: Map<TypeVariableInstanceType, Type>,
-    bindSet: Set<TypeVariableInstanceType>) {
+  typeMap: Map<TypeVariableInstanceType, Type>,
+  bindSet: Set<TypeVariableInstanceType>) {
   function bind(type: Type): Type {
     if (type instanceof ListType) {
       return bind(type.itemType).getListType();
@@ -1143,7 +1227,7 @@ export function formatVariable(variable: Variable): string {
 type ParamSpec = [string, Type] | [string, Type, ConstValue]
 
 function mkmap(methods: Variable<FunctionType>[]):
-    Map<string, Variable<FunctionType>> {
+  Map<string, Variable<FunctionType>> {
   const map = new Map<string, Variable<FunctionType>>();
   for (const method of methods) {
     map.set(method.identifier.name, method);
@@ -1152,10 +1236,10 @@ function mkmap(methods: Variable<FunctionType>[]):
 }
 
 function mkmethod(
-    name: string,
-    paramSpecs: ParamSpec[],
-    returnType: Type,
-    documentation: string | null = null): Variable<FunctionType> {
+  name: string,
+  paramSpecs: ParamSpec[],
+  returnType: Type,
+  documentation: string | null = null): Variable<FunctionType> {
   const identifier = new ast.Identifier(BUILTIN_LOCATION, name);
   const functype = new FunctionType(
     [],
