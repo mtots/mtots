@@ -244,7 +244,7 @@ static Status popenWait(
 
       *stdoutString = internString(buffer, size);
     } else {
-      *stdoutString = vm.emptyString;
+      *stdoutString = vm.cs->empty;
     }
 
     if (proc->pipeStderr) {
@@ -261,13 +261,13 @@ static Status popenWait(
 
       *stderrString = internString(buffer, size);
     } else {
-      *stderrString = vm.emptyString;
+      *stderrString = vm.cs->empty;
     }
 
     free(buffer);
   } else {
-    *stdoutString = vm.emptyString;
-    *stderrString = vm.emptyString;
+    *stdoutString = vm.cs->empty;
+    *stderrString = vm.cs->empty;
   }
 
   do {
@@ -558,8 +558,8 @@ static Status impl(i16 argc, Value *argv, Value *out) {
       popenStaticMethods);
 
   completedProcess = NEW_NATIVE(ObjCompletedProcess, &descriptorCompletedProcess);
-  completedProcess->stderrString = vm.emptyString;
-  completedProcess->stdoutString = vm.emptyString;
+  completedProcess->stderrString = vm.cs->empty;
+  completedProcess->stdoutString = vm.cs->empty;
   moduleRetain(module, valObjExplicit((Obj *)(completedProcess)));
 
   moduleRetain(module, valString(stringReturncode = internCString("returncode")));

@@ -19,20 +19,6 @@ static ubool specialStringsInitialized;
 static String *oneCharAsciiStrings[128];
 static String *emptyString;
 
-/* If called, the empty string and one character ASCII strings will
- * be cached. These strings will never be freed, and when calling
- * internString, these will be retrieved very quickly. */
-void initSpecialStrings(void) {
-  if (!specialStringsInitialized) {
-    char ch;
-    for (ch = 0; ((unsigned char)ch) < 128; ch++) {
-      oneCharAsciiStrings[(size_t)ch] = internString(&ch, 1);
-    }
-    emptyString = internString(NULL, 0);
-    specialStringsInitialized = UTRUE;
-  }
-}
-
 static u32 hashString(const char *key, size_t length) {
   /* FNV-1a as presented in the Crafting Interpreters book */
   size_t i;
@@ -243,4 +229,62 @@ void freeUnmarkedStrings(void) {
     }
   }
   free(oldEntries);
+}
+
+CommonStrings *getCommonStrings(void) {
+  static CommonStrings *cs;
+  if (!cs) {
+    cs = (CommonStrings *)malloc(sizeof(CommonStrings));
+    cs->empty = internForeverCString("");
+    cs->init = internForeverCString("__init__");
+    cs->iter = internForeverCString("__iter__");
+    cs->len = internForeverCString("__len__");
+    cs->repr = internForeverCString("__repr__");
+    cs->add = internForeverCString("__add__");
+    cs->sub = internForeverCString("__sub__");
+    cs->mul = internForeverCString("__mul__");
+    cs->div = internForeverCString("__div__");
+    cs->floordiv = internForeverCString("__floordiv__");
+    cs->mod = internForeverCString("__mod__");
+    cs->pow = internForeverCString("__pow__");
+    cs->neg = internForeverCString("__neg__");
+    cs->contains = internForeverCString("__contains__");
+    cs->nil = internForeverCString("nil");
+    cs->true = internForeverCString("true");
+    cs->false = internForeverCString("false");
+    cs->getitem = internForeverCString("__getitem__");
+    cs->setitem = internForeverCString("__setitem__");
+    cs->slice = internForeverCString("__slice__");
+    cs->getattr = internForeverCString("__getattr__");
+    cs->setattr = internForeverCString("__setattr__");
+    cs->call = internForeverCString("__call__");
+    cs->red = internForeverCString("red");
+    cs->green = internForeverCString("green");
+    cs->blue = internForeverCString("blue");
+    cs->alpha = internForeverCString("alpha");
+    cs->r = internForeverCString("r");
+    cs->g = internForeverCString("g");
+    cs->b = internForeverCString("b");
+    cs->a = internForeverCString("a");
+    cs->w = internForeverCString("w");
+    cs->h = internForeverCString("h");
+    cs->x = internForeverCString("x");
+    cs->y = internForeverCString("y");
+    cs->z = internForeverCString("z");
+    cs->type = internForeverCString("type");
+    cs->width = internForeverCString("width");
+    cs->height = internForeverCString("height");
+    cs->minX = internForeverCString("minX");
+    cs->minY = internForeverCString("minY");
+    cs->maxX = internForeverCString("maxX");
+    cs->maxY = internForeverCString("maxY");
+    {
+      unsigned char ch;
+      oneCharAsciiStrings[0] = cs->empty;
+      for (ch = 1; ch < 128; ch++) {
+        oneCharAsciiStrings[ch] = internString((char *)&ch, 1);
+      }
+    }
+  }
+  return cs;
 }

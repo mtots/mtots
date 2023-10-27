@@ -1581,7 +1581,7 @@ static Status parseSubscript(Parser *parser) {
   if (AT(TOKEN_COLON)) {
     ConstID nameID;
     ADVANCE();
-    ADD_CONST_STRING(vm.sliceString, &nameID);
+    ADD_CONST_STRING(vm.cs->slice, &nameID);
     if (AT(TOKEN_RIGHT_BRACKET)) {
       EMIT1(OP_NIL); /* Implicit nil second argument, if missing */
     } else {
@@ -1594,12 +1594,12 @@ static Status parseSubscript(Parser *parser) {
     if (AT(TOKEN_EQUAL)) {
       ConstID nameID;
       ADVANCE();
-      ADD_CONST_STRING(vm.setitemString, &nameID);
+      ADD_CONST_STRING(vm.cs->setitem, &nameID);
       CHECK(parseExpression);
       EMIT1C1(OP_INVOKE, nameID, 2);
     } else {
       ConstID nameID;
-      ADD_CONST_STRING(vm.getitemString, &nameID);
+      ADD_CONST_STRING(vm.cs->getitem, &nameID);
       EMIT1C1(OP_INVOKE, nameID, 1);
     }
   }

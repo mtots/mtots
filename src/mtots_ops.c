@@ -454,11 +454,11 @@ Status valueRepr(StringBuilder *out, Value value) {
         case OBJ_INSTANCE:
           if (AS_INSTANCE_UNSAFE(value)->klass->isModuleClass) {
             sbprintf(out, "<module %s>", AS_INSTANCE_UNSAFE(value)->klass->name->chars);
-          } else if (classHasMethod(getClassOfValue(value), vm.reprString)) {
+          } else if (classHasMethod(getClassOfValue(value), vm.cs->repr)) {
             Value resultValue;
             String *resultString;
             push(value);
-            if (!callMethod(vm.reprString, 0)) {
+            if (!callMethod(vm.cs->repr, 0)) {
               return STATUS_ERROR;
             }
             resultValue = pop();
@@ -517,11 +517,11 @@ Status valueRepr(StringBuilder *out, Value value) {
           return mapRepr(out, &dict->map);
         }
         case OBJ_NATIVE:
-          if (classHasMethod(getClassOfValue(value), vm.reprString)) {
+          if (classHasMethod(getClassOfValue(value), vm.cs->repr)) {
             Value resultValue;
             String *resultString;
             push(value);
-            if (!callMethod(vm.reprString, 0)) {
+            if (!callMethod(vm.cs->repr, 0)) {
               return STATUS_ERROR;
             }
             resultValue = pop();
@@ -625,7 +625,7 @@ Status valueLen(Value recv, size_t *out) {
       default: {
         Value value;
         push(recv);
-        if (!callMethod(vm.lenString, 0)) {
+        if (!callMethod(vm.cs->len, 0)) {
           return STATUS_ERROR;
         }
         value = pop();
@@ -668,7 +668,7 @@ Status valueIter(Value iterable, Value *out) {
     return STATUS_OK;
   }
   push(iterable);
-  if (!callMethod(vm.iterString, 0)) {
+  if (!callMethod(vm.cs->iter, 0)) {
     return STATUS_ERROR;
   }
   *out = pop();
@@ -717,7 +717,7 @@ Status valueGetItem(Value owner, Value key, Value *out) {
   }
   push(owner);
   push(key);
-  if (!callMethod(vm.getitemString, 1)) {
+  if (!callMethod(vm.cs->getitem, 1)) {
     return STATUS_ERROR;
   }
   *out = pop();
@@ -734,7 +734,7 @@ Status valueSetItem(Value owner, Value key, Value value) {
   push(owner);
   push(key);
   push(value);
-  if (!callMethod(vm.setitemString, 2)) {
+  if (!callMethod(vm.cs->setitem, 2)) {
     return STATUS_ERROR;
   }
   pop(); /* method call result */

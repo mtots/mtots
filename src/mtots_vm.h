@@ -45,49 +45,7 @@ typedef struct VM {
    * call to `window.mainLoop()` */
   CFunction *runOnFinish;
 
-  String *emptyString;
-  String *initString;
-  String *iterString;
-  String *lenString;
-  String *reprString;
-  String *addString;
-  String *subString;
-  String *mulString;
-  String *divString;
-  String *floordivString;
-  String *modString;
-  String *powString;
-  String *negString;
-  String *containsString;
-  String *nilString;
-  String *trueString;
-  String *falseString;
-  String *getitemString;
-  String *setitemString;
-  String *sliceString;
-  String *getattrString;
-  String *setattrString;
-  String *callString;
-  String *redString;
-  String *greenString;
-  String *blueString;
-  String *alphaString;
-  String *rString;
-  String *gString;
-  String *bString;
-  String *aString;
-  String *wString;
-  String *hString;
-  String *xString;
-  String *yString;
-  String *zString;
-  String *typeString;
-  String *widthString;
-  String *heightString;
-  String *minXString;
-  String *minYString;
-  String *maxXString;
-  String *maxYString;
+  CommonStrings *cs;
 
   ObjClass *sentinelClass;
 

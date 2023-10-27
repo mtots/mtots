@@ -235,11 +235,11 @@ static void addMethodsToNativeOrBuiltinClass(
       } else {
         String *name = internCString((*function)->name);
         push(valString(name));
-        if (name == vm.callString) {
+        if (name == vm.cs->call) {
           cls->call = *function;
-        } else if (name == vm.getattrString) {
+        } else if (name == vm.cs->getattr) {
           cls->getattr = *function;
-        } else if (name == vm.setattrString) {
+        } else if (name == vm.cs->setattr) {
           cls->setattr = *function;
         } else {
           mapSetStr(&cls->methods, name, valCFunction(*function));
@@ -254,7 +254,7 @@ static void addMethodsToNativeOrBuiltinClass(
       String *name = internCString((*function)->name);
       push(valString(name));
       mapSetStr(&cls->staticMethods, name, valCFunction(*function));
-      if (name == vm.callString) {
+      if (name == vm.cs->call) {
         cls->instantiate = *function;
       }
       pop(); /* name */

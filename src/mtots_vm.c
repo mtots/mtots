@@ -86,7 +86,6 @@ static void initNoMethodClass(ObjClass **clsptr, const char *name) {
 void initVM(void) {
   setErrorContextProvider(printStackToStringBuffer);
   checkAssumptions();
-  initSpecialStrings();
   resetStack();
   initMemory(&vm.memory);
   vm.runOnFinish = NULL;
@@ -122,49 +121,7 @@ void initVM(void) {
   initMap(&vm.frozenLists);
   initMap(&vm.frozenDicts);
 
-  vm.emptyString = internForeverCString("");
-  vm.initString = internForeverCString("__init__");
-  vm.iterString = internForeverCString("__iter__");
-  vm.lenString = internForeverCString("__len__");
-  vm.reprString = internForeverCString("__repr__");
-  vm.addString = internForeverCString("__add__");
-  vm.subString = internForeverCString("__sub__");
-  vm.mulString = internForeverCString("__mul__");
-  vm.divString = internForeverCString("__div__");
-  vm.floordivString = internForeverCString("__floordiv__");
-  vm.modString = internForeverCString("__mod__");
-  vm.powString = internForeverCString("__pow__");
-  vm.negString = internForeverCString("__neg__");
-  vm.containsString = internForeverCString("__contains__");
-  vm.nilString = internForeverCString("nil");
-  vm.trueString = internForeverCString("true");
-  vm.falseString = internForeverCString("false");
-  vm.getitemString = internForeverCString("__getitem__");
-  vm.setitemString = internForeverCString("__setitem__");
-  vm.sliceString = internForeverCString("__slice__");
-  vm.getattrString = internForeverCString("__getattr__");
-  vm.setattrString = internForeverCString("__setattr__");
-  vm.callString = internForeverCString("__call__");
-  vm.redString = internForeverCString("red");
-  vm.greenString = internForeverCString("green");
-  vm.blueString = internForeverCString("blue");
-  vm.alphaString = internForeverCString("alpha");
-  vm.rString = internForeverCString("r");
-  vm.gString = internForeverCString("g");
-  vm.bString = internForeverCString("b");
-  vm.aString = internForeverCString("a");
-  vm.wString = internForeverCString("w");
-  vm.hString = internForeverCString("h");
-  vm.xString = internForeverCString("x");
-  vm.yString = internForeverCString("y");
-  vm.zString = internForeverCString("z");
-  vm.typeString = internForeverCString("type");
-  vm.widthString = internForeverCString("width");
-  vm.heightString = internForeverCString("height");
-  vm.minXString = internForeverCString("minX");
-  vm.minYString = internForeverCString("minY");
-  vm.maxXString = internForeverCString("maxX");
-  vm.maxYString = internForeverCString("maxY");
+  vm.cs = getCommonStrings();
 
   initNoMethodClass(&vm.sentinelClass, "Sentinel");
 
@@ -388,7 +345,7 @@ static Status setupCallClassWithKwArgs(ObjClass *klass, i16 argc) {
   } else {
     /* normal classes */
     vm.stackTop[-argc - 2] = valInstance(newInstance(klass));
-    if (mapGetStr(&klass->methods, vm.initString, &initializer)) {
+    if (mapGetStr(&klass->methods, vm.cs->init, &initializer)) {
       if (!setupClosureWithKwArgs(AS_CLOSURE_UNSAFE(initializer), argc)) {
         return STATUS_ERROR;
       }
@@ -959,27 +916,27 @@ static Status run(void) {
           double a = pop().as.number;
           push(valNumber(a + b));
         } else {
-          INVOKE(vm.addString, 1);
+          INVOKE(vm.cs->add, 1);
         }
         break;
       }
       case OP_SUBTRACT:
-        BINARY_OP(a - b, vm.subString);
+        BINARY_OP(a - b, vm.cs->sub);
         break;
       case OP_MULTIPLY:
-        BINARY_OP(a * b, vm.mulString);
+        BINARY_OP(a * b, vm.cs->mul);
         break;
       case OP_DIVIDE:
-        BINARY_OP(a / b, vm.divString);
+        BINARY_OP(a / b, vm.cs->div);
         break;
       case OP_FLOOR_DIVIDE:
-        BINARY_OP(floor(a / b), vm.floordivString);
+        BINARY_OP(floor(a / b), vm.cs->floordiv);
         break;
       case OP_MODULO:
-        BINARY_OP(mfmod(a, b), vm.modString);
+        BINARY_OP(mfmod(a, b), vm.cs->mod);
         break;
       case OP_POWER:
-        BINARY_OP(pow(a, b), vm.powString);
+        BINARY_OP(pow(a, b), vm.cs->pow);
         break;
       case OP_SHIFT_LEFT:
         BINARY_BITWISE_OP("lshift", <<);
@@ -1015,7 +972,7 @@ static Status run(void) {
           Value a = pop();
           push(b);
           push(a);
-          INVOKE(vm.containsString, 1);
+          INVOKE(vm.cs->contains, 1);
         }
         break;
       }
@@ -1026,7 +983,7 @@ static Status run(void) {
         if (isNumber(peek(0))) {
           push(valNumber(-pop().as.number));
         } else {
-          INVOKE(vm.negString, 0);
+          INVOKE(vm.cs->neg, 0);
         }
         break;
       case OP_JUMP: {
@@ -1061,7 +1018,7 @@ static Status run(void) {
           if (isRange(iterable)) {
             vm.stackTop[-1].type = VAL_RANGE_ITERATOR;
           } else {
-            INVOKE(vm.iterString, 0);
+            INVOKE(vm.cs->iter, 0);
           }
         }
         break;
@@ -1295,7 +1252,7 @@ static Status callClass(ObjClass *klass, i16 argCount, ubool consummate) {
   } else {
     /* normal classes */
     vm.stackTop[-argCount - 1] = valInstance(newInstance(klass));
-    if (mapGetStr(&klass->methods, vm.initString, &initializer)) {
+    if (mapGetStr(&klass->methods, vm.cs->init, &initializer)) {
       if (!setupCallClosure(AS_CLOSURE_UNSAFE(initializer), argCount)) {
         return STATUS_ERROR;
       }

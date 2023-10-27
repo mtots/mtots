@@ -17,11 +17,11 @@ static CFunction funcVectorStaticCall = {implVectorStaticCall, "__call__", 0, 3}
 static Status implVectorGetattr(i16 argc, Value *argv, Value *out) {
   Vector vector = asVector(argv[-1]);
   String *name = asString(argv[0]);
-  if (name == vm.xString) {
+  if (name == vm.cs->x) {
     *out = valNumber(vector.x);
-  } else if (name == vm.yString) {
+  } else if (name == vm.cs->y) {
     *out = valNumber(vector.y);
-  } else if (name == vm.zString) {
+  } else if (name == vm.cs->z) {
     *out = valNumber(vector.z);
   } else {
     fieldNotFoundError(argv[-1], name->chars);
