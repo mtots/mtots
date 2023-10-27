@@ -65,7 +65,6 @@ export abstract class Type {
   readonly __tagType = 0;
   _listType: ListType<this> | null = null;
   _frozenListType: FrozenListType<this> | null = null;
-  _optionalType: OptionalType<this> | null = null;
   _iterationType: IterationType<this> | null = null;
   _iterableType: IterableType<this> | null = null;
   abstract _equals(other: Type): boolean;
@@ -149,14 +148,8 @@ export abstract class Type {
     this._iterableType = iterableType;
     return iterableType;
   }
-  getOptionalType(): OptionalType {
-    const type = this._optionalType;
-    if (type) {
-      return type;
-    }
-    const optionalType = new OptionalType(this);
-    this._optionalType = optionalType;
-    return optionalType;
+  getOptionalType(): Type {
+    return UnionType.of([this, NIL_TYPE]);
   }
   /** If an instance of this type is callable, return its function type.
    * If this type is not callable, returns null.
@@ -180,10 +173,6 @@ export abstract class Type {
     }
     if (this instanceof UnionType) {
       return this.types.every(entry => entry.isAssignableTo(other));
-    }
-    if (other instanceof OptionalType && (
-      NIL_TYPE.equals(this) || this.isAssignableTo(other.itemType))) {
-      return true;
     }
     if (other instanceof IterationType) {
       if (STOP_ITERATION_TYPE.equals(this)) {
@@ -712,26 +701,6 @@ export class IterableType<T extends Type = Type> extends Type {
   }
 }
 
-export class OptionalType<T extends Type = Type> extends Type {
-  readonly itemType: T;
-  constructor(itemType: T) {
-    super();
-    this.itemType = itemType;
-  }
-  _equals(other: Type): boolean {
-    return other instanceof ListType && this.itemType.equals(other.itemType);
-  }
-  toString(): string {
-    return `${this.itemType}?`;
-  }
-  assumeTrue(): Type {
-    return this.itemType;
-  }
-  getOptionalType(): this {
-    return this;
-  }
-}
-
 export class ListType<T extends Type = Type> extends Type {
   readonly itemType: T;
   readonly methods: Map<string, Variable<FunctionType>>;
@@ -1088,13 +1057,6 @@ export class UnionType extends Type {
         types.push(...entry.types);
         continue;
       }
-      if (entry instanceof OptionalType) {
-        // if an optional is there anywhere, the whole thing
-        // becomes optional.
-        isOptional = true;
-        types.push(entry.itemType);
-        continue;
-      }
       if (pairs.some(pair => entry.isAssignableTo(pair[0]))) {
         // if any of the previous types is broader than the
         // current type, we can ignore the current type
@@ -1140,7 +1102,12 @@ export class UnionType extends Type {
       this.types.every((entry, i) => entry.equals(other.types[i]));
   }
   toString(): string {
-    return `Union[${this.types.join(', ')}]`
+    const noNilTypes = this.types.filter(t => t !== NIL_TYPE);
+    let ret = noNilTypes.join('|');
+    if (noNilTypes.length < this.types.length) {
+      ret += '?';
+    }
+    return ret;
   }
 }
 
@@ -1156,8 +1123,8 @@ export function newTypeBinder(
       return bind(type.itemType).getListType();
     } else if (type instanceof FrozenListType) {
       return bind(type.itemType).getFrozenListType();
-    } else if (type instanceof OptionalType) {
-      return bind(type.itemType).getOptionalType();
+    } else if (type instanceof UnionType) {
+      return UnionType.of(type.types.map(bind));
     } else if (type instanceof DictType) {
       return DictType.of(bind(type.keyType), bind(type.valueType));
     } else if (type instanceof FrozenDictType) {

@@ -1,7 +1,7 @@
 
 
-print(sorted([1, 2, 3, 5, 4, 3, 2, 1]))
-print(sorted(["a", "aaa", "bbbb", "cab"]))
+print(sorted([1, 2, 3, 5, 4, 3, 2, 1]) as List[Int])
+print(sorted(["a", "aaa", "bbbb", "cab"]) as List[String])
 
 def getKey2(x Number) Number:
   return -x
@@ -9,9 +9,9 @@ def getKey2(x Number) Number:
 def getKey3(x Number) String:
   return str(x)
 
-final sortedList1 = sorted([1, 2, 3, 5, 4, 3, 2, 1, 11, 155, 99])
-final sortedList2 = sorted(sortedList1, getKey2)
-final sortedList3 = sorted(sortedList1, getKey3)
+final sortedList1 = sorted([1, 2, 3, 5, 4, 3, 2, 1, 11, 155, 99]) as List[Int]
+final sortedList2 = sorted(sortedList1, getKey2) as List[Int]
+final sortedList3 = sorted(sortedList1, getKey3) as List[Int]
 
 print("sortedList1 %r" % [sortedList1])
 print("sortedList2 %r" % [sortedList2])

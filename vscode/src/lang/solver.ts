@@ -10,16 +10,16 @@ import { MLocation } from "./location";
 
 
 export function solve(
-    moduleName: string,
-    file: ast.File,
-    moduleMap: Map<string, ir.Module>): ir.Module {
+  moduleName: string,
+  file: ast.File,
+  moduleMap: Map<string, ir.Module>): ir.Module {
   return swrap('solve', moduleName, () => _solve(moduleName, file, moduleMap));
 }
 
 function _solve(
-    moduleName: string,
-    file: ast.File,
-    moduleMap: Map<string, ir.Module>): ir.Module {
+  moduleName: string,
+  file: ast.File,
+  moduleMap: Map<string, ir.Module>): ir.Module {
   const artificialBuiltinsScope = new Scope(null);
   const moduleScope = new Scope(artificialBuiltinsScope);
   const module = new ir.Module(moduleName, file, moduleScope);
@@ -39,8 +39,8 @@ function _solve(
     }
   }
   function declareVariable(
-      variable: Variable,
-      explicitRefName: string | null = null) {
+    variable: Variable,
+    explicitRefName: string | null = null) {
     const refName = explicitRefName || variable.identifier.name;
     const prev = scope.map.get(refName);
     if (prev) {
@@ -75,9 +75,9 @@ function _solve(
         declareVariable(tp);
       }
       const parameters = func.parameters.map(p => new ir.Parameter(
-          p.identifier,
-          solveType(p.typeExpression),
-          p.defaultValue ? requireConstExpr(p.defaultValue) : undefined));
+        p.identifier,
+        solveType(p.typeExpression),
+        p.defaultValue ? requireConstExpr(p.defaultValue) : undefined));
       const returnType = solveType(func.returnType);
       return new ir.FunctionType(
         typeParameters, parameters, returnType, func.documentation?.value || null);
@@ -120,7 +120,7 @@ function _solve(
               if (baseType === ir.ANY_TYPE) {
                 // everything already inherits from ANY... sort of
               } else if (baseType instanceof ir.InstanceType ||
-                  baseType instanceof ir.BoundInstanceType) {
+                baseType instanceof ir.BoundInstanceType) {
                 bb.push(baseType);
               } else {
                 err(bexpr.location, `${baseType} is not inheritable`);
@@ -270,9 +270,9 @@ function _solve(
       return ir.ANY_TYPE;
     }
     function resolveValueType(
-        identifier: ast.Identifier,
-        valueType: ir.Type,
-        args: ir.Type[]): ir.Type {
+      identifier: ast.Identifier,
+      valueType: ir.Type,
+      args: ir.Type[]): ir.Type {
       if (valueType instanceof ir.ClassType) {
         declareUsage(identifier, valueType.instanceType.asVariable);
         if (args.length > 0) {
@@ -529,13 +529,13 @@ function _solve(
   }
 
   function applyFunction(
-      location: MLocation,
-      usage: Usage | null,
-      funcType: ir.FunctionType,
-      hintReturnType: ir.Type | null,
-      argexprs: ast.Expression[],
-      kwargExprs: [ast.Identifier, ast.Expression][],
-      argLocations: MLocation[] | null): ir.Type {
+    location: MLocation,
+    usage: Usage | null,
+    funcType: ir.FunctionType,
+    hintReturnType: ir.Type | null,
+    argexprs: ast.Expression[],
+    kwargExprs: [ast.Identifier, ast.Expression][],
+    argLocations: MLocation[] | null): ir.Type {
     const tparams = funcType.typeParameters;
     const params = funcType.parameters;
     const rtype = funcType.returnType;
@@ -630,54 +630,84 @@ function _solve(
     const bindSet = new Set(funcType.typeParameters.map(tp => tp.type.instanceType));
     const binder = ir.newTypeBinder(typeMap, bindSet);
     function infer(param: ir.Type, type: ir.Type): void {
+      console.log(`STARTING infer(${param}, ${type})`);
       if (param.equals(type)) {
         return;
       }
+      console.log(`  CONTINUING infer(${param}, ${type})`);
       if (param instanceof ir.ListType) {
+        console.log(`  PARAM ListType infer(${param}, ${type})`);
         if (type instanceof ir.ListType) {
           infer(param.itemType, type.itemType);
         }
       } else if (param instanceof ir.FrozenListType) {
+        console.log(`  CONTINUING infer FrozenListType`);
         if (type instanceof ir.FrozenListType) {
           infer(param.itemType, type.itemType);
         }
-      } else if (param instanceof ir.OptionalType) {
-        if (type instanceof ir.OptionalType) {
-          infer(param.itemType, type.itemType);
+      } else if (param instanceof ir.UnionType) {
+        console.log(`  CONTINUING infer UnionType`);
+        // TODO: come up with a better way to do inference on Union types.
+        // For now, this should more or less work the same way as Optional
+        // used to.
+        if (type instanceof ir.UnionType) {
+          const paramTypes = [...param.types];
+          const argTypes = [...type.types];
+          for (let i = 0; i < paramTypes.length; i++) {
+            for (let j = 0; j < argTypes.length; j++) {
+              if (paramTypes[i].equals(argTypes[j])) {
+                paramTypes[i] = argTypes[j] = ir.NEVER_TYPE;
+              }
+            }
+          }
+          const ptypes = paramTypes.filter(t => t !== ir.NEVER_TYPE);
+          const atypes = argTypes.filter(t => t !== ir.NEVER_TYPE);
+          const len = Math.min(ptypes.length, atypes.length);
+          for (let i = 0; i < len; i++) {
+            infer(ptypes[i], atypes[i]);
+          }
         }
       } else if (param instanceof ir.DictType) {
+        console.log(`  CONTINUING infer DictType`);
         if (type instanceof ir.DictType) {
           infer(param.keyType, type.keyType);
           infer(param.valueType, type.valueType);
         }
       } else if (param instanceof ir.FrozenDictType) {
+        console.log(`  CONTINUING infer FrozenDictType`);
         if (type instanceof ir.FrozenDictType) {
           infer(param.keyType, type.keyType);
           infer(param.valueType, type.valueType);
         }
       } else if (param instanceof ir.IterableType) {
+        console.log(`  CONTINUING infer IterableType`);
         if (type instanceof ir.IterableType) {
           infer(param.itemType, type.itemType);
         }
       } else if (param instanceof ir.IterationType) {
+        console.log(`  CONTINUING infer IterationType`);
         if (type instanceof ir.IterationType) {
           infer(param.itemType, type.itemType);
         }
       } else if (param instanceof ir.FunctionType) {
+        console.log(`  CONTINUING infer FunctionType`);
+        console.log(`  CONTINUING param is function type ${param}`);
         if (type instanceof ir.FunctionType) {
           if (type.typeParameters.length > 0) {
             // If there are type parameters on the argument function,
-            // don't many any inferences.
+            // don't make any inferences.
             return;
           }
           const argc = Math.min(
             param.parameters.length, type.parameters.length);
           for (let i = 0; i < argc; i++) {
+            console.log(`INFERRING ${i}: ${param.parameters[i].type} <- ${type.parameters[i].type}`);
             infer(param.parameters[i].type, type.parameters[i].type);
           }
           infer(param.returnType, type.returnType);
         }
       } else if (param instanceof ir.TypeVariableInstanceType) {
+        console.log(`  CONTINUING infer TypeVariableInstanceType`);
         if (bindSet.has(param) && !typeMap.has(param)) {
           typeMap.set(param, type.toNonLiteralType());
         }
@@ -717,7 +747,7 @@ function _solve(
   }
 
   function solveHomogeneousSeqs(
-      exprs: ast.Expression[], hint: ir.Type | null = null): [ir.Type, ir.Type[]] {
+    exprs: ast.Expression[], hint: ir.Type | null = null): [ir.Type, ir.Type[]] {
     let i = 0;
     const itemTypes: ir.Type[] = [];
     const bound = (() => {
@@ -751,7 +781,7 @@ function _solve(
   }
 
   function solveHomogeneousSeq(
-      exprs: ast.Expression[], hint: ir.Type | null = null): ir.Type {
+    exprs: ast.Expression[], hint: ir.Type | null = null): ir.Type {
     return solveHomogeneousSeqs(exprs, hint)[0];
   }
 
@@ -1123,7 +1153,7 @@ function _solve(
 }
 
 function mergeBuiltinScope(
-    moduleName: string, moduleScope: Scope, moduleMap: Map<string, ir.Module>) {
+  moduleName: string, moduleScope: Scope, moduleMap: Map<string, ir.Module>) {
   const builtinScope = moduleMap.get('__builtin__')?.scope;
   if (builtinScope) {
     for (const [k, v] of builtinScope.map) {
