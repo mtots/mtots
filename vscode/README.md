@@ -22,6 +22,7 @@ Future work:
 ### 0.0.48
 
 Support for `Union` types.
+Misc type inference improvements.
 
 ### 0.0.47
 

@@ -1149,7 +1149,7 @@ export const ITERABLE_TYPE_VAR = new Variable(
  * UNTYPED_LIST is like ANY_TYPE.getListType(), except, sometimes
  * the solver will treat UNTYPED_LIST a bit differently
  */
-export const UNTYPED_LIST = new ListType(ANY_TYPE);
+export const UNTYPED_LIST = ANY_TYPE.getListType();
 
 const ANY_PROPERTY = new Variable(
   false, new ast.Identifier(BUILTIN_LOCATION, '(any)'), ANY_TYPE, null);
