@@ -14,10 +14,7 @@ typedef struct StringSet {
 } StringSet;
 
 static StringSet allStrings;
-
-static ubool specialStringsInitialized;
-static String *oneCharAsciiStrings[128];
-static String *emptyString;
+static CommonStrings *commonStrings;
 
 static u32 hashString(const char *key, size_t length) {
   /* FNV-1a as presented in the Crafting Interpreters book */
@@ -68,11 +65,11 @@ static void computeUnicodeMetadata(String *string) {
 }
 
 String *internString(const char *chars, size_t byteLength) {
-  if (specialStringsInitialized) {
+  if (commonStrings) {
     if (byteLength == 0) {
-      return emptyString;
+      return commonStrings->empty;
     } else if (byteLength == 1 && ((unsigned char)chars[0]) < 128) {
-      return oneCharAsciiStrings[(size_t)chars[0]];
+      return commonStrings->oneCharAsciiStrings[(unsigned char)chars[0]];
     }
   }
   if (allStrings.occupied + 1 > allStrings.capacity * STRING_SET_MAX_LOAD) {
@@ -196,12 +193,6 @@ void freeUnmarkedStrings(void) {
   size_t i, cap = allStrings.capacity;
   String **oldEntries = allStrings.strings;
   String **newEntries = (String **)malloc(sizeof(String *) * cap);
-  if (specialStringsInitialized) {
-    emptyString->isMarked = UTRUE;
-    for (i = 0; i < 128; i++) {
-      oneCharAsciiStrings[i]->isMarked = UTRUE;
-    }
-  }
   for (i = 0; i < cap; i++) {
     newEntries[i] = NULL;
   }
@@ -232,9 +223,8 @@ void freeUnmarkedStrings(void) {
 }
 
 CommonStrings *getCommonStrings(void) {
-  static CommonStrings *cs;
-  if (!cs) {
-    cs = (CommonStrings *)malloc(sizeof(CommonStrings));
+  if (!commonStrings) {
+    CommonStrings *cs = (CommonStrings *)malloc(sizeof(CommonStrings));
     cs->empty = internForeverCString("");
     cs->init = internForeverCString("__init__");
     cs->iter = internForeverCString("__iter__");
@@ -280,11 +270,12 @@ CommonStrings *getCommonStrings(void) {
     cs->maxY = internForeverCString("maxY");
     {
       unsigned char ch;
-      oneCharAsciiStrings[0] = cs->empty;
+      cs->oneCharAsciiStrings[0] = cs->empty;
       for (ch = 1; ch < 128; ch++) {
-        oneCharAsciiStrings[ch] = internString((char *)&ch, 1);
+        cs->oneCharAsciiStrings[ch] = internForeverString((char *)&ch, 1);
       }
     }
+    commonStrings = cs;
   }
-  return cs;
+  return commonStrings;
 }
