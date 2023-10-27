@@ -227,44 +227,26 @@ static Status popenWait(
   }
 
   if (proc->pipeStdout || proc->pipeStderr) {
-    ssize_t readSize;
-    size_t size = 0, capacity = 0;
-    char *buffer = NULL;
+    int fds[2];
+    Buffer buffers[2];
 
-    /* TODO: read from stdout and stderr in parallel with poll to ensure
-     * we do not get into deadlock */
-    if (proc->pipeStdout) {
-      do {
-        capacity = capacity == 0 ? 512 : capacity * 2;
-        buffer = (char *)realloc(buffer, capacity);
-        size += readSize = read(proc->stdoutFile, buffer + size, capacity - size);
-      } while (size == capacity && readSize > 0);
+    fds[0] = proc->pipeStdout ? proc->stdoutFile : -1;
+    fds[1] = proc->pipeStderr ? proc->stderrFile : -1;
 
-      close(proc->stdoutFile);
+    initBuffer(&buffers[0]);
+    initBuffer(&buffers[1]);
 
-      *stdoutString = internString(buffer, size);
-    } else {
-      *stdoutString = vm.cs->empty;
+    if (!readFromMultipleFDs(fds, buffers, 2)) {
+      freeBuffer(&buffers[0]);
+      freeBuffer(&buffers[1]);
+      return STATUS_ERROR;
     }
 
-    if (proc->pipeStderr) {
-      size = 0;
-      do {
-        capacity = capacity == 0 ? 512
-                   : size == 0   ? capacity
-                                 : capacity * 2;
-        buffer = (char *)realloc(buffer, capacity);
-        size += read(proc->stderrFile, buffer + size, capacity - size);
-      } while (size == capacity && readSize > 0);
+    *stdoutString = bufferToString(&buffers[0]);
+    *stderrString = bufferToString(&buffers[1]);
 
-      close(proc->stderrFile);
-
-      *stderrString = internString(buffer, size);
-    } else {
-      *stderrString = vm.cs->empty;
-    }
-
-    free(buffer);
+    freeBuffer(&buffers[0]);
+    freeBuffer(&buffers[1]);
   } else {
     *stdoutString = vm.cs->empty;
     *stderrString = vm.cs->empty;

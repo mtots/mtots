@@ -119,6 +119,10 @@ void bufferClear(Buffer *buf) {
   buf->length = 0;
 }
 
+String *bufferToString(Buffer *buf) {
+  return internString((char *)buf->data, buf->length);
+}
+
 void freeBuffer(Buffer *buf) {
   if (buf->ownsData) {
     free(buf->data);

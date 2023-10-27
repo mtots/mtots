@@ -9,6 +9,7 @@
 #include "mtots_util_buffer.h"
 #include "mtots_util_error.h"
 #include "mtots_util_escape.h"
+#include "mtots_util_fd.h"
 #include "mtots_util_fs.h"
 #include "mtots_util_number.h"
 #include "mtots_util_printf.h"

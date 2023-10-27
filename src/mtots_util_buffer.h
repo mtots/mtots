@@ -40,6 +40,7 @@ void bufferLock(Buffer *buf);
 void bufferSetMinCapacity(Buffer *buf, size_t minCap);
 void bufferSetLength(Buffer *buf, size_t newLength);
 void bufferClear(Buffer *buf);
+String *bufferToString(Buffer *buf);
 u8 bufferGetU8(Buffer *buf, size_t pos);
 u16 bufferGetU16(Buffer *buf, size_t pos);
 u32 bufferGetU32(Buffer *buf, size_t pos);
