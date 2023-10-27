@@ -19,6 +19,10 @@ Future work:
 
 ## Release Notes
 
+### 0.0.48
+
+Support for `Union` types.
+
 ### 0.0.47
 
 Support for keyword arguments

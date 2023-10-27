@@ -630,23 +630,27 @@ function _solve(
     const bindSet = new Set(funcType.typeParameters.map(tp => tp.type.instanceType));
     const binder = ir.newTypeBinder(typeMap, bindSet);
     function infer(param: ir.Type, type: ir.Type): void {
-      console.log(`STARTING infer(${param}, ${type})`);
       if (param.equals(type)) {
         return;
       }
-      console.log(`  CONTINUING infer(${param}, ${type})`);
       if (param instanceof ir.ListType) {
-        console.log(`  PARAM ListType infer(${param}, ${type})`);
         if (type instanceof ir.ListType) {
           infer(param.itemType, type.itemType);
         }
       } else if (param instanceof ir.FrozenListType) {
-        console.log(`  CONTINUING infer FrozenListType`);
         if (type instanceof ir.FrozenListType) {
           infer(param.itemType, type.itemType);
         }
       } else if (param instanceof ir.UnionType) {
-        console.log(`  CONTINUING infer UnionType`);
+
+        // Special treatment for case when param is an Optional type,
+        // but type is not.
+        // TODO: Come up with a more general algorithm that makes this
+        // special treatment unnecessary.
+        if (param.types.some(t => t === ir.NIL_TYPE) && !ir.NIL_TYPE.isAssignableTo(type)) {
+          return infer(ir.UnionType.of(param.types.filter(t => t !== ir.NIL_TYPE)), type);
+        }
+
         // TODO: come up with a better way to do inference on Union types.
         // For now, this should more or less work the same way as Optional
         // used to.
@@ -668,30 +672,24 @@ function _solve(
           }
         }
       } else if (param instanceof ir.DictType) {
-        console.log(`  CONTINUING infer DictType`);
         if (type instanceof ir.DictType) {
           infer(param.keyType, type.keyType);
           infer(param.valueType, type.valueType);
         }
       } else if (param instanceof ir.FrozenDictType) {
-        console.log(`  CONTINUING infer FrozenDictType`);
         if (type instanceof ir.FrozenDictType) {
           infer(param.keyType, type.keyType);
           infer(param.valueType, type.valueType);
         }
       } else if (param instanceof ir.IterableType) {
-        console.log(`  CONTINUING infer IterableType`);
         if (type instanceof ir.IterableType) {
           infer(param.itemType, type.itemType);
         }
       } else if (param instanceof ir.IterationType) {
-        console.log(`  CONTINUING infer IterationType`);
         if (type instanceof ir.IterationType) {
           infer(param.itemType, type.itemType);
         }
       } else if (param instanceof ir.FunctionType) {
-        console.log(`  CONTINUING infer FunctionType`);
-        console.log(`  CONTINUING param is function type ${param}`);
         if (type instanceof ir.FunctionType) {
           if (type.typeParameters.length > 0) {
             // If there are type parameters on the argument function,
@@ -701,13 +699,11 @@ function _solve(
           const argc = Math.min(
             param.parameters.length, type.parameters.length);
           for (let i = 0; i < argc; i++) {
-            console.log(`INFERRING ${i}: ${param.parameters[i].type} <- ${type.parameters[i].type}`);
             infer(param.parameters[i].type, type.parameters[i].type);
           }
           infer(param.returnType, type.returnType);
         }
       } else if (param instanceof ir.TypeVariableInstanceType) {
-        console.log(`  CONTINUING infer TypeVariableInstanceType`);
         if (bindSet.has(param) && !typeMap.has(param)) {
           typeMap.set(param, type.toNonLiteralType());
         }
