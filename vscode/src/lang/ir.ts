@@ -65,12 +65,22 @@ export abstract class Type {
   readonly __tagType = 0;
   _listType: ListType<this> | null = null;
   _frozenListType: FrozenListType<this> | null = null;
-  _iterationType: IterationType<this> | null = null;
   _iterableType: IterableType<this> | null = null;
   abstract _equals(other: Type): boolean;
   abstract toString(): string;
   equals(other: Type): boolean {
     return this === other || this._equals(other);
+  }
+  getIterationItemType(): Type | null {
+    const me: Type = this;
+    if (me instanceof UnionType && me.types.some(t => t === STOP_ITERATION_TYPE)) {
+      return UnionType.of(me.types.filter(t => t !== STOP_ITERATION_TYPE));
+    }
+    if (me === STOP_ITERATION_TYPE) {
+      return NEVER_TYPE;
+    }
+    // Not an iteration type
+    return null;
   }
   getIterType(): Type | null {
     if (this instanceof AnyType) {
@@ -81,9 +91,8 @@ export abstract class Type {
     }
     if (this instanceof FunctionType &&
       this.typeParameters.length === 0 &&
-      this.parameters.length === 0 &&
-      this.returnType instanceof IterationType) {
-      return this.returnType.itemType;
+      this.parameters.length === 0) {
+      return this.returnType.getIterationItemType();
     }
     const getter = this.getMethod('__iter__')?.type.asFunctionType();
     if (!getter || getter.typeParameters.length > 0 || getter.parameters.length > 0) {
@@ -94,9 +103,8 @@ export abstract class Type {
       return null;
     }
     if (iterator.typeParameters.length === 0 &&
-      iterator.parameters.length === 0 &&
-      iterator.returnType instanceof IterationType) {
-      return iterator.returnType.itemType;
+      iterator.parameters.length === 0) {
+      return iterator.returnType.getIterationItemType();
     }
     return null;
   }
@@ -130,14 +138,8 @@ export abstract class Type {
     this._frozenListType = listType;
     return listType;
   }
-  getIterationType(): IterationType {
-    const type = this._iterationType;
-    if (type) {
-      return type;
-    }
-    const iterationType = new IterationType(this);
-    this._iterationType = iterationType;
-    return iterationType;
+  getIterationType(): Type {
+    return UnionType.of([this, STOP_ITERATION_TYPE]);
   }
   getIterableType(): IterableType<this> {
     const type = this._iterableType;
@@ -173,20 +175,6 @@ export abstract class Type {
     }
     if (this instanceof UnionType) {
       return this.types.every(entry => entry.isAssignableTo(other));
-    }
-    if (other instanceof IterationType) {
-      if (STOP_ITERATION_TYPE.equals(this)) {
-        return true;
-      } else if (this instanceof IterationType) {
-        return this.itemType.isAssignableTo(other.itemType);
-      } else {
-        return this.isAssignableTo(other.itemType);
-      }
-    }
-    if (other instanceof IterationType && (
-      STOP_ITERATION_TYPE.equals(this) ||
-      this.isAssignableTo(other.itemType))) {
-      return true;
     }
     if (other === CLASS_TYPE && this instanceof ClassType) {
       return true;
@@ -658,23 +646,6 @@ export class TypeVariableTypeType extends Type {
   }
 }
 
-export class IterationType<T extends Type = Type> extends Type {
-  readonly itemType: T;
-  constructor(itemType: T) {
-    super();
-    this.itemType = itemType;
-  }
-  _equals(other: Type): boolean {
-    return other instanceof ListType && this.itemType.equals(other.itemType);
-  }
-  toString(): string {
-    return `Iteration[${this.itemType}]`;
-  }
-  assumeTrue(): Type {
-    return this.itemType;
-  }
-}
-
 export class IterableType<T extends Type = Type> extends Type {
   readonly itemType: T;
   readonly iterMethod: Variable<FunctionType>;
@@ -731,6 +702,11 @@ export class ListType<T extends Type = Type> extends Type {
       mkmethod('insert',
         [['index', NUMBER_TYPE.getOptionalType()]], itemType),
       mkmethod('reverse', [], NIL_TYPE),
+      mkmethod('sort', [
+        ['keyfunc', new FunctionType([], [
+          new Parameter(new ast.Identifier(BUILTIN_LOCATION, 'item'), itemType, undefined),
+        ], ANY_TYPE, null).getOptionalType(), null],
+      ], NIL_TYPE),
       mkmethod('__iter__', [], new FunctionType([], [], itemType.getIterationType(), null)),
       ...(itemType instanceof ListType ? [
         mkmethod('flatten', [], itemType),
@@ -1131,8 +1107,6 @@ export function newTypeBinder(
       return FrozenDictType.of(bind(type.keyType), bind(type.valueType));
     } else if (type instanceof IterableType) {
       return new IterableType(bind(type.itemType));
-    } else if (type instanceof IterationType) {
-      return new IterationType(bind(type.itemType));
     } else if (type instanceof FunctionType) {
       return new FunctionType(
         type.typeParameters,

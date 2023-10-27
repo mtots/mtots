@@ -23,5 +23,6 @@ final strings = [
   "c",
   "ccc",
 ]
+# strings.sort()
 strings.sort(len)
 print(strings)

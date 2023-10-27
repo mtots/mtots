@@ -644,11 +644,16 @@ function _solve(
       } else if (param instanceof ir.UnionType) {
 
         // Special treatment for case when param is an Optional type,
-        // but type is not.
+        // or Iteration type but type is not.
         // TODO: Come up with a more general algorithm that makes this
         // special treatment unnecessary.
         if (param.types.some(t => t === ir.NIL_TYPE) && !ir.NIL_TYPE.isAssignableTo(type)) {
           return infer(ir.UnionType.of(param.types.filter(t => t !== ir.NIL_TYPE)), type);
+        }
+        if (param.types.some(t => t === ir.STOP_ITERATION_TYPE) &&
+          !ir.STOP_ITERATION_TYPE.isAssignableTo(type)) {
+          return infer(ir.UnionType.of(
+            param.types.filter(t => t !== ir.STOP_ITERATION_TYPE)), type);
         }
 
         // TODO: come up with a better way to do inference on Union types.
@@ -683,10 +688,6 @@ function _solve(
         }
       } else if (param instanceof ir.IterableType) {
         if (type instanceof ir.IterableType) {
-          infer(param.itemType, type.itemType);
-        }
-      } else if (param instanceof ir.IterationType) {
-        if (type instanceof ir.IterationType) {
           infer(param.itemType, type.itemType);
         }
       } else if (param instanceof ir.FunctionType) {
