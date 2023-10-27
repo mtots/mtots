@@ -24,18 +24,6 @@ void addForeverValue(Value value) {
   vm.memory.foreverValues[vm.memory.foreverValueCount++] = value;
 }
 
-String *internForeverCString(const char *cstr) {
-  String *str = internString(cstr, strlen(cstr));
-  addForeverValue(valString(str));
-  return str;
-}
-
-String *internForeverString(const char *chars, size_t len) {
-  String *str = internString(chars, len);
-  addForeverValue(valString(str));
-  return str;
-}
-
 void *reallocate(void *pointer, size_t oldSize, size_t newSize) {
   void *result;
 

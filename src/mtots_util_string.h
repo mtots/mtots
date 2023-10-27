@@ -5,6 +5,7 @@
 
 typedef struct String {
   ubool isMarked;
+  ubool isForever;       /* if true, this string should never be freed */
   char *chars;           /* UTF-8 encoding of the string */
   u32 *utf32;            /* UTF-32 encoding, if this string is not ASCII */
   size_t byteLength;     /* Number of bytes in the UTF-8 encoding */
@@ -16,6 +17,8 @@ void initSpecialStrings(void);
 String *internString(const char *chars, size_t length);
 String *internCString(const char *string);
 String *internOwnedString(char *chars, size_t length);
+String *internForeverCString(const char *string);
+String *internForeverString(const char *chars, size_t len);
 Status internUTF32(const u32 *utf32, size_t codePointCount, String **out);
 Status sliceString(String *string, size_t start, size_t end, String **out);
 size_t getInternedStringsAllocationSize(void);

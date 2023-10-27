@@ -152,6 +152,16 @@ String *internOwnedString(char *chars, size_t length) {
   return string;
 }
 
+String *internForeverCString(const char *cstr) {
+  return internForeverString(cstr, strlen(cstr));
+}
+
+String *internForeverString(const char *chars, size_t len) {
+  String *str = internString(chars, len);
+  str->isForever = UTRUE;
+  return str;
+}
+
 Status internUTF32(const u32 *utf32, size_t codePointCount, String **out) {
   size_t byteLength = 0, i, j;
   char *utf8;
@@ -215,7 +225,7 @@ void freeUnmarkedStrings(void) {
   for (i = 0; i < cap; i++) {
     String *str = oldEntries[i];
     if (str) {
-      if (str->isMarked) {
+      if (str->isMarked || str->isForever) {
         String **entry = stringSetFindEntry(str->chars, str->byteLength, str->hash);
         if (*entry) {
           assertionError("freeUnmarkedStrings");
