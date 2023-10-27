@@ -7,7 +7,7 @@ final nestedList = [
     [11, 22, 33],
     [66, 77, 88],
   ]
-]
+] as List[List[Any]]
 final flattendList = nestedList.flatten()
 print("flattendList = %r" % [flattendList])
 

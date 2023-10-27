@@ -24,6 +24,7 @@ function _solve(
   const moduleScope = new Scope(artificialBuiltinsScope);
   const module = new ir.Module(moduleName, file, moduleScope);
   mergeBuiltinScope(moduleName, artificialBuiltinsScope, moduleMap);
+  artificialBuiltinsScope.map.set('Iterable', ir.ITERABLE_TYPE_VAR);
 
   const usageMap = new Map<ast.Identifier, number>();
   const errors = module.errors;
@@ -355,16 +356,6 @@ function _solve(
               err(te.location, `Iteration expects 1 arg but got ${typeArgs.length}`);
           }
           return ir.ANY_TYPE;
-        case 'Iterable':
-          switch (typeArgs.length) {
-            case 0:
-              return ir.ANY_TYPE.getIterableType();
-            case 1:
-              return typeArgs[0].getIterableType();
-            default:
-              err(te.location, `Iterable expects 1 arg but got ${typeArgs.length}`);
-          }
-          return ir.ANY_TYPE;
         case 'Dict':
           switch (typeArgs.length) {
             case 0:
@@ -685,10 +676,6 @@ function _solve(
         if (type instanceof ir.FrozenDictType) {
           infer(param.keyType, type.keyType);
           infer(param.valueType, type.valueType);
-        }
-      } else if (param instanceof ir.IterableType) {
-        if (type instanceof ir.IterableType) {
-          infer(param.itemType, type.itemType);
         }
       } else if (param instanceof ir.FunctionType) {
         if (type instanceof ir.FunctionType) {

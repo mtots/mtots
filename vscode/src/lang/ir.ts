@@ -65,7 +65,7 @@ export abstract class Type {
   readonly __tagType = 0;
   _listType: ListType<this> | null = null;
   _frozenListType: FrozenListType<this> | null = null;
-  _iterableType: IterableType<this> | null = null;
+  _iterableType: Type | null = null;
   abstract _equals(other: Type): boolean;
   abstract toString(): string;
   equals(other: Type): boolean {
@@ -85,9 +85,6 @@ export abstract class Type {
   getIterType(): Type | null {
     if (this instanceof AnyType) {
       return this;
-    }
-    if (this instanceof IterableType) {
-      return this.itemType;
     }
     if (this instanceof FunctionType &&
       this.typeParameters.length === 0 &&
@@ -141,12 +138,12 @@ export abstract class Type {
   getIterationType(): Type {
     return UnionType.of([this, STOP_ITERATION_TYPE]);
   }
-  getIterableType(): IterableType<this> {
+  getIterableType(): Type {
     const type = this._iterableType;
     if (type) {
       return type;
     }
-    const iterableType = new IterableType(this);
+    const iterableType = new BoundInstanceType(UNBOUND_ITERABLE_TYPE, [this]);
     this._iterableType = iterableType;
     return iterableType;
   }
@@ -179,10 +176,6 @@ export abstract class Type {
     if (other === CLASS_TYPE && this instanceof ClassType) {
       return true;
     }
-    if (other instanceof IterableType) {
-      const iterType = this.getIterType();
-      return iterType?.isAssignableTo(other.itemType) || false;
-    }
     if (other instanceof FunctionType) {
       if (other.typeParameters.length > 0) {
         return false;
@@ -208,17 +201,19 @@ export abstract class Type {
       }
       return true;
     }
-    if (other instanceof InstanceType && other.isTrait()) {
-      for (const methodSpec of other.methods.values()) {
-        const method = this.getMethod(methodSpec.identifier.name);
-        if (!method) {
+    if ((other instanceof InstanceType ||
+      other instanceof BoundInstanceType) && other.isTrait()) {
+      for (const methodName of other.getMethodNames()) {
+        const methodSpec = other.getMethod(methodName);
+        const method = this.getMethod(methodName);
+        if (!methodSpec || !method) {
           return false;
         }
         if (!method.type.isAssignableTo(methodSpec.type)) {
           return false;
         }
+        return true;
       }
-      return true;
     }
     if (other instanceof FrozenDictType && this instanceof FrozenDictLiteralType) {
       return this.type.isAssignableTo(other);
@@ -439,6 +434,9 @@ export class BoundInstanceType extends Type {
   toString(): string {
     return `${this.instanceType.identifier.name}[${this.typeArgs.join(', ')}]`;
   }
+  isTrait(): boolean {
+    return this.instanceType.isTrait();
+  }
   getField(fieldName: string): Variable | null {
     const cachedResult = this.boundFields.get(fieldName);
     if (cachedResult) {
@@ -559,7 +557,16 @@ export class ClassType extends Type {
     return this === other;
   }
   toString(): string {
-    return `class ${this.instanceType.identifier.name}`;
+    const prefix = this.isTrait() ? 'trait' : 'class';
+    let ret = `${prefix} ${this.instanceType.identifier.name}`;
+    if (this.instanceType.typeParameters.length > 0) {
+      ret = `${ret}[${this.instanceType.typeParameters.map(
+        v => v.identifier.name).join(', ')}]`;
+    }
+    return ret;
+  }
+  isTrait(): boolean {
+    return this.instanceType.isTrait();
   }
   getMethodNames(): string[] {
     return Array.from(this.instanceType.staticMethods.keys());
@@ -646,32 +653,6 @@ export class TypeVariableTypeType extends Type {
   }
 }
 
-export class IterableType<T extends Type = Type> extends Type {
-  readonly itemType: T;
-  readonly iterMethod: Variable<FunctionType>;
-  constructor(itemType: T) {
-    super();
-    this.itemType = itemType;
-    this.iterMethod = new Variable(
-      true,
-      new ast.Identifier(BUILTIN_LOCATION, '__iter__'),
-      new FunctionType([], [], itemType.getIterationType(), null),
-      null);
-  }
-  _equals(other: Type): boolean {
-    return other instanceof IterableType && this.itemType.equals(other.itemType);
-  }
-  toString(): string {
-    return `Iterable[${this.itemType}]`;
-  }
-  getMethod(methodName: string): Variable<FunctionType> | null {
-    if (methodName === '__iter__') {
-      return this.iterMethod;
-    }
-    return null;
-  }
-}
-
 export class ListType<T extends Type = Type> extends Type {
   readonly itemType: T;
   readonly methods: Map<string, Variable<FunctionType>>;
@@ -698,9 +679,10 @@ export class ListType<T extends Type = Type> extends Type {
       mkmethod('clear', [], NIL_TYPE),
       mkmethod('append', [['item', itemType]], NIL_TYPE),
       mkmethod('extend', [['items', itemType.getIterableType()]], NIL_TYPE),
-      mkmethod('pop', [], itemType),
+      mkmethod('pop', [['index', NUMBER_TYPE.getOptionalType(), null]], itemType),
       mkmethod('insert',
-        [['index', NUMBER_TYPE.getOptionalType()]], itemType),
+        [['index', NUMBER_TYPE.getOptionalType()],
+         ['item', itemType]], NIL_TYPE),
       mkmethod('reverse', [], NIL_TYPE),
       mkmethod('sort', [
         ['keyfunc', new FunctionType([], [
@@ -1078,10 +1060,13 @@ export class UnionType extends Type {
       this.types.every((entry, i) => entry.equals(other.types[i]));
   }
   toString(): string {
-    const noNilTypes = this.types.filter(t => t !== NIL_TYPE);
-    let ret = noNilTypes.join('|');
-    if (noNilTypes.length < this.types.length) {
-      ret += '?';
+    const isIteration = this.types.some(t => t === STOP_ITERATION_TYPE);
+    const isOptional = this.types.some(t => t === NIL_TYPE);
+    const filteredTypes = this.types.filter(
+      t => t !== STOP_ITERATION_TYPE && t !== NIL_TYPE);
+    let ret = filteredTypes.join('|') + (isOptional ? '?' : '');
+    if (isIteration) {
+      ret = `Iteration[${ret}]`;
     }
     return ret;
   }
@@ -1105,8 +1090,8 @@ export function newTypeBinder(
       return DictType.of(bind(type.keyType), bind(type.valueType));
     } else if (type instanceof FrozenDictType) {
       return FrozenDictType.of(bind(type.keyType), bind(type.valueType));
-    } else if (type instanceof IterableType) {
-      return new IterableType(bind(type.itemType));
+    } else if (type instanceof BoundInstanceType) {
+      return new BoundInstanceType(type.instanceType, type.typeArgs.map(t => bind(t)));
     } else if (type instanceof FunctionType) {
       return new FunctionType(
         type.typeParameters,
@@ -1131,6 +1116,32 @@ export const BOOL_TYPE = new PrimitiveType('Bool');
 export const NUMBER_TYPE = new PrimitiveType('Number');
 export const STRING_TYPE = new PrimitiveType('String');
 
+// trait Iterable[T]
+const ITERABLE_TYPEVAR_INSTANCETYPE = new TypeVariableInstanceType(
+  new ast.Identifier(BUILTIN_LOCATION, 'T'), null);
+const ITERABLE_TYPEVAR_TYPETYPE = new TypeVariableTypeType(
+  ITERABLE_TYPEVAR_INSTANCETYPE);
+const ITERABLE_TYPEVAR_VAR = new Variable(
+  true, ITERABLE_TYPEVAR_TYPETYPE.instanceType.identifier,
+  ITERABLE_TYPEVAR_TYPETYPE, null);
+export const UNBOUND_ITERABLE_TYPE = new InstanceType(
+  true, // isTrait
+  new ast.Identifier(BUILTIN_LOCATION, 'Iterable'),
+  [ITERABLE_TYPEVAR_VAR],
+  [], null, null);
+const UNBOUND_ITERABLE_CLASSTYPE = new ClassType(UNBOUND_ITERABLE_TYPE);
+UNBOUND_ITERABLE_TYPE.methods.set(
+  '__iter__',
+  mkmethod('__iter__',
+    [], new FunctionType(
+      [], [], ITERABLE_TYPEVAR_INSTANCETYPE.getIterationType(), null)));
+export const ITERABLE_TYPE_VAR = new Variable(
+  true, // isFinal
+  UNBOUND_ITERABLE_TYPE.identifier,
+  UNBOUND_ITERABLE_CLASSTYPE,
+  null);
+
+
 // TODO: Come up with a better more general 'unknown' type strategy
 // rather than adhoc hacks with things like UNTYPED_LIST.
 
@@ -1148,7 +1159,7 @@ export function formatVariable(variable: Variable): string {
   const type = variable.type;
   const keyword = variable.final ? 'final' : 'var';
   if (type instanceof ClassType) {
-    return `class ${type.instanceType.identifier.name}`;
+    return '' + type;
   }
   if (type instanceof ModuleType) {
     return `import ${type.module.name}`;
