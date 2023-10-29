@@ -2,8 +2,8 @@
 
 #include <string.h>
 
+#include "mtots.h"
 #include "mtots_util_proc.h"
-#include "mtots_vm.h"
 
 #if MTOTS_IS_POSIX
 #include <errno.h>
@@ -12,15 +12,12 @@
 #include <unistd.h>
 #endif
 
-#define MTOTS_PIPE (-1)
-
 #define RETURNCODE_PENDING (-1) /* subprocess still running */
 #define RETURNCODE_MISSING (-2) /* finished, but no clear returncode */
 
 #define MAX_RUN_ARGC 127
 
 #define isPopen(value) (getNativeObjectDescriptor(value) == &descriptorPopen)
-#define isCompletedProcess(value) (getNativeObjectDescriptor(value) == &descriptorCompletedProcess)
 
 static void initProcArgs(MTOTSProc *proc, ObjList *argsList) {
   size_t i;
@@ -42,59 +39,43 @@ static int asFileDescriptor(i16 argc, Value *argv, i16 i) {
   return i < argc && !isNil(argv[i]) ? asInt(argv[i]) : MTOTS_PROC_INHERIT;
 }
 
-typedef struct ObjCompletedProcess {
-  ObjNative obj;
+typedef struct CompletedProcess {
   int returncode;
   String *stdoutString;
   String *stderrString;
+} CompletedProcess;
+
+typedef struct ObjCompletedProcess {
+  ObjNative obj;
+  CompletedProcess handle;
 } ObjCompletedProcess;
 
-static ObjCompletedProcess *completedProcess;
-static String *stringReturncode;
-static String *stringStdout;
-static String *stringStderr;
-
 static void blackenCompletedProcess(ObjNative *n) {
-  ObjCompletedProcess *proc = (ObjCompletedProcess *)n;
-  markString(proc->stdoutString);
-  markString(proc->stderrString);
+  ObjCompletedProcess *cp = (ObjCompletedProcess *)n;
+  markString(cp->handle.stdoutString);
+  markString(cp->handle.stderrString);
 }
 
-static NativeObjectDescriptor descriptorCompletedProcess = {
+WRAP_C_TYPE_EX(
+    CompletedProcess,
+    CompletedProcess,
+    static,
     blackenCompletedProcess,
-    nopFree,
-    sizeof(ObjCompletedProcess),
-    "CompletedProcess",
+    nopFree)
+DEFINE_FIELD_GETTER(CompletedProcess, returncode, valNumber(owner->handle.returncode))
+DEFINE_FIELD_GETTER(CompletedProcess, stdout, valString(owner->handle.stdoutString))
+DEFINE_FIELD_GETTER(CompletedProcess, stderr, valString(owner->handle.stderrString))
+static CFunction *CompletedProcessMethods[] = {
+    &funcCompletedProcess_getreturncode,
+    &funcCompletedProcess_getstdout,
+    &funcCompletedProcess_getstderr,
+    NULL,
+};
+static CFunction *CompletedProcessStaticMethods[] = {
+    NULL,
 };
 
-static ObjCompletedProcess *asCompletedProcess(Value value) {
-  if (!isCompletedProcess(value)) {
-    panic("Expected CompletedProcess but got %s", getKindName(value));
-  }
-  return (ObjCompletedProcess *)AS_OBJ_UNSAFE(value);
-}
-
-static Status implCompletedProcessGetattr(i16 argc, Value *argv, Value *out) {
-  ObjCompletedProcess *cp = asCompletedProcess(argv[-1]);
-  String *name = asString(argv[0]);
-  if (name == stringReturncode) {
-    *out = valNumber(cp->returncode);
-  } else if (name == stringStdout) {
-    *out = valString(cp->stdoutString);
-  } else if (name == stringStderr) {
-    *out = valString(cp->stderrString);
-  } else {
-    runtimeError("Field '%s' not found on %s", name->chars, getKindName(argv[-1]));
-    return STATUS_ERROR;
-  }
-  return STATUS_OK;
-}
-
-static CFunction funcCompletedProcessGetattr = {
-    implCompletedProcessGetattr,
-    "__getattr__",
-    1,
-};
+static ObjCompletedProcess *completedProcess;
 
 static Status implRun(i16 argc, Value *argv, Value *out) {
 #if MTOTS_IS_POSIX
@@ -146,11 +127,11 @@ static Status implRun(i16 argc, Value *argv, Value *out) {
     return STATUS_ERROR;
   }
 
-  completedProcess->returncode = proc.returncode;
-  completedProcess->stdoutString = bufferToString(&proc.stdoutData);
-  completedProcess->stderrString = bufferToString(&proc.stderrData);
+  completedProcess->handle.returncode = proc.returncode;
+  completedProcess->handle.stdoutString = bufferToString(&proc.stdoutData);
+  completedProcess->handle.stderrString = bufferToString(&proc.stderrData);
 
-  *out = valObjExplicit((Obj *)completedProcess);
+  *out = valCompletedProcess(completedProcess);
 
   return STATUS_OK;
 #else
@@ -184,30 +165,21 @@ static Status impl(i16 argc, Value *argv, Value *out) {
       &funcRun,
       NULL,
   };
-  CFunction *completedProcessStaticMethods[] = {NULL};
-  CFunction *completedProcessMethods[] = {
-      &funcCompletedProcessGetattr,
-      NULL,
-  };
+  CommonStrings *cs = getCommonStrings();
 
   moduleAddFunctions(module, functions);
 
-  newNativeClass(
-      module,
-      &descriptorCompletedProcess,
-      completedProcessMethods,
-      completedProcessStaticMethods);
+  ADD_TYPE_TO_MODULE(CompletedProcess);
 
-  completedProcess = NEW_NATIVE(ObjCompletedProcess, &descriptorCompletedProcess);
-  completedProcess->stderrString = vm.cs->empty;
-  completedProcess->stdoutString = vm.cs->empty;
+  completedProcess = allocCompletedProcess();
+  completedProcess->handle.returncode = -1;
+  completedProcess->handle.stderrString = cs->empty;
+  completedProcess->handle.stdoutString = cs->empty;
   moduleRetain(module, valObjExplicit((Obj *)(completedProcess)));
 
-  moduleRetain(module, valString(stringReturncode = internCString("returncode")));
-  moduleRetain(module, valString(stringStdout = internCString("stdout")));
-  moduleRetain(module, valString(stringStderr = internCString("stderr")));
-
-  mapSetN(&module->fields, "PIPE", valNumber(MTOTS_PIPE));
+  mapSetN(&module->fields, "PIPE", valNumber(MTOTS_PROC_PIPE));
+  mapSetN(&module->fields, "STDOUT", valNumber(MTOTS_PROC_STDOUT));
+  mapSetN(&module->fields, "DEVNULL", valNumber(MTOTS_PROC_DEVNULL));
 
   return STATUS_OK;
 }
