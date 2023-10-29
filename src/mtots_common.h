@@ -78,4 +78,8 @@ typedef enum Status {
   STATUS_OK
 } Status;
 
+typedef struct ByteSlice {
+  const u8 *start, *end;
+} ByteSlice;
+
 #endif /*mtots_common_h*/

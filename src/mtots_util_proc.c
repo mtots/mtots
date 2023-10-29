@@ -1,5 +1,6 @@
 #include "mtots_util_proc.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -7,6 +8,7 @@
 
 #if MTOTS_IS_POSIX
 #include <errno.h>
+#include <fcntl.h>
 #include <spawn.h>
 #include <unistd.h>
 
@@ -25,15 +27,15 @@ void MTOTSProcInit(MTOTSProc *proc) {
   proc->pid = -1;
   proc->returncode = -1;
   proc->checkReturnCode = UFALSE;
-  initBuffer(&proc->outputData[0]);
-  initBuffer(&proc->outputData[1]);
+  initBuffer(&proc->stdoutData);
+  initBuffer(&proc->stderrData);
 }
 
 void MTOTSProcFree(MTOTSProc *proc) {
   /* TODO: kill process if it is running */
   MTOTSProcFreeArgs(proc);
-  freeBuffer(&proc->outputData[0]);
-  freeBuffer(&proc->outputData[1]);
+  freeBuffer(&proc->stdoutData);
+  freeBuffer(&proc->stderrData);
 }
 
 void MTOTSProcFreeArgs(MTOTSProc *proc) {
@@ -85,6 +87,16 @@ static Status handleInputFileActions(
       return STATUS_ERROR;
     }
 
+    /* Make sure that the pipe can be written to without blocking */
+    {
+      int flags = fcntl(pipeFDs[1], F_GETFL, 0);
+      if (flags < 0) {
+        runtimeError("fntcl(%d, F_GETFL, 0): %s", pipeFDs[1], strerror(errno));
+        return STATUS_ERROR;
+      }
+      fcntl(pipeFDs[1], F_SETFL, flags | O_NONBLOCK);
+    }
+
     /* Close the write end in the child process */
     if ((status = posix_spawn_file_actions_addclose(fileActions, pipeFDs[1])) != 0) {
       runtimeError("posix_spawn_file_actions_addclose(): %s", strerror(status));
@@ -103,6 +115,8 @@ static Status handleInputFileActions(
       runtimeError("posix_spawn_file_actions_addclose(): %s", strerror(status));
       return STATUS_ERROR;
     }
+
+    return STATUS_OK;
   }
   if (fd >= 0) {
     /* Map input from a specific file descriptor */
@@ -237,13 +251,27 @@ Status MTOTSProcStart(MTOTSProc *proc) {
 #endif
 }
 
-Status MTOTSProcWait(MTOTSProc *proc) {
+Status MTOTSProcWait(MTOTSProc *proc, ByteSlice *inputSlice) {
 #if MTOTS_IS_POSIX
-  int fds[2], status;
+  MTOTSFDJob fdjobs[3];
+  int status;
   pid_t p;
-  fds[0] = proc->stdoutPipe[0];
-  fds[1] = proc->stderrPipe[0];
-  if (!readFromMultipleFDs(fds, proc->outputData, 2)) {
+
+  fdjobs[0].type = MTOTSFD_WRITE;
+  fdjobs[0].fd = proc->stdinPipe[1];
+  fdjobs[0].as.write = inputSlice;
+  fdjobs[1].type = MTOTSFD_READ;
+  fdjobs[1].fd = proc->stdoutPipe[0];
+  fdjobs[1].as.read = &proc->stdoutData;
+  fdjobs[2].type = MTOTSFD_READ;
+  fdjobs[2].fd = proc->stderrPipe[0];
+  fdjobs[2].as.read = &proc->stderrData;
+
+  if (!inputSlice) {
+    fdjobs[0].fd = -1;
+  }
+
+  if (!MTOTSRunFDJobs(fdjobs, 3)) {
     return STATUS_ERROR;
   }
 

@@ -1,0 +1,4 @@
+import subprocess
+
+
+subprocess.run(['grep', '-v', 'xxx'], input="aaaxxx\nxxxbbb\nffff\nzxxxz\n")

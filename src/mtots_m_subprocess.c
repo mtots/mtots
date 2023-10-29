@@ -101,6 +101,7 @@ static Status implRun(i16 argc, Value *argv, Value *out) {
   String *input;
   ubool captureOutput;
   MTOTSProc proc;
+  ByteSlice inputSlice;
   ObjList *argsList = asList(argv[0]);
   MTOTSProcInit(&proc);
   initProcArgs(&proc, argsList);
@@ -120,6 +121,8 @@ static Status implRun(i16 argc, Value *argv, Value *out) {
           "if input is also provided");
     }
     proc.stdinFD = MTOTS_PROC_PIPE;
+    inputSlice.start = (const u8 *)input->chars;
+    inputSlice.end = inputSlice.start + input->byteLength;
   }
 
   if (captureOutput) {
@@ -138,14 +141,14 @@ static Status implRun(i16 argc, Value *argv, Value *out) {
   }
 
   /* TODO: pipe input to stdin */
-  if (!MTOTSProcWait(&proc)) {
+  if (!MTOTSProcWait(&proc, input ? &inputSlice : NULL)) {
     MTOTSProcFree(&proc);
     return STATUS_ERROR;
   }
 
   completedProcess->returncode = proc.returncode;
-  completedProcess->stdoutString = bufferToString(&proc.outputData[0]);
-  completedProcess->stderrString = bufferToString(&proc.outputData[1]);
+  completedProcess->stdoutString = bufferToString(&proc.stdoutData);
+  completedProcess->stderrString = bufferToString(&proc.stderrData);
 
   *out = valObjExplicit((Obj *)completedProcess);
 
