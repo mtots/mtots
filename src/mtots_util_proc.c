@@ -13,18 +13,6 @@
 #include "mtots_util_fd.h"
 #endif
 
-static void freeArgv(MTOTSProc *proc) {
-  if (proc->argv) {
-    size_t i;
-    for (i = 0; i < proc->argc; i++) {
-      free(proc->argv[i]);
-    }
-    free(proc->argv);
-  }
-  proc->argv = NULL;
-  proc->argc = 0;
-}
-
 void MTOTSProcInit(MTOTSProc *proc) {
   proc->state = MTOTS_PROC_NOT_STARTED;
   proc->pid = -1;
@@ -43,14 +31,26 @@ void MTOTSProcInit(MTOTSProc *proc) {
 
 void MTOTSProcFree(MTOTSProc *proc) {
   /* TODO: kill process if it is running */
-  freeArgv(proc);
+  MTOTSProcFreeArgs(proc);
   freeBuffer(&proc->outputData[0]);
   freeBuffer(&proc->outputData[1]);
 }
 
+void MTOTSProcFreeArgs(MTOTSProc *proc) {
+  if (proc->argv) {
+    size_t i;
+    for (i = 0; i < proc->argc; i++) {
+      free(proc->argv[i]);
+    }
+    free(proc->argv);
+  }
+  proc->argv = NULL;
+  proc->argc = 0;
+}
+
 void MTOTSProcSetArgs(MTOTSProc *proc, const char **argv, size_t argc) {
   size_t i;
-  freeArgv(proc);
+  MTOTSProcFreeArgs(proc);
   proc->argv = (char **)malloc(sizeof(char *) * (argc + 1));
   proc->argc = argc;
   for (i = 0; i < argc; i++) {

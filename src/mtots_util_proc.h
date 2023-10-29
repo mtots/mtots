@@ -47,6 +47,7 @@ typedef struct MTOTSProc {
 
 void MTOTSProcInit(MTOTSProc *proc);
 void MTOTSProcFree(MTOTSProc *proc);
+void MTOTSProcFreeArgs(MTOTSProc *proc);
 void MTOTSProcSetArgs(MTOTSProc *proc, const char **argv, size_t argc);
 Status MTOTSProcStart(MTOTSProc *proc);
 Status MTOTSProcWait(MTOTSProc *proc);
