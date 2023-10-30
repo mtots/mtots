@@ -1,0 +1,13 @@
+
+
+class Foo:
+  var value Int
+
+  def __init__():
+    this.value = 0
+
+  def __or__(i Int) Foo:
+    this.value = this.value + i
+    return this
+
+print((Foo() | 1 | 2 | 3).value)

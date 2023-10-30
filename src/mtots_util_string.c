@@ -238,6 +238,11 @@ CommonStrings *getCommonStrings(void) {
     cs->mod = internForeverCString("__mod__");
     cs->pow = internForeverCString("__pow__");
     cs->neg = internForeverCString("__neg__");
+    cs->dunderLshift = internForeverCString("__lshift__");
+    cs->dunderRshift = internForeverCString("__rshift__");
+    cs->dunderOr = internForeverCString("__or__");
+    cs->dunderAnd = internForeverCString("__and__");
+    cs->dunderXor = internForeverCString("__xor__");
     cs->contains = internForeverCString("__contains__");
     cs->nil = internForeverCString("nil");
     cs->true = internForeverCString("true");

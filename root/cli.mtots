@@ -1,0 +1,53 @@
+"""
+Utilities for starting, piping and waiting on subprocesses.
+"""
+import subprocess
+
+
+class Run:
+  """
+  A command to run together with an stdin source.
+  """
+
+  final _args List[String]
+  var _input Run?
+  var _popen subprocess.Popen?
+
+  def __init__(args List[String]):
+    this._args = args
+    this._input = nil
+    this._popen = nil
+
+  def start(pipe Bool = false) subprocess.Popen:
+    """
+    Start a run of this cli command and return a Popen object.
+    To check if the process finished, call `wait` on the returned
+    Popen instance or use the `run` method instead.
+    """
+    var inputFD Int? = nil
+    if this._input:
+      inputFD = (this._input as Run).start(true).stdoutPipe
+    var stdoutFD Int? = nil
+    if pipe:
+      stdoutFD = subprocess.PIPE
+    final popen = subprocess.Popen(this._args, inputFD, stdoutFD)
+    this._popen = popen
+    return popen
+
+  def _wait() nil:
+    var r Run? = this
+    while r:
+      final run = r as Run
+      (run._popen as subprocess.Popen).wait()
+      r = run._input
+
+  def run() nil:
+    """
+    Start a run of this cli command and wait for it to finish
+    """
+    this.start()
+    this._wait()
+
+  def __or__(other Run) Run:
+    other._input = this
+    return other

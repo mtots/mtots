@@ -680,19 +680,15 @@ static Status run(void) {
       INVOKE(invokeStr, 1);                          \
     }                                                \
   } while (0)
-#define BINARY_BITWISE_OP(opname, op)                          \
-  do {                                                         \
-    if (!isNumber(peek(0)) || !isNumber(peek(1))) {            \
-      runtimeError(                                            \
-          "Operands to %s must be numbers but got %s and %s",  \
-          opname, getKindName(peek(1)), getKindName(peek(0))); \
-      return STATUS_ERROR;                                     \
-    }                                                          \
-    {                                                          \
-      u32 b = asU32Bits(pop());                                \
-      u32 a = asU32Bits(pop());                                \
-      push(valNumber(a op b));                                 \
-    }                                                          \
+#define BINARY_BITWISE_OP(op, methodName)         \
+  do {                                            \
+    if (isNumber(peek(0)) && isNumber(peek(1))) { \
+      u32 b = asU32Bits(pop());                   \
+      u32 a = asU32Bits(pop());                   \
+      push(valNumber(a op b));                    \
+    } else {                                      \
+      INVOKE(methodName, 1);                      \
+    }                                             \
   } while (0)
 
   for (;;) {
@@ -939,19 +935,19 @@ static Status run(void) {
         BINARY_OP(pow(a, b), vm.cs->pow);
         break;
       case OP_SHIFT_LEFT:
-        BINARY_BITWISE_OP("lshift", <<);
+        BINARY_BITWISE_OP(<<, vm.cs->dunderLshift);
         break;
       case OP_SHIFT_RIGHT:
-        BINARY_BITWISE_OP("rshift", >>);
+        BINARY_BITWISE_OP(>>, vm.cs->dunderLshift);
         break;
       case OP_BITWISE_OR:
-        BINARY_BITWISE_OP("bitwise or", |);
+        BINARY_BITWISE_OP(|, vm.cs->dunderOr);
         break;
       case OP_BITWISE_AND:
-        BINARY_BITWISE_OP("bitwise and", &);
+        BINARY_BITWISE_OP(&, vm.cs->dunderAnd);
         break;
       case OP_BITWISE_XOR:
-        BINARY_BITWISE_OP("bitwise xor", ^);
+        BINARY_BITWISE_OP(^, vm.cs->dunderXor);
         break;
       case OP_BITWISE_NOT: {
         u32 x;

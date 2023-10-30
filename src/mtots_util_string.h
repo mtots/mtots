@@ -27,6 +27,11 @@ typedef struct CommonStrings {
   String *mod;
   String *pow;
   String *neg;
+  String *dunderLshift;
+  String *dunderRshift;
+  String *dunderOr;
+  String *dunderAnd;
+  String *dunderXor;
   String *contains;
   String *nil;
   String * true;

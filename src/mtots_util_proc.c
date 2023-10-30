@@ -61,7 +61,9 @@ void MTOTSProcInit(MTOTSProc *proc) {
 }
 
 void MTOTSProcFree(MTOTSProc *proc) {
-  /* TODO: kill process if it is running */
+  /* TODO: consider killing process if it is running
+   * this might or might not be a good idea, but it's not
+   * obvious to me which at this moment */
   MTOTSProcFreeArgs(proc);
   freeBuffer(&proc->stdoutData);
   freeBuffer(&proc->stderrData);
