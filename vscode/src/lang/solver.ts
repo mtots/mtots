@@ -29,6 +29,7 @@ function _solve(
   const usageMap = new Map<ast.Identifier, number>();
   const errors = module.errors;
   let scope = moduleScope;
+  const entityStack: (ast.Function | ast.Class)[] = [];
 
   function err(location: MLocation, message: string) {
     errors.push(new MError(location, message));
@@ -96,20 +97,25 @@ function _solve(
       const instanceTypeMap = new Map<ast.Class | ast.Trait, ir.InstanceType>();
       const functionTypeMap = new Map<ast.Function, ir.FunctionType>();
       function solveFunctionBody(funcAST: ast.Function) {
-        const funcType = functionTypeMap.get(funcAST);
-        if (!funcType) {
-          throw new Error('Assertion Error');
+        entityStack.push(funcAST);
+        try {
+          const funcType = functionTypeMap.get(funcAST);
+          if (!funcType) {
+            throw new Error('Assertion Error');
+          }
+          withScope(() => {
+            for (const typeParameter of funcType.typeParameters) {
+              declareVariable(typeParameter);
+            }
+            for (const parameter of funcType.parameters) {
+              declareVariable(new Variable(
+                false, parameter.identifier, parameter.type, null));
+            }
+            solveBlock(funcAST.body);
+          });
+        } finally {
+          entityStack.pop();
         }
-        withScope(() => {
-          for (const typeParameter of funcType.typeParameters) {
-            declareVariable(typeParameter);
-          }
-          for (const parameter of funcType.parameters) {
-            declareVariable(new Variable(
-              false, parameter.identifier, parameter.type, null));
-          }
-          solveBlock(funcAST.body);
-        });
       }
       for (const stmt of stmts) {
         if (stmt instanceof ast.Class || stmt instanceof ast.Trait) {
@@ -987,7 +993,14 @@ function _solve(
       const field = owner.getField(e.identifier.name);
       if (field) {
         if (field.final) {
-          err(e.identifier.location, `Cannot assign to final value`);
+          if (e.owner instanceof ast.GetVariable && e.owner.identifier.name === 'this' &&
+            entityStack.length > 0 &&
+            entityStack[entityStack.length - 1] instanceof ast.Function &&
+            entityStack[entityStack.length - 1].identifier.name === '__init__') {
+            // allow assigning fields in __init__
+          } else {
+            err(e.identifier.location, `Cannot assign to final value`);
+          }
         }
         declareUsage(e.identifier, field);
         solveExpr(e.value, field.type);
