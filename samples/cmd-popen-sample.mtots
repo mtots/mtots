@@ -1,0 +1,28 @@
+from subprocess import Popen
+from subprocess import PIPE
+import subprocess
+
+# final fin = subprocess.run(['cat', 'LICENSE'], stdout=PIPE)
+# print(fin)
+final p1 = Popen(['cat', 'LICENSE'], stdout=PIPE)
+# p1.communicate()
+final p2 = Popen(['grep', 'License', '--color=always'], stdin=p1.stdoutPipe, stdout=PIPE)
+final p3 = Popen(['grep', 'x', '--color=always'], stdin=p2.stdoutPipe)
+
+# print("BEFORE p1.communicate()")
+# p1.communicate()
+# print("AFTER p1.communicate()")
+
+# print("p1.returncode = %s" % [p1.returncode])
+
+print("BEFORE p2.wait()")
+p2.wait()
+print("AFTER p2.wait()")
+
+print("p2.returncode = %s" % [p2.returncode])
+
+p1.wait()
+print("p1.returncode = %s" % [p1.returncode])
+
+p3.communicate()
+print("p3.returncode = %s" % [p3.returncode])

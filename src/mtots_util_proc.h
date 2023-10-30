@@ -37,10 +37,10 @@ typedef struct MTOTSProc {
   ubool checkReturnCode;
 #endif
 
-  /* any stdout data piped while MTOTSProcWait runs will be written here */
+  /* any stdout data piped while MTOTSProcCommunicate runs will be written here */
   Buffer stdoutData;
 
-  /* any stderr data piped while MTOTSProcWait runs will be written here */
+  /* any stderr data piped while MTOTSProcCommunicate runs will be written here */
   Buffer stderrData;
 
 } MTOTSProc;
@@ -50,6 +50,7 @@ void MTOTSProcFree(MTOTSProc *proc);
 void MTOTSProcFreeArgs(MTOTSProc *proc);
 void MTOTSProcSetArgs(MTOTSProc *proc, const char **argv, size_t argc);
 Status MTOTSProcStart(MTOTSProc *proc);
-Status MTOTSProcWait(MTOTSProc *proc, ByteSlice *inputSlice);
+Status MTOTSProcWait(MTOTSProc *proc);
+Status MTOTSProcCommunicate(MTOTSProc *proc, ByteSlice *inputSlice);
 
 #endif /*mtots_util_proc_h*/

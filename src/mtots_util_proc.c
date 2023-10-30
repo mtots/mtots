@@ -15,6 +15,35 @@
 #include "mtots_util_fd.h"
 #endif
 
+#if MTOTS_IS_POSIX
+static Status prepPipeFD(int fd) {
+  int flags = fcntl(fd, F_GETFL, 0);
+
+  if (flags < 0) {
+    return runtimeError("fntcl(%d, F_GETFL, 0): %s", fd, strerror(errno));
+  }
+
+  if (fcntl(fd, F_SETFD, FD_CLOEXEC) != 0) {
+    return runtimeError("fcntl(%d, F_SETFD, FD_CLOEXEC)", fd);
+  }
+
+  return STATUS_OK;
+}
+static Status newPipe(int pipeFDs[2]) {
+  if (pipe(pipeFDs) != 0) {
+    runtimeError("pipe(): %s", strerror(errno));
+    return STATUS_ERROR;
+  }
+  if (!prepPipeFD(pipeFDs[0])) {
+    return STATUS_ERROR;
+  }
+  if (!prepPipeFD(pipeFDs[1])) {
+    return STATUS_ERROR;
+  }
+  return STATUS_OK;
+}
+#endif
+
 void MTOTSProcInit(MTOTSProc *proc) {
   proc->state = MTOTS_PROC_NOT_STARTED;
   proc->pid = -1;
@@ -77,13 +106,11 @@ static Status handleInputFileActions(
   }
   if (fd == MTOTS_PROC_DEVNULL) {
     /* TODO */
-    runtimeError("reading from DEVNULL not yet supported");
-    return STATUS_ERROR;
+    return runtimeError("reading from DEVNULL not yet supported");
   }
   if (fd == MTOTS_PROC_PIPE) {
     /* PIPE input to child */
-    if (pipe(pipeFDs) != 0) {
-      runtimeError("pipe(): %s", strerror(errno));
+    if (!newPipe(pipeFDs)) {
       return STATUS_ERROR;
     }
 
@@ -91,29 +118,25 @@ static Status handleInputFileActions(
     {
       int flags = fcntl(pipeFDs[1], F_GETFL, 0);
       if (flags < 0) {
-        runtimeError("fntcl(%d, F_GETFL, 0): %s", pipeFDs[1], strerror(errno));
-        return STATUS_ERROR;
+        return runtimeError("fntcl(%d, F_GETFL, 0): %s", pipeFDs[1], strerror(errno));
       }
       fcntl(pipeFDs[1], F_SETFL, flags | O_NONBLOCK);
     }
 
     /* Close the write end in the child process */
     if ((status = posix_spawn_file_actions_addclose(fileActions, pipeFDs[1])) != 0) {
-      runtimeError("posix_spawn_file_actions_addclose(): %s", strerror(status));
-      return STATUS_ERROR;
+      return runtimeError("posix_spawn_file_actions_addclose(): %s", strerror(status));
     }
 
     /* Map the read end to the target FD */
     if ((status = posix_spawn_file_actions_adddup2(
              fileActions, pipeFDs[0], targetFD)) != 0) {
-      runtimeError("posix_spawn_file_actions_adddup2(): %s", strerror(status));
-      return STATUS_ERROR;
+      return runtimeError("posix_spawn_file_actions_adddup2(): %s", strerror(status));
     }
 
     /* Close the pipe read end in the child process */
     if ((status = posix_spawn_file_actions_addclose(fileActions, pipeFDs[0])) != 0) {
-      runtimeError("posix_spawn_file_actions_addclose(): %s", strerror(status));
-      return STATUS_ERROR;
+      return runtimeError("posix_spawn_file_actions_addclose(): %s", strerror(status));
     }
 
     return STATUS_OK;
@@ -122,12 +145,11 @@ static Status handleInputFileActions(
     /* Map input from a specific file descriptor */
     if ((status = posix_spawn_file_actions_adddup2(
              fileActions, fd, targetFD)) != 0) {
-      runtimeError("posix_spawn_file_actions_adddup2(): %s", strerror(status));
-      return STATUS_ERROR;
+      return runtimeError("posix_spawn_file_actions_adddup2(): %s", strerror(status));
     }
+    return STATUS_OK;
   }
-  runtimeError("Invalid MTOTSProc input fd value %d", fd);
-  return STATUS_ERROR;
+  return runtimeError("Invalid MTOTSProc input fd value %d", fd);
 }
 static Status handleOutputFileActions(
     posix_spawn_file_actions_t *fileActions,
@@ -160,8 +182,7 @@ static Status handleOutputFileActions(
   }
   if (fd == MTOTS_PROC_PIPE) {
     /* PIPE the output from child */
-    if (pipe(pipeFDs) != 0) {
-      runtimeError("pipe(): %s", strerror(errno));
+    if (!newPipe(pipeFDs)) {
       return STATUS_ERROR;
     }
 
@@ -246,35 +267,14 @@ Status MTOTSProcStart(MTOTSProc *proc) {
 
   return STATUS_OK;
 #else
-  runtimeError("Operation not supported for platform (MTOTSProcStart)");
-  return STATUS_ERROR;
+  return runtimeError("Operation not supported for platform (MTOTSProcStart)");
 #endif
 }
 
-Status MTOTSProcWait(MTOTSProc *proc, ByteSlice *inputSlice) {
+Status MTOTSProcWait(MTOTSProc *proc) {
 #if MTOTS_IS_POSIX
-  MTOTSFDJob fdjobs[3];
   int status;
   pid_t p;
-
-  fdjobs[0].type = MTOTSFD_WRITE;
-  fdjobs[0].fd = proc->stdinPipe[1];
-  fdjobs[0].as.write = inputSlice;
-  fdjobs[1].type = MTOTSFD_READ;
-  fdjobs[1].fd = proc->stdoutPipe[0];
-  fdjobs[1].as.read = &proc->stdoutData;
-  fdjobs[2].type = MTOTSFD_READ;
-  fdjobs[2].fd = proc->stderrPipe[0];
-  fdjobs[2].as.read = &proc->stderrData;
-
-  if (!inputSlice) {
-    fdjobs[0].fd = -1;
-  }
-
-  if (!MTOTSRunFDJobs(fdjobs, 3)) {
-    return STATUS_ERROR;
-  }
-
   do {
     status = 0;
     p = waitpid(proc->pid, &status, 0);
@@ -319,7 +319,34 @@ Status MTOTSProcWait(MTOTSProc *proc, ByteSlice *inputSlice) {
 
   return STATUS_OK;
 #else
-  runtimeError("Operation not supported for platform (MTOTSProcWait)");
-  return STATUS_ERROR;
+  return runtimeError("Operation not supported for platform (MTOTSProcWait)");
+#endif
+}
+
+Status MTOTSProcCommunicate(MTOTSProc *proc, ByteSlice *inputSlice) {
+#if MTOTS_IS_POSIX
+  MTOTSFDJob fdjobs[3];
+
+  fdjobs[0].type = MTOTSFD_WRITE;
+  fdjobs[0].fd = proc->stdinPipe[1];
+  fdjobs[0].as.write = inputSlice;
+  fdjobs[1].type = MTOTSFD_READ;
+  fdjobs[1].fd = proc->stdoutPipe[0];
+  fdjobs[1].as.read = &proc->stdoutData;
+  fdjobs[2].type = MTOTSFD_READ;
+  fdjobs[2].fd = proc->stderrPipe[0];
+  fdjobs[2].as.read = &proc->stderrData;
+
+  if (!inputSlice) {
+    fdjobs[0].fd = -1;
+  }
+
+  if (!MTOTSRunFDJobs(fdjobs, 3)) {
+    return STATUS_ERROR;
+  }
+
+  return MTOTSProcWait(proc);
+#else
+  return runtimeError("Operation not supported for platform (MTOTSProcCommunicate)");
 #endif
 }

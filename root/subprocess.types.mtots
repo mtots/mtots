@@ -50,16 +50,41 @@ class Popen:
 
   final returncode Int
 
+  final stdinPipe Int """
+    The file descriptor for the write end of the stdin pipe if this Popen
+    was created with stdin=PIPE. Otherwise this value should be -1.
+  """
+
+  final stdoutPipe Int """
+    The file descriptor for the read end of the stdout pipe if this Popen
+    was created wtih stdout=PIPE. Otherwise this value should be -1.
+  """
+
+  final stderrPipe Int """
+    The file descriptor for the read end of the stderr pipe if this Popen
+    was created wtih stderr=PIPE. Otherwise this value should be -1.
+  """
+
   def __init__(
       args List[String],
-      check Bool = false,
       stdin Int?=nil,
-      captureOutput Bool = false):
+      stdout Int?=nil,
+      stderr Int?=nil):
     """
     Start a new subprocess.
     """
 
-  def communicate(input String?=nil) List[String]:
+  def wait() Int:
+    """
+    Wait for child process to terminate. Set and return returncode attribute.
+
+    Note: This will deadlock when using stdout=PIPE or stderr=PIPE and the
+    child process generates enough output to a pipe such that it blocks
+    waiting for the OS pipe buffer to accept more data. Use
+    Popen.communicate() when using pipes to avoid that.
+    """
+
+  def communicate(input String?=nil) nil:
     """
     Interact with process: Read data from stdout and stderr, until end-of-file
     is reached. Wait for process to terminate and set the returncode

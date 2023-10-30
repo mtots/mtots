@@ -39,7 +39,7 @@ NORETURN void panic(const char *format, ...) {
 }
 
 /* Potentially recoverable error. */
-void runtimeError(const char *format, ...) {
+Status runtimeError(const char *format, ...) {
   size_t len = 0;
   va_list args;
   char *ptr;
@@ -71,6 +71,7 @@ void runtimeError(const char *format, ...) {
   *ptr = '\0';
 
   freeStringBuilder(&sb);
+  return STATUS_ERROR;
 }
 
 void setErrorString(const char *newErrorString) {

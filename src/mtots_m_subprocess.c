@@ -17,8 +17,6 @@
 
 #define MAX_RUN_ARGC 127
 
-#define isPopen(value) (getNativeObjectDescriptor(value) == &descriptorPopen)
-
 static void initProcArgs(MTOTSProc *proc, ObjList *argsList) {
   size_t i;
   if (argsList->length == 0) {
@@ -38,6 +36,93 @@ static void initProcArgs(MTOTSProc *proc, ObjList *argsList) {
 static int asFileDescriptor(i16 argc, Value *argv, i16 i) {
   return i < argc && !isNil(argv[i]) ? asInt(argv[i]) : MTOTS_PROC_INHERIT;
 }
+
+typedef struct ObjPopen {
+  ObjNative obj;
+  MTOTSProc handle;
+} ObjPopen;
+
+static void freePopen(ObjNative *n) {
+  ObjPopen *po = (ObjPopen *)n;
+  MTOTSProcFree(&po->handle);
+}
+
+WRAP_C_TYPE_EX(Popen, MTOTSProc, static, nopBlacken, freePopen)
+
+static Status implPopenStaticCall(i16 argc, Value *argv, Value *out) {
+  ObjPopen *po = allocPopen();
+  MTOTSProc *proc = &po->handle;
+  ObjList *argsList = asList(argv[0]);
+  MTOTSProcInit(proc);
+  initProcArgs(proc, argsList);
+
+  proc->stdinFD = asFileDescriptor(argc, argv, 1);
+  proc->stdoutFD = asFileDescriptor(argc, argv, 2);
+  proc->stderrFD = asFileDescriptor(argc, argv, 3);
+
+  if (!MTOTSProcStart(proc)) {
+    MTOTSProcFree(proc);
+    return STATUS_ERROR;
+  }
+
+  *out = valPopen(po);
+
+  return STATUS_OK;
+}
+
+static const char *argsPopenStaticCall[] = {
+    "args",
+    "stdin",
+    "stdout",
+    "stderr",
+    NULL,
+};
+
+static CFunction funcPopenStaticCall = {
+    implPopenStaticCall,
+    "__call__",
+    1,
+    (sizeof(argsPopenStaticCall) / sizeof(argsPopenStaticCall[0])) - 1,
+    argsPopenStaticCall,
+};
+WRAP_C_FUNCTION_EX(wait, PopenWait, 0, 0, {
+  ObjPopen *po = asPopen(argv[-1]);
+  MTOTSProc *proc = &po->handle;
+  if (!MTOTSProcWait(proc)) {
+    return STATUS_ERROR;
+  }
+  *out = valNumber(proc->returncode);
+  return STATUS_OK;
+})
+WRAP_C_FUNCTION_EX(communicate, PopenCommunicate, 0, 1, {
+  ObjPopen *po = asPopen(argv[-1]);
+  MTOTSProc *proc = &po->handle;
+  String *input = argc > 0 && !isNil(argv[0]) ? asString(argv[0]) : NULL;
+  ByteSlice inputSlice;
+  if (input) {
+    inputSlice.start = (const u8 *)input->chars;
+    inputSlice.end = inputSlice.start + input->byteLength;
+  }
+  return MTOTSProcCommunicate(proc, input ? &inputSlice : NULL);
+})
+DEFINE_FIELD_GETTER(Popen, returncode, valNumber(owner->handle.returncode))
+DEFINE_FIELD_GETTER(Popen, stdinPipe, valNumber(owner->handle.stdinPipe[1]))
+DEFINE_FIELD_GETTER(Popen, stdoutPipe, valNumber(owner->handle.stdoutPipe[0]))
+DEFINE_FIELD_GETTER(Popen, stderrPipe, valNumber(owner->handle.stderrPipe[0]))
+
+static CFunction *PopenStaticMethods[] = {
+    &funcPopenStaticCall,
+    NULL,
+};
+static CFunction *PopenMethods[] = {
+    &funcPopenWait,
+    &funcPopenCommunicate,
+    &funcPopen_getreturncode,
+    &funcPopen_getstdinPipe,
+    &funcPopen_getstdoutPipe,
+    &funcPopen_getstderrPipe,
+    NULL,
+};
 
 typedef struct CompletedProcess {
   int returncode;
@@ -122,7 +207,7 @@ static Status implRun(i16 argc, Value *argv, Value *out) {
   }
 
   /* TODO: pipe input to stdin */
-  if (!MTOTSProcWait(&proc, input ? &inputSlice : NULL)) {
+  if (!MTOTSProcCommunicate(&proc, input ? &inputSlice : NULL)) {
     MTOTSProcFree(&proc);
     return STATUS_ERROR;
   }
@@ -169,6 +254,7 @@ static Status impl(i16 argc, Value *argv, Value *out) {
 
   moduleAddFunctions(module, functions);
 
+  ADD_TYPE_TO_MODULE(Popen);
   ADD_TYPE_TO_MODULE(CompletedProcess);
 
   completedProcess = allocCompletedProcess();
