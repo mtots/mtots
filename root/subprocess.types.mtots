@@ -84,7 +84,7 @@ class Popen:
     Popen.communicate() when using pipes to avoid that.
     """
 
-  def communicate(input String?=nil) nil:
+  def communicate(input String?=nil, stdout Buffer?=nil, stderr Buffer?=nil) nil:
     """
     Interact with process: Read data from stdout and stderr, until end-of-file
     is reached. Wait for process to terminate and set the returncode

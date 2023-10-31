@@ -1,0 +1,12 @@
+from shell import Run
+import subprocess
+
+# (
+#   Run(['ls', 'src']) |
+#   Run(['grep', '--color=always', 'a'])
+# ).run()
+
+(
+  Run(['ls']) |
+  Run(['grep', '--color=always', 'a'])
+).run()

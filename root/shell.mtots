@@ -4,50 +4,63 @@ Utilities for starting, piping and waiting on subprocesses.
 import subprocess
 
 
-class Run:
+class Job:
   """
-  A command to run together with an stdin source.
+  Base class for a shell job that can be piped
+  """
+  var input Job?
+
+  def __init__():
+    this.input = nil
+
+  def _wait() nil:
+    "Wait on this, without considering any of its dependencies"
+
+  def wait() nil:
+    if this.input:
+      (this.input as Job).wait()
+    this._wait()
+
+
+class Run(Job):
+  """
+  A shell job that runs a subprocess
   """
 
   final _args List[String]
-  var _input Run?
-  var _popen subprocess.Popen?
+  var popen subprocess.Popen?
 
   def __init__(args List[String]):
+    super.__init__()
     this._args = args
-    this._input = nil
-    this._popen = nil
 
-  def start(pipe Bool = false) subprocess.Popen:
+  def start(pipe Bool = false) nil:
     """
     Start a run of this cli command and return a Popen object.
     To check if the process finished, call `wait` on the returned
     Popen instance or use the `run` method instead.
     """
     var inputFD Int? = nil
-    if this._input:
-      inputFD = (this._input as Run).start(true).stdoutPipe
+    if this.input:
+      final input = this.input as Job
+      inputFD = (input.popen as subprocess.Popen).stdoutPipe
     var stdoutFD Int? = nil
     if pipe:
       stdoutFD = subprocess.PIPE
     final popen = subprocess.Popen(this._args, inputFD, stdoutFD)
-    this._popen = popen
+    this.popen = popen
     return popen
 
   def _wait() nil:
-    var r Run? = this
-    while r:
-      final run = r as Run
-      (run._popen as subprocess.Popen).wait()
-      r = run._input
+    (this.popen as subprocess.Popen).wait()
 
   def run() nil:
     """
     Start a run of this cli command and wait for it to finish
     """
     this.start()
-    this._wait()
+    this.wait()
 
   def __or__(other Run) Run:
-    other._input = this
+    other.input = this
     return other

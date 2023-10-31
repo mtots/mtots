@@ -4,13 +4,13 @@
 
 #include "mtots_vm.h"
 
-typedef struct Slice {
+typedef struct ValueSlice {
   Value *buffer;
   size_t length;
-} Slice;
+} ValueSlice;
 
-static Slice getSlice(Value value) {
-  Slice slice;
+static ValueSlice getValueSlice(Value value) {
+  ValueSlice slice;
   if (isFrozenList(value)) {
     ObjFrozenList *frozenList = (ObjFrozenList *)value.as.obj;
     slice.buffer = frozenList->buffer;
@@ -47,7 +47,7 @@ static CFunction funcFrozenListStaticCall = {implFrozenListStaticCall, "__call__
 
 typedef struct ObjListIterator {
   ObjNative obj;
-  Slice slice;
+  ValueSlice slice;
   Obj *list;
   size_t index;
 } ObjListIterator;
@@ -148,8 +148,8 @@ static Status implListInsert(i16 argc, Value *argv, Value *out) {
 static CFunction funcListInsert = {implListInsert, "insert", 2};
 
 static Status implListAdd(i16 argc, Value *argv, Value *out) {
-  Slice lhs = getSlice(argv[-1]);
-  Slice rhs = getSlice(argv[0]);
+  ValueSlice lhs = getValueSlice(argv[-1]);
+  ValueSlice rhs = getValueSlice(argv[0]);
   ObjList *result = newList(lhs.length + rhs.length);
   memcpy(result->buffer, lhs.buffer, sizeof(Value) * lhs.length);
   memcpy(result->buffer + lhs.length, rhs.buffer, sizeof(Value) * rhs.length);
@@ -167,7 +167,7 @@ static Status implListAdd(i16 argc, Value *argv, Value *out) {
 static CFunction funcListAdd = {implListAdd, "__add__", 1};
 
 static Status implListMul(i16 argc, Value *argv, Value *out) {
-  Slice slice = getSlice(argv[-1]);
+  ValueSlice slice = getValueSlice(argv[-1]);
   ObjList *result;
   size_t r, rep = asU32(argv[0]);
   result = newList(slice.length * rep);
@@ -191,7 +191,7 @@ static Status implListMul(i16 argc, Value *argv, Value *out) {
 static CFunction funcListMul = {implListMul, "__mul__", 1};
 
 static Status implListGetItem(i16 argc, Value *argv, Value *out) {
-  Slice slice = getSlice(argv[-1]);
+  ValueSlice slice = getValueSlice(argv[-1]);
   i32 index = asIndex(argv[0], slice.length);
   *out = slice.buffer[index];
   return STATUS_OK;
@@ -209,7 +209,7 @@ static Status implListSetItem(i16 argc, Value *argv, Value *out) {
 static CFunction funcListSetItem = {implListSetItem, "__setitem__", 2};
 
 static Status implListSlice(i16 argc, Value *argv, Value *out) {
-  Slice slice = getSlice(argv[-1]);
+  ValueSlice slice = getValueSlice(argv[-1]);
   size_t start = isNil(argv[0]) ? 0 : asIndexLower(argv[0], slice.length);
   size_t end = isNil(argv[1]) ? slice.length : asIndexUpper(argv[1], slice.length);
   if (start > end) {
@@ -277,7 +277,7 @@ static Status implListFlatten(i16 argc, Value *argv, Value *out) {
 static CFunction funcListFlatten = {implListFlatten, "flatten"};
 
 static Status implListIter(i16 argc, Value *argv, Value *out) {
-  Slice slice = getSlice(argv[-1]);
+  ValueSlice slice = getValueSlice(argv[-1]);
   ObjListIterator *iter;
   iter = NEW_NATIVE(ObjListIterator, &descriptorListIterator);
   iter->slice = slice;

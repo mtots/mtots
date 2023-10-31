@@ -94,16 +94,31 @@ WRAP_C_FUNCTION_EX(wait, PopenWait, 0, 0, {
   *out = valNumber(proc->returncode);
   return STATUS_OK;
 })
-WRAP_C_FUNCTION_EX(communicate, PopenCommunicate, 0, 1, {
+WRAP_C_FUNCTION_EX(communicate, PopenCommunicate, 0, 3, {
   ObjPopen *po = asPopen(argv[-1]);
   MTOTSProc *proc = &po->handle;
-  String *input = argc > 0 && !isNil(argv[0]) ? asString(argv[0]) : NULL;
-  ByteSlice inputSlice;
-  if (input) {
-    inputSlice.start = (const u8 *)input->chars;
-    inputSlice.end = inputSlice.start + input->byteLength;
+  ByteSlice inputSliceBuffer;
+  ByteSlice *inputSlice = NULL;
+  Buffer *stdoutData = NULL;
+  Buffer *stderrData = NULL;
+  if (argc > 0 && !isNil(argv[0])) {
+    inputSlice = &inputSliceBuffer;
+    if (isString(argv[0])) {
+      String *string = asString(argv[0]);
+      inputSlice->start = (const u8 *)string->chars;
+      inputSlice->end = inputSlice->start + string->byteLength;
+    } else {
+      ObjBuffer *buffer = asBuffer(argv[0]);
+      inputSlice->start = buffer->handle.data;
+    }
   }
-  return MTOTSProcCommunicate(proc, input ? &inputSlice : NULL);
+  if (argc > 1 && !isNil(argv[1])) {
+    stdoutData = &asBuffer(argv[1])->handle;
+  }
+  if (argc > 2 && !isNil(argv[2])) {
+    stderrData = &asBuffer(argv[2])->handle;
+  }
+  return MTOTSProcCommunicate(proc, inputSlice, stdoutData, stderrData);
 })
 DEFINE_FIELD_GETTER(Popen, returncode, valNumber(owner->handle.returncode))
 DEFINE_FIELD_GETTER(Popen, stdinPipe, valNumber(owner->handle.stdinPipe[1]))
@@ -169,8 +184,11 @@ static Status implRun(i16 argc, Value *argv, Value *out) {
   MTOTSProc proc;
   ByteSlice inputSlice;
   ObjList *argsList = asList(argv[0]);
+  Buffer stdoutData, stderrData;
   MTOTSProcInit(&proc);
   initProcArgs(&proc, argsList);
+  initBuffer(&stdoutData);
+  initBuffer(&stderrData);
 
   proc.checkReturnCode = argc > 1 && !isNil(argv[1]) ? asBool(argv[1]) : UFALSE;
   proc.stdinFD = asFileDescriptor(argc, argv, 2);
@@ -207,14 +225,14 @@ static Status implRun(i16 argc, Value *argv, Value *out) {
   }
 
   /* TODO: pipe input to stdin */
-  if (!MTOTSProcCommunicate(&proc, input ? &inputSlice : NULL)) {
+  if (!MTOTSProcCommunicate(&proc, input ? &inputSlice : NULL, &stdoutData, &stderrData)) {
     MTOTSProcFree(&proc);
     return STATUS_ERROR;
   }
 
   completedProcess->handle.returncode = proc.returncode;
-  completedProcess->handle.stdoutString = bufferToString(&proc.stdoutData);
-  completedProcess->handle.stderrString = bufferToString(&proc.stderrData);
+  completedProcess->handle.stdoutString = bufferToString(&stdoutData);
+  completedProcess->handle.stderrString = bufferToString(&stderrData);
 
   *out = valCompletedProcess(completedProcess);
 

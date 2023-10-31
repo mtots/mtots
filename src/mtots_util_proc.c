@@ -56,8 +56,6 @@ void MTOTSProcInit(MTOTSProc *proc) {
   proc->pid = -1;
   proc->returncode = -1;
   proc->checkReturnCode = UFALSE;
-  initBuffer(&proc->stdoutData);
-  initBuffer(&proc->stderrData);
 }
 
 void MTOTSProcFree(MTOTSProc *proc) {
@@ -65,8 +63,6 @@ void MTOTSProcFree(MTOTSProc *proc) {
    * this might or might not be a good idea, but it's not
    * obvious to me which at this moment */
   MTOTSProcFreeArgs(proc);
-  freeBuffer(&proc->stdoutData);
-  freeBuffer(&proc->stderrData);
 }
 
 void MTOTSProcFreeArgs(MTOTSProc *proc) {
@@ -325,7 +321,11 @@ Status MTOTSProcWait(MTOTSProc *proc) {
 #endif
 }
 
-Status MTOTSProcCommunicate(MTOTSProc *proc, ByteSlice *inputSlice) {
+Status MTOTSProcCommunicate(
+    MTOTSProc *proc,
+    ByteSlice *inputSlice,
+    Buffer *stdoutData,
+    Buffer *stderrData) {
 #if MTOTS_IS_POSIX
   MTOTSFDJob fdjobs[3];
 
@@ -334,10 +334,10 @@ Status MTOTSProcCommunicate(MTOTSProc *proc, ByteSlice *inputSlice) {
   fdjobs[0].as.write = inputSlice;
   fdjobs[1].type = MTOTSFD_READ;
   fdjobs[1].fd = proc->stdoutPipe[0];
-  fdjobs[1].as.read = &proc->stdoutData;
+  fdjobs[1].as.read = stdoutData;
   fdjobs[2].type = MTOTSFD_READ;
   fdjobs[2].fd = proc->stderrPipe[0];
-  fdjobs[2].as.read = &proc->stderrData;
+  fdjobs[2].as.read = stderrData;
 
   if (!inputSlice) {
     fdjobs[0].fd = -1;
