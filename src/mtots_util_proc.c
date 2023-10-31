@@ -209,9 +209,9 @@ static Status handleOutputFileActions(
     /* Map output to a specific file descriptor */
     if ((status = posix_spawn_file_actions_adddup2(
              fileActions, fd, targetFD)) != 0) {
-      runtimeError("posix_spawn_file_actions_adddup2(): %s", strerror(status));
-      return STATUS_ERROR;
+      return runtimeError("posix_spawn_file_actions_adddup2(): %s", strerror(status));
     }
+    return STATUS_OK;
   }
   runtimeError("Invalid MTOTSProc output fd value %d", fd);
   return STATUS_ERROR;

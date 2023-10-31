@@ -189,6 +189,7 @@ FileDescriptor asFileDescriptor(Value value);
 Obj *asObj(Value value);
 
 void *asVoidPointer(Value value);
+const void *asConstVoidPointer(Value value);
 int *asIntPointer(Value value);
 u8 *asU8Pointer(Value value);
 u16 *asU16Pointer(Value value);

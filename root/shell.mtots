@@ -2,6 +2,7 @@
 Utilities for starting, piping and waiting on subprocesses.
 """
 import subprocess
+import os.posix
 
 
 class Job:
@@ -9,17 +10,76 @@ class Job:
   Base class for a shell job that can be piped
   """
   var input Job?
+  var output FileDescriptor?
 
   def __init__():
     this.input = nil
+    this.output = nil
+
+  def run() nil:
+    """
+    Run the job - i.e. start and wait for this job to finish
+    """
+    this.start()
+    this.wait()
+
+  def start(output FileDescriptor|Int?=nil) nil:
+    "Start this job"
 
   def _wait() nil:
     "Wait on this, without considering any of its dependencies"
 
   def wait() nil:
-    this._wait()
     if this.input:
       this.input!.wait()
+    this._wait()
+
+  def __or__(other Job) Job:
+    other.input = this
+    return other
+
+
+class ReadFile(Job):
+  final path String
+
+  def __init__(path String):
+    super.__init__()
+    this.path = path
+
+  def __repr__() String:
+    return "ReadFile(%r)" % [this.path]
+
+  def start(output FileDescriptor|Int?=nil) nil:
+    final fd = posix.open(this.path, posix.O_RDONLY|posix.O_CLOEXEC|posix.O_NONBLOCK)
+    this.output = fd
+
+
+class WriteFile(Job):
+  final path String
+  var _fd FileDescriptor?
+
+  def __init__(path String):
+    super.__init__()
+    this.path = path
+    this._fd = nil
+
+  def __repr__() String:
+    return "WriteFile(%r)" % [this.path]
+
+  def start(output FileDescriptor|Int?=nil) nil:
+    if not this.input:
+      raise "WriteFile requires input"
+    final input = this.input!
+    final mode = 6 * 64 + 4 * 8 + 4 # 0o644
+    final fd = posix.open(
+      this.path,
+      posix.O_WRONLY|posix.O_CREAT|posix.O_CLOEXEC,
+      mode)
+    input.start(fd)
+    this._fd = fd
+
+  def _wait() nil:
+    posix.close(this._fd!)
 
 
 class Run(Job):
@@ -28,39 +88,32 @@ class Run(Job):
   """
 
   final _args List[String]
-  var popen subprocess.Popen?
+  var _popen subprocess.Popen?
 
   def __init__(args List[String]):
     super.__init__()
     this._args = args
 
-  def start(pipe Bool = false) nil:
+  def __repr__() String:
+    return "Run(%r)" % [this._args]
+
+  def start(output FileDescriptor|Int?=nil) nil:
     """
     Start a run of this cli command and return a Popen object.
     To check if the process finished, call `wait` on the returned
     Popen instance or use the `run` method instead.
     """
-    var inputFD Int? = nil
+    var inputFD FileDescriptor|Int? = nil
     if this.input:
-      final input = this.input as Job
-      inputFD = (input.popen as subprocess.Popen).stdoutPipe
-    var stdoutFD Int? = nil
-    if pipe:
-      stdoutFD = subprocess.PIPE
-    final popen = subprocess.Popen(this._args, inputFD, stdoutFD)
-    this.popen = popen
+      print("input = %r" % [this.input])
+      final input = this.input!
+      input.start(subprocess.PIPE)
+      inputFD = input.output!
+    final popen = subprocess.Popen(this._args, inputFD, output)
+    this._popen = popen
+    if (output as Number) == subprocess.PIPE:
+      this.output = popen.stdoutPipe
     return popen
 
   def _wait() nil:
-    (this.popen as subprocess.Popen).wait()
-
-  def run() nil:
-    """
-    Start a run of this cli command and wait for it to finish
-    """
-    this.start()
-    this.wait()
-
-  def __or__(other Run) Run:
-    other.input = this
-    return other
+    this._popen!.wait()

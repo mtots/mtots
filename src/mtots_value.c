@@ -247,6 +247,10 @@ void *asVoidPointer(Value value) {
   }
   return pointer.as.voidPointer;
 }
+const void *asConstVoidPointer(Value value) {
+  TypedPointer pointer = asPointer(value);
+  return pointer.metadata.isConst ? pointer.as.constVoidPointer : pointer.as.voidPointer;
+}
 int *asIntPointer(Value value) {
   TypedPointer pointer = asPointer(value);
   if (pointer.metadata.isConst || pointer.metadata.type != POINTER_TYPE_INT) {

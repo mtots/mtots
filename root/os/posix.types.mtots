@@ -45,3 +45,16 @@ def read(fd FileDescriptor, buf Buffer, count Int? = nil) Int:
 
   Returns the total number of bytes read
   """
+
+
+def write(fd FileDescriptor, buf Buffer | String | Pointer, count Int? = nil) Int:
+  """
+  Write data to a file descriptor
+
+  If `buf` is a Buffer, the data is taken from the beginning of the Buffer.
+  If, at the same time, `count` is provided, `count` bytes will be written from the Buffer.
+  Otherwise, the entire contents of the Buffer will be written.
+
+  If `buf` is a String, the data is taken from (the UTF-8 encoding of) the String.
+  If, at the same time, `count` is provided, `count` bytes will be written from the String.
+  """

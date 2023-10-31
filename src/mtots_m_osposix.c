@@ -16,13 +16,13 @@ static Status implOpen(i16 argc, Value *argv, Value *out) {
   int flags = asInt(argv[1]);
   int fd;
   if (flags & O_CREAT) {
-    if (argc > 2 && !isNil(argv[2])) {
+    if (!(argc > 2 && !isNil(argv[2]))) {
       return runtimeError(
           "open with O_CREAT requires a third argument but got %d", argc);
     }
     fd = open(pathname, flags, asInt(argv[2]));
   } else {
-    if (!(argc == 2 || (argc > 2 && isNil(argv[2])))) {
+    if (argc > 2 && !isNil(argv[2])) {
       return runtimeError(
           "open without O_CREAT must have exactly 2 arguments but got %d", argc);
     }
@@ -87,12 +87,40 @@ static Status implRead(i16 argc, Value *argv, Value *out) {
 
 static CFunction funcRead = {implRead, "read", 2, 3};
 
+static Status implWrite(i16 argc, Value *argv, Value *out) {
+  int fd = asFileDescriptor(argv[0]);
+  ssize_t writeSize;
+  if (isPointer(argv[1])) {
+    const void *buf = asConstVoidPointer(argv[1]);
+    if (!(argc > 2 && !isNil(argv[2]))) {
+      return runtimeError(
+          "write() with a pointer for the buf paramter requires an explicit count argument");
+    }
+    writeSize = write(fd, buf, asSize(argv[2]));
+  } else if (isString(argv[1])) {
+    String *string = asString(argv[1]);
+    size_t count = argc > 2 && !isNil(argv[2]) ? asSize(argv[2]) : string->byteLength;
+    writeSize = write(fd, string->chars, count);
+  } else {
+    Buffer *buffer = &asBuffer(argv[1])->handle;
+    size_t count = argc > 2 && !isNil(argv[2]) ? asSize(argv[2]) : buffer->length;
+    writeSize = write(fd, buffer->data, count);
+  }
+  if (writeSize < 0) {
+    return runtimeError("write(): %s", strerror(errno));
+  }
+  return STATUS_OK;
+}
+
+static CFunction funcWrite = {implWrite, "write", 2, 3};
+
 static Status impl(i16 argc, Value *argv, Value *out) {
   ObjModule *module = asModule(argv[0]);
   CFunction *functions[] = {
       &funcOpen,
       &funcClose,
       &funcRead,
+      &funcWrite,
       NULL,
   };
 
