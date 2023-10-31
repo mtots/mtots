@@ -19,6 +19,10 @@ Future work:
 
 ## Release Notes
 
+### 0.0.50
+
+nil-check syntax
+
 ### 0.0.49
 
 Allow assigning to final fields inside `__init__` methods.

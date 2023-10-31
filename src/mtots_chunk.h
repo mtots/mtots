@@ -38,6 +38,7 @@ typedef enum OpCode {
   OP_IN,
   OP_NOT,
   OP_NEGATE,
+  OP_NIL_CHECK,
   OP_JUMP,
   OP_JUMP_IF_FALSE,
   OP_JUMP_IF_STOP_ITERATION,

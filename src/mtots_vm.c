@@ -982,6 +982,11 @@ static Status run(void) {
           INVOKE(vm.cs->neg, 0);
         }
         break;
+      case OP_NIL_CHECK:
+        if (isNil(peek(0))) {
+          return runtimeError("Expected non-nil value but got nil");
+        }
+        break;
       case OP_JUMP: {
         u16 offset = READ_SHORT();
         frame->ip += offset;

@@ -1,0 +1,8 @@
+
+
+var x String? = "asdf"
+final a = x!
+print("a = %s" % [a])
+x = nil
+final b = x!
+print("b = %s" % [b])

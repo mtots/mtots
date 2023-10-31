@@ -459,6 +459,17 @@ export class TypeAssertion extends Expression {
   }
 }
 
+export class NilCheck extends Expression {
+  readonly expression: Expression;
+  constructor(location: MLocation, expression: Expression) {
+    super(location);
+    this.expression = expression;
+  }
+  accept<A, R>(visitor: ExpressionVisitor<A, R>, arg: A): R {
+    return visitor.visitNilCheck(this, arg);
+  }
+}
+
 export class ListDisplay extends Expression {
   readonly items: Expression[];
   constructor(location: MLocation, items: Expression[]) {
@@ -705,6 +716,7 @@ export interface ExpressionVisitor<A, R> {
   visitNumberLiteral(e: NumberLiteral, arg: A): R;
   visitStringLiteral(e: StringLiteral, arg: A): R;
   visitTypeAssertion(e: TypeAssertion, arg: A): R;
+  visitNilCheck(e: NilCheck, arg: A): R;
   visitListDisplay(e: ListDisplay, arg: A): R;
   visitFrozenListDisplay(e: FrozenListDisplay, arg: A): R;
   visitTupleDisplay(e: TupleDisplay, arg: A): R;

@@ -13,7 +13,7 @@ const PrecList: MTokenType[][] = [
   ['or'],
   ['and'],
   [],        // precedence for unary operator 'not'
-  ['==', '!=', '<', '>', '<=', '>=', 'in', 'not', 'is', 'as'],
+  ['==', '!=', '<', '>', '<=', '>=', 'in', 'not', 'is', 'as', '!'],
   ['<<', '>>'],
   ['&'],
   ['^'],
@@ -506,6 +506,10 @@ function _parse(filePath: string | Uri, s: string): ast.File {
         const assertType = parseTypeExpression();
         const location = startLocation.merge(assertType.location);
         return new ast.TypeAssertion(location, lhs, assertType);
+      }
+      case '!': {
+        const location = incr().location;
+        return new ast.NilCheck(location, lhs);
       }
     }
 

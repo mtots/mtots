@@ -62,7 +62,7 @@ typedef enum Precedence {
   PREC_OR,          /* or */
   PREC_AND,         /* and */
   PREC_NOT,         /* not */
-  PREC_COMPARISON,  /* == != < > <= >= in not-in is is-not as */
+  PREC_COMPARISON,  /* == != < > <= >= in not-in is is-not as (postfix-!) */
   PREC_SHIFT,       /* << >> */
   PREC_BITWISE_AND, /* & */
   PREC_BITWISE_XOR, /* ^ */
@@ -1613,6 +1613,12 @@ static Status parseAs(Parser *parser) {
   return parseTypeExpression(parser);
 }
 
+static Status parseNilCheck(Parser *parser) {
+  EXPECT(TOKEN_BANG);
+  EMIT1(OP_NIL_CHECK);
+  return STATUS_OK;
+}
+
 static Status parseDot(Parser *parser) {
   ConstID nameID;
 
@@ -2083,6 +2089,7 @@ static void initParseRulesPrivate(void) {
   rules[TOKEN_THIS] = newRule(parseThis, NULL, PREC_NONE);
   rules[TOKEN_TRUE] = newRule(parseLiteral, NULL, PREC_NONE);
   rules[TOKEN_AS] = newRule(NULL, parseAs, PREC_COMPARISON);
+  rules[TOKEN_BANG] = newRule(NULL, parseNilCheck, PREC_COMPARISON);
   rules[TOKEN_FINAL] = newRule(parseFrozenDisplay, NULL, PREC_NONE);
   rules[TOKEN_IN] = newRule(NULL, parseBinary, PREC_COMPARISON);
   rules[TOKEN_IS] = newRule(NULL, parseBinary, PREC_COMPARISON);

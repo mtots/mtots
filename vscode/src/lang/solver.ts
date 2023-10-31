@@ -823,6 +823,17 @@ function _solve(
       solveExpr(e.expression, type);
       return type;
     },
+    visitNilCheck: function(e: ast.NilCheck, hint: ir.Type | null): ir.Type {
+      const innerType = solveExpr(e.expression, hint);
+      if (innerType === ir.ANY_TYPE) {
+        return innerType;
+      }
+      if (innerType instanceof ir.UnionType && innerType.types.some(t => t === ir.NIL_TYPE)) {
+        return ir.UnionType.of(innerType.types.filter(t => t !== ir.NIL_TYPE));
+      }
+      err(e.location, `${innerType} is not an Optional type`);
+      return innerType;
+    },
     visitListDisplay: function (e: ast.ListDisplay, hint: ir.Type | null): ir.Type {
       if (hint === ir.UNTYPED_LIST) {
         for (const itemExpr of e.items) {
