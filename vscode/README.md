@@ -22,6 +22,7 @@ Future work:
 ### 0.0.52
 
 More correct Union - Union assignability checks
+Bugfix with trait assignability checks
 
 ### 0.0.51
 

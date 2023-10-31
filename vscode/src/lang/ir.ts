@@ -226,8 +226,8 @@ export abstract class Type {
         if (!method.type.isAssignableTo(methodSpec.type)) {
           return false;
         }
-        return true;
       }
+      return true;
     }
     if (other instanceof FrozenDictType && this instanceof FrozenDictLiteralType) {
       return this.type.isAssignableTo(other);
