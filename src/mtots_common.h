@@ -82,4 +82,12 @@ typedef struct ByteSlice {
   const u8 *start, *end;
 } ByteSlice;
 
+#if MTOTS_IS_WINDOWS
+/* void* if platform is Windows, and int otherwise */
+typedef void *FileDescriptor; /* i.e. HANDLE */
+#else
+/* void* if platform is Windows, and int otherwise */
+typedef int FileDescriptor;
+#endif
+
 #endif /*mtots_common_h*/

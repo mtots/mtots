@@ -630,6 +630,8 @@ ObjClass *getClassOfValue(Value value) {
       return vm.vectorClass;
     case VAL_POINTER:
       return vm.pointerClass;
+    case VAL_FILE_DESCRIPTOR:
+      return vm.fileDescriptorClass;
     case VAL_OBJ: {
       switch (AS_OBJ_UNSAFE(value)->type) {
         case OBJ_CLASS:

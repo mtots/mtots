@@ -1216,3 +1216,12 @@ trait U16Pointer(Pointer):
 
 trait U32Pointer(Pointer):
   "u32 pointer"
+
+
+class FileDescriptor:
+  """
+  `HANDLE`/`void*` on Windows or `int` on all other platforms.
+
+  This is a builtin Value type, and so does not take up any
+  space in the heap.
+  """

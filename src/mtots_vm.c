@@ -131,6 +131,7 @@ void initVM(void) {
   initStringClass();
   initVectorClass();
   initPointerClass();
+  initNoMethodClass(&vm.fileDescriptorClass, "FileDescriptor");
   initBufferClass();
   initListClass();
   initDictClass();

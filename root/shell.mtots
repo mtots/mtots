@@ -17,9 +17,9 @@ class Job:
     "Wait on this, without considering any of its dependencies"
 
   def wait() nil:
-    if this.input:
-      (this.input as Job).wait()
     this._wait()
+    if this.input:
+      this.input!.wait()
 
 
 class Run(Job):

@@ -33,7 +33,7 @@ static void initProcArgs(MTOTSProc *proc, ObjList *argsList) {
   proc->argv[argsList->length] = NULL;
 }
 
-static int asFileDescriptor(i16 argc, Value *argv, i16 i) {
+static int getFD(i16 argc, Value *argv, i16 i) {
   return i < argc && !isNil(argv[i]) ? asInt(argv[i]) : MTOTS_PROC_INHERIT;
 }
 
@@ -56,9 +56,9 @@ static Status implPopenStaticCall(i16 argc, Value *argv, Value *out) {
   MTOTSProcInit(proc);
   initProcArgs(proc, argsList);
 
-  proc->stdinFD = asFileDescriptor(argc, argv, 1);
-  proc->stdoutFD = asFileDescriptor(argc, argv, 2);
-  proc->stderrFD = asFileDescriptor(argc, argv, 3);
+  proc->stdinFD = getFD(argc, argv, 1);
+  proc->stdoutFD = getFD(argc, argv, 2);
+  proc->stderrFD = getFD(argc, argv, 3);
 
   if (!MTOTSProcStart(proc)) {
     MTOTSProcFree(proc);
@@ -191,9 +191,9 @@ static Status implRun(i16 argc, Value *argv, Value *out) {
   initBuffer(&stderrData);
 
   proc.checkReturnCode = argc > 1 && !isNil(argv[1]) ? asBool(argv[1]) : UFALSE;
-  proc.stdinFD = asFileDescriptor(argc, argv, 2);
-  proc.stdoutFD = asFileDescriptor(argc, argv, 3);
-  proc.stderrFD = asFileDescriptor(argc, argv, 4);
+  proc.stdinFD = getFD(argc, argv, 2);
+  proc.stdoutFD = getFD(argc, argv, 3);
+  proc.stderrFD = getFD(argc, argv, 4);
 
   input = argc > 5 && !isNil(argv[5]) ? asString(argv[5]) : NULL;
   captureOutput = argc > 6 && !isNil(argv[6]) ? asBool(argv[6]) : UFALSE;

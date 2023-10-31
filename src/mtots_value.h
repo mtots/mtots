@@ -28,6 +28,7 @@ typedef enum ValueType {
 
   /* dangerous, but useful for interfacing with C */
   VAL_POINTER,
+  VAL_FILE_DESCRIPTOR,
 
   VAL_OBJ
 } ValueType;
@@ -128,6 +129,7 @@ typedef struct Value {
     VectorPartial vector;
     void *voidPointer;            /* for TypedPointer */
     const void *constVoidPointer; /* for TypedPointer */
+    FileDescriptor fileDescriptor;
     Obj *obj;
   } as; /* 8-bytes */
 } Value;
@@ -157,6 +159,7 @@ typedef struct ValueArray {
 #define isRangeIterator(value) ((value).type == VAL_RANGE_ITERATOR)
 #define isVector(value) ((value).type == VAL_VECTOR)
 #define isPointer(value) ((value).type == VAL_POINTER)
+#define isFileDescriptor(value) ((value).type == VAL_FILE_DESCRIPTOR)
 #define isObj(value) ((value).type == VAL_OBJ)
 #define AS_OBJ_UNSAFE(value) ((value).as.obj)
 
@@ -182,6 +185,7 @@ Range asRange(Value value);
 RangeIterator asRangeIterator(Value value);
 Vector asVector(Value value);
 TypedPointer asPointer(Value value);
+FileDescriptor asFileDescriptor(Value value);
 Obj *asObj(Value value);
 
 void *asVoidPointer(Value value);
@@ -199,6 +203,7 @@ Value valSentinel(Sentinel sentinel);
 Value valRange(Range range);
 Value valRangeIterator(RangeIterator rangeIterator);
 Value valPointer(TypedPointer pointer);
+Value valFileDescriptor(FileDescriptor fd);
 Value valVector(Vector vector);
 Value valObjExplicit(Obj *object);
 

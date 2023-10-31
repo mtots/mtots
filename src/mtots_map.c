@@ -80,6 +80,8 @@ u32 hashval(Value value) {
       return (u32)(size_t)(value.extra.tpm.isConst
                                ? value.as.constVoidPointer
                                : value.as.voidPointer);
+    case VAL_FILE_DESCRIPTOR:
+      break;
     case VAL_OBJ:
       switch (AS_OBJ_UNSAFE(value)->type) {
         case OBJ_FROZEN_LIST:

@@ -42,6 +42,8 @@ ubool valuesIs(Value a, Value b) {
       return vectorsEqual(asVector(a), asVector(b));
     case VAL_POINTER:
       return getConstPointerUnsafe(a) == getConstPointerUnsafe(b);
+    case VAL_FILE_DESCRIPTOR:
+      return a.as.fileDescriptor == b.as.fileDescriptor;
     case VAL_OBJ:
       return a.as.obj == b.as.obj;
   }
@@ -95,6 +97,8 @@ ubool valuesEqual(Value a, Value b) {
       return vectorsEqual(asVector(a), asVector(b));
     case VAL_POINTER:
       return getConstPointerUnsafe(a) == getConstPointerUnsafe(b);
+    case VAL_FILE_DESCRIPTOR:
+      return a.as.fileDescriptor == b.as.fileDescriptor;
     case VAL_OBJ: {
       Obj *objA = a.as.obj;
       Obj *objB = b.as.obj;
@@ -206,6 +210,8 @@ ubool valueLessThan(Value a, Value b) {
     }
     case VAL_POINTER:
       return getConstPointerUnsafe(a) < getConstPointerUnsafe(b);
+    case VAL_FILE_DESCRIPTOR:
+      return a.as.fileDescriptor < b.as.fileDescriptor;
     case VAL_OBJ: {
       Obj *objA = AS_OBJ_UNSAFE(a);
       Obj *objB = AS_OBJ_UNSAFE(b);
@@ -438,6 +444,13 @@ Status valueRepr(StringBuilder *out, Value value) {
                value.extra.tpm.isConst ? "const " : "",
                getPointerTypeName(value.extra.tpm.type),
                getConstPointerUnsafe(value));
+      return STATUS_OK;
+    case VAL_FILE_DESCRIPTOR:
+#if MTOTS_IS_WINDOWS
+      sbprintf(out, "<FileDescriptor %p>", value.as.fileDescriptor);
+#else
+      sbprintf(out, "<FileDescriptor %d>", value.as.fileDescriptor);
+#endif
       return STATUS_OK;
     case VAL_OBJ: {
       Obj *obj = AS_OBJ_UNSAFE(value);

@@ -225,6 +225,12 @@ TypedPointer asPointer(Value value) {
   }
   return pointer;
 }
+FileDescriptor asFileDescriptor(Value value) {
+  if (!isFileDescriptor(value)) {
+    panic("Expected FileDescriptor but got %s", getKindName(value));
+  }
+  return value.as.fileDescriptor;
+}
 Obj *asObj(Value value) {
   if (!isObj(value)) {
     panic("Expected Obj but got %s", getKindName(value));
@@ -338,6 +344,11 @@ Value valPointer(TypedPointer pointer) {
   }
   return v;
 }
+Value valFileDescriptor(FileDescriptor fd) {
+  Value v = {VAL_FILE_DESCRIPTOR};
+  v.as.fileDescriptor = fd;
+  return v;
+}
 Value valObjExplicit(Obj *object) {
   Value v = {VAL_OBJ};
   v.as.obj = object;
@@ -420,6 +431,8 @@ const char *getKindName(Value value) {
       return "Vector";
     case VAL_POINTER:
       return "Pointer";
+    case VAL_FILE_DESCRIPTOR:
+      return "FileDescriptor";
     case VAL_OBJ:
       switch (value.as.obj->type) {
         case OBJ_CLASS:
