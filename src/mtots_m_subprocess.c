@@ -34,7 +34,11 @@ static void initProcArgs(MTOTSProc *proc, ObjList *argsList) {
 }
 
 static int getFD(i16 argc, Value *argv, i16 i) {
-  return i < argc && !isNil(argv[i]) ? asInt(argv[i]) : MTOTS_PROC_INHERIT;
+  return i < argc && !isNil(argv[i])
+             ? isFileDescriptor(argv[i])
+                   ? argv[i].as.fileDescriptor
+                   : asInt(argv[i])
+             : MTOTS_PROC_INHERIT;
 }
 
 typedef struct ObjPopen {
@@ -121,9 +125,9 @@ WRAP_C_FUNCTION_EX(communicate, PopenCommunicate, 0, 3, {
   return MTOTSProcCommunicate(proc, inputSlice, stdoutData, stderrData);
 })
 DEFINE_FIELD_GETTER(Popen, returncode, valNumber(owner->handle.returncode))
-DEFINE_FIELD_GETTER(Popen, stdinPipe, valNumber(owner->handle.stdinPipe[1]))
-DEFINE_FIELD_GETTER(Popen, stdoutPipe, valNumber(owner->handle.stdoutPipe[0]))
-DEFINE_FIELD_GETTER(Popen, stderrPipe, valNumber(owner->handle.stderrPipe[0]))
+DEFINE_FIELD_GETTER(Popen, stdinPipe, valFileDescriptor(owner->handle.stdinPipe[1]))
+DEFINE_FIELD_GETTER(Popen, stdoutPipe, valFileDescriptor(owner->handle.stdoutPipe[0]))
+DEFINE_FIELD_GETTER(Popen, stderrPipe, valFileDescriptor(owner->handle.stderrPipe[0]))
 
 static CFunction *PopenStaticMethods[] = {
     &funcPopenStaticCall,

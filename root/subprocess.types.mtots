@@ -50,26 +50,26 @@ class Popen:
 
   final returncode Int
 
-  final stdinPipe Int """
+  final stdinPipe FileDescriptor """
     The file descriptor for the write end of the stdin pipe if this Popen
     was created with stdin=PIPE. Otherwise this value should be -1.
   """
 
-  final stdoutPipe Int """
+  final stdoutPipe FileDescriptor """
     The file descriptor for the read end of the stdout pipe if this Popen
     was created wtih stdout=PIPE. Otherwise this value should be -1.
   """
 
-  final stderrPipe Int """
+  final stderrPipe FileDescriptor """
     The file descriptor for the read end of the stderr pipe if this Popen
     was created wtih stderr=PIPE. Otherwise this value should be -1.
   """
 
   def __init__(
       args List[String],
-      stdin Int?=nil,
-      stdout Int?=nil,
-      stderr Int?=nil):
+      stdin FileDescriptor|Int?=nil,
+      stdout FileDescriptor|Int?=nil,
+      stderr FileDescriptor|Int?=nil):
     """
     Start a new subprocess.
     """
