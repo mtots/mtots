@@ -19,6 +19,10 @@ Future work:
 
 ## Release Notes
 
+### 0.0.52
+
+More correct Union - Union assignability checks
+
 ### 0.0.51
 
 nil-coalesce operator

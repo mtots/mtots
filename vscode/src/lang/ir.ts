@@ -181,11 +181,11 @@ export abstract class Type {
     if (other === ANY_TYPE || this === NEVER_TYPE || this.equals(other)) {
       return true;
     }
-    if (other instanceof UnionType) {
-      return other.types.some(entry => this.isAssignableTo(entry));
-    }
     if (this instanceof UnionType) {
       return this.types.every(entry => entry.isAssignableTo(other));
+    }
+    if (other instanceof UnionType) {
+      return other.types.some(entry => this.isAssignableTo(entry));
     }
     if (other === CLASS_TYPE && this instanceof ClassType) {
       return true;
