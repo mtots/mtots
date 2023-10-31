@@ -19,6 +19,12 @@ Future work:
 
 ## Release Notes
 
+### 0.0.51
+
+nil-coalesce operator
+
+types are now checked when values are assigned to variables or fields.
+
 ### 0.0.50
 
 nil-check syntax
