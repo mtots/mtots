@@ -1,0 +1,9 @@
+import os.posix
+
+final fd = posix.open("LICENSE", posix.O_RDONLY)
+print(fd)
+final buffer = Buffer()
+posix.read(fd, buffer)
+print("len(buffer) = %s" % [len(buffer)])
+print(buffer.asString())
+posix.close(fd)

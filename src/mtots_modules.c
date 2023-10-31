@@ -7,6 +7,7 @@
 #include "mtots_m_json.h"
 #include "mtots_m_os.h"
 #include "mtots_m_os_path.h"
+#include "mtots_m_osposix.h"
 #include "mtots_m_platform.h"
 #include "mtots_m_random.h"
 #include "mtots_m_sdl.h"
@@ -25,6 +26,7 @@ void addNativeModules(void) {
   addNativeModuleJson();
   addNativeModuleOs();
   addNativeModuleOsPath();
+  addNativeModuleOsPosix();
   addNativeModulePlatform();
   addNativeModuleRandom();
   addNativeModuleSDL();

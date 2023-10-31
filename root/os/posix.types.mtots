@@ -1,0 +1,47 @@
+"""
+Module for providing some POSIX-specific functionality
+
+If `os.isPosix()` is false, importing from this module will succeed, but
+it will have no members.
+"""
+
+final O_RDONLY Int = raise 0
+final O_WRONLY Int = raise 0
+final O_RDWR Int = raise 0
+final O_APPEND Int = raise 0
+final O_CREAT Int = raise 0
+final O_DSYNC Int = raise 0
+final O_CLOEXEC Int = raise 0
+final O_EXCL Int = raise 0
+final O_NONBLOCK Int = raise 0
+final O_TRUNC Int = raise 0
+final O_RSYNC Int "May not be supported on some platforms" = raise 0
+final O_SYNC Int "May not be supported on some platforms" = raise 0
+
+
+def open(pathname String, flags Int, mode Int=nil) FileDescriptor:
+  """
+  https://man7.org/linux/man-pages/man2/open.2.html
+
+  https://pubs.opengroup.org/onlinepubs/007904875/functions/open.html
+  """
+
+
+def close(fd FileDescriptor) nil:
+  """
+  https://man7.org/linux/man-pages/man2/close.2.html
+  """
+
+
+def read(fd FileDescriptor, buf Buffer, count Int? = nil) Int:
+  """
+  Read data from a file descriptor, and append the data to the given Buffer.
+
+  If parameter `count` is omitted or nil, `read()` is called repeatedly
+  until the file provides no more data.
+
+  If `count` is explicitly provided, the POSIX `read()` function will
+  be called exactly once.
+
+  Returns the total number of bytes read
+  """

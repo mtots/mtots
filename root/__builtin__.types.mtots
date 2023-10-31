@@ -448,6 +448,21 @@ class Buffer:
     Set the length of this buffer to zero
     """
 
+  def setLength(newLength Int) nil:
+    """
+    Modify the length of this Buffer.
+
+    If `newLength` is larger than the current length, this method
+    may reallocate the buffer.
+
+    Further, any extra bytes added will be zeroed out.
+    """
+
+  def setMinCapacity(newCap Int) nil:
+    """
+    Request a minimum allocated capacity for this Buffer.
+    """
+
   def clone() Buffer:
     """
     Create a clone of this Buffer
@@ -582,6 +597,18 @@ class Buffer:
     """
     Given a base64 encoded string, decode and add the content
     to the end of this buffer
+    """
+
+  def asString() String:
+    """
+    Decode the contents of this buffer as UTF8
+    """
+
+  def getPointer(byteIndex Int = 0) U8Pointer:
+    """
+    Get a `U8Pointer` into the bytes of the Buffer.
+
+    This method will also lock the buffer.
     """
 
 

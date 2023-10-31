@@ -39,6 +39,24 @@ static Status implBufferClear(i16 argCount, Value *args, Value *out) {
 
 static CFunction funcBufferClear = {implBufferClear, "clear"};
 
+static Status implBufferSetLength(i16 argc, Value *argv, Value *out) {
+  ObjBuffer *bo = asBuffer(argv[-1]);
+  size_t newSize = asSize(argv[0]);
+  bufferSetLength(&bo->handle, newSize);
+  return STATUS_OK;
+}
+
+static CFunction funcBufferSetLength = {implBufferSetLength, "setLength", 1};
+
+static Status implBufferSetMinCapacity(i16 argc, Value *argv, Value *out) {
+  ObjBuffer *bo = asBuffer(argv[-1]);
+  size_t newCap = asSize(argv[0]);
+  bufferSetMinCapacity(&bo->handle, newCap);
+  return STATUS_OK;
+}
+
+static CFunction funcBufferSetMinCapacity = {implBufferSetMinCapacity, "setMinCapacity", 1};
+
 static Status implBufferClone(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
   ObjBuffer *newBuf = newBuffer();
@@ -357,6 +375,25 @@ static Status implBufferMemcpy(i16 argCount, Value *args, Value *out) {
 
 static CFunction funcBufferMemcpy = {implBufferMemcpy, "memcpy", 2, 4};
 
+static Status implBufferAsString(i16 argc, Value *argv, Value *out) {
+  ObjBuffer *bo = asBuffer(argv[-1]);
+  String *string = bufferToString(&bo->handle);
+  *out = valString(string);
+  return STATUS_OK;
+}
+
+static CFunction funcBufferAsString = {implBufferAsString, "asString"};
+
+static Status implBufferGetPointer(i16 argc, Value *argv, Value *out) {
+  ObjBuffer *bo = asBuffer(argv[-1]);
+  size_t i = argc > 0 && !isNil(argv[0]) ? asIndex(argv[0], bo->handle.length) : 0;
+  bufferLock(&bo->handle);
+  *out = valPointer(newTypedPointer(&bo->handle.data + i, POINTER_TYPE_U8));
+  return STATUS_OK;
+}
+
+static CFunction funcBufferGetPointer = {implBufferGetPointer, "getPointer", 0, 1};
+
 static Status implBufferStaticFromSize(i16 argCount, Value *args, Value *out) {
   size_t size = asU32(args[0]);
   ObjBuffer *bo = newBuffer();
@@ -411,6 +448,8 @@ void initBufferClass(void) {
       &funcBufferLock,
       &funcBufferIsLocked,
       &funcBufferClear,
+      &funcBufferSetLength,
+      &funcBufferSetMinCapacity,
       &funcBufferClone,
       &funcBufferLen,
       &funcBufferGetitem,
@@ -445,6 +484,8 @@ void initBufferClass(void) {
       &funcBufferSetF32,
       &funcBufferSetF64,
       &funcBufferMemcpy,
+      &funcBufferAsString,
+      &funcBufferGetPointer,
       NULL,
   };
   CFunction *staticMethods[] = {
