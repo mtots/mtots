@@ -20,7 +20,7 @@ export const Symbols = [
   '@', '|', '&', '^', '~', '?', '!', '=', '<', '>',
 
   // double character tokens
-  '//', '**', '!=', '==', '<<', '<=', '>>', '>='
+  '//', '**', '!=', '==', '<<', '<=', '>>', '>=', '??',
 ] as const;
 
 type MTokenTypeKeyword = typeof Keywords[number];

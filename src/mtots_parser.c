@@ -59,6 +59,7 @@ typedef struct ConstID {
 
 typedef enum Precedence {
   PREC_NONE,
+  PREC_COALESCE,    /* ?? */
   PREC_OR,          /* or */
   PREC_AND,         /* and */
   PREC_NOT,         /* not */
@@ -1041,7 +1042,7 @@ static Status parsePrec(Parser *parser, Precedence prec) {
 }
 
 static Status parseExpression(Parser *parser) {
-  return parsePrec(parser, PREC_OR);
+  return parsePrec(parser, PREC_COALESCE);
 }
 
 static Status parseRawStringLiteral(Parser *parser) {
@@ -1669,6 +1670,16 @@ static Status parseOr(Parser *parser) {
   return STATUS_OK;
 }
 
+static Status parseNilCoalesce(Parser *parser) {
+  i32 endJump;
+  EXPECT(TOKEN_QMARK_QMARK);
+  CHECK2(emitJump, OP_JUMP_IF_NOT_NIL, &endJump);
+  EMIT1(OP_POP);
+  CHECK1(parsePrec, PREC_COALESCE);
+  CHECK1(patchJump, endJump);
+  return STATUS_OK;
+}
+
 static Status parseBinary(Parser *parser) {
   TokenType operatorType = parser->current.type;
   ParseRule *rule = getRule(operatorType);
@@ -2063,6 +2074,7 @@ static void initParseRulesPrivate(void) {
   rules[TOKEN_AMPERSAND] = newRule(NULL, parseBinary, PREC_BITWISE_AND);
   rules[TOKEN_CARET] = newRule(NULL, parseBinary, PREC_BITWISE_XOR);
   rules[TOKEN_TILDE] = newRule(parseUnary, NULL, PREC_NONE);
+  rules[TOKEN_QMARK_QMARK] = newRule(NULL, parseNilCoalesce, PREC_COALESCE);
   rules[TOKEN_SHIFT_LEFT] = newRule(NULL, parseBinary, PREC_SHIFT);
   rules[TOKEN_SHIFT_RIGHT] = newRule(NULL, parseBinary, PREC_SHIFT);
   rules[TOKEN_BANG_EQUAL] = newRule(NULL, parseBinary, PREC_COMPARISON);

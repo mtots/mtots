@@ -10,6 +10,7 @@ import { swrap } from "../debug";
 
 const PrecList: MTokenType[][] = [
   [],
+  ['??'],
   ['or'],
   ['and'],
   [],        // precedence for unary operator 'not'
@@ -94,15 +95,15 @@ function _parse(filePath: string | Uri, s: string): ast.File {
     }
     return false;
   }
-  function expect(type: MTokenType, sync=false): MToken {
+  function expect(type: MTokenType, sync = false): MToken {
     if (at(type)) {
       return incr();
     }
     err(`Expected ${type} but got ${peek.type}`);
     const value =
       type === 'NUMBER' ? 0 :
-      type === 'STRING' || type == 'IDENTIFIER' || type == 'ERROR' ? '(missing)' :
-      null;
+        type === 'STRING' || type == 'IDENTIFIER' || type == 'ERROR' ? '(missing)' :
+          null;
     const clone = new MToken(peek.location, type, value);
     if (sync) {
       while (i < tokens.length && peek.type !== type) {
@@ -417,8 +418,8 @@ function _parse(filePath: string | Uri, s: string): ast.File {
         const methodIdentifier = new ast.Identifier(
           startLocation,
           tokenType === '~' ? '__not__' :
-          tokenType === '-' ? '__neg__' :
-          tokenType === '+' ? '__pos__' : 'invalid');
+            tokenType === '-' ? '__neg__' :
+              tokenType === '+' ? '__pos__' : 'invalid');
         incr();
         const arg = parsePrec(PREC_UNARY_MINUS);
         const location = startLocation.merge(arg.location);
@@ -510,6 +511,11 @@ function _parse(filePath: string | Uri, s: string): ast.File {
       case '!': {
         const location = incr().location;
         return new ast.NilCheck(location, lhs);
+      }
+      case '??': {
+        const location = incr().location;
+        const rhs = parsePrec(PrecMap.get('??')!);
+        return new ast.NilCoalesce(location, lhs, rhs);
       }
     }
 
@@ -912,7 +918,7 @@ function _parse(filePath: string | Uri, s: string): ast.File {
   function parseDecoratorApplication(): ast.Statement {
     const atLocation = expect('@').location;
     let decorator = parsePrec(PREC_PRIMARY);
-    let methodName: ast.Identifier|null = null;
+    let methodName: ast.Identifier | null = null;
     const dotLocation = peek.location;
     if (consume('.')) {
       if (at('IDENTIFIER')) {
@@ -941,7 +947,7 @@ function _parse(filePath: string | Uri, s: string): ast.File {
     ]);
   }
 
-  function parseFunctionDeclaration(nameRequired=true): ast.Function {
+  function parseFunctionDeclaration(nameRequired = true): ast.Function {
     const startLocation = expect('def').location;
     const identifier =
       (at('IDENTIFIER') || nameRequired) ?

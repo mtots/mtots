@@ -1,0 +1,7 @@
+
+
+final a = nil ?? 5
+print("(a = nil ?? 5) = %s" % [a])
+
+final b = a ?? 30
+print("(b = a ?? 30) = %s" % [b])

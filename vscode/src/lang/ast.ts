@@ -2,10 +2,10 @@ import { MError } from "./error";
 import { MLocation } from "./location";
 
 type Operator = (
-  'is'      |
-  'not'     |
-  'and'     |
-  'or'      |
+  'is' |
+  'not' |
+  'and' |
+  'or' |
   'if'
 )
 
@@ -39,9 +39,9 @@ export class QualifiedIdentifier extends Ast {
   readonly parent: QualifiedIdentifier | null;
   readonly identifier: Identifier;
   constructor(
-      location: MLocation,
-      parent: QualifiedIdentifier | null,
-      identifier: Identifier) {
+    location: MLocation,
+    parent: QualifiedIdentifier | null,
+    identifier: Identifier) {
     super(location);
     this.parent = parent;
     this.identifier = identifier;
@@ -76,10 +76,10 @@ export class TypeExpression extends Ast {
   readonly baseIdentifier: Identifier;
   readonly args: TypeExpression[];
   constructor(
-      location: MLocation,
-      parentIdentifier: Identifier | null,
-      baseIdentifier: Identifier,
-      args: TypeExpression[]) {
+    location: MLocation,
+    parentIdentifier: Identifier | null,
+    baseIdentifier: Identifier,
+    args: TypeExpression[]) {
     super(location);
     this.parentIdentifier = parentIdentifier;
     this.baseIdentifier = baseIdentifier;
@@ -93,11 +93,11 @@ export class File extends Ast {
   readonly statements: Statement[];
   readonly syntaxErrors: MError[];
   constructor(
-      location: MLocation,
-      documentation: string | null,
-      imports: Import[],
-      statements: Statement[],
-      syntaxErrors: MError[]) {
+    location: MLocation,
+    documentation: string | null,
+    imports: Import[],
+    statements: Statement[],
+    syntaxErrors: MError[]) {
     super(location);
     this.documentation = documentation;
     this.imports = imports;
@@ -120,9 +120,9 @@ export class TypeParameter extends Ast {
   readonly identifier: Identifier
   readonly bound: TypeExpression | null;
   constructor(
-      location: MLocation,
-      identifier: Identifier,
-      bound: TypeExpression | null) {
+    location: MLocation,
+    identifier: Identifier,
+    bound: TypeExpression | null) {
     super(location);
     this.identifier = identifier;
     this.bound = bound;
@@ -134,10 +134,10 @@ export class Parameter extends Ast {
   readonly typeExpression: TypeExpression | null;
   readonly defaultValue: Expression | null;
   constructor(
-      location: MLocation,
-      identifier: Identifier,
-      typeExpression: TypeExpression | null,
-      defaultValue: Expression | null) {
+    location: MLocation,
+    identifier: Identifier,
+    typeExpression: TypeExpression | null,
+    defaultValue: Expression | null) {
     super(location);
     this.identifier = identifier;
     this.typeExpression = typeExpression;
@@ -153,13 +153,13 @@ export class Function extends Statement {
   readonly documentation: StringLiteral | null;
   readonly body: Block;
   constructor(
-      location: MLocation,
-      identifier: Identifier,
-      typeParameters: TypeParameter[],
-      parameters: Parameter[],
-      returnType: TypeExpression | null,
-      documentation: StringLiteral | null,
-      body: Block) {
+    location: MLocation,
+    identifier: Identifier,
+    typeParameters: TypeParameter[],
+    parameters: Parameter[],
+    returnType: TypeExpression | null,
+    documentation: StringLiteral | null,
+    body: Block) {
     super(location);
     this.identifier = identifier;
     this.typeParameters = typeParameters;
@@ -180,11 +180,11 @@ export class Field extends Ast {
   readonly typeExpression: TypeExpression;
   readonly documentation: StringLiteral | null;
   constructor(
-      location: MLocation,
-      final: boolean,
-      identifier: Identifier,
-      typeExpression: TypeExpression,
-      documentation: StringLiteral | null) {
+    location: MLocation,
+    final: boolean,
+    identifier: Identifier,
+    typeExpression: TypeExpression,
+    documentation: StringLiteral | null) {
     super(location);
     this.final = final;
     this.identifier = identifier;
@@ -202,14 +202,14 @@ export class Class extends Statement {
   readonly fields: Field[];
   readonly methods: Function[];
   constructor(
-      location: MLocation,
-      identifier: Identifier,
-      typeParameters: TypeParameter[],
-      bases: TypeExpression[],
-      documentation: StringLiteral | null,
-      staticMethods: Function[],
-      fields: Field[],
-      methods: Function[]) {
+    location: MLocation,
+    identifier: Identifier,
+    typeParameters: TypeParameter[],
+    bases: TypeExpression[],
+    documentation: StringLiteral | null,
+    staticMethods: Function[],
+    fields: Field[],
+    methods: Function[]) {
     super(location);
     this.identifier = identifier;
     this.typeParameters = typeParameters;
@@ -233,13 +233,13 @@ export class Trait extends Statement {
   readonly fields: Field[];
   readonly methods: Function[];
   constructor(
-      location: MLocation,
-      identifier: Identifier,
-      typeParameters: TypeParameter[],
-      bases: TypeExpression[],
-      documentation: StringLiteral | null,
-      fields: Field[],
-      methods: Function[]) {
+    location: MLocation,
+    identifier: Identifier,
+    typeParameters: TypeParameter[],
+    bases: TypeExpression[],
+    documentation: StringLiteral | null,
+    fields: Field[],
+    methods: Function[]) {
     super(location);
     this.identifier = identifier;
     this.typeParameters = typeParameters;
@@ -259,10 +259,10 @@ export class Import extends Ast {
   readonly member: Identifier | null;
   readonly alias: Identifier;
   constructor(
-      location: MLocation,
-      module: QualifiedIdentifier,
-      member: Identifier | null,
-      alias: Identifier | null) {
+    location: MLocation,
+    module: QualifiedIdentifier,
+    member: Identifier | null,
+    alias: Identifier | null) {
     super(location);
     this.module = module;
     this.member = member;
@@ -278,12 +278,12 @@ export class Variable extends Statement {
   readonly typeExpression: TypeExpression | null;
   readonly valueExpression: Expression;
   constructor(
-      location: MLocation,
-      documentation: string | null,
-      final: boolean,
-      identifier: Identifier,
-      typeExpression: TypeExpression | null,
-      valueExpression: Expression) {
+    location: MLocation,
+    documentation: string | null,
+    final: boolean,
+    identifier: Identifier,
+    typeExpression: TypeExpression | null,
+    valueExpression: Expression) {
     super(location);
     this.documentation = documentation;
     this.final = final;
@@ -316,10 +316,10 @@ export class For extends Statement {
   readonly container: Expression;
   readonly body: Block;
   constructor(
-      location: MLocation,
-      variable: Identifier,
-      container: Expression,
-      body: Block) {
+    location: MLocation,
+    variable: Identifier,
+    container: Expression,
+    body: Block) {
     super(location);
     this.variable = variable;
     this.container = container;
@@ -335,9 +335,9 @@ export class If extends Statement {
   readonly pairs: [Expression, Block][];
   readonly fallback: Block | null;
   constructor(
-      location: MLocation,
-      pairs: [Expression, Block][],
-      fallback: Block | null) {
+    location: MLocation,
+    pairs: [Expression, Block][],
+    fallback: Block | null) {
     super(location);
     this.pairs = pairs;
     this.fallback = fallback;
@@ -447,9 +447,9 @@ export class TypeAssertion extends Expression {
   readonly expression: Expression;
   readonly typeExpression: TypeExpression;
   constructor(
-      location: MLocation,
-      expression: Expression,
-      typeExpression: TypeExpression) {
+    location: MLocation,
+    expression: Expression,
+    typeExpression: TypeExpression) {
     super(location);
     this.expression = expression;
     this.typeExpression = typeExpression;
@@ -467,6 +467,19 @@ export class NilCheck extends Expression {
   }
   accept<A, R>(visitor: ExpressionVisitor<A, R>, arg: A): R {
     return visitor.visitNilCheck(this, arg);
+  }
+}
+
+export class NilCoalesce extends Expression {
+  readonly lhs: Expression;
+  readonly rhs: Expression;
+  constructor(location: MLocation, lhs: Expression, rhs: Expression) {
+    super(location);
+    this.lhs = lhs;
+    this.rhs = rhs;
+  }
+  accept<A, R>(visitor: ExpressionVisitor<A, R>, arg: A): R {
+    return visitor.visitNilCoalesce(this, arg);
   }
 }
 
@@ -532,10 +545,10 @@ export class Lambda extends Expression {
   readonly returnType: TypeExpression | null;
   readonly body: Expression;
   constructor(
-      location: MLocation,
-      parameters: Parameter[],
-      returnType: TypeExpression | null,
-      body: Expression) {
+    location: MLocation,
+    parameters: Parameter[],
+    returnType: TypeExpression | null,
+    body: Expression) {
     super(location);
     this.parameters = parameters;
     this.returnType = returnType;
@@ -561,11 +574,11 @@ export class FunctionCall extends Expression {
   readonly argLocations: MLocation[] | null;
 
   constructor(
-      location: MLocation,
-      func: Expression,
-      args: Expression[],
-      kwargs: [Identifier, Expression][],
-      argLocations: MLocation[] | null) {
+    location: MLocation,
+    func: Expression,
+    args: Expression[],
+    kwargs: [Identifier, Expression][],
+    argLocations: MLocation[] | null) {
     super(location);
     this.func = func;
     this.args = args;
@@ -598,12 +611,12 @@ export class MethodCall extends Expression {
   readonly argLocations: MLocation[] | null;
 
   constructor(
-      location: MLocation,
-      owner: Expression,
-      identifier: Identifier,
-      args: Expression[],
-      kwargs: [Identifier, Expression][] = [],
-      argLocations: MLocation[] | null = null) {
+    location: MLocation,
+    owner: Expression,
+    identifier: Identifier,
+    args: Expression[],
+    kwargs: [Identifier, Expression][] = [],
+    argLocations: MLocation[] | null = null) {
     super(location);
     this.owner = owner;
     this.identifier = identifier;
@@ -639,10 +652,10 @@ export class SetField extends Expression {
   readonly identifier: Identifier;
   readonly value: Expression;
   constructor(
-      location: MLocation,
-      owner: Expression,
-      identifier: Identifier,
-      value: Expression) {
+    location: MLocation,
+    owner: Expression,
+    identifier: Identifier,
+    value: Expression) {
     super(location);
     this.owner = owner;
     this.identifier = identifier;
@@ -665,10 +678,10 @@ export class Dot extends Expression {
   /** Location of the token immediately following the '.' */
   readonly followLocation: MLocation;
   constructor(
-      location: MLocation,
-      owner: Expression,
-      dotLocation: MLocation,
-      followLocation: MLocation) {
+    location: MLocation,
+    owner: Expression,
+    dotLocation: MLocation,
+    followLocation: MLocation) {
     super(location);
     this.owner = owner;
     this.dotLocation = dotLocation;
@@ -683,9 +696,9 @@ export class Operation extends Expression {
   readonly op: Operator;
   readonly args: Expression[];
   constructor(
-      location: MLocation,
-      op: Operator,
-      args: Expression[]) {
+    location: MLocation,
+    op: Operator,
+    args: Expression[]) {
     super(location);
     this.op = op;
     this.args = args;
@@ -717,6 +730,7 @@ export interface ExpressionVisitor<A, R> {
   visitStringLiteral(e: StringLiteral, arg: A): R;
   visitTypeAssertion(e: TypeAssertion, arg: A): R;
   visitNilCheck(e: NilCheck, arg: A): R;
+  visitNilCoalesce(e: NilCoalesce, arg: A): R;
   visitListDisplay(e: ListDisplay, arg: A): R;
   visitFrozenListDisplay(e: FrozenListDisplay, arg: A): R;
   visitTupleDisplay(e: TupleDisplay, arg: A): R;

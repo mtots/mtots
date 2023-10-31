@@ -29,6 +29,7 @@ typedef enum TokenType {
   TOKEN_CARET,
   TOKEN_TILDE,
   TOKEN_QMARK,
+  TOKEN_QMARK_QMARK,
   TOKEN_SHIFT_LEFT,
   TOKEN_SHIFT_RIGHT,
   /* One or two character tokens. */

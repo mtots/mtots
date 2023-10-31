@@ -41,6 +41,7 @@ typedef enum OpCode {
   OP_NIL_CHECK,
   OP_JUMP,
   OP_JUMP_IF_FALSE,
+  OP_JUMP_IF_NOT_NIL,
   OP_JUMP_IF_STOP_ITERATION,
   OP_RAISE,
   OP_GET_ITER, /* iterable TOS, replaces with iterator */

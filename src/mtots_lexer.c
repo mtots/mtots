@@ -58,6 +58,7 @@ static OneCharSymbolInfo oneCharSymbols[] = {
 };
 
 static TwoCharSymbolInfo twoCharSymbols[] = {
+    {TOKEN_QMARK_QMARK, '?', '?'},
     {TOKEN_BANG_EQUAL, '!', '='},
     {TOKEN_EQUAL_EQUAL, '=', '='},
     {TOKEN_GREATER_EQUAL, '>', '='},
@@ -468,6 +469,8 @@ const char *tokenTypeToName(TokenType type) {
       return "TILDE";
     case TOKEN_QMARK:
       return "QMARK";
+    case TOKEN_QMARK_QMARK:
+      return "QMARK_QMARK";
     case TOKEN_SHIFT_LEFT:
       return "SHIFT_LEFT";
     case TOKEN_SHIFT_RIGHT:

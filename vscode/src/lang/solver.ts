@@ -644,8 +644,8 @@ function _solve(
         // or Iteration type but type is not.
         // TODO: Come up with a more general algorithm that makes this
         // special treatment unnecessary.
-        if (param.types.some(t => t === ir.NIL_TYPE) && !ir.NIL_TYPE.isAssignableTo(type)) {
-          return infer(ir.UnionType.of(param.types.filter(t => t !== ir.NIL_TYPE)), type);
+        if (param.types.some(t => t.isNilType()) && !ir.NIL_TYPE.isAssignableTo(type)) {
+          return infer(param.getNonNilType(), type);
         }
         if (param.types.some(t => t === ir.STOP_ITERATION_TYPE) &&
           !ir.STOP_ITERATION_TYPE.isAssignableTo(type)) {
@@ -793,12 +793,17 @@ function _solve(
     visitSetVariable: function (e: ast.SetVariable, hint: ir.Type | null): ir.Type {
       const variable = scope.get(e.identifier.name);
       if (variable) {
-        solveExpr(e.value, variable.type);
+        const valueType = solveExpr(e.value, variable.type);
         declareUsage(e.identifier, variable);
         if (variable.final) {
           err(
             e.location,
             `Assign to final variable "${e.identifier.name}"`);
+        }
+        if (!valueType.isAssignableTo(variable.type)) {
+          err(e.location,
+            `Value of type ${valueType} is not assignable ` +
+            `to variable of type ${variable.type}`);
         }
         return variable.type;
       }
@@ -823,16 +828,24 @@ function _solve(
       solveExpr(e.expression, type);
       return type;
     },
-    visitNilCheck: function(e: ast.NilCheck, hint: ir.Type | null): ir.Type {
+    visitNilCheck: function (e: ast.NilCheck, hint: ir.Type | null): ir.Type {
       const innerType = solveExpr(e.expression, hint);
       if (innerType === ir.ANY_TYPE) {
         return innerType;
       }
-      if (innerType instanceof ir.UnionType && innerType.types.some(t => t === ir.NIL_TYPE)) {
-        return ir.UnionType.of(innerType.types.filter(t => t !== ir.NIL_TYPE));
+      if (innerType instanceof ir.UnionType && innerType.types.some(t => t.isNilType())) {
+        return ir.UnionType.of(innerType.types.filter(t => !t.isNilType()));
       }
       err(e.location, `${innerType} is not an Optional type`);
       return innerType;
+    },
+    visitNilCoalesce: function (e: ast.NilCoalesce, hint: ir.Type | null): ir.Type {
+      const lhs = solveExpr(e.lhs, hint ? ir.UnionType.of([hint, ir.NIL_TYPE]) : null);
+      const rhs = solveExpr(e.rhs, hint ? hint.getNonNilType() : null);
+      console.log(
+        `lhs = ${lhs}, lhs.type = ${lhs.constructor.name} rhs = ${rhs}, ` +
+        `lhs.getNonNilType() = ${lhs.getNonNilType()}`);
+      return ir.UnionType.of([lhs.getNonNilType(), rhs]);
     },
     visitListDisplay: function (e: ast.ListDisplay, hint: ir.Type | null): ir.Type {
       if (hint === ir.UNTYPED_LIST) {
@@ -1014,7 +1027,12 @@ function _solve(
           }
         }
         declareUsage(e.identifier, field);
-        solveExpr(e.value, field.type);
+        const valueType = solveExpr(e.value, field.type);
+        if (!valueType.isAssignableTo(field.type)) {
+          err(e.location,
+            `Value of type ${valueType} is not assignable ` +
+            `to field of type ${field.type}`);
+        }
         return field.type;
       } else {
         err(e.identifier.location,
@@ -1077,9 +1095,14 @@ function _solve(
     visitTrait: function (s: ast.Trait): void {
     },
     visitVariable: function (s: ast.Variable): void {
-      const implicitType = solveExpr(s.valueExpression);
-      let type = s.typeExpression ?
-        solveType(s.typeExpression) : implicitType;
+      const declaredType = s.typeExpression ? solveType(s.typeExpression) : null;
+      const implicitType = solveExpr(s.valueExpression, declaredType);
+      if (declaredType && !implicitType.isAssignableTo(declaredType)) {
+        err(s.location,
+          `Value of type ${implicitType} is not assignable ` +
+          `to variable of type ${declaredType}`);
+      }
+      let type = declaredType || implicitType;
       if (s.final && type instanceof ir.PrimitiveType) {
         const value = solveConstExpr(s.valueExpression);
         if (value !== undefined) {

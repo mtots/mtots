@@ -105,6 +105,20 @@ export abstract class Type {
     }
     return null;
   }
+  isNilType(): boolean {
+    const type: Type = this;
+    return type === NIL_TYPE || (type instanceof LiteralType && type.value === null);
+  }
+  getNonNilType(): Type {
+    const type: Type = this;
+    if (type.isNilType()) {
+      return NEVER_TYPE;
+    }
+    if (type instanceof UnionType) {
+      return UnionType.of(type.types.filter(t => !t.isNilType()));
+    }
+    return this;
+  }
   getField(fieldName: string): Variable | null {
     return null;
   }
@@ -682,7 +696,7 @@ export class ListType<T extends Type = Type> extends Type {
       mkmethod('pop', [['index', NUMBER_TYPE.getOptionalType(), null]], itemType),
       mkmethod('insert',
         [['index', NUMBER_TYPE.getOptionalType()],
-         ['item', itemType]], NIL_TYPE),
+        ['item', itemType]], NIL_TYPE),
       mkmethod('reverse', [], NIL_TYPE),
       mkmethod('sort', [
         ['keyfunc', new FunctionType([], [
@@ -1061,7 +1075,7 @@ export class UnionType extends Type {
   }
   toString(): string {
     const isIteration = this.types.some(t => t === STOP_ITERATION_TYPE);
-    const isOptional = this.types.some(t => t === NIL_TYPE);
+    const isOptional = this.types.some(t => t.isNilType());
     const filteredTypes = this.types.filter(
       t => t !== STOP_ITERATION_TYPE && t !== NIL_TYPE);
     let ret = filteredTypes.join('|') + (isOptional ? '?' : '');

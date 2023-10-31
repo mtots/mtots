@@ -999,6 +999,13 @@ static Status run(void) {
         }
         break;
       }
+      case OP_JUMP_IF_NOT_NIL: {
+        u16 offset = READ_SHORT();
+        if (!isNil(peek(0))) {
+          frame->ip += offset;
+        }
+        break;
+      }
       case OP_JUMP_IF_STOP_ITERATION: {
         u16 offset = READ_SHORT();
         if (isStopIteration(peek(0))) {
