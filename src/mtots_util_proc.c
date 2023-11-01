@@ -343,6 +343,14 @@ Status MTOTSProcCommunicate(
     fdjobs[0].fd = -1;
   }
 
+  if (!stdoutData) {
+    fdjobs[1].fd = -1;
+  }
+
+  if (!stderrData) {
+    fdjobs[2].fd = -1;
+  }
+
   if (!MTOTSRunFDJobs(fdjobs, 3)) {
     return STATUS_ERROR;
   }

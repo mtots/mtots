@@ -593,6 +593,11 @@ class Buffer:
   def addF64(value Float):
     pass
 
+  def addString(string String):
+    """
+    Append the contents of a String as UTF-8 to this Buffer
+    """
+
   def addBase64(string String):
     """
     Given a base64 encoded string, decode and add the content

@@ -1,0 +1,106 @@
+"""
+Convenient utility for running shell commands
+
+The IO facilities are simplified, and each Job provides their
+output to a `Buffer`.
+
+For a streaming version, see the `shell.concurrent` module
+where pipes and file descriptors are used instead.
+"""
+import subprocess
+import fs
+
+
+class Job:
+  """
+  """
+  def __init__():
+    ""
+
+  def run(output Buffer? = nil, scratch Buffer? = nil) nil:
+    """
+    Abstract. Runs this job and dump the final contents to the given
+    output buffer if provided.
+    """
+    # return this._run(Buffer(), output ?? Buffer())
+    raise "NotImplemented Job.run()"
+
+  def __or__(downstream JobWithInput) Job:
+    downstream.upstream = this
+    return downstream
+
+
+class JobWithInput(Job):
+  var upstream Job?
+
+  def __init__():
+    super.__init__()
+    this.upstream = nil
+
+
+class ReadString(Job):
+  final contents String
+
+  def __init__(contents String):
+    this.contents = contents
+
+  def run(output Buffer? = nil, scratch Buffer? = nil) nil:
+    final out = output ?? Buffer()
+    out.addString(this.contents)
+
+
+class ReadFile(Job):
+  final path String
+
+  def __init__(path String):
+    this.path = path
+
+  def run(output Buffer? = nil, scratch Buffer? = nil) nil:
+    fs.readIntoBuffer(this.path, output ?? Buffer())
+
+
+class WriteFile(JobWithInput):
+  final path String
+
+  def __init__(path String):
+    this.path = path
+
+  def run(output Buffer? = nil, scratch Buffer? = nil) nil:
+    if this.upstream:
+      final out = output ?? Buffer()
+      final inp = scratch ?? Buffer()
+      this.upstream!.run(inp, out)
+      out.clear()
+      fs.writeBytes(this.path, inp)
+
+
+class Run(JobWithInput):
+  """
+  A job that runs a subprocess
+  """
+  final args List[String]
+
+  def __init__(args List[String]):
+    super.__init__()
+    this.args = args
+
+  def run(output Buffer? = nil, scratch Buffer? = nil) nil:
+    """
+    Runs this job and dump the final contents to the given output buffer
+    if provided.
+    """
+    final inp = scratch ?? Buffer()
+    final out = output ?? Buffer()
+    inp.clear()
+    if this.upstream:
+      this.upstream!.run(inp, out)
+    out.clear()
+    subprocess.run(
+      this.args,    # args
+      true,         # check
+      nil,          # stdin
+      nil,          # stdout
+      nil,          # stderr
+      inp,          # input
+      out,          # outputBuffer
+    )

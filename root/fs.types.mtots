@@ -32,6 +32,16 @@ def readBytes(path String) Buffer:
   """
 
 
+def readIntoBuffer(path String, output Buffer) nil:
+  """
+  Read the entire contents of a file into the provided Buffer.
+
+  Parameters:
+  * path - The path of the file to read from.
+  * output - The buffer to write the file contents into.
+  """
+
+
 def writeString(path String, contents String) nil:
   """
   Create a file and fill it with the contents of the given String.

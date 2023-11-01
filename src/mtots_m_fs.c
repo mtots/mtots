@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "mtots_common.h"
 #include "mtots.h"
+#include "mtots_common.h"
 
 static Status implReadString(i16 argCount, Value *args, Value *out) {
   String *fileName = asString(args[0]);
@@ -69,6 +69,14 @@ static Status implReadBytes(i16 argCount, Value *args, Value *out) {
 }
 
 static CFunction funcReadBytes = {implReadBytes, "readBytes", 1, 0};
+
+static Status implReadIntoBuffer(i16 argc, Value *argv, Value *out) {
+  String *path = asString(argv[0]);
+  Buffer *buffer = &asBuffer(argv[1])->handle;
+  return readFileIntoBuffer(path->chars, buffer);
+}
+
+static CFunction funcReadIntoBuffer = {implReadIntoBuffer, "readIntoBuffer", 2};
 
 static Status implWriteString(i16 argCount, Value *args, Value *out) {
   String *fileName = asString(args[0]);
@@ -236,6 +244,7 @@ static Status impl(i16 argCount, Value *args, Value *out) {
   CFunction *functions[] = {
       &funcReadString,
       &funcReadBytes,
+      &funcReadIntoBuffer,
       &funcWriteString,
       &funcWriteBytes,
       &funcIsFile,

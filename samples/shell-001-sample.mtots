@@ -1,6 +1,6 @@
-from shell import Run
-from shell import ReadFile
-from shell import WriteFile
+from shell.concurrent import Run
+from shell.concurrent import ReadFile
+from shell.concurrent import WriteFile
 
 
 (

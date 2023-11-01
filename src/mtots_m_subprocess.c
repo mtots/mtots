@@ -41,6 +41,22 @@ static int getFD(i16 argc, Value *argv, i16 i) {
              : MTOTS_PROC_INHERIT;
 }
 
+static ByteSlice *getBS(int argc, Value *argv, i16 i, ByteSlice *dat) {
+  if (!(argc > i && !isNil(argv[i]))) {
+    return NULL;
+  }
+  if (isString(argv[i])) {
+    String *string = argv[i].as.string;
+    dat->start = (const u8 *)string->chars;
+    dat->end = dat->start + string->byteLength;
+  } else {
+    Buffer *buffer = &asBuffer(argv[i])->handle;
+    dat->start = buffer->data;
+    dat->end = dat->start + buffer->length;
+  }
+  return dat;
+}
+
 typedef struct ObjPopen {
   ObjNative obj;
   MTOTSProc handle;
@@ -183,12 +199,11 @@ static ObjCompletedProcess *completedProcess;
 
 static Status implRun(i16 argc, Value *argv, Value *out) {
 #if MTOTS_IS_POSIX
-  String *input;
   ubool captureOutput;
   MTOTSProc proc;
-  ByteSlice inputSlice;
+  ByteSlice inputStruct, *input = &inputStruct;
+  Buffer stdoutData, stderrData, *stdoutBuffer, *stderrBuffer;
   ObjList *argsList = asList(argv[0]);
-  Buffer stdoutData, stderrData;
   MTOTSProcInit(&proc);
   initProcArgs(&proc, argsList);
   initBuffer(&stdoutData);
@@ -199,8 +214,10 @@ static Status implRun(i16 argc, Value *argv, Value *out) {
   proc.stdoutFD = getFD(argc, argv, 3);
   proc.stderrFD = getFD(argc, argv, 4);
 
-  input = argc > 5 && !isNil(argv[5]) ? asString(argv[5]) : NULL;
-  captureOutput = argc > 6 && !isNil(argv[6]) ? asBool(argv[6]) : UFALSE;
+  input = getBS(argc, argv, 5, &inputStruct);
+  stdoutBuffer = argc > 6 && !isNil(argv[6]) ? &asBuffer(argv[6])->handle : &stdoutData;
+  stderrBuffer = argc > 7 && !isNil(argv[7]) ? &asBuffer(argv[7])->handle : &stderrData;
+  captureOutput = argc > 8 && !isNil(argv[8]) ? asBool(argv[8]) : UFALSE;
 
   if (input) {
     if (proc.stdinFD != MTOTS_PROC_INHERIT) {
@@ -209,8 +226,6 @@ static Status implRun(i16 argc, Value *argv, Value *out) {
           "if input is also provided");
     }
     proc.stdinFD = MTOTS_PROC_PIPE;
-    inputSlice.start = (const u8 *)input->chars;
-    inputSlice.end = inputSlice.start + input->byteLength;
   }
 
   if (captureOutput) {
@@ -223,13 +238,29 @@ static Status implRun(i16 argc, Value *argv, Value *out) {
     proc.stderrFD = MTOTS_PROC_PIPE;
   }
 
+  if (stdoutBuffer != &stdoutData) {
+    if (proc.stdoutFD != MTOTS_PROC_INHERIT) {
+      return runtimeError(
+          "If stdoutBuffer argument is provided, stdout argument should not be set");
+    }
+    proc.stdoutFD = MTOTS_PROC_PIPE;
+  }
+
+  if (stderrBuffer != &stderrData) {
+    if (proc.stderrFD != MTOTS_PROC_INHERIT) {
+      return runtimeError(
+          "If stderrBuffer argument is provided, stderr argument should not be set");
+    }
+    proc.stderrFD = MTOTS_PROC_PIPE;
+  }
+
   if (!MTOTSProcStart(&proc)) {
     MTOTSProcFree(&proc);
     return STATUS_ERROR;
   }
 
   /* TODO: pipe input to stdin */
-  if (!MTOTSProcCommunicate(&proc, input ? &inputSlice : NULL, &stdoutData, &stderrData)) {
+  if (!MTOTSProcCommunicate(&proc, input, stdoutBuffer, stderrBuffer)) {
     MTOTSProcFree(&proc);
     return STATUS_ERROR;
   }
@@ -237,6 +268,9 @@ static Status implRun(i16 argc, Value *argv, Value *out) {
   completedProcess->handle.returncode = proc.returncode;
   completedProcess->handle.stdoutString = bufferToString(&stdoutData);
   completedProcess->handle.stderrString = bufferToString(&stderrData);
+
+  freeBuffer(&stdoutData);
+  freeBuffer(&stderrData);
 
   *out = valCompletedProcess(completedProcess);
 
@@ -254,6 +288,8 @@ static const char *argsRun[] = {
     "stdout",
     "stderr",
     "input",
+    "stdoutBuffer",
+    "stderrBuffer",
     "captureOutput",
     NULL,
 };

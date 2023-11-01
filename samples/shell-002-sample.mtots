@@ -1,0 +1,11 @@
+from shell import Run
+from shell import ReadFile
+from shell import WriteFile
+
+
+(
+  ReadFile("LICENSE") |
+  Run(['grep', '--color=always', 'x']) |
+  WriteFile("RESULTS.txt")
+).run()
+

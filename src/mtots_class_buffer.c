@@ -213,6 +213,15 @@ static Status implBufferAddF64(i16 argCount, Value *args, Value *out) {
 
 static CFunction funcBufferAddF64 = {implBufferAddF64, "addF64", 1};
 
+static Status implBufferAddString(i16 argc, Value *argv, Value *out) {
+  Buffer *buffer = &asBuffer(argv[-1])->handle;
+  String *string = asString(argv[0]);
+  bufferAddBytes(buffer, string->chars, string->byteLength);
+  return STATUS_OK;
+}
+
+static CFunction funcBufferAddString = {implBufferAddString, "addUTF8", 1};
+
 static Status implBufferAddBase64(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
   String *string = asString(args[0]);
@@ -466,6 +475,7 @@ void initBufferClass(void) {
       &funcBufferAddU32,
       &funcBufferAddF32,
       &funcBufferAddF64,
+      &funcBufferAddString,
       &funcBufferAddBase64,
       &funcBufferGetI8,
       &funcBufferGetU8,

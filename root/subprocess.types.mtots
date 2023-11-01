@@ -5,6 +5,11 @@ Implements a subset of Python's subprocess module, and adds a few things not in 
 (Compare with https://docs.python.org/3/library/subprocess.html)
 """
 
+final PIPE """
+Flag used to indicate a Popen stream should be captured.
+"""= -1
+
+
 class CompletedProcess:
   final returncode Int
   final stdout String
@@ -14,7 +19,12 @@ class CompletedProcess:
 def run(
     args List[String],
     check Bool=false,
-    input String?=nil,
+    stdin FileDescriptor|Int?=nil,
+    stdout FileDescriptor|Int?=nil,
+    stderr FileDescriptor|Int?=nil,
+    input String|Buffer?=nil,
+    stdoutBuffer Buffer?=nil,
+    stderrBuffer Buffer?=nil,
     captureOutput Bool=false) CompletedProcess:
   """
   Spawn a subprocess and wait for it to finish.
@@ -27,18 +37,22 @@ def run(
     to pass to the subprocess.
   * check - if set to `true`, this function will throw if the subprocess returns
     a non-zero exit code.
+  * stdin - a file descriptor to read stdin from.
+    Defaults to inheriting the parent's stdin.
+  * stdout - a file descriptor to write stdout. May be PIPE.
+    Defaults to inheriting the parent's stdout.
+  * stderr - a file descriptor to write stderr. May be PIPE.
+    Defaults to inheriting the parent's stderr.
   * input - some data to pass to stdin of the child process. Any non-nil value here
-    will cause this function to PIPE the stdin of the child.
+    will cause this function to PIPE the stdin of the child. If `input` is provided,
+    the `stdin` argument should not be provided.
+  * stdoutBuffer - a buffer to write stdout to. This will cause stdout to be PIPE.
+  * stderrBuffer - a buffer to write stderr to. This will cause stderr to be PIPE.
   * captureOutput - by default, when set to `false`, `run` will inherit stdout and
     stderr from the parent. However, when this parameter is set to `true`, stdout
     and stderr will be piped and stored as a `String` in the returned `CompletedProcess`'s
     `stdout` and `stderr` fields.
   """
-
-
-final PIPE """
-Flag used to indicate a Popen stream should be captured.
-"""= -1
 
 
 class Popen:
