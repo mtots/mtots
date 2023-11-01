@@ -11,31 +11,50 @@ import subprocess
 import fs
 
 
+class Pipeline:
+  "A pipeline of jobs"
+  final jobs List[Job]
+
+  def __init__(jobs List[Job]):
+    this.jobs = jobs
+
+  def __or__(job Job) Pipeline:
+    this.jobs.append(job)
+    return this
+
+  def run() nil:
+    var input = Buffer()
+    var output = Buffer()
+
+    for job in this.jobs:
+      job.exe(input, output)
+      final tmp = input
+      input = output
+      output = tmp
+
+
 class Job:
   """
   """
   def __init__():
     ""
 
-  def run(output Buffer? = nil, scratch Buffer? = nil) nil:
+  def exe(input Buffer, output Buffer) nil:
     """
-    Abstract. Runs this job and dump the final contents to the given
-    output buffer if provided.
+    Abstract.
+
+    Parameters:
+    * input - Buffer containing input data. Because the input data may
+      be used for other Jobs, the input Buffer should not be mutated.
+    * output - Buffer to write/append output data to.
     """
-    # return this._run(Buffer(), output ?? Buffer())
-    raise "NotImplemented Job.run()"
+    raise "NotImplemented Job.exe()"
 
-  def __or__(downstream JobWithInput) Job:
-    downstream.upstream = this
-    return downstream
+  def run() nil:
+    return this.exe(Buffer(), Buffer())
 
-
-class JobWithInput(Job):
-  var upstream Job?
-
-  def __init__():
-    super.__init__()
-    this.upstream = nil
+  def __or__(other Job) Pipeline:
+    return Pipeline([this, other])
 
 
 class ReadString(Job):
@@ -44,9 +63,8 @@ class ReadString(Job):
   def __init__(contents String):
     this.contents = contents
 
-  def run(output Buffer? = nil, scratch Buffer? = nil) nil:
-    final out = output ?? Buffer()
-    out.addString(this.contents)
+  def exe(input Buffer, output Buffer) nil:
+    output.addString(this.contents)
 
 
 class ReadFile(Job):
@@ -55,26 +73,21 @@ class ReadFile(Job):
   def __init__(path String):
     this.path = path
 
-  def run(output Buffer? = nil, scratch Buffer? = nil) nil:
-    fs.readIntoBuffer(this.path, output ?? Buffer())
+  def exe(input Buffer, output Buffer) nil:
+    fs.readIntoBuffer(this.path, output)
 
 
-class WriteFile(JobWithInput):
+class WriteFile(Job):
   final path String
 
   def __init__(path String):
     this.path = path
 
-  def run(output Buffer? = nil, scratch Buffer? = nil) nil:
-    if this.upstream:
-      final out = output ?? Buffer()
-      final inp = scratch ?? Buffer()
-      this.upstream!.run(inp, out)
-      out.clear()
-      fs.writeBytes(this.path, inp)
+  def exe(input Buffer, output Buffer) nil:
+    fs.writeBytes(this.path, input)
 
 
-class Run(JobWithInput):
+class Run(Job):
   """
   A job that runs a subprocess
   """
@@ -84,23 +97,13 @@ class Run(JobWithInput):
     super.__init__()
     this.args = args
 
-  def run(output Buffer? = nil, scratch Buffer? = nil) nil:
-    """
-    Runs this job and dump the final contents to the given output buffer
-    if provided.
-    """
-    final inp = scratch ?? Buffer()
-    final out = output ?? Buffer()
-    inp.clear()
-    if this.upstream:
-      this.upstream!.run(inp, out)
-    out.clear()
+  def exe(input Buffer, output Buffer) nil:
     subprocess.run(
       this.args,    # args
       true,         # check
       nil,          # stdin
       nil,          # stdout
       nil,          # stderr
-      inp,          # input
-      out,          # outputBuffer
+      input,        # input
+      output,       # outputBuffer
     )
