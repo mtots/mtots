@@ -1,5 +1,7 @@
 """
 Utilities for starting, piping and waiting on subprocesses.
+
+Uses native operating system piping mechanism to run all jobs in parallel
 """
 import subprocess
 import os.posix
