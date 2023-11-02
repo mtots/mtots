@@ -1,0 +1,25 @@
+import x.lodepng
+import c
+
+
+final W = 48
+final H = 48
+
+final image = Buffer()
+image.setLength(3 * W * H)
+print("len = %s" % [len(image)])
+print("capacity = %s" % [image.getCapacity()])
+for i in range(0, len(image), 3):
+  image.setU8(i + 0, 40)   # R
+  image.setU8(i + 1, 80)   # G
+  image.setU8(i + 2, 140)  # B
+  # image.setU8(i + 3, 255)  # A
+lodepng.encode24_file("out.png", image.getPointer(), W, H)
+
+# final image = c.mallocSizeof(c.U8, W * H * 3)
+# for i in range(0, W * H * 3, 3):
+#  image[i + 0] = 40   # R
+#  image[i + 1] = 40   # G
+#  image[i + 2] = 140  # B
+#  image[i + 3] = 255  # A
+# lodepng.encode24_file("out.png", image, W, H)

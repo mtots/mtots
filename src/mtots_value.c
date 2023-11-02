@@ -39,12 +39,23 @@ int asInt(Value value) {
   if (x < (double)INT_MIN) {
     int v = INT_MIN;
     double vd = (double)v;
-    panic("Expected int, but value is less than INT_MIN (%f, %f, %d)", x, -2147483648.0, (x < vd));
+    panic("Expected int, but value is less than INT_MIN (%f < %f)", x, vd);
   }
   if (x > (double)INT_MAX) {
-    panic("Expected int, but value is greater than INT_MAX (%f)", x);
+    panic("Expected int, but value is greater than INT_MAX (%f > %d)", x, INT_MAX);
   }
   return (int)x;
+}
+
+unsigned asUnsigned(Value value) {
+  double x = asNumber(value);
+  if (x < 0) {
+    panic("Expected unsigned int, but value is negative (%f < 0)", x);
+  }
+  if (x > (double)UINT_MAX) {
+    panic("Expected int, but value is greater than INT_MAX (%f > %u)", x, UINT_MAX);
+  }
+  return (unsigned)x;
 }
 
 float asFloat(Value value) {
@@ -251,41 +262,27 @@ const void *asConstVoidPointer(Value value) {
   TypedPointer pointer = asPointer(value);
   return pointer.metadata.isConst ? pointer.as.constVoidPointer : pointer.as.voidPointer;
 }
-int *asIntPointer(Value value) {
+void *asCheckedPointer(Value value, PointerType type) {
   TypedPointer pointer = asPointer(value);
-  if (pointer.metadata.isConst || pointer.metadata.type != POINTER_TYPE_INT) {
-    panic("Expected int pointer but got %s%s",
+  if (pointer.metadata.isConst || pointer.metadata.type != type) {
+    panic("Expected %s but got %s%s",
+          getPointerTypeName(type),
           pointer.metadata.isConst ? "const " : "",
           getPointerTypeName(pointer.metadata.type));
   }
-  return (int *)pointer.as.voidPointer;
+  return pointer.as.voidPointer;
 }
-u8 *asU8Pointer(Value value) {
+const void *asCheckedConstPointer(Value value, PointerType type) {
   TypedPointer pointer = asPointer(value);
-  if (pointer.metadata.isConst || pointer.metadata.type != POINTER_TYPE_U8) {
-    panic("Expected u8 pointer but got %s%s",
+  if (pointer.metadata.type != POINTER_TYPE_U8) {
+    panic("Expected const %s pointer but got %s%s",
+          getPointerTypeName(type),
           pointer.metadata.isConst ? "const " : "",
           getPointerTypeName(pointer.metadata.type));
   }
-  return (u8 *)pointer.as.voidPointer;
-}
-u16 *asU16Pointer(Value value) {
-  TypedPointer pointer = asPointer(value);
-  if (pointer.metadata.isConst || pointer.metadata.type != POINTER_TYPE_U16) {
-    panic("Expected u16 pointer but got %s%s",
-          pointer.metadata.isConst ? "const " : "",
-          getPointerTypeName(pointer.metadata.type));
-  }
-  return (u16 *)pointer.as.voidPointer;
-}
-u32 *asU32Pointer(Value value) {
-  TypedPointer pointer = asPointer(value);
-  if (pointer.metadata.isConst || pointer.metadata.type != POINTER_TYPE_U32) {
-    panic("Expected u32 pointer but got %s%s",
-          pointer.metadata.isConst ? "const " : "",
-          getPointerTypeName(pointer.metadata.type));
-  }
-  return (u32 *)pointer.as.voidPointer;
+  return pointer.metadata.isConst
+             ? pointer.as.constVoidPointer
+             : pointer.as.voidPointer;
 }
 
 Value valNil(void) {

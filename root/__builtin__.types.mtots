@@ -463,6 +463,11 @@ class Buffer:
     Request a minimum allocated capacity for this Buffer.
     """
 
+  def getCapacity() Int:
+    """
+    Return the current capacity (in bytes) of this Buffer
+    """
+
   def clone() Buffer:
     """
     Create a clone of this Buffer
@@ -1238,8 +1243,16 @@ trait IntPointer(Pointer):
   "int pointer"
 
 
+trait UnsignedIntPointer(Pointer):
+  "unsigned int pointer"
+
+
 trait U8Pointer(Pointer):
   "u8 pointer"
+
+
+trait ConstU8Pointer(Pointer):
+  "const u8 pointer"
 
 
 trait U16Pointer(Pointer):

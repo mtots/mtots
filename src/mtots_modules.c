@@ -17,6 +17,7 @@
 #include "mtots_m_sys.h"
 #include "mtots_m_termios.h"
 #include "mtots_m_time.h"
+#include "mtots_m_xlodepng.h"
 
 void addNativeModules(void) {
   addNativeModuleBmon();
@@ -36,4 +37,5 @@ void addNativeModules(void) {
   addNativeModuleSys();
   addNativeModuleTermios();
   addNativeModuleTime();
+  addNativeModuleXLodepng();
 }

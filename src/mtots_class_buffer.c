@@ -57,6 +57,14 @@ static Status implBufferSetMinCapacity(i16 argc, Value *argv, Value *out) {
 
 static CFunction funcBufferSetMinCapacity = {implBufferSetMinCapacity, "setMinCapacity", 1};
 
+static Status implBufferGetCapacity(i16 argc, Value *argv, Value *out) {
+  Buffer *buffer = &asBuffer(argv[-1])->handle;
+  *out = valNumber(buffer->capacity);
+  return STATUS_OK;
+}
+
+static CFunction funcBufferGetCapacity = {implBufferGetCapacity, "getCapacity"};
+
 static Status implBufferClone(i16 argCount, Value *args, Value *out) {
   ObjBuffer *bo = asBuffer(args[-1]);
   ObjBuffer *newBuf = newBuffer();
@@ -394,10 +402,10 @@ static Status implBufferAsString(i16 argc, Value *argv, Value *out) {
 static CFunction funcBufferAsString = {implBufferAsString, "asString"};
 
 static Status implBufferGetPointer(i16 argc, Value *argv, Value *out) {
-  ObjBuffer *bo = asBuffer(argv[-1]);
-  size_t i = argc > 0 && !isNil(argv[0]) ? asIndex(argv[0], bo->handle.length) : 0;
-  bufferLock(&bo->handle);
-  *out = valPointer(newTypedPointer(&bo->handle.data + i, POINTER_TYPE_U8));
+  Buffer *buffer = &asBuffer(argv[-1])->handle;
+  size_t i = argc > 0 && !isNil(argv[0]) ? asIndex(argv[0], buffer->length) : 0;
+  bufferLock(buffer);
+  *out = valPointer(newTypedPointer(buffer->data + i, POINTER_TYPE_U8));
   return STATUS_OK;
 }
 
@@ -459,6 +467,7 @@ void initBufferClass(void) {
       &funcBufferClear,
       &funcBufferSetLength,
       &funcBufferSetMinCapacity,
+      &funcBufferGetCapacity,
       &funcBufferClone,
       &funcBufferLen,
       &funcBufferGetitem,

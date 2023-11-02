@@ -166,6 +166,7 @@ typedef struct ValueArray {
 size_t asSize(Value value);
 ptrdiff_t asPtrdiff(Value value);
 int asInt(Value value);
+unsigned asUnsigned(Value value);
 float asFloat(Value value);
 u32 asU32Bits(Value value);
 u32 asU32(Value value);
@@ -188,12 +189,54 @@ TypedPointer asPointer(Value value);
 FileDescriptor asFileDescriptor(Value value);
 Obj *asObj(Value value);
 
+void *asCheckedPointer(Value value, PointerType type);
+const void *asCheckedConstPointer(Value value, PointerType type);
 void *asVoidPointer(Value value);
 const void *asConstVoidPointer(Value value);
-int *asIntPointer(Value value);
-u8 *asU8Pointer(Value value);
-u16 *asU16Pointer(Value value);
-u32 *asU32Pointer(Value value);
+
+#define asCharPointer(v) ((char *)asCheckedPointer((v), POINTER_TYPE_CHAR))
+#define asShortPointer(v) ((short *)asCheckedPointer((v), POINTER_TYPE_SHORT))
+#define asIntPointer(v) ((int *)asCheckedPointer((v), POINTER_TYPE_INT))
+#define asLongPointer(v) ((long *)asCheckedPointer((v), POINTER_TYPE_LONG))
+#define asUnsignedShortPointer(v) ((unsigned short *)asCheckedPointer((v), POINTER_TYPE_UNSIGNED_SHORT))
+#define asUnsignedIntPointer(v) ((unsigned int *)asCheckedPointer((v), POINTER_TYPE_UNSIGNED_INT))
+#define asUnsignedLongPointer(v) ((unsigned long *)asCheckedPointer((v), POINTER_TYPE_UNSIGNED_LONG))
+#define asU8Pointer(v) ((u8 *)asCheckedPointer((v), POINTER_TYPE_U8))
+#define asU16Pointer(v) ((u16 *)asCheckedPointer((v), POINTER_TYPE_U16))
+#define asU32Pointer(v) ((u32 *)asCheckedPointer((v), POINTER_TYPE_U32))
+#define asU64Pointer(v) ((u64 *)asCheckedPointer((v), POINTER_TYPE_U64))
+#define asI8Pointer(v) ((i8 *)asCheckedPointer((v), POINTER_TYPE_I8))
+#define asI16Pointer(v) ((i16 *)asCheckedPointer((v), POINTER_TYPE_I16))
+#define asI32Pointer(v) ((i32 *)asCheckedPointer((v), POINTER_TYPE_I32))
+#define asI64Pointer(v) ((i64 *)asCheckedPointer((v), POINTER_TYPE_I64))
+#define asSizeTPointer(v) ((size_t *)asCheckedPointer((v), POINTER_TYPE_SIZE_T))
+#define asPtrdiffTPointer(v) ((ptrdiff_t *)asCheckedPointer((v), POINTER_TYPE_PTRDIFF_T))
+#define asFloatPointer(v) ((float *)asCheckedPointer((v), POINTER_TYPE_FLOAT))
+#define asDoublePointer(v) ((double *)asCheckedPointer((v), POINTER_TYPE_DOUBLE))
+
+#define asConstCharPointer(v) ((const char *)asCheckedConstPointer((v), POINTER_TYPE_CHAR))
+#define asConstShortPointer(v) ((const short *)asCheckedConstPointer((v), POINTER_TYPE_SHORT))
+#define asConstIntPointer(v) ((const int *)asCheckedConstPointer((v), POINTER_TYPE_INT))
+#define asConstLongPointer(v) ((const long *)asCheckedConstPointer((v), POINTER_TYPE_LONG))
+#define asConstUnsignedShortPointer(v) \
+  ((const unsigned short *Const)asCheckedConstPointer((v), POINTER_TYPE_UNSIGNED_SHORT))
+#define asConstUnsignedIntPointer(v) \
+  ((const unsigned int *)asCheckedConstPointer((v), POINTER_TYPE_UNSIGNED_INT))
+#define asConstUnsignedLongPointer(v) \
+  ((const unsigned long *)asCheckedConstPointer((v), POINTER_TYPE_UNSIGNED_LONG))
+#define asConstU8Pointer(v) ((const u8 *)asCheckedConstPointer((v), POINTER_TYPE_U8))
+#define asConstU16Pointer(v) ((const u16 *)asCheckedConstPointer((v), POINTER_TYPE_U16))
+#define asConstU32Pointer(v) ((const u32 *)asCheckedConstPointer((v), POINTER_TYPE_U32))
+#define asConstU64Pointer(v) ((const u64 *)asCheckedConstPointer((v), POINTER_TYPE_U64))
+#define asConstI8Pointer(v) ((const i8 *)asCheckedConstPointer((v), POINTER_TYPE_I8))
+#define asConstI16Pointer(v) ((const i16 *)asCheckedConstPointer((v), POINTER_TYPE_I16))
+#define asConstI32Pointer(v) ((const i32 *)asCheckedConstPointer((v), POINTER_TYPE_I32))
+#define asConstI64Pointer(v) ((const i64 *)asCheckedConstPointer((v), POINTER_TYPE_I64))
+#define asConstSizeTPointer(v) ((const size_t *)asCheckedConstPointer((v), POINTER_TYPE_SIZE_T))
+#define asConstPtrdiffTPointer(v) \
+  ((const ptrdiff_t *)asChConsteckedPointer((v), POINTER_TYPE_PTRDIFF_T))
+#define asConstFloatPointer(v) ((const float *)asCheckedConstPointer((v), POINTER_TYPE_FLOAT))
+#define asConstDoublePointer(v) ((const double *)asCheckedConstPointer((v), POINTER_TYPE_DOUBLE))
 
 Value valNil(void);
 Value valBool(ubool value);

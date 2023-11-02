@@ -1,0 +1,186 @@
+"""
+Unsafe wrapper around the lodepng C library.
+
+This module is unsafe because it involves passing unmanaged pointers
+and requires the client to do some manual memory management.
+"""
+
+final LCT_GREY Int "grayscale: 1,2,4,8,16 bit" = 0
+final LCT_RGB Int "RGB: 8,16 bit" = 2
+final LCT_PALETTE Int "palette: 1,2,4,8 bit" = 3
+final LCT_GREY_ALPHA Int "grayscale with alpha: 8,16 bit" = 4
+final LCT_RGBA Int "RGB with alpha: 8,16 bit" = 6
+final LCT_MAX_OCTET_VALUE Int """
+LCT_MAX_OCTET_VALUE lets the compiler allow this enum to represent any invalid
+  byte value from 0 to 255 that could be present in an invalid PNG file header. Do
+  not use, compare with or set the name LCT_MAX_OCTET_VALUE, instead either use
+  the valid color type names above, or numeric values like 1 or 7 when checking for
+  particular disallowed color type byte values, or cast to integer to print it.
+"""= 255
+
+
+def decode_memory(
+    out Buffer, w UnsignedIntPointer, h UnsignedIntPointer,
+    in_ ConstU8Pointer, inSize Int,
+    colortype Int, bitdepth Int) nil:
+  """Converts PNG data in memory to raw pixel data.
+
+  Parameters;
+  * out: Output parameter. Pointer to buffer that will contain the raw pixel data.
+      After decoding, its size is w * h * (bytes per pixel) bytes larger than
+      initially. Bytes per pixel depends on colortype and bitdepth.
+      Must be freed after usage with free(*out).
+      * Note: for 16-bit per channel colors, uses big endian format like PNG does.
+  * w: Output parameter. Pointer to width of pixel data.
+  * h: Output parameter. Pointer to height of pixel data.
+  * in: Memory buffer with the PNG file.
+  * insize: size of the in buffer.
+  * colortype: the desired color type for the raw output image. See explanation on PNG color types.
+  * bitdepth: the desired bit depth for the raw output image. See explanation on PNG color types.
+  * Return value: LodePNG error code (0 means no error).
+
+  MTOTS NOTE: I decided to break with the general rule of doing a direct unsafe translation
+  of the C function, and using a `Buffer` out parameter instead of a `unsigned char**` out
+  parameter. Aside from the clunkiness of such an API, pointer support in Mtots is fairly limited,
+  and a pointer to pointer parameter is rather awkward to deal with correctly.
+  """
+
+
+def decode32(
+    out Buffer, w UnsignedIntPointer, h UnsignedIntPointer,
+    in_ ConstU8Pointer, inSize Int) nil:
+  """Same as lodepng_decode_memory, but always decodes to 32-bit RGBA raw image.
+
+  MTOTS NOTE: Looking at the source, this function seems equivalent to
+    `decode_memory(out, w, h, in, insize, LCT_RGBA, 8)`
+  """
+
+
+def decode24(
+    out Buffer, w UnsignedIntPointer, h UnsignedIntPointer,
+    in_ ConstU8Pointer, inSize Int) nil:
+  """Same as lodepng_decode_memory, but always decodes to 24-bit RGBA raw image.
+
+  MTOTS NOTE: Looking at the source, this function seems equivalent to
+    `decode_memory(out, w, h, in, insize, LCT_RGBA, 8)`
+  """
+
+
+def decode_file(
+    out Buffer, w UnsignedIntPointer, h UnsignedIntPointer,
+    filename String,
+    colortype Int, bitdepth Int) nil:
+  """Load PNG from disk, from file with given name.
+
+  Same as the other decode functions, but instead takes a filename as input.
+
+  NOTE: Wide-character filenames are not supported, you can use an external method
+  to handle such files and decode in-memory.
+  """
+
+
+def decode32_file(out Buffer, w UnsignedIntPointer, h UnsignedIntPointer, filename String) nil:
+  """Same as lodepng_decode_file, but always decodes to 32-bit RGBA raw image.
+
+  NOTE: Wide-character filenames are not supported, you can use an external method
+  to handle such files and decode in-memory.
+
+  MTOTS NOTE: Looking at the source, this function seems equivalent to
+    `decode_file(out, w, h, filename, LCT_RGBA, 8)`
+  """
+
+
+def decode24_file(out Buffer, w UnsignedIntPointer, h UnsignedIntPointer, filename String) nil:
+  """Same as lodepng_decode_file, but always decodes to 24-bit RGBA raw image.
+
+  NOTE: Wide-character filenames are not supported, you can use an external method
+  to handle such files and decode in-memory.
+
+  MTOTS NOTE: Looking at the source, this function seems equivalent to
+    `decode_file(out, w, h, filename, LCT_RGB, 8)`
+  """
+
+
+def encode_memory(out Buffer, image ConstU8Pointer, w Int, h Int, colortype Int, bitdepth Int) nil:
+  """Converts raw pixel data into a PNG image in memory. The colortype and bitdepth
+    of the output PNG image cannot be chosen, they are automatically determined
+    by the colortype, bitdepth and content of the input pixel data.
+
+  Note: for 16-bit per channel colors, needs big endian format like PNG does.
+
+  Parameters:
+  * out: Output parameter. Pointer to buffer that will contain the PNG image data.
+      Must be freed after usage with free(*out).
+  * outsize: Output parameter. Pointer to the size in bytes of the out buffer.
+  * image: The raw pixel data to encode. The size of this buffer should be
+        w * h * (bytes per pixel), bytes per pixel depends on colortype and bitdepth.
+  * w: width of the raw pixel data in pixels.
+  * h: height of the raw pixel data in pixels.
+  * colortype: the color type of the raw input image. See explanation on PNG color types.
+  * bitdepth: the bit depth of the raw input image. See explanation on PNG color types.
+  * Return value: LodePNG error code (0 means no error).
+
+  MTOTS NOTE: I decided to break with the general rule of doing a direct unsafe translation
+  of the C function, and using a single `Buffer` out parameter instead of using two parameters
+  `unsigned**` out and `size_t` outsize. Aside from the clunkiness of such an API, pointer
+  support in Mtots is fairly limited, and a pointer to pointer parameter is rather awkward to
+  deal with correctly.
+
+  In terms of memory allocation, this function will copy over the contents of the output
+  to `out`, and call `free` on the block of memory returned by lodepng.
+  """
+
+
+def encode32(out Buffer, image ConstU8Pointer, w Int, h Int) nil:
+  """Same as lodepng_encode_memory, but always encodes from 32-bit RGBA raw image.
+
+  MTOTS NOTE: Looking at the source, this function seems equivalent to
+    `encode_memory(out, outsize, image, w, h, LCT_RGBA, 8)`
+  """
+
+
+def encode24(out Buffer, image ConstU8Pointer, w Int, h Int) nil:
+  """Same as lodepng_encode_memory, but always encodes from 24-bit RGBA raw image.
+
+  MTOTS NOTE: Looking at the source, this function seems equivalent to
+    `encode_memory(out, outsize, image, w, h, LCT_RGB, 8)`
+  """
+
+
+def encode_file(
+    filename String,
+    image ConstU8Pointer,
+    w Int,
+    h Int,
+    colortype Int,
+    bitdepth Int) nil:
+  """Converts raw pixel data into a PNG file on disk.
+  Same as the other encode functions, but instead takes a filename as output.
+
+  NOTE: This overwrites existing files without warning!
+
+  NOTE: Wide-character filenames are not supported, you can use an external method
+  to handle such files and encode in-memory.
+  """
+
+
+def encode32_file(filename String, image ConstU8Pointer, w Int, h Int) nil:
+  """Same as lodepng_encode_file, but always encodes from 32-bit RGBA raw image.
+
+  NOTE: Wide-character filenames are not supported, you can use an external method
+  to handle such files and encode in-memory.
+
+  MTOTS NOTE: Looking at the source, this function seems equivalent to
+    `encode_file(filename, image, w, h, LCT_RGBA, 8)`
+  """
+
+
+def encode24_file(filename String, image ConstU8Pointer, w Int, h Int) nil:
+  """Same as lodepng_encode_file, but always encodes from 24-bit RGBA raw image.
+
+  NOTE: Wide-character filenames are not supported, you can use an external method
+  to handle such files and encode in-memory.
+
+  MTOTS NOTE: Looking at the source, this function seems equivalent to
+    `encode_file(filename, image, w, h, LCT_RGB, 8)`
+  """

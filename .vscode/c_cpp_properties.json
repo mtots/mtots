@@ -3,6 +3,7 @@
         {
             "name": "Mac",
             "includePath": [
+                "${workspaceFolder}/lib/lodepng/src",
                 "${workspaceFolder}/src"
             ],
             "macFrameworkPath": [
@@ -15,6 +16,7 @@
         {
             "name": "Win32",
             "includePath": [
+                "${workspaceFolder}/lib/lodepng/src",
                 "${workspaceFolder}/src"
             ],
             "defines": ["_DEBUG", "UNICODE", "_UNICODE"],

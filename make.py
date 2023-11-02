@@ -93,11 +93,23 @@ MACOS_SDL_FLAGS = [
     "-Wno-documentation",
 ]
 
+MACOS_LODEPNG_FLAGS = [
+    "-DMTOTS_ENABLE_LODEPNG=1",
+    "-I" + os.path.join("lib", "lodepng", "src"),
+    os.path.join("lib", "lodepng", "src", "lodepng.c"),
+]
+
 aparser = argparse.ArgumentParser()
 aparser.add_argument("--verbose", "-v", default=False, action="store_true")
 aparser.add_argument("--release", "-r", default=False, action="store_true")
 aparser.add_argument("--no-compile", dest="compile", default=True, action="store_false")
 aparser.add_argument("--test", "-t", default=False, action="store_true")
+aparser.add_argument(
+    "--enable-lodepng",
+    default=False,
+    action="store_true",
+    help="Build with lodepng support",
+)
 aparser.add_argument(
     "--enable-sdl",
     default=False,
@@ -111,6 +123,7 @@ RELEASE: bool = args.release
 COMPILE: bool = args.compile
 TEST: bool = args.test
 ENABLE_SDL: bool = args.enable_sdl
+ENABLE_LODEPNG: bool = args.enable_lodepng
 
 
 def c_sources() -> typing.List[str]:
@@ -149,6 +162,7 @@ def compile(release: bool):
                 *MACOS_BASE_FLAGS,
                 *(MACOS_RELEASE_FLAGS if release else MACOS_DEBUG_FLAGS),
                 *(MACOS_SDL_FLAGS if ENABLE_SDL else []),
+                *(MACOS_LODEPNG_FLAGS if ENABLE_LODEPNG else []),
                 *c_sources(),
                 "-omtots",
             ]
